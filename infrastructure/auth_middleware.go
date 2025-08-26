@@ -9,7 +9,7 @@ import (
 )
 
 // AuthMiddleware creates a gin middleware for JWT authentication.
-func AuthMiddleware(jwtService JWTService) gin.HandlerFunc {
+func AuthMiddleware(jwtService domain.IJWTService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {

@@ -11,7 +11,7 @@ import (
 )
 
 // setupService is a helper to create a new service for tests.
-func setupService() (JWTService, string, string) {
+func setupService() (domain.IJWTService, string, string) {
 	secret := "my-super-secret-key-for-testing"
 	issuer := "test-issuer"
 	accessTTL := 15 * time.Minute

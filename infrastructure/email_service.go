@@ -1,16 +1,11 @@
 package infrastructure
 
 import (
+	"EthioGuide/domain"
 	"fmt"
 
 	"gopkg.in/gomail.v2"
 )
-
-// EmailService defines the contract for sending emails.
-type EmailService interface {
-	SendPasswordResetEmail(toEmail, username, resetToken string) error
-	SendActivationEmail(toEmail, username, activationToken string) error
-}
 
 // dialer interface allows mocking the gomail.Dialer
 type dialer interface {
@@ -26,7 +21,7 @@ type SmtpEmailService struct {
 	dialer   dialer
 }
 
-func NewSMTPEmailService(host string, port int, username, password, from string) EmailService {
+func NewSMTPEmailService(host string, port int, username, password, from string) domain.IEmailService {
 	d := gomail.NewDialer(host, port, username, password)
 
 	return &SmtpEmailService{

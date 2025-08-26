@@ -1,7 +1,8 @@
 package infrastructure_test
 
 import (
-	"EthioGuide/infrastructure"
+	"EthioGuide/domain"
+	. "EthioGuide/infrastructure"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -10,11 +11,11 @@ import (
 // PasswordServiceTestSuite groups tests for PasswordService
 type PasswordServiceTestSuite struct {
 	suite.Suite
-	passwordService infrastructure.PasswordService
+	passwordService domain.IPasswordService
 }
 
 func (s *PasswordServiceTestSuite) SetupTest() {
-	s.passwordService = infrastructure.NewPasswordService()
+	s.passwordService = NewPasswordService()
 }
 
 func (s *PasswordServiceTestSuite) TestHashAndCompare_Success() {

@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"EthioGuide/domain"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,7 +19,7 @@ type RateLimiter struct {
 }
 
 // NewRateLimiter creates a new RateLimiter instance.
-func NewRateLimiter(redisService *RedisService) *RateLimiter {
+func NewRateLimiter(redisService *RedisService) domain.IRateLimiter {
 	if redisService == nil || redisService.Client == nil {
 		log.Fatal("FATAL: RedisService is not initialized. Rate limiter cannot be created.")
 	}

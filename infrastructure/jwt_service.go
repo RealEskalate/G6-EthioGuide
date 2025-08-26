@@ -10,22 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// JWTService defines the operations for JWT token management.
-type JWTService interface {
-	GenerateAccessToken(userID string, role domain.Role) (string, *JWTClaims, error)
-	GenerateRefreshToken(userID string) (string, *JWTClaims, error)
-	ValidateToken(tokenString string) (*JWTClaims, error)
-	ParseExpiredToken(tokenString string) (*JWTClaims, error)
-	GetRefreshTokenExpiry() time.Duration
-}
-
-// JWTClaims contains the claims for the JWT.
-type JWTClaims struct {
-	UserID string      `json:"user_id"`
-	Role   domain.Role `json:"role"`
-	jwt.RegisteredClaims
-}
-
 type jwtService struct {
 	secretKey       string
 	issuer          string
@@ -34,7 +18,7 @@ type jwtService struct {
 }
 
 // NewJWTService creates a new JWT service instance.
-func NewJWTService(secret, issuer string, accessTokenTTL, refreshTokenTTL time.Duration) JWTService {
+func NewJWTService(secret, issuer string, accessTokenTTL, refreshTokenTTL time.Duration) domain.IJWTService {
 	return &jwtService{
 		secretKey:       secret,
 		issuer:          issuer,
@@ -43,8 +27,8 @@ func NewJWTService(secret, issuer string, accessTokenTTL, refreshTokenTTL time.D
 	}
 }
 
-func (s *jwtService) GenerateAccessToken(userID string, role domain.Role) (string, *JWTClaims, error) {
-	claims := &JWTClaims{
+func (s *jwtService) GenerateAccessToken(userID string, role domain.Role) (string, *domain.JWTClaims, error) {
+	claims := &domain.JWTClaims{
 		UserID: userID,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -59,8 +43,8 @@ func (s *jwtService) GenerateAccessToken(userID string, role domain.Role) (strin
 	return tokenString, claims, err
 }
 
-func (s *jwtService) ValidateToken(tokenString string) (*JWTClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+func (s *jwtService) ValidateToken(tokenString string) (*domain.JWTClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &domain.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -71,15 +55,15 @@ func (s *jwtService) ValidateToken(tokenString string) (*JWTClaims, error) {
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+	if claims, ok := token.Claims.(*domain.JWTClaims); ok && token.Valid {
 		return claims, nil
 	}
 	return nil, fmt.Errorf("invalid token")
 }
 
 // GenerateRefreshToken creates a long-lived refresh token.
-func (s *jwtService) GenerateRefreshToken(userID string) (string, *JWTClaims, error) {
-	claims := &JWTClaims{
+func (s *jwtService) GenerateRefreshToken(userID string) (string, *domain.JWTClaims, error) {
+	claims := &domain.JWTClaims{
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate((time.Now().Add((s.refreshTokenTTL)))),
@@ -93,12 +77,12 @@ func (s *jwtService) GenerateRefreshToken(userID string) (string, *JWTClaims, er
 	return tokenString, claims, err
 }
 
-func (s *jwtService) ParseExpiredToken(tokenString string) (*JWTClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+func (s *jwtService) ParseExpiredToken(tokenString string) (*domain.JWTClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &domain.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(s.secretKey), nil
 	})
 
-	if claims, ok := token.Claims.(*JWTClaims); ok {
+	if claims, ok := token.Claims.(*domain.JWTClaims); ok {
 		if err != nil && !errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, err
 		}

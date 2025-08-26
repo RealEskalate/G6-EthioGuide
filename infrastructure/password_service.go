@@ -1,11 +1,10 @@
 package infrastructure
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"EthioGuide/domain"
 
-type PasswordService interface {
-	HashPassword(password string) (string, error)
-	ComparePassword(hashedPassword, password string) error
-}
+	"golang.org/x/crypto/bcrypt"
+)
 
 // bcryptService is the concrete implementation of PasswordService using the bcrypt algorithm.
 // The struct is empty because the service is stateless.
@@ -13,7 +12,7 @@ type PasswordService interface {
 type bcryptService struct{}
 
 // NewPasswordService creates a new instance of our password service.
-func NewPasswordService() PasswordService {
+func NewPasswordService() domain.IPasswordService {
 	return &bcryptService{}
 }
 

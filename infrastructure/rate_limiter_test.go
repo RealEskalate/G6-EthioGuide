@@ -1,6 +1,7 @@
 package infrastructure_test
 
 import (
+	"EthioGuide/domain"
 	. "EthioGuide/infrastructure"
 	"EthioGuide/testhelper"
 	"context"
@@ -17,7 +18,7 @@ import (
 // RateLimiterTestSuite defines the suite for testing the RateLimiter middleware.
 type RateLimiterTestSuite struct {
 	suite.Suite
-	rateLimiter *RateLimiter
+	rateLimiter domain.IRateLimiter
 }
 
 // SetupSuite starts a Redis container and creates a RateLimiter instance for the suite.

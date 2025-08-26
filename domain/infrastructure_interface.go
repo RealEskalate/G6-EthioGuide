@@ -2,11 +2,21 @@ package domain
 
 import (
 	"context"
-	"mime/multipart"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 )
+
+type IAuthMiddleware interface {
+	AuthMiddleware(jwtService IJWTService) gin.HandlerFunc
+}
+
+type IEmailService interface {
+	SendPasswordResetEmail(toEmail, username, resetToken string) error
+	SendActivationEmail(toEmail, username, activationToken string) error
+}
 
 type IAIService interface {
 	GenerateCompletion(ctx context.Context, prompt string) (string, error)
@@ -24,8 +34,28 @@ type IGoogleOAuthService interface {
 	GetUserInfo(ctx context.Context, token *oauth2.Token) (*GoogleUserInfo, error)
 }
 
-type ImageUploaderService interface {
-	UploadProfilePicture(file multipart.File, fileHeader *multipart.FileHeader) (string, error)
+type JWTClaims struct {
+	UserID       string       `json:"user_id"`
+	Role         Role         `json:"role"`
+	Subscription Subscription `json:"subscription"`
+	jwt.RegisteredClaims
+}
+
+type IJWTService interface {
+	GenerateAccessToken(userID string, role Role) (string, *JWTClaims, error)
+	GenerateRefreshToken(userID string) (string, *JWTClaims, error)
+	ValidateToken(tokenString string) (*JWTClaims, error)
+	ParseExpiredToken(tokenString string) (*JWTClaims, error)
+	GetRefreshTokenExpiry() time.Duration
+}
+
+type IPasswordService interface {
+	HashPassword(password string) (string, error)
+	ComparePassword(hashedPassword, password string) error
+}
+
+type IRateLimiter interface {
+	LimiterMiddleware(limit int64, period time.Duration, userIDKey string) gin.HandlerFunc
 }
 
 type ICacheService interface {
