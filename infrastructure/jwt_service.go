@@ -23,6 +23,7 @@ type JWTService interface {
 type JWTClaims struct {
 	UserID string      `json:"user_id"`
 	Role   domain.Role `json:"role"`
+	Subscription  string  `json: "subscription"`
 	jwt.RegisteredClaims
 }
 
