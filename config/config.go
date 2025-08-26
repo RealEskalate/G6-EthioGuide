@@ -32,10 +32,6 @@ type Config struct {
 	GeminiAPIKey string
 	GeminiModel  string
 
-	CloudinaryCloudName string
-	CloudinaryAPIKey    string
-	CloudinaryAPISecret string
-
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleRedirectURI  string
@@ -45,6 +41,9 @@ type Config struct {
 	SMTPUser string
 	SMTPPass string
 	SMTPFrom string
+
+	VerificationFrontendUrl string
+	ResetPasswordFrontendUrl string
 }
 
 // Load loads the configuration from .env files and environment variables.
@@ -67,20 +66,17 @@ func Load() *Config {
 		ServerPort:          getEnv("PORT", "8080"),
 		UsecaseTimeout:      5 * time.Second,
 		MongoURI:            getEnv("MONGO_URI", "mongodb://localhost:27017"),
-		DBName:              getEnv("DB_NAME", "g6-blog-db"),
+		DBName:              getEnv("DB_NAME", "ethio-guide-db"),
 		RedisUrl:            getEnv("REDIS_URI", ""),
 		RedisAddr:           getEnv("REDIS_ADDR", "localhost:6379"),
 		RedisPassword:       getEnv("REDIS_PASSWORD", ""),
 		RedisDB:             redisDB,
 		JWTSecret:           getEnv("JWT_SECRET", "a-very-secret-key-that-should-be-long-and-random"),
-		JWTIssuer:           "g6-blog-api",
+		JWTIssuer:           "ethio-guide-api",
 		JWTAccessTTL:        time.Duration(accessTTL) * time.Minute,
 		JWTRefreshTTL:       time.Duration(refreshTTL) * time.Hour,
 		GeminiAPIKey:        getEnv("GEMINI_API_KEY", ""),
 		GeminiModel:         getEnv("GEMINI_MODEL", "gemini-2.5-pro"),
-		CloudinaryCloudName: getEnv("CLOUDINARY_CLOUD_NAME", ""),
-		CloudinaryAPIKey:    getEnv("CLOUDINARY_API_KEY", ""),
-		CloudinaryAPISecret: getEnv("CLOUDINARY_API_SECRET", ""),
 		GoogleClientID:      getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret:  getEnv("GOOGLE_CLIENT_SECRET", ""),
 		GoogleRedirectURI:   getEnv("GOOGLE_REDIRECT_URI", ""),
@@ -89,6 +85,8 @@ func Load() *Config {
 		SMTPUser:            getEnv("SMTP_USER", ""),
 		SMTPPass:            getEnv("SMTP_PASSWORD", ""),
 		SMTPFrom:            getEnv("SMTP_FROM_EMAIL", "no-reply@example.com"),
+		VerificationFrontendUrl: getEnv("VERIFICATION_FRONTEND-URL", "http://localhost:8080/api/v1/auth/verify"),
+		ResetPasswordFrontendUrl: getEnv("RESET_PASSWORD_FRONTEND_URL", "http://localhost:8080/api/v1/password/reset"),
 	}
 }
 
@@ -111,10 +109,10 @@ func LoadForTest() *Config {
 
 	// Use our test-specific helper for reading variables
 	mongoURI := getTestEnv("MONGO_URI_TEST", "MONGO_URI", "mongodb://localhost:27017")
-	dbName := getTestEnv("DB_NAME_TEST", "DB_NAME", "g6-blog-db-test")
+	dbName := getTestEnv("DB_NAME_TEST", "DB_NAME", "ethio-guide-db-test")
 
 	// Perform the safety check here, within the config loader.
-	if dbName == "g6-blog-db" {
+	if dbName == "ethio-guide-db" {
 		log.Fatalf("FATAL: Cannot run tests on the main database '%s'. Set DB_NAME_TEST in your .env.test file.", dbName)
 	}
 

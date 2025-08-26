@@ -13,24 +13,28 @@ type dialer interface {
 }
 
 type SmtpEmailService struct {
-	host     string
-	port     int
-	username string
-	password string
-	from     string
-	dialer   dialer
+	host             string
+	port             int
+	username         string
+	password         string
+	from             string
+	dialer           dialer
+	verificationUrl  string
+	resetPasswordUrl string
 }
 
-func NewSMTPEmailService(host string, port int, username, password, from string) domain.IEmailService {
+func NewSMTPEmailService(host string, port int, username, password, from, verificationUrl, resetPasswordUrl string) domain.IEmailService {
 	d := gomail.NewDialer(host, port, username, password)
 
 	return &SmtpEmailService{
-		host:     host,
-		port:     port,
-		username: username,
-		password: password,
-		from:     from,
-		dialer:   d,
+		host:             host,
+		port:             port,
+		username:         username,
+		password:         password,
+		from:             from,
+		dialer:           d,
+		verificationUrl:  verificationUrl,
+		resetPasswordUrl: resetPasswordUrl,
 	}
 }
 
@@ -45,15 +49,15 @@ func (s *SmtpEmailService) SendPasswordResetEmail(toEmail, username, resetToken 
 	%s
 
 	Or click the link below:
-	http://localhost:8080/api/v1/password/reset?token=%s
+	%s?token=%s
 
 	If you did not request this, please ignore this email.
-	`, username, resetToken, resetToken)
+	`, username, resetToken, s.verificationUrl, resetToken)
 
 	return s.send(toEmail, subject, body)
 }
 
-func (s *SmtpEmailService) SendActivationEmail(toEmail, username, activationToken string) error {
+func (s *SmtpEmailService) SendVerificationEmail(toEmail, username, activationToken string) error {
 	subject := "Activate Your Account"
 	body := fmt.Sprintf(`
 	Hi %s,
@@ -64,9 +68,9 @@ func (s *SmtpEmailService) SendActivationEmail(toEmail, username, activationToke
 	%s
 
 	Or click this link:
-	http://localhost:8080/api/v1/auth/activate?token=%s
+	%s?token=%s
 	If you did not create an account, ignore this email.
-	`, username, activationToken, activationToken)
+	`, username, activationToken, s.resetPasswordUrl, activationToken)
 
 	return s.send(toEmail, subject, body)
 }
