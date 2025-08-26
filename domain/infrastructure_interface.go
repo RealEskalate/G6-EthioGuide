@@ -11,6 +11,8 @@ import (
 
 type IAuthMiddleware interface {
 	AuthMiddleware(jwtService IJWTService) gin.HandlerFunc
+	ProOnlyMiddleware() gin.HandlerFunc
+	RequireRole(roles ...Role) gin.HandlerFunc
 }
 
 type IEmailService interface {
