@@ -50,7 +50,7 @@ func (ac *AuthController) HandleRefreshToken(c *gin.Context) {
 			"access_token":  newAccess,
 			"refresh_token": newRefresh,
 		})
-		
+
 	} else {
 		refreshtoken, err := c.Cookie("refresh_token")
 		if err != nil {
@@ -120,4 +120,31 @@ func (ctrl *UserController) Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "id": toUserResponse(account)})
+}
+
+func (uc *UserController) Login(ctx *gin.Context) {
+	var req LoginRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	if req.Identifier == "" || req.Password == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Identifier and password are required"})
+		return
+	}
+
+	account, token, refreshToken, err := uc.userUsecase.Login(ctx, req.Identifier, req.Password)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+
+	loginResponse := &LoginResponse{
+		User:         *account,
+		Token:        token,
+		RefreshToken: refreshToken,
+	}
+
+	ctx.JSON(http.StatusOK, loginResponse)
 }

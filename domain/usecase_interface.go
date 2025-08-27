@@ -4,6 +4,7 @@ import "context"
 
 type IUserUsecase interface {
 	Register(ctx context.Context, user *Account) error
+	Login(ctx context.Context, identifier, password string) (*Account, string, string, error)
 	// ActivateAccount(ctx context.Context, activationTokenValue string) error
 	// Login(ctx context.Context, identifier, password string) (accessToken, refreshToken string, err error)
 	// Logout(ctx context.Context, refreshToken string) error

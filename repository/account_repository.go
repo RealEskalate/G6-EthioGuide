@@ -3,6 +3,7 @@ package repository
 import (
 	"EthioGuide/domain"
 	"context"
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,11 +24,11 @@ type UserDetailModel struct {
 }
 
 type OrganizationDetailModel struct {
-	Description  string           `bson:"description,omitempty"`
-	Location     string           `bson:"location,omitempty"`
-	Type         string           `bson:"type,omitempty"` // e.g., "Corporation", "Non-Profit"
-	ContactInfo  ContactInfoModel `bson:"contact_info,omitempty"`
-	PhoneNumbers []string         `bson:"phone_numbers,omitempty"`
+	Description  string                  `bson:"description,omitempty"`
+	Location     string                  `bson:"location,omitempty"`
+	Type         domain.OrganizationType `bson:"type,omitempty"` // e.g., "Corporation", "Non-Profit"
+	ContactInfo  ContactInfoModel        `bson:"contact_info,omitempty"`
+	PhoneNumbers []string                `bson:"phone_numbers,omitempty"`
 }
 
 type AccountModel struct {
@@ -49,10 +50,10 @@ func fromUserDetailDomain(ud *domain.UserDetail) *UserDetailModel {
 	}
 
 	return &UserDetailModel{
-		Username: ud.Username,
+		Username:         ud.Username,
 		SubscriptionPlan: ud.SubscriptionPlan,
-		IsBanned: ud.IsBanned,
-		IsVerified: ud.IsVerified,
+		IsBanned:         ud.IsBanned,
+		IsVerified:       ud.IsVerified,
 	}
 }
 
@@ -62,10 +63,10 @@ func fromOrgDetailDomain(od *domain.OrganizationDetail) *OrganizationDetailModel
 	}
 
 	return &OrganizationDetailModel{
-		Description: od.Description,
-		Location: od.Location,
-		Type: string(od.Type),
-		ContactInfo: ContactInfoModel(od.ContactInfo),
+		Description:  od.Description,
+		Location:     od.Location,
+		Type:         od.Type,
+		ContactInfo:  ContactInfoModel(od.ContactInfo),
 		PhoneNumbers: od.PhoneNumbers,
 	}
 }
@@ -75,48 +76,48 @@ func fromAccountDomain(a domain.Account) AccountModel {
 	if id, err := primitive.ObjectIDFromHex(a.ID); err == nil {
 		objectID = id
 	}
-	
+
 	return AccountModel{
-		ID:             objectID,
-		Name:           a.Name,
-		Email:          a.Email,
-		PasswordHash:   a.PasswordHash,
-		Role:           a.Role,
-		ProfilePicURL:  a.ProfilePicURL,
-		CreatedAt:      a.CreatedAt,
-		UserDetail:     fromUserDetailDomain(a.UserDetail),
+		ID:                 objectID,
+		Name:               a.Name,
+		Email:              a.Email,
+		PasswordHash:       a.PasswordHash,
+		Role:               a.Role,
+		ProfilePicURL:      a.ProfilePicURL,
+		CreatedAt:          a.CreatedAt,
+		UserDetail:         fromUserDetailDomain(a.UserDetail),
 		OrganizationDetail: fromOrgDetailDomain(a.OrganizationDetail),
 	}
 }
 
 func toUserDetailDomain(ud UserDetailModel) *domain.UserDetail {
 	return &domain.UserDetail{
-		Username: ud.Username,
+		Username:         ud.Username,
 		SubscriptionPlan: ud.SubscriptionPlan,
-		IsBanned: ud.IsBanned,
-		IsVerified: ud.IsVerified,
+		IsBanned:         ud.IsBanned,
+		IsVerified:       ud.IsVerified,
 	}
 }
 
 func toOrgDetailDomain(od OrganizationDetailModel) *domain.OrganizationDetail {
 	return &domain.OrganizationDetail{
-		Description: od.Description,
-		Location: od.Location,
-		Type: domain.OrganizationType(od.Type),
-		ContactInfo: domain.ContactInfo(od.ContactInfo),
+		Description:  od.Description,
+		Location:     od.Location,
+		Type:         domain.OrganizationType(od.Type),
+		ContactInfo:  domain.ContactInfo(od.ContactInfo),
 		PhoneNumbers: od.PhoneNumbers,
 	}
 }
 
 func toAccountDomain(a AccountModel) *domain.Account {
 	return &domain.Account{
-		ID: a.ID.Hex(),
-		Name: a.Name,
-		Email: a.Email,
-		ProfilePicURL: a.ProfilePicURL,
-		Role: a.Role,
-		CreatedAt: a.CreatedAt,
-		UserDetail: toUserDetailDomain(*a.UserDetail),
+		ID:                 a.ID.Hex(),
+		Name:               a.Name,
+		Email:              a.Email,
+		ProfilePicURL:      a.ProfilePicURL,
+		Role:               a.Role,
+		CreatedAt:          a.CreatedAt,
+		UserDetail:         toUserDetailDomain(*a.UserDetail),
 		OrganizationDetail: toOrgDetailDomain(*a.OrganizationDetail),
 	}
 }
@@ -148,7 +149,6 @@ func (r *MongoUserRepository) Create(ctx context.Context, account *domain.Accoun
 	return nil
 }
 
-
 func (r *MongoUserRepository) GetByEmail(ctx context.Context, email string) (*domain.Account, error) {
 	var mongoModel AccountModel
 	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&mongoModel)
@@ -173,4 +173,40 @@ func (r *MongoUserRepository) GetByUsername(ctx context.Context, username string
 	}
 	// fmt.Println("r", mongoModel.IsActive)
 	return toAccountDomain(mongoModel), nil
+}
+
+func (dto *AccountModel) ToAccountDomain() *domain.Account {
+	return &domain.Account{
+		ID:            dto.ID.Hex(),
+		Name:          dto.Name,
+		Email:         dto.Email,
+		PasswordHash:  dto.PasswordHash,
+		ProfilePicURL: dto.ProfilePicURL,
+		Role:          dto.Role,
+		CreatedAt:     dto.CreatedAt,
+		UserDetail: &domain.UserDetail{
+			SubscriptionPlan: dto.UserDetail.SubscriptionPlan,
+			IsBanned:         dto.UserDetail.IsBanned,
+			IsVerified:       dto.UserDetail.IsVerified,
+		},
+		OrganizationDetail: &domain.OrganizationDetail{
+			Description: dto.OrganizationDetail.Description,
+			Location:    dto.OrganizationDetail.Location,
+			Type:        dto.OrganizationDetail.Type,
+			ContactInfo: domain.ContactInfo{
+				Socials: dto.OrganizationDetail.ContactInfo.Socials,
+				Website: dto.OrganizationDetail.ContactInfo.Website,
+			},
+			PhoneNumbers: dto.OrganizationDetail.PhoneNumbers,
+		},
+	}
+}
+
+func (r *MongoUserRepository) GetByPhone(ctx context.Context, phoneNumber string) (*domain.Account, error) {
+	var account AccountModel
+	err := r.collection.FindOne(ctx, bson.M{"phone_numbers": phoneNumber}).Decode(&account)
+	if err == mongo.ErrNoDocuments {
+		return nil, errors.New("user not found")
+	}
+	return account.ToAccountDomain(), err
 }

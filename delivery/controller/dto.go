@@ -43,3 +43,14 @@ func toUserResponse(a *domain.Account) UserResponse {
 type TranslateDTO struct {
 	Content string `json:"content" binding:"required"`
 }
+
+type LoginRequest struct {
+	Identifier string `json:"identifier" binding:"required"`
+	Password   string `json:"password" binding:"required"`
+}
+
+type LoginResponse struct {
+	User         domain.Account `json:"user"`
+	Token        string         `json:"token"`
+	RefreshToken string         `json:"refresh_token"`
+}

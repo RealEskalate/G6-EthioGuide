@@ -8,6 +8,7 @@ type IUserRepository interface {
 	Create(ctx context.Context, user *Account) error
 	GetByEmail(ctx context.Context, email string) (*Account, error)
 	GetByUsername(ctx context.Context, username string) (*Account, error)
+	GetByPhone(ctx context.Context, phone string) (*Account, error)
 	// GetByID(ctx context.Context, id string) (*domain.User, error)
 	// Update(ctx context.Context, user *domain.User) error
 	// FindUserIDsByName(ctx context.Context, authorName string) ([]string, error)
