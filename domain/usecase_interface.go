@@ -21,3 +21,7 @@ type IUserUsecase interface {
 	// SearchAndFilter(ctx context.Context, options domain.UserSearchFilterOptions) ([]*domain.User, int64, error)
 	// SetUserRole(ctx context.Context, actorUserID string, actorRole domain.Role, targetUserID string, newRole domain.Role) (*domain.User, error)
 }
+
+type IGeminiUseCase interface {
+	TranslateContent(ctx context.Context, content, targetLang string) (string, error)
+}

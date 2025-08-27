@@ -20,22 +20,26 @@ type UserResponse struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 
-	ProfilePicture string    `json:"profile_picture,omitempty"`
+	ProfilePicture string      `json:"profile_picture,omitempty"`
 	Role           domain.Role `json:"role"`
-	IsVerified     bool      `json:"is_verified"`
-	CreatedAt      time.Time `json:"created_at"`
+	IsVerified     bool        `json:"is_verified"`
+	CreatedAt      time.Time   `json:"created_at"`
 }
 
 func toUserResponse(a *domain.Account) UserResponse {
 	return UserResponse{
-		ID:             a.ID,
-		Name:           a.Name,
-		Username:       a.UserDetail.Username,
-		Email:          a.Email,
-		
+		ID:       a.ID,
+		Name:     a.Name,
+		Username: a.UserDetail.Username,
+		Email:    a.Email,
+
 		ProfilePicture: a.ProfilePicURL,
 		Role:           a.Role,
 		IsVerified:     a.UserDetail.IsVerified,
 		CreatedAt:      a.CreatedAt,
 	}
+}
+
+type TranslateDTO struct {
+	Content string `json:"content" binding:"required"`
 }
