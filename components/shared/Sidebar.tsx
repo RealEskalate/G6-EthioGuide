@@ -1,35 +1,34 @@
 "use client"
 
 import { UserSidebar } from "./UserSidebar"
+import { usePathname, useRouter } from "next/navigation"
 
-const defaultMenuItems = [
-  { iconSrc: "/icons/dashboard.svg", iconAlt: "Dashboard", label: "Dashboard", active: true },
-  { iconSrc: "/icons/workspace.svg", iconAlt: "My workspace", label: "My workspace", active: false },
-  { iconSrc: "/icons/ai-chat.svg", iconAlt: "AI Chat", label: "AI Chat", active: false },
-  { iconSrc: "/icons/discussions.svg", iconAlt: "Discussions", label: "Discussions", active: false },
-  { iconSrc: "/icons/official-notices.svg", iconAlt: "Official Notices", label: "Official Notices", active: false },
-]
 
 export function Sidebar() {
-  const handleSettingsClick = () => {
-    console.log(" Settings clicked")
-    // Add settings navigation logic here
-  }
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const handleLogoutClick = () => {
-    console.log(" Logout clicked")
-    // Add logout logic here
-  }
+  // Map menu items to their hrefs
+  const menuItems = [
+    { iconSrc: "/icons/dashboard.svg", iconAlt: "Dashboard", label: "Dashboard", href: "/user/home" },
+    { iconSrc: "/icons/workspace.svg", iconAlt: "My workspace", label: "My workspace", href: "/user/workspace" },
+    { iconSrc: "/icons/ai-chat.svg", iconAlt: "AI Chat", label: "AI Chat", href: "/user/chat" },
+    { iconSrc: "/icons/discussions.svg", iconAlt: "Discussions", label: "Discussions", href: "/user/discussions" },
+    { iconSrc: "/icons/official-notices.svg", iconAlt: "Official Notices", label: "Official Notices", href: "/user/notices" },
+  ];
 
-  const handleMenuItemClick = (label: string) => {
-    console.log(` ${label} clicked`)
-    // Add navigation logic here
-  }
-
-  const menuItemsWithHandlers = defaultMenuItems.map((item) => ({
+  const menuItemsWithHandlers = menuItems.map((item) => ({
     ...item,
-    onClick: () => handleMenuItemClick(item.label),
-  }))
+    active: pathname === item.href,
+    onClick: () => router.push(item.href),
+  }));
+
+  const handleSettingsClick = () => {
+    // Example: router.push('/settings');
+  };
+  const handleLogoutClick = () => {
+    // Example: router.push('/logout');
+  };
 
   return (
     <UserSidebar
@@ -37,5 +36,5 @@ export function Sidebar() {
       onSettingsClick={handleSettingsClick}
       onLogoutClick={handleLogoutClick}
     />
-  )
+  );
 }
