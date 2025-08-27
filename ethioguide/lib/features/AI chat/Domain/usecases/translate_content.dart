@@ -7,9 +7,7 @@ class TranslateContent {
 
   TranslateContent({required this.repository});
 
-  Future<Either<Failure, String>> call(String content, String lang) async {
+  Future<Either<Failure, String>> call({required String content, required String lang}) async {
     return await repository.translateContent(content, lang);
   }
 }
-
-
