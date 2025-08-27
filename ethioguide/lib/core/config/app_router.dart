@@ -1,3 +1,4 @@
+import 'package:ethioguide/core/config/route_names.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ethioguide/features/splashscreen/presentation/screens/placeholder_screen.dart';
 import 'package:ethioguide/features/splashscreen/presentation/screens/splash_screen.dart';
@@ -12,7 +13,7 @@ final GoRouter router = GoRouter(
     //  This is the route for the splash screen.
     GoRoute(
       path: '/', 
-      name: 'splash', 
+      name: RouteNames.splash, 
       builder: (context, state) => const SplashScreen(), // The function that builds the widget for this screen.
     ),
 
