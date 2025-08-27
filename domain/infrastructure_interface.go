@@ -17,7 +17,7 @@ type IAuthMiddleware interface {
 
 type IEmailService interface {
 	SendPasswordResetEmail(toEmail, username, resetToken string) error
-	SendActivationEmail(toEmail, username, activationToken string) error
+	SendVerificationEmail(toEmail, username, activationToken string) error
 }
 
 type IAIService interface {

@@ -53,7 +53,7 @@ func TestSendPasswordResetEmail_Success(t *testing.T) {
 func TestSendActivationEmail_Success(t *testing.T) {
 	svc, mock := newTestEmailService("test@example.com", false)
 
-	err := svc.SendActivationEmail("user@example.com", "Alice", "activate123")
+	err := svc.SendVerificationEmail("user@example.com", "Alice", "activate123")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
