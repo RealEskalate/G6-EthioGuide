@@ -11,13 +11,11 @@ class MyApp extends StatelessWidget {
   MyApp({super.key});
 
     // default light
-
     ThemeMode _themeMode = ThemeMode.light; 
 
 
   @override
   Widget build(BuildContext context) {
-
     // 2. Use the MaterialApp.router constructor.
     return MaterialApp.router(
       themeMode: _themeMode,
