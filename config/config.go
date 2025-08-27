@@ -44,6 +44,7 @@ type Config struct {
 
 	VerificationFrontendUrl string
 	ResetPasswordFrontendUrl string
+	EmbeddingUrl string
 }
 
 // Load loads the configuration from .env files and environment variables.
@@ -87,6 +88,7 @@ func Load() *Config {
 		SMTPFrom:            getEnv("SMTP_FROM_EMAIL", "no-reply@example.com"),
 		VerificationFrontendUrl: getEnv("VERIFICATION_FRONTEND-URL", "http://localhost:8080/api/v1/auth/verify"),
 		ResetPasswordFrontendUrl: getEnv("RESET_PASSWORD_FRONTEND_URL", "http://localhost:8080/api/v1/password/reset"),
+		EmbeddingUrl: getEnv("EMBEDDING_URL","https://api-inference.huggingface.co/pipeline/feature-extraction/"),
 	}
 }
 

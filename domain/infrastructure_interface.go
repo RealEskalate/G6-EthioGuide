@@ -68,3 +68,9 @@ type ICacheService interface {
 	GetSetMembers(ctx context.Context, key string) ([]string, error)
 	DeleteKeys(ctx context.Context, keys []string) error
 }
+
+type IEmbeddingService interface {
+    GenerateEmbedding(ctx context.Context, text string) ([]float64, error)
+    // GenerateBatch(ctx context.Context, texts []string) ([][]float64, error)
+}
+
