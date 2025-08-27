@@ -80,8 +80,91 @@ func TestAuthUsecase(t *testing.T) {
 	suite.Run(t, new(AuthUsecaseTestSuite))
 }
 
-func (suite *AuthUsecaseTestSuite) TestRefreshToken_Success() {
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForWeb_Success() {
+	userID := uuid.New().String()
+	refreshToken := "test_refresh_token"
 
+	claims := &domain.JWTClaims{
+		UserID: userID,
+		Role:   domain.RoleUser,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+			ID:        uuid.New().String(),
+		},
+	}
+	newAccessToken := "new_access_token"
+
+	suite.mockJwtService.On("ParseExpiredToken", refreshToken).Return(claims, nil).Once()
+	suite.mockAuthRepo.On("GetToken", mock.Anything, string(RefreshToken), refreshToken).Return("", nil).Once()
+	suite.mockAuthRepo.On("DeleteToken", mock.Anything, string(RefreshToken), refreshToken).Return(nil).Once()
+	suite.mockJwtService.On("GenerateAccessToken", claims.UserID, claims.Role).Return(newAccessToken, &domain.JWTClaims{}, nil).Once()
+
+	accessToken, err := suite.authUsecase.RefreshTokenForWeb(context.Background(), refreshToken)
+
+	suite.NoError(err)
+	suite.Equal(newAccessToken, accessToken)
+
+	suite.mockJwtService.AssertExpectations(suite.T())
+	suite.mockAuthRepo.AssertExpectations(suite.T())
+}
+
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForWeb_EmptyToken() {
+	_, err := suite.authUsecase.RefreshTokenForWeb(context.Background(), "")
+	suite.Error(err)
+}
+
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForWeb_ParseExpiredTokenError() {
+	refreshToken := "test_refresh_token"
+
+	suite.mockJwtService.On("ParseExpiredToken", refreshToken).Return(&domain.JWTClaims{}, fmt.Errorf("some error")).Once()
+	_, err := suite.authUsecase.RefreshTokenForWeb(context.Background(), refreshToken)
+	suite.Error(err)
+	suite.mockJwtService.AssertExpectations(suite.T())
+}
+
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForWeb_GetTokenError() {
+	userID := uuid.New().String()
+	refreshToken := "test_refresh_token"
+
+	claims := &domain.JWTClaims{UserID: userID}
+	suite.mockJwtService.On("ParseExpiredToken", refreshToken).Return(claims, nil).Once()
+	suite.mockAuthRepo.On("GetToken", mock.Anything, string(RefreshToken), refreshToken).Return("", fmt.Errorf("some error")).Once()
+	_, err := suite.authUsecase.RefreshTokenForWeb(context.Background(), refreshToken)
+	suite.Error(err)
+	suite.mockJwtService.AssertExpectations(suite.T())
+	suite.mockAuthRepo.AssertExpectations(suite.T())
+}
+
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForWeb_DeleteTokenError() {
+	userID := uuid.New().String()
+	refreshToken := "test_refresh_token"
+
+	claims := &domain.JWTClaims{UserID: userID}
+	suite.mockJwtService.On("ParseExpiredToken", refreshToken).Return(claims, nil).Once()
+	suite.mockAuthRepo.On("GetToken", mock.Anything, string(RefreshToken), refreshToken).Return("", nil).Once()
+	suite.mockAuthRepo.On("DeleteToken", mock.Anything, string(RefreshToken), refreshToken).Return(fmt.Errorf("some error")).Once()
+	_, err := suite.authUsecase.RefreshTokenForWeb(context.Background(), refreshToken)
+	suite.Error(err)
+	suite.mockJwtService.AssertExpectations(suite.T())
+	suite.mockAuthRepo.AssertExpectations(suite.T())
+}
+
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForWeb_GenerateAccessTokenError() {
+	userID := uuid.New().String()
+	refreshToken := "test_refresh_token"
+
+	claims := &domain.JWTClaims{UserID: userID}
+	suite.mockJwtService.On("ParseExpiredToken", refreshToken).Return(claims, nil).Once()
+	suite.mockAuthRepo.On("GetToken", mock.Anything, string(RefreshToken), refreshToken).Return("", nil).Once()
+	suite.mockAuthRepo.On("DeleteToken", mock.Anything, string(RefreshToken), refreshToken).Return(nil).Once()
+	suite.mockJwtService.On("GenerateAccessToken", claims.UserID, claims.Role).Return("", &domain.JWTClaims{}, fmt.Errorf("some error")).Once()
+	_, err := suite.authUsecase.RefreshTokenForWeb(context.Background(), refreshToken)
+	suite.Error(err)
+	suite.mockJwtService.AssertExpectations(suite.T())
+	suite.mockAuthRepo.AssertExpectations(suite.T())
+}
+
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForMobile_Success() {
 	userID := uuid.New().String()
 	refreshToken := "test_refresh_token"
 
@@ -110,7 +193,7 @@ func (suite *AuthUsecaseTestSuite) TestRefreshToken_Success() {
 	suite.mockJwtService.On("GenerateRefreshToken", claims.UserID).Return(newRefreshToken, newRefreshClaims, nil).Once()
 	suite.mockAuthRepo.On("CreateToken", mock.Anything, mock.AnythingOfType("*domain.TokenModel")).Return(&domain.TokenModel{}, nil).Once()
 
-	accessToken, refreshToken, err := suite.authUsecase.RefreshToken(context.Background(), refreshToken)
+	accessToken, refreshToken, err := suite.authUsecase.RefreshTokenForMobile(context.Background(), refreshToken)
 
 	suite.NoError(err)
 	suite.Equal(newAccessToken, accessToken)
@@ -120,38 +203,34 @@ func (suite *AuthUsecaseTestSuite) TestRefreshToken_Success() {
 	suite.mockAuthRepo.AssertExpectations(suite.T())
 }
 
-func (suite *AuthUsecaseTestSuite) TestRefreshToken_EmptyToken() {
-
-	_, _, err := suite.authUsecase.RefreshToken(context.Background(), "")
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForMobile_EmptyToken() {
+	_, _, err := suite.authUsecase.RefreshTokenForMobile(context.Background(), "")
 	suite.Error(err)
 }
 
-func (suite *AuthUsecaseTestSuite) TestRefreshToken_ParseExpiredTokenError() {
-
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForMobile_ParseExpiredTokenError() {
 	refreshToken := "test_refresh_token"
 
 	suite.mockJwtService.On("ParseExpiredToken", refreshToken).Return(&domain.JWTClaims{}, fmt.Errorf("some error")).Once()
-	_, _, err := suite.authUsecase.RefreshToken(context.Background(), refreshToken)
+	_, _, err := suite.authUsecase.RefreshTokenForMobile(context.Background(), refreshToken)
 	suite.Error(err)
 	suite.mockJwtService.AssertExpectations(suite.T())
 }
 
-func (suite *AuthUsecaseTestSuite) TestRefreshToken_GetTokenError() {
-
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForMobile_GetTokenError() {
 	userID := uuid.New().String()
 	refreshToken := "test_refresh_token"
 
 	claims := &domain.JWTClaims{UserID: userID}
 	suite.mockJwtService.On("ParseExpiredToken", refreshToken).Return(claims, nil).Once()
 	suite.mockAuthRepo.On("GetToken", mock.Anything, string(RefreshToken), refreshToken).Return("", fmt.Errorf("some error")).Once()
-	_, _, err := suite.authUsecase.RefreshToken(context.Background(), refreshToken)
+	_, _, err := suite.authUsecase.RefreshTokenForMobile(context.Background(), refreshToken)
 	suite.Error(err)
 	suite.mockJwtService.AssertExpectations(suite.T())
 	suite.mockAuthRepo.AssertExpectations(suite.T())
 }
 
-func (suite *AuthUsecaseTestSuite) TestRefreshToken_DeleteTokenError() {
-
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForMobile_DeleteTokenError() {
 	userID := uuid.New().String()
 	refreshToken := "test_refresh_token"
 
@@ -159,14 +238,13 @@ func (suite *AuthUsecaseTestSuite) TestRefreshToken_DeleteTokenError() {
 	suite.mockJwtService.On("ParseExpiredToken", refreshToken).Return(claims, nil).Once()
 	suite.mockAuthRepo.On("GetToken", mock.Anything, string(RefreshToken), refreshToken).Return("", nil).Once()
 	suite.mockAuthRepo.On("DeleteToken", mock.Anything, string(RefreshToken), refreshToken).Return(fmt.Errorf("some error")).Once()
-	_, _, err := suite.authUsecase.RefreshToken(context.Background(), refreshToken)
+	_, _, err := suite.authUsecase.RefreshTokenForMobile(context.Background(), refreshToken)
 	suite.Error(err)
 	suite.mockJwtService.AssertExpectations(suite.T())
 	suite.mockAuthRepo.AssertExpectations(suite.T())
 }
 
-func (suite *AuthUsecaseTestSuite) TestRefreshToken_GenerateAccessTokenError() {
-
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForMobile_GenerateAccessTokenError() {
 	userID := uuid.New().String()
 	refreshToken := "test_refresh_token"
 
@@ -175,14 +253,13 @@ func (suite *AuthUsecaseTestSuite) TestRefreshToken_GenerateAccessTokenError() {
 	suite.mockAuthRepo.On("GetToken", mock.Anything, string(RefreshToken), refreshToken).Return("", nil).Once()
 	suite.mockAuthRepo.On("DeleteToken", mock.Anything, string(RefreshToken), refreshToken).Return(nil).Once()
 	suite.mockJwtService.On("GenerateAccessToken", claims.UserID, claims.Role).Return("", &domain.JWTClaims{}, fmt.Errorf("some error")).Once()
-	_, _, err := suite.authUsecase.RefreshToken(context.Background(), refreshToken)
+	_, _, err := suite.authUsecase.RefreshTokenForMobile(context.Background(), refreshToken)
 	suite.Error(err)
 	suite.mockJwtService.AssertExpectations(suite.T())
 	suite.mockAuthRepo.AssertExpectations(suite.T())
 }
 
-func (suite *AuthUsecaseTestSuite) TestRefreshToken_GenerateRefreshTokenError() {
-
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForMobile_GenerateRefreshTokenError() {
 	userID := uuid.New().String()
 	refreshToken := "test_refresh_token"
 
@@ -193,15 +270,14 @@ func (suite *AuthUsecaseTestSuite) TestRefreshToken_GenerateRefreshTokenError() 
 	suite.mockJwtService.On("GenerateAccessToken", claims.UserID, claims.Role).Return("new_access_token", &domain.JWTClaims{}, nil).Once()
 	suite.mockJwtService.On("GenerateRefreshToken", claims.UserID).Return("", &domain.JWTClaims{}, fmt.Errorf("some error")).Once()
 
-	_, _, err := suite.authUsecase.RefreshToken(context.Background(), refreshToken)
+	_, _, err := suite.authUsecase.RefreshTokenForMobile(context.Background(), refreshToken)
 
 	suite.Error(err)
 	suite.mockJwtService.AssertExpectations(suite.T())
 	suite.mockAuthRepo.AssertExpectations(suite.T())
 }
 
-func (suite *AuthUsecaseTestSuite) TestRefreshToken_CreateTokenError() {
-
+func (suite *AuthUsecaseTestSuite) TestRefreshTokenForMobile_CreateTokenError() {
 	userID := uuid.New().String()
 	refreshToken := "test_refresh_token"
 
@@ -222,9 +298,31 @@ func (suite *AuthUsecaseTestSuite) TestRefreshToken_CreateTokenError() {
 	suite.mockJwtService.On("GenerateRefreshToken", claims.UserID).Return(newRefreshToken, newRefreshClaims, nil).Once()
 	suite.mockAuthRepo.On("CreateToken", mock.Anything, mock.AnythingOfType("*domain.TokenModel")).Return(&domain.TokenModel{}, fmt.Errorf("some error")).Once()
 
-	_, _, err := suite.authUsecase.RefreshToken(context.Background(), refreshToken)
+	_, _, err := suite.authUsecase.RefreshTokenForMobile(context.Background(), refreshToken)
 
 	suite.Error(err)
 	suite.mockJwtService.AssertExpectations(suite.T())
 	suite.mockAuthRepo.AssertExpectations(suite.T())
 }
+
+func (suite *AuthUsecaseTestSuite) TestRefreshToken_ContextTimeout() {
+	refreshToken := "test_refresh_token"
+	claims := &domain.JWTClaims{UserID: uuid.New().String()}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Nanosecond)
+	defer cancel()
+
+	suite.mockJwtService.On("ParseExpiredToken", refreshToken).Return(claims, nil)
+	suite.mockAuthRepo.On("GetToken", mock.Anything, string(RefreshToken), refreshToken).Return("", context.DeadlineExceeded)
+
+	_, _, err := suite.authUsecase.RefreshTokenForMobile(ctx, refreshToken)
+
+	suite.Error(err)
+	suite.Equal(context.DeadlineExceeded, err)
+
+	_, err = suite.authUsecase.RefreshTokenForWeb(ctx, refreshToken)
+	suite.Error(err)
+	suite.Equal(context.DeadlineExceeded, err)
+}
+
+

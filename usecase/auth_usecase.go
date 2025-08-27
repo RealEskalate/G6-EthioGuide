@@ -27,7 +27,36 @@ const (
 	ActivationToken    TokenTypes = "activationToken"
 )
 
-func (auc *AuthUsecase) RefreshToken(ctx context.Context, refreshToken string) (string, string, error) {
+func (auc *AuthUsecase) RefreshTokenForWeb(ctx context.Context, refreshToken string) (string, error) {
+	if refreshToken == "" {
+		return "", fmt.Errorf("empty token string")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	claims, err := auc.Jwtservice.ParseExpiredToken(refreshToken)
+	if err != nil {
+		return "", err
+	}
+
+	if _, err := auc.Tokenrepo.GetToken(ctx, string(RefreshToken), refreshToken); err != nil {
+		return "", err
+	}
+
+	if err := auc.Tokenrepo.DeleteToken(ctx, string(RefreshToken), refreshToken); err != nil {
+		return "", err
+	}
+
+	newAccessToken, _, errAccess := auc.Jwtservice.GenerateAccessToken(claims.UserID, claims.Role)
+	if errAccess != nil {
+		return "", errAccess
+	}
+
+	return newAccessToken, nil
+}
+
+func (auc *AuthUsecase) RefreshTokenForMobile(ctx context.Context, refreshToken string) (string, string, error) {
 	if refreshToken == "" {
 		return "", "", fmt.Errorf("empty token string")
 	}
