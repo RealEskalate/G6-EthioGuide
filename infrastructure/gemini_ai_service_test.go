@@ -6,24 +6,21 @@ import (
 	. "EthioGuide/infrastructure"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 )
 
 type GeminiAIServiceSuite struct {
 	suite.Suite
 	apiKey    string
-	modelNmae string
+	modelName string
 	service   domain.IAIService
 }
 
 func (s *GeminiAIServiceSuite) SetupSuite() {
-	_ = godotenv.Load("../.env")
-	_ = godotenv.Load(".env")
-
 	cfg := config.LoadForTest()
 	key := cfg.GeminiAPIKey
 	if key == "" {
@@ -31,14 +28,14 @@ func (s *GeminiAIServiceSuite) SetupSuite() {
 	}
 
 	s.apiKey = key
-	s.modelNmae = cfg.GeminiModel
-	if s.modelNmae == "" {
-		s.modelNmae = "gemini-2.5-pro"
+	s.modelName = cfg.GeminiModel
+	if s.modelName == "" {
+		s.modelName = "gemini-2.5-pro"
 	}
 }
 
 func (s *GeminiAIServiceSuite) SetupTest() {
-	service, err := NewGeminiAIService(s.apiKey, s.modelNmae)
+	service, err := NewGeminiAIService(s.apiKey, s.modelName)
 	s.Require().NoError(err, "Failed to create a new Gemini AI Service instance")
 	s.service = service
 }
@@ -90,6 +87,54 @@ func (s *GeminiAIServiceSuite) TestGenerateCompletion() {
 
 		s.NoError(unmarshalErr, "The AI response should be valid JSON that can be unmarshalled")
 		s.Equal("Japan", data.Country, "The unmarshalled data should contain the correct value")
+	})
+
+	s.Run("Success - Translation Prompt Logic", func() {
+		s.T().Helper() // Marks this function as a test helper
+
+		// This helper function creates the exact prompt from your use case
+		createTranslationPrompt := func(targetLang, content string) string {
+			return fmt.Sprintf(`
+	Translate the following content to %s.
+	Ensure the translation is accurate, maintains the original meaning, and uses natural, fluent language appropriate for the context. Do not add or omit any information. 
+	Do not include any other text or markdown formatting.
+	If you don't know the language I requested, send only the text "unknown language".
+	Here is the content:
+	%s
+	`, targetLang, content)
+		}
+
+		s.Run("Valid Language", func() {
+			// Arrange
+			content := "Hello, how are you?"
+			prompt := createTranslationPrompt("Spanish", content)
+
+			// Act
+			response, err := s.service.GenerateCompletion(ctx, prompt)
+
+			// Assert
+			s.NoError(err, "API call for a valid translation should succeed")
+			s.NotEmpty(response)
+			// Use Contains because LLM output can have slight variations.
+			// This is more robust than asserting for exact equality.
+			s.Contains(strings.ToLower(response), "hola", "The Spanish translation should contain 'hola'")
+		})
+
+		s.Run("Unknown Language", func() {
+			// Arrange
+			content := "This should not be translated."
+			// Use a fictional language to test the specific instruction in the prompt.
+			prompt := createTranslationPrompt("abracadabra", content)
+
+			// Act
+			response, err := s.service.GenerateCompletion(ctx, prompt)
+
+			// Assert
+			s.NoError(err, "API call should succeed even if the language is unknown")
+			s.NotEmpty(response)
+			// Here we expect an exact string match, as requested in the prompt.
+			s.Equal("unknown language", strings.TrimSpace(response), "The AI should return the exact fallback string")
+		})
 	})
 }
 

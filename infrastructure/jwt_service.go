@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 )
 
 type jwtService struct {
@@ -32,7 +32,7 @@ func (s *jwtService) GenerateAccessToken(userID string, role domain.Role) (strin
 		UserID: userID,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        primitive.NewObjectID().Hex(),
+			ID:        uuid.NewString(),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.accessTokenTTL)),
 			Issuer:    s.issuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -69,7 +69,7 @@ func (s *jwtService) GenerateRefreshToken(userID string) (string, *domain.JWTCla
 			ExpiresAt: jwt.NewNumericDate((time.Now().Add((s.refreshTokenTTL)))),
 			Issuer:    s.issuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ID:        primitive.NewObjectID().Hex(),
+			ID:        uuid.NewString(),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

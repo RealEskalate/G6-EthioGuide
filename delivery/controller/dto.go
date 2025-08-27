@@ -51,6 +51,6 @@ type LoginRequest struct {
 
 type LoginResponse struct {
 	User         domain.Account `json:"user"`
-	Token        string         `json:"token"`
-	RefreshToken string         `json:"refresh_token"`
+	AccessToken  string         `json:"access_token"`
+	RefreshToken string         `json:"refresh_token,omitempty"`
 }

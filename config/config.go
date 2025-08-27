@@ -42,7 +42,7 @@ type Config struct {
 	SMTPPass string
 	SMTPFrom string
 
-	VerificationFrontendUrl string
+	VerificationFrontendUrl  string
 	ResetPasswordFrontendUrl string
 }
 
@@ -62,30 +62,37 @@ func Load() *Config {
 	smtpPort, _ := strconv.Atoi(getEnv("SMTP_PORT", "2525"))
 
 	return &Config{
-		AppEnv:              getEnv("APP_ENV", "development"),
-		ServerPort:          getEnv("PORT", "8080"),
-		UsecaseTimeout:      5 * time.Second,
-		MongoURI:            getEnv("MONGO_URI", "mongodb://localhost:27017"),
-		DBName:              getEnv("DB_NAME", "ethio-guide-db"),
-		RedisUrl:            getEnv("REDIS_URI", ""),
-		RedisAddr:           getEnv("REDIS_ADDR", "localhost:6379"),
-		RedisPassword:       getEnv("REDIS_PASSWORD", ""),
-		RedisDB:             redisDB,
-		JWTSecret:           getEnv("JWT_SECRET", "a-very-secret-key-that-should-be-long-and-random"),
-		JWTIssuer:           "ethio-guide-api",
-		JWTAccessTTL:        time.Duration(accessTTL) * time.Minute,
-		JWTRefreshTTL:       time.Duration(refreshTTL) * time.Hour,
-		GeminiAPIKey:        getEnv("GEMINI_API_KEY", ""),
-		GeminiModel:         getEnv("GEMINI_MODEL", "gemini-2.5-pro"),
-		GoogleClientID:      getEnv("GOOGLE_CLIENT_ID", ""),
-		GoogleClientSecret:  getEnv("GOOGLE_CLIENT_SECRET", ""),
-		GoogleRedirectURI:   getEnv("GOOGLE_REDIRECT_URI", ""),
-		SMTPHost:            getEnv("SMTP_HOST", "smtp.mailtrap.io"),
-		SMTPPort:            smtpPort,
-		SMTPUser:            getEnv("SMTP_USER", ""),
-		SMTPPass:            getEnv("SMTP_PASSWORD", ""),
-		SMTPFrom:            getEnv("SMTP_FROM_EMAIL", "no-reply@example.com"),
-		VerificationFrontendUrl: getEnv("VERIFICATION_FRONTEND-URL", "http://localhost:8080/api/v1/auth/verify"),
+		AppEnv:         getEnv("APP_ENV", "development"),
+		ServerPort:     getEnv("PORT", "8080"),
+		UsecaseTimeout: 5 * time.Second,
+
+		MongoURI: getEnv("MONGO_URI", "mongodb://localhost:27017"),
+		DBName:   getEnv("DB_NAME", "ethio-guide-db"),
+
+		RedisUrl:      getEnv("REDIS_URI", ""),
+		RedisAddr:     getEnv("REDIS_ADDR", "localhost:6379"),
+		RedisPassword: getEnv("REDIS_PASSWORD", ""),
+		RedisDB:       redisDB,
+
+		JWTSecret:     getEnv("JWT_SECRET", "a-very-secret-key-that-should-be-long-and-random"),
+		JWTIssuer:     "ethio-guide-api",
+		JWTAccessTTL:  time.Duration(accessTTL) * time.Minute,
+		JWTRefreshTTL: time.Duration(refreshTTL) * time.Hour,
+
+		GeminiAPIKey: getEnv("GEMINI_API_KEY", ""),
+		GeminiModel:  getEnv("GEMINI_MODEL", "gemini-2.5-pro"),
+
+		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
+		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
+		GoogleRedirectURI:  getEnv("GOOGLE_REDIRECT_URI", ""),
+
+		SMTPHost: getEnv("SMTP_HOST", "smtp.mailtrap.io"),
+		SMTPPort: smtpPort,
+		SMTPUser: getEnv("SMTP_USER", ""),
+		SMTPPass: getEnv("SMTP_PASSWORD", ""),
+		SMTPFrom: getEnv("SMTP_FROM_EMAIL", "no-reply@example.com"),
+
+		VerificationFrontendUrl:  getEnv("VERIFICATION_FRONTEND-URL", "http://localhost:8080/api/v1/auth/verify"),
 		ResetPasswordFrontendUrl: getEnv("RESET_PASSWORD_FRONTEND_URL", "http://localhost:8080/api/v1/password/reset"),
 	}
 }

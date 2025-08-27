@@ -4,45 +4,39 @@ import (
 	"EthioGuide/domain"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-type AuthController struct {
-	authusecase domain.IAuthInterface
+type UserController struct {
+	userUsecase     domain.IUserUsecase
+	refreshTokenTTL int
 }
 
-func NewAuthController(usecase domain.IAuthInterface) *AuthController {
-	return &AuthController{
-		authusecase: usecase,
+func NewUserController(uc domain.IUserUsecase, refreshTokenTTL time.Duration) *UserController {
+	return &UserController{
+		userUsecase:     uc,
+		refreshTokenTTL: int(refreshTokenTTL.Seconds()),
 	}
 }
 
-func setAuthCookie(c *gin.Context, accessToken string) {
-	if accessToken != "" {
-		c.SetCookie("access_token", accessToken, 15*60, "/", "", false, true)
-	}
+func isMobileClient(c *gin.Context) bool {
+	return c.GetHeader("X-Client-Type") == "mobile"
 }
 
-func (ac *AuthController) HandleRefreshToken(c *gin.Context) {
-	userAgent := c.Request.UserAgent()
-	if strings.Contains(userAgent, "iPhone") || strings.Contains(userAgent, "Android") {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
-			return
-		}
-
-		const prefix = "Bearer "
-		if !strings.HasPrefix(authHeader, prefix) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header format"})
-			return
-		}
-
-		refreshToken := strings.TrimPrefix(authHeader, prefix)
-		newAccess, newRefresh, err := ac.authusecase.RefreshTokenForMobile(c.Request.Context(), refreshToken)
+func (ctrl *UserController) HandleRefreshToken(c *gin.Context) {
+	if isMobileClient(c) {
+		// --- Mobile Client Logic ---
+		refreshToken, err := extractBearerToken(c)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			HandleError(c, err)
+			return
+		}
+
+		newAccess, newRefresh, err := ctrl.userUsecase.RefreshTokenForMobile(c.Request.Context(), refreshToken)
+		if err != nil {
+			HandleError(c, err)
 			return
 		}
 
@@ -52,40 +46,32 @@ func (ac *AuthController) HandleRefreshToken(c *gin.Context) {
 		})
 
 	} else {
-		refreshtoken, err := c.Cookie("refresh_token")
+		// --- Web Client Logic ---
+		refreshToken, err := c.Cookie("refresh_token")
 		if err != nil {
-			c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "No refresh token"})
+			HandleError(c, domain.ErrAuthenticationFailed)
+			return
 		}
 
-		newAccess, err := ac.authusecase.RefreshTokenForWeb(c.Request.Context(), refreshtoken)
+		newAccess, err := ctrl.userUsecase.RefreshTokenForWeb(c.Request.Context(), refreshToken)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid refresh token"})
+			HandleError(c, err)
+			return
 		}
 
-		setAuthCookie(c, newAccess)
-		c.JSON(http.StatusOK, gin.H{"message": "token refreshed"})
+		c.JSON(http.StatusOK, gin.H{"access_token": newAccess})
 	}
-
 }
 
-type UserController struct {
-	userUsecase domain.IUserUsecase
-}
-
-func NewUserController(uc domain.IUserUsecase) *UserController {
-	return &UserController{userUsecase: uc}
-}
-
+// Register is now much cleaner, delegating all error handling to the helper.
 func (ctrl *UserController) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
 		return
 	}
 
-	password := req.Password
 	userDetail := &domain.UserDetail{
-		Username:         req.Username,
 		SubscriptionPlan: domain.SubscriptionNone,
 		IsBanned:         false,
 		IsVerified:       false,
@@ -93,58 +79,67 @@ func (ctrl *UserController) Register(c *gin.Context) {
 	account := &domain.Account{
 		Name:         req.Name,
 		Email:        req.Email,
-		PasswordHash: password,
+		PasswordHash: req.Password,
 		Role:         domain.RoleUser,
-
-		UserDetail: userDetail,
+		UserDetail:   userDetail,
 	}
-	// user := &domain.Account{
-	// 	Username: req.Username,
-	// 	Email:    req.Email,
-	// 	Password: &password,
-	// 	Role:     domain.RoleUser,
-	// }
-	// fmt.Println(account)
+
 	err := ctrl.userUsecase.Register(c.Request.Context(), account)
-	// fmt.Println(account)
 	if err != nil {
-		switch err {
-		case domain.ErrEmailExists:
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-		case domain.ErrPasswordTooShort, domain.ErrInvalidEmailFormat:
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal error occurred"})
-		}
+		HandleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "id": toUserResponse(account)})
+	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "user": toUserResponse(account)})
 }
 
-func (uc *UserController) Login(ctx *gin.Context) {
+func (ctrl *UserController) Login(c *gin.Context) {
 	var req LoginRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
 		return
 	}
 
-	if req.Identifier == "" || req.Password == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Identifier and password are required"})
-		return
-	}
-
-	account, token, refreshToken, err := uc.userUsecase.Login(ctx, req.Identifier, req.Password)
+	account, accessToken, refreshToken, err := ctrl.userUsecase.Login(c.Request.Context(), req.Identifier, req.Password)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		HandleError(c, err)
 		return
 	}
 
-	loginResponse := &LoginResponse{
-		User:         *account,
-		Token:        token,
-		RefreshToken: refreshToken,
+	if isMobileClient(c) {
+		c.JSON(http.StatusOK, &LoginResponse{
+			User:         *account,
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		})
+	} else {
+		setAuthCookie(c, refreshToken, ctrl.refreshTokenTTL)
+		c.JSON(http.StatusOK, &LoginResponse{
+			User:        *account,
+			AccessToken: accessToken,
+		})
+	}
+}
+
+// --- HELPER FUNCTIONS ---
+
+// extractBearerToken is a helper to get the token from the Authorization header.
+func extractBearerToken(c *gin.Context) (string, error) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		return "", domain.ErrAuthenticationFailed
 	}
 
-	ctx.JSON(http.StatusOK, loginResponse)
+	const prefix = "Bearer "
+	if !strings.HasPrefix(authHeader, prefix) {
+		return "", domain.ErrAuthenticationFailed
+	}
+
+	return strings.TrimPrefix(authHeader, prefix), nil
+}
+
+func setAuthCookie(c *gin.Context, refreshToken string, refreshTokenTTL int) {
+	if refreshToken != "" {
+		c.SetCookie("refresh_token", refreshToken, refreshTokenTTL, "/", "", false, true)
+	}
 }

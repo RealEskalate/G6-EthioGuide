@@ -12,6 +12,7 @@ var (
 	ErrInvalidEmailFormat = errors.New("invalid email format")
 	ErrInvalidRole        = errors.New("invalid role provided")
 	ErrValidation         = errors.New("validation error")
+	ErrConflict           = errors.New("conflict occured")
 
 	// Application-level errors
 	ErrNotFound             = errors.New("resource not found")
@@ -20,6 +21,7 @@ var (
 	ErrUserNotFound         = errors.New("user not found")
 	ErrPermissionDenied     = errors.New("permission denied")
 	ErrUsernameExists       = errors.New("username already exists")
+	ErrPhoneNumberExists    = errors.New("phone number already exists")
 	ErrOAuthUser            = errors.New("this action is not applicable to an account created with an external provider")
 	ErrCannotChangeOwnRole  = errors.New("admins cannot change their own role")
 
@@ -29,4 +31,6 @@ var (
 	ErrCannotDemoteSelf       = errors.New("admin cannot demote themselves")
 	ErrAccountNotActive       = errors.New("this account has not been activated")
 	ErrInvalidActivationToken = errors.New("invalid or expired activation token")
+
+	ErrUnsupportedLanguage = errors.New("unsupported language used")
 )

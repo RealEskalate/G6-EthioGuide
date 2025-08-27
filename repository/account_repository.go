@@ -4,12 +4,15 @@ import (
 	"EthioGuide/domain"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+// --- Database Models ---
 
 type ContactInfoModel struct {
 	Socials map[string]string `bson:"socials,omitempty"`
@@ -26,29 +29,42 @@ type UserDetailModel struct {
 type OrganizationDetailModel struct {
 	Description  string                  `bson:"description,omitempty"`
 	Location     string                  `bson:"location,omitempty"`
-	Type         domain.OrganizationType `bson:"type,omitempty"` // e.g., "Corporation", "Non-Profit"
+	Type         domain.OrganizationType `bson:"type,omitempty"`
 	ContactInfo  ContactInfoModel        `bson:"contact_info,omitempty"`
 	PhoneNumbers []string                `bson:"phone_numbers,omitempty"`
 }
 
 type AccountModel struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty"`
-	Name          string             `bson:"name,omitempty"`
-	Email         string             `bson:"email"`
-	PasswordHash  string             `bson:"password_hash"`
-	ProfilePicURL string             `bson:"profile_pic_url,omitempty"`
-	Role          domain.Role        `bson:"role"`
-	CreatedAt     time.Time          `bson:"created_at"`
-
+	ID                 primitive.ObjectID       `bson:"_id,omitempty"`
+	Name               string                   `bson:"name,omitempty"`
+	Email              string                   `bson:"email"`
+	PasswordHash       string                   `bson:"password_hash"`
+	ProfilePicURL      string                   `bson:"profile_pic_url,omitempty"`
+	Role               domain.Role              `bson:"role"`
+	CreatedAt          time.Time                `bson:"created_at"`
 	UserDetail         *UserDetailModel         `bson:"user_detail,omitempty"`
 	OrganizationDetail *OrganizationDetailModel `bson:"organization_detail,omitempty"`
 }
 
-func fromUserDetailDomain(ud *domain.UserDetail) *UserDetailModel {
+// --- Mappers ---
+
+func fromDomainAccount(a *domain.Account) (*AccountModel, error) {
+	return &AccountModel{
+		Name:               a.Name,
+		Email:              a.Email,
+		PasswordHash:       a.PasswordHash,
+		Role:               a.Role,
+		ProfilePicURL:      a.ProfilePicURL,
+		CreatedAt:          a.CreatedAt,
+		UserDetail:         fromDomainUserDetail(a.UserDetail),
+		OrganizationDetail: fromDomainOrgDetail(a.OrganizationDetail),
+	}, nil
+}
+
+func fromDomainUserDetail(ud *domain.UserDetail) *UserDetailModel {
 	if ud == nil {
 		return nil
 	}
-
 	return &UserDetailModel{
 		Username:         ud.Username,
 		SubscriptionPlan: ud.SubscriptionPlan,
@@ -57,11 +73,10 @@ func fromUserDetailDomain(ud *domain.UserDetail) *UserDetailModel {
 	}
 }
 
-func fromOrgDetailDomain(od *domain.OrganizationDetail) *OrganizationDetailModel {
+func fromDomainOrgDetail(od *domain.OrganizationDetail) *OrganizationDetailModel {
 	if od == nil {
 		return nil
 	}
-
 	return &OrganizationDetailModel{
 		Description:  od.Description,
 		Location:     od.Location,
@@ -71,26 +86,29 @@ func fromOrgDetailDomain(od *domain.OrganizationDetail) *OrganizationDetailModel
 	}
 }
 
-func fromAccountDomain(a domain.Account) AccountModel {
-	var objectID primitive.ObjectID
-	if id, err := primitive.ObjectIDFromHex(a.ID); err == nil {
-		objectID = id
+func toDomainAccount(a *AccountModel) *domain.Account {
+	domainAccount := &domain.Account{
+		ID:            a.ID.Hex(),
+		Name:          a.Name,
+		Email:         a.Email,
+		PasswordHash:  a.PasswordHash,
+		ProfilePicURL: a.ProfilePicURL,
+		Role:          a.Role,
+		CreatedAt:     a.CreatedAt,
 	}
 
-	return AccountModel{
-		ID:                 objectID,
-		Name:               a.Name,
-		Email:              a.Email,
-		PasswordHash:       a.PasswordHash,
-		Role:               a.Role,
-		ProfilePicURL:      a.ProfilePicURL,
-		CreatedAt:          a.CreatedAt,
-		UserDetail:         fromUserDetailDomain(a.UserDetail),
-		OrganizationDetail: fromOrgDetailDomain(a.OrganizationDetail),
+	if a.UserDetail != nil {
+		domainAccount.UserDetail = toDomainUserDetail(a.UserDetail)
 	}
+
+	if a.OrganizationDetail != nil {
+		domainAccount.OrganizationDetail = toDomainOrgDetail(a.OrganizationDetail)
+	}
+
+	return domainAccount
 }
 
-func toUserDetailDomain(ud UserDetailModel) *domain.UserDetail {
+func toDomainUserDetail(ud *UserDetailModel) *domain.UserDetail {
 	return &domain.UserDetail{
 		Username:         ud.Username,
 		SubscriptionPlan: ud.SubscriptionPlan,
@@ -99,114 +117,85 @@ func toUserDetailDomain(ud UserDetailModel) *domain.UserDetail {
 	}
 }
 
-func toOrgDetailDomain(od OrganizationDetailModel) *domain.OrganizationDetail {
+func toDomainOrgDetail(od *OrganizationDetailModel) *domain.OrganizationDetail {
 	return &domain.OrganizationDetail{
 		Description:  od.Description,
 		Location:     od.Location,
-		Type:         domain.OrganizationType(od.Type),
+		Type:         od.Type,
 		ContactInfo:  domain.ContactInfo(od.ContactInfo),
 		PhoneNumbers: od.PhoneNumbers,
 	}
 }
 
-func toAccountDomain(a AccountModel) *domain.Account {
-	return &domain.Account{
-		ID:                 a.ID.Hex(),
-		Name:               a.Name,
-		Email:              a.Email,
-		ProfilePicURL:      a.ProfilePicURL,
-		Role:               a.Role,
-		CreatedAt:          a.CreatedAt,
-		UserDetail:         toUserDetailDomain(*a.UserDetail),
-		OrganizationDetail: toOrgDetailDomain(*a.OrganizationDetail),
-	}
-}
+// --- Repository Implementation ---
 
-type MongoUserRepository struct {
+type AccountRepository struct {
 	collection *mongo.Collection
 }
 
-// NewMongoUserRepository creates a new user repository instance.
-func NewMongoUserRepository(db *mongo.Database, collectionName string) domain.IUserRepository {
-	return &MongoUserRepository{
-		collection: db.Collection(collectionName),
+func NewAccountRepository(db *mongo.Database) domain.IAccountRepository {
+	return &AccountRepository{
+		collection: db.Collection("accounts"),
 	}
 }
 
-func (r *MongoUserRepository) Create(ctx context.Context, account *domain.Account) error {
-	mongoModel := fromAccountDomain(*account)
-	now := time.Now()
-	mongoModel.CreatedAt = now
-	mongoModel.ID = primitive.NewObjectID()
-
-	_, err := r.collection.InsertOne(ctx, mongoModel)
+func (r *AccountRepository) Create(ctx context.Context, account *domain.Account) error {
+	model, err := fromDomainAccount(account)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to map domain account to model: %w", err)
 	}
 
-	// Update the domain object with the generated ID
-	account.ID = mongoModel.ID.Hex()
+	model.CreatedAt = time.Now()
+	model.ID = primitive.NewObjectID()
+
+	_, err = r.collection.InsertOne(ctx, model)
+	if err != nil {
+		// Here you might check for mongo duplicate key errors and return domain.Err...
+		return fmt.Errorf("failed to insert account: %w", err)
+	}
+
+	// Back-fill the domain object with the generated ID.
+	account.ID = model.ID.Hex()
 	return nil
 }
 
-func (r *MongoUserRepository) GetByEmail(ctx context.Context, email string) (*domain.Account, error) {
-	var mongoModel AccountModel
-	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&mongoModel)
+func (r *AccountRepository) GetById(ctx context.Context, id string) (*domain.Account, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, nil // Not an application error, just means no user found
+		return nil, domain.ErrNotFound
+	}
+
+	var model AccountModel
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&model)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, domain.ErrNotFound
 		}
 		return nil, err
 	}
-	return toAccountDomain(mongoModel), nil
+	return toDomainAccount(&model), nil
 }
 
-// GetByUsername fetches a single user by their username.
-func (r *MongoUserRepository) GetByUsername(ctx context.Context, username string) (*domain.Account, error) {
-	var mongoModel AccountModel
-	err := r.collection.FindOne(ctx, bson.M{"user_detail.username": username}).Decode(&mongoModel)
+func (r *AccountRepository) GetByEmail(ctx context.Context, email string) (*domain.Account, error) {
+	var model AccountModel
+	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&model)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, nil
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, domain.ErrNotFound
 		}
 		return nil, err
 	}
-	// fmt.Println("r", mongoModel.IsActive)
-	return toAccountDomain(mongoModel), nil
+	return toDomainAccount(&model), nil
 }
 
-func (dto *AccountModel) ToAccountDomain() *domain.Account {
-	return &domain.Account{
-		ID:            dto.ID.Hex(),
-		Name:          dto.Name,
-		Email:         dto.Email,
-		PasswordHash:  dto.PasswordHash,
-		ProfilePicURL: dto.ProfilePicURL,
-		Role:          dto.Role,
-		CreatedAt:     dto.CreatedAt,
-		UserDetail: &domain.UserDetail{
-			SubscriptionPlan: dto.UserDetail.SubscriptionPlan,
-			IsBanned:         dto.UserDetail.IsBanned,
-			IsVerified:       dto.UserDetail.IsVerified,
-		},
-		OrganizationDetail: &domain.OrganizationDetail{
-			Description: dto.OrganizationDetail.Description,
-			Location:    dto.OrganizationDetail.Location,
-			Type:        dto.OrganizationDetail.Type,
-			ContactInfo: domain.ContactInfo{
-				Socials: dto.OrganizationDetail.ContactInfo.Socials,
-				Website: dto.OrganizationDetail.ContactInfo.Website,
-			},
-			PhoneNumbers: dto.OrganizationDetail.PhoneNumbers,
-		},
+func (r *AccountRepository) GetByUsername(ctx context.Context, username string) (*domain.Account, error) {
+	var model AccountModel
+	err := r.collection.FindOne(ctx, bson.M{"user_detail.username": username}).Decode(&model)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
 	}
-}
-
-func (r *MongoUserRepository) GetByPhone(ctx context.Context, phoneNumber string) (*domain.Account, error) {
-	var account AccountModel
-	err := r.collection.FindOne(ctx, bson.M{"phone_numbers": phoneNumber}).Decode(&account)
-	if err == mongo.ErrNoDocuments {
-		return nil, errors.New("user not found")
-	}
-	return account.ToAccountDomain(), err
+	return toDomainAccount(&model), nil
 }

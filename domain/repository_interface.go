@@ -4,20 +4,16 @@ import (
 	"context"
 )
 
-type IUserRepository interface {
+type IAccountRepository interface {
 	Create(ctx context.Context, user *Account) error
+	GetById(ctx context.Context, id string) (*Account, error)
 	GetByEmail(ctx context.Context, email string) (*Account, error)
 	GetByUsername(ctx context.Context, username string) (*Account, error)
-	GetByPhone(ctx context.Context, phone string) (*Account, error)
-	// GetByID(ctx context.Context, id string) (*domain.User, error)
-	// Update(ctx context.Context, user *domain.User) error
-	// FindUserIDsByName(ctx context.Context, authorName string) ([]string, error)
-	// FindByProviderID(ctx context.Context, provider domain.AuthProvider, providerID string) (*domain.User, error)
-	// SearchAndFilter(ctx context.Context, options domain.UserSearchFilterOptions) ([]*domain.User, int64, error)
+	// GetByPhoneNumber(ctx context.Context, phone string) (*Account, error)
 }
 
-type IAuthRepository interface {
-	CreateToken(ctx context.Context, token *TokenModel) (*TokenModel, error)
+type ITokenRepository interface {
+	CreateToken(ctx context.Context, token *Token) (*Token, error)
 	GetToken(ctx context.Context, tokentype, token string) (string, error)
 	DeleteToken(ctx context.Context, tokentype, token string) error
 }
