@@ -34,7 +34,7 @@ interface Message {
 interface Step {
   id: number
   title: string
-  icon: any
+  icon: React.ElementType
   items: string[]
   completed?: boolean
 }
@@ -274,7 +274,7 @@ export default function ChatPage() {
                                 <h4 className="font-medium text-gray-900">Required Documents</h4>
                               </div>
                               <p className="text-sm text-gray-600">
-                                You'll need documents for proof of identity and business certificate.
+                                You&apos;ll need documents for proof of identity and business certificate.
                               </p>
                             </CardContent>
                           </Card>
