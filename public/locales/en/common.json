@@ -1,0 +1,19 @@
+{
+  "welcome": "Welcome to EthioGuide",
+  "hero_description": "Simplify bureaucracy with ease",
+  "login": "Log In",
+  "categories": "Explore Services",
+  "category": {
+    "passport": "Passport Services",
+    "id": "ID Services",
+    "business": "Business Services",
+    "banking": "Banking Services"
+  },
+  "explore": "Explore",
+  "footer": {
+    "about": "About",
+    "contact": "Contact",
+    "terms": "Terms",
+    "privacy": "Privacy"
+  }
+}
