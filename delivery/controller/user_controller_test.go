@@ -50,6 +50,11 @@ func (m *MockUserUsecase) RefreshTokenForMobile(ctx context.Context, refreshToke
 	return args.String(0), args.String(1), args.Error(2)
 }
 
+func (m *MockUserUsecase) UpdatePassword(ctx context.Context, userID, currentPassword, newPassword string) error {
+	args := m.Called(ctx, userID, currentPassword, newPassword)
+	return args.Error(0)
+}
+
 // --- Test Suite Definition ---
 
 type UserControllerTestSuite struct {
@@ -268,5 +273,98 @@ func (s *UserControllerTestSuite) TestHandleRefreshToken() {
 		// Assert
 		s.Equal(http.StatusUnauthorized, s.recorder.Code)
 		s.mockUsecase.AssertNotCalled(s.T(), "RefreshTokenForMobile")
+	})
+}
+
+func (s *UserControllerTestSuite) TestUpdatePassword() {
+	// Setup route for PATCH /me/password
+	s.router.PATCH("/me/password", func(c *gin.Context) {
+		// Simulate middleware setting userID in context
+		c.Set("userID", "user-123")
+		s.controller.UpdatePassword(c)
+	})
+
+	s.Run("Success", func() {
+		s.SetupTest()
+		s.router.PATCH("/me/password", func(c *gin.Context) {
+			c.Set("userID", "user-123")
+			s.controller.UpdatePassword(c)
+		})
+
+		reqBody := ChangePasswordRequest{
+			OldPassword: "oldpass",
+			NewPassword: "newpass123",
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		s.mockUsecase.On("UpdatePassword", mock.Anything, "user-123", "oldpass", "newpass123").Return(nil).Once()
+
+		req, _ := http.NewRequest(http.MethodPatch, "/me/password", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusOK, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "Password updated successfully")
+		s.mockUsecase.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - No userID in context", func() {
+		s.SetupTest()
+		// Route without setting userID
+		s.router.PATCH("/me/password", func(c *gin.Context) {
+			s.controller.UpdatePassword(c)
+		})
+
+		reqBody := ChangePasswordRequest{
+			OldPassword: "oldpass",
+			NewPassword: "newpass123",
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		req, _ := http.NewRequest(http.MethodPatch, "/me/password", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusUnauthorized, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "User ID not found")
+	})
+
+	s.Run("Failure - Invalid request body", func() {
+		s.SetupTest()
+		s.router.PATCH("/me/password", func(c *gin.Context) {
+			c.Set("userID", "user-123")
+			s.controller.UpdatePassword(c)
+		})
+
+		req, _ := http.NewRequest(http.MethodPatch, "/me/password", bytes.NewBuffer([]byte("not-json")))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusBadRequest, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "Invalid request body")
+	})
+
+	s.Run("Failure - Usecase error", func() {
+		s.SetupTest()
+		s.router.PATCH("/me/password", func(c *gin.Context) {
+			c.Set("userID", "user-123")
+			s.controller.UpdatePassword(c)
+		})
+
+		reqBody := ChangePasswordRequest{
+			OldPassword: "oldpass",
+			NewPassword: "newpass123",
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		s.mockUsecase.On("UpdatePassword", mock.Anything, "user-123", "oldpass", "newpass123").Return(domain.ErrAuthenticationFailed).Once()
+
+		req, _ := http.NewRequest(http.MethodPatch, "/me/password", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusUnauthorized, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), domain.ErrAuthenticationFailed.Error())
+		s.mockUsecase.AssertExpectations(s.T())
 	})
 }

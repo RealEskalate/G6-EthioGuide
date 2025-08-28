@@ -67,6 +67,13 @@ func SetupRouter(
 				// You would need to create this controller method.
 				// adminGroup.GET("/users", userController.GetAllUsers)
 			}
+
+			// --- User Profile Routes ---
+			// Any logged in user can access these routes to manage their profile
+			authGroup := apiGroup.Group("/auth")
+			{
+				authGroup.PATCH("/me/password", userController.UpdatePassword)
+			}
 		}
 	}
 
