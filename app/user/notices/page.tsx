@@ -86,22 +86,22 @@ export default function NoticesPage() {
               />
             </div>
             <div className="flex gap-2 flex-1">
-              <Select defaultValue={status} onValueChange={setStatus}>
-                <SelectTrigger className="w-full bg-white">
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-full bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent transition-all">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-lg border border-gray-200 shadow-md bg-white">
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="upcoming">Upcoming</SelectItem>
                   <SelectItem value="expired">Expired</SelectItem>
                 </SelectContent>
               </Select>
-              <Select defaultValue={department} onValueChange={setDepartment}>
-                <SelectTrigger className="w-full bg-white">
+              <Select value={department} onValueChange={setDepartment}>
+                <SelectTrigger className="w-full bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent transition-all">
                   <SelectValue placeholder="All Departments" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-lg border border-gray-200 shadow-md bg-white">
                   <SelectItem value="all">All Departments</SelectItem>
                   <SelectItem value="hr">HR Department</SelectItem>
                   <SelectItem value="it">IT Operations</SelectItem>
