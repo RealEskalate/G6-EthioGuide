@@ -121,7 +121,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">
-                    User feedback received on Driver's License procedure
+                    User feedback received on Driver&#39;s License procedure
                   </p>
                   <p className="text-xs text-muted-foreground">3 days ago</p>
                 </div>
