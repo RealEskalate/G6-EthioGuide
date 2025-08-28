@@ -93,57 +93,57 @@ export default function CommunityPage() {
             Add Discussion
           </Button>
         </div>
-         {/* Search and Filters */}
-            <Card className="p-4 mb-6">
-              <div className="flex flex-col sm:flex-row gap-4 w-full">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search discussions..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent"
-                  />
-                </div>
-                <div className="flex gap-2 flex-1">
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="ai">AI & Technology</SelectItem>
-                      <SelectItem value="study">Study Tips</SelectItem>
-                      <SelectItem value="business">Business</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select defaultValue="latest">
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Latest" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="latest">Latest</SelectItem>
-                      <SelectItem value="popular">Popular</SelectItem>
-                      <SelectItem value="trending">Trending</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </Card>
-
-            {/* Quick Tags */}
-            <div className="flex flex-wrap gap-3 mb-6">
-              {quickTags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="outline"
-                  className="cursor-pointer hover:bg-[#3A6A8D] hover:text-white transition-colors"
-                >
-                  {tag}
-                </Badge>
-              ))}
+        {/* Search and Filters */}
+        <Card className="p-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 w-full">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search discussions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent"
+              />
             </div>
+            <div className="flex gap-2 flex-1">
+              <Select defaultValue="all">
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="ai">AI & Technology</SelectItem>
+                  <SelectItem value="study">Study Tips</SelectItem>
+                  <SelectItem value="business">Business</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select defaultValue="latest">
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Latest" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="latest">Latest</SelectItem>
+                  <SelectItem value="popular">Popular</SelectItem>
+                  <SelectItem value="trending">Trending</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </Card>
+
+        {/* Quick Tags */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          {quickTags.map((tag) => (
+            <Badge
+              key={tag}
+              variant="outline"
+              className="cursor-pointer hover:bg-blue-100 hover:text-blue-700 transition-colors"
+            >
+              {tag}
+            </Badge>
+          ))}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Content */}
@@ -152,7 +152,7 @@ export default function CommunityPage() {
               {discussions.map((discussion, index) => (
                 <Card
                   key={discussion.id}
-                  className={`p-6 hover:shadow-lg transition-all duration-300 cursor-pointer animate-in fade-in slide-in-from-bottom-4`}
+                  className={`p-6 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer animate-in fade-in slide-in-from-bottom-4`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <CardContent className="p-0">
@@ -222,7 +222,7 @@ export default function CommunityPage() {
           {/* Sidebar */}
           <div className="lg:col-span-3 space-y-6">
             {/* Popular Tags */}
-            <Card className="p-4">
+            <Card className="p-4 bg-white">
               <h3 className="font-semibold text-gray-900 mb-4">Popular Tags</h3>
               <div className="space-y-2">
                 {popularTags.map((tag) => (
@@ -240,7 +240,7 @@ export default function CommunityPage() {
             </Card>
 
             {/* Top Contributors */}
-            <Card className="p-4">
+            <Card className="p-4 bg-white">
               <h3 className="font-semibold text-gray-900 mb-4">Top Contributors</h3>
               <div className="space-y-3">
                 {topContributors.map((contributor) => (
@@ -260,7 +260,7 @@ export default function CommunityPage() {
             </Card>
 
             {/* Pinned Discussions */}
-            <Card className="p-4">
+            <Card className="p-4 bg-white">
               <h3 className="font-semibold text-gray-900 mb-4">Pinned Discussions</h3>
               <div className="space-y-2">
                 {pinnedDiscussions.map((discussion, index) => (
