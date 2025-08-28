@@ -50,6 +50,16 @@ func (m *MockUserUsecase) RefreshTokenForMobile(ctx context.Context, refreshToke
 	return args.String(0), args.String(1), args.Error(2)
 }
 
+// Add missing GetProfile method to satisfy domain.IUserUsecase
+func (m *MockUserUsecase) GetProfile(ctx context.Context, userID string) (*domain.Account, error) {
+	args := m.Called(ctx, userID)
+	var acc *domain.Account
+	if args.Get(0) != nil {
+		acc = args.Get(0).(*domain.Account)
+	}
+	return acc, args.Error(1)
+}
+
 // --- Test Suite Definition ---
 
 type UserControllerTestSuite struct {
@@ -268,5 +278,75 @@ func (s *UserControllerTestSuite) TestHandleRefreshToken() {
 		// Assert
 		s.Equal(http.StatusUnauthorized, s.recorder.Code)
 		s.mockUsecase.AssertNotCalled(s.T(), "RefreshTokenForMobile")
+	})
+}
+
+func (s *UserControllerTestSuite) TestGetProfile() {
+	// Add the route for testing
+	s.router.GET("/profile", func(c *gin.Context) {
+		// Simulate middleware setting userID in context
+		c.Set("userID", "user123")
+		s.controller.GetProfile(c)
+	})
+
+	mockAccount := &domain.Account{
+		ID:    "user123",
+		Email: "test@example.com",
+		Name:  "Test User",
+		UserDetail: &domain.UserDetail{
+			Username:         "testuser",
+			SubscriptionPlan: domain.SubscriptionNone,
+			IsBanned:         false,
+			IsVerified:       true,
+		},
+	}
+
+	s.Run("Success", func() {
+		s.SetupTest()
+		// Add the route again after SetupTest
+		s.router.GET("/profile", func(c *gin.Context) {
+			c.Set("userID", "user123")
+			s.controller.GetProfile(c)
+		})
+
+		s.mockUsecase.On("GetProfile", mock.Anything, "user123").Return(mockAccount, nil).Once()
+
+		req, _ := http.NewRequest(http.MethodGet, "/profile", nil)
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusOK, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "testuser")
+		s.mockUsecase.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - User Not Found", func() {
+		s.SetupTest()
+		s.router.GET("/profile", func(c *gin.Context) {
+			c.Set("userID", "user123")
+			s.controller.GetProfile(c)
+		})
+
+		s.mockUsecase.On("GetProfile", mock.Anything, "user123").Return(nil, domain.ErrUserNotFound).Once()
+
+		req, _ := http.NewRequest(http.MethodGet, "/profile", nil)
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusNotFound, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), domain.ErrUserNotFound.Error())
+		s.mockUsecase.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - No userID in context", func() {
+		s.SetupTest()
+		// Route without setting userID
+		s.router.GET("/profile", func(c *gin.Context) {
+			s.controller.GetProfile(c)
+		})
+
+		req, _ := http.NewRequest(http.MethodGet, "/profile", nil)
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusUnauthorized, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "User ID not found")
 	})
 }
