@@ -50,7 +50,7 @@ export default function AdminDashboard() {
     },
   ];
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 w-full">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r bg-[#3A6A8D] text-white p-6 rounded-2xl shadow py-10">
         <h1 className="text-2xl font-semibold">Welcome back, Admin</h1>
