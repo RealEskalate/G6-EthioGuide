@@ -199,3 +199,31 @@ func (r *AccountRepository) GetByUsername(ctx context.Context, username string) 
 	}
 	return toDomainAccount(&model), nil
 }
+
+func (r *AccountRepository) UpdateUserFields(ctx context.Context, userIDstr string, update map[string]interface{}) error {
+	if len(update) == 0 {
+		return errors.New("no fields to update")
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDstr)
+	if err != nil {
+		return domain.ErrInvalidID
+	}
+
+	filter := bson.M{
+		"_id": userID,
+	}
+	updates := bson.M{
+		"$set": update,
+	}
+
+	result, errUpdate := r.collection.UpdateOne(ctx, filter, updates)
+	if errUpdate != nil {
+		return errUpdate
+	}
+	if result.MatchedCount == 0 {
+		return domain.ErrUserNotFound
+	}
+
+	return nil
+}

@@ -79,6 +79,32 @@ func (uc *UserUsecase) Register(c context.Context, user *domain.Account) error {
 	return nil
 }
 
+func (uc *UserUsecase) VerifyAccount(ctx context.Context, activationTokenValue string) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	claims, err := uc.jwtService.ValidateToken(activationTokenValue)
+	if err != nil {
+		return domain.ErrInvalidActivationToken
+	}
+
+	if _, err := uc.tokenRepo.GetToken(ctx, string(domain.VerificationToken), activationTokenValue); err != nil {
+		return domain.ErrInvalidActivationToken
+	}
+
+	_, errUser := uc.userRepo.GetById(ctx, claims.UserID)
+	if errUser != nil {
+		return domain.ErrUserNotFound
+	}
+
+	update:= map[string]interface{
+		""
+	}
+
+	errUpdate:= uc.userRepo.UpdateUserFields(ctx, claims.UserID, )
+
+}
+
 // Login method is already quite good. Minimal changes for consistency.
 func (uc *UserUsecase) Login(c context.Context, identifier, password string) (*domain.Account, string, string, error) {
 	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
