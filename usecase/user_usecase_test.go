@@ -53,6 +53,9 @@ func (m *MockAccountRepository) GetByPhoneNumber(ctx context.Context, phone stri
 	}
 	return acc, args.Error(1)
 }
+func (m *MockAccountRepository) UpdateProfile(ctx context.Context, account domain.Account) error {
+    return m.Called(ctx, account).Error(0)
+}
 
 // MockTokenRepository mocks ITokenRepository
 type MockTokenRepository struct{ mock.Mock }
@@ -349,4 +352,66 @@ func (s *UserUsecaseTestSuite) TestRefreshToken() {
 		s.ErrorIs(err, domain.ErrAuthenticationFailed)
 		s.mockJwtSvc.AssertNotCalled(s.T(), "GenerateAccessToken")
 	})
+}
+
+// --- Update Profile Tests ---
+func (s *UserUsecaseTestSuite) TestUpdateProfile() {
+    userID := "user-123"
+    originalAccount := &domain.Account{
+        ID:    userID,
+        Name:  "Old Name",
+        Email: "old@example.com",
+        UserDetail: &domain.UserDetail{
+            Username:         "olduser",
+            SubscriptionPlan: domain.SubscriptionNone,
+            IsBanned:         false,
+            IsVerified:       true,
+        },
+    }
+    updatedAccount := *originalAccount
+    updatedAccount.Name = "New Name"
+
+    s.Run("Success", func() {
+        s.SetupTest()
+        updates := map[string]interface{}{"name": "New Name"}
+
+        s.mockUserRepo.On("GetById", mock.Anything, userID).Return(originalAccount, nil).Once()
+        s.mockUserRepo.On("UpdateProfile", mock.Anything, mock.MatchedBy(func(acc domain.Account) bool {
+            return acc.ID == userID && acc.Name == "New Name"
+        })).Return(nil).Once()
+
+        result, err := s.usecase.UpdateProfile(context.Background(), userID, updates)
+
+        s.NoError(err)
+        s.NotNil(result)
+        s.Equal("New Name", result.Name)
+        s.mockUserRepo.AssertExpectations(s.T())
+    })
+
+    s.Run("Failure - User Not Found", func() {
+        s.SetupTest()
+        updates := map[string]interface{}{"name": "New Name"}
+
+        s.mockUserRepo.On("GetById", mock.Anything, userID).Return(nil, domain.ErrNotFound).Once()
+
+        result, err := s.usecase.UpdateProfile(context.Background(), userID, updates)
+
+        s.ErrorIs(err, domain.ErrNotFound)
+        s.Nil(result)
+        s.mockUserRepo.AssertExpectations(s.T())
+    })
+
+    s.Run("Failure - Repo Update Error", func() {
+        s.SetupTest()
+        updates := map[string]interface{}{"name": "New Name"}
+
+        s.mockUserRepo.On("GetById", mock.Anything, userID).Return(originalAccount, nil).Once()
+        s.mockUserRepo.On("UpdateProfile", mock.Anything, mock.Anything).Return(errors.New("db error")).Once()
+
+        result, err := s.usecase.UpdateProfile(context.Background(), userID, updates)
+
+        s.Error(err)
+        s.Nil(result)
+        s.mockUserRepo.AssertExpectations(s.T())
+    })
 }

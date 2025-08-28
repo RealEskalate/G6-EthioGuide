@@ -205,3 +205,53 @@ func (s *AccountRepositoryTestSuite) TestMappingLogic() {
 		s.Equal("Test Location", foundOrg.OrganizationDetail.Location)
 	})
 }
+
+// func (s *AccountRepositoryTestSuite) TestUpdateProfile() {
+//     ctx := context.Background()
+
+//     // First, create a user to update
+//     original := &domain.Account{
+//         Name:         "Original Name",
+//         Email:        "updateprofile@example.com",
+//         PasswordHash: "hashedpassword",
+//         Role:         domain.RoleUser,
+//         UserDetail: &domain.UserDetail{
+//             Username:         "updateuser",
+//             SubscriptionPlan: domain.SubscriptionNone,
+//             IsBanned:         false,
+//             IsVerified:       true,
+//         },
+//     }
+//     err := s.repo.Create(ctx, original)
+//     s.Require().NoError(err)
+//     s.Require().NotEmpty(original.ID)
+
+//     s.Run("Success", func() {
+//         updated := *original
+//         updated.Name = "Updated Name"
+//         updated.UserDetail.Username = "updateduser"
+
+//         err := s.repo.UpdateProfile(ctx, updated)
+//         s.NoError(err)
+
+//         // Fetch and verify
+//         fetched, err := s.repo.GetById(ctx, original.ID)
+//         s.NoError(err)
+//         s.Equal("Updated Name", fetched.Name)
+//         s.Equal("updateduser", fetched.UserDetail.Username)
+//     })
+
+//     s.Run("Failure - Invalid ID", func() {
+//         invalid := *original
+//         invalid.ID = "badid"
+//         err := s.repo.UpdateProfile(ctx, invalid)
+//         s.ErrorIs(err, domain.ErrUserNotFound)
+//     })
+
+//     s.Run("Failure - Not Found", func() {
+//         notFound := *original
+//         notFound.ID = "507f1f77bcf86cd799439011" // valid ObjectID, but not in DB
+//         err := s.repo.UpdateProfile(ctx, notFound)
+//         s.ErrorIs(err, domain.ErrUserNotFound)
+//     })
+// }

@@ -50,6 +50,15 @@ func (m *MockUserUsecase) RefreshTokenForMobile(ctx context.Context, refreshToke
 	return args.String(0), args.String(1), args.Error(2)
 }
 
+func (m *MockUserUsecase) UpdateProfile(ctx context.Context, userID string, updates map[string]interface{}) (*domain.Account, error) {
+	args := m.Called(ctx, userID, updates)
+	var acc *domain.Account
+	if args.Get(0) != nil {
+		acc = args.Get(0).(*domain.Account)
+	}
+	return acc, args.Error(1)
+}
+
 // --- Test Suite Definition ---
 
 type UserControllerTestSuite struct {
@@ -268,5 +277,107 @@ func (s *UserControllerTestSuite) TestHandleRefreshToken() {
 		// Assert
 		s.Equal(http.StatusUnauthorized, s.recorder.Code)
 		s.mockUsecase.AssertNotCalled(s.T(), "RefreshTokenForMobile")
+	})
+}
+
+func (s *UserControllerTestSuite) TestUpdateProfile() {
+	// Setup route for PATCH /me
+	s.router.PATCH("/me", func(c *gin.Context) {
+		// Simulate middleware setting userID in context
+		c.Set("userID", "user-123")
+		s.controller.UpdateProfile(c)
+	})
+
+	updatedAccount := &domain.Account{
+		ID:    "user-123",
+		Name:  "Updated Name",
+		Email: "updated@example.com",
+		UserDetail: &domain.UserDetail{
+			Username:         "updateduser",
+			SubscriptionPlan: domain.SubscriptionNone,
+			IsBanned:         false,
+			IsVerified:       true,
+		},
+	}
+
+	s.Run("Success", func() {
+		s.SetupTest()
+		s.router.PATCH("/me", func(c *gin.Context) {
+			c.Set("userID", "user-123")
+			s.controller.UpdateProfile(c)
+		})
+
+		updates := map[string]interface{}{
+			"name": "Updated Name",
+		}
+		jsonBody, _ := json.Marshal(updates)
+
+		s.mockUsecase.On("UpdateProfile", mock.Anything, "user-123", updates).Return(updatedAccount, nil).Once()
+
+		req, _ := http.NewRequest(http.MethodPatch, "/me", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusOK, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "Updated Name")
+		s.mockUsecase.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - No userID in context", func() {
+		s.SetupTest()
+		// Route without setting userID
+		s.router.PATCH("/me", func(c *gin.Context) {
+			s.controller.UpdateProfile(c)
+		})
+
+		updates := map[string]interface{}{
+			"name": "Updated Name",
+		}
+		jsonBody, _ := json.Marshal(updates)
+
+		req, _ := http.NewRequest(http.MethodPatch, "/me", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusUnauthorized, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "User ID not found")
+	})
+
+	s.Run("Failure - Invalid form data", func() {
+		s.SetupTest()
+		s.router.PATCH("/me", func(c *gin.Context) {
+			c.Set("userID", "user-123")
+			s.controller.UpdateProfile(c)
+		})
+
+		req, _ := http.NewRequest(http.MethodPatch, "/me", bytes.NewBuffer([]byte("not-json")))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusBadRequest, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "Invalid form data")
+	})
+
+	s.Run("Failure - Usecase error", func() {
+		s.SetupTest()
+		s.router.PATCH("/me", func(c *gin.Context) {
+			c.Set("userID", "user-123")
+			s.controller.UpdateProfile(c)
+		})
+
+		updates := map[string]interface{}{
+			"name": "Updated Name",
+		}
+		jsonBody, _ := json.Marshal(updates)
+
+		s.mockUsecase.On("UpdateProfile", mock.Anything, "user-123", updates).Return(nil, domain.ErrNotFound).Once()
+
+		req, _ := http.NewRequest(http.MethodPatch, "/me", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusNotFound, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), domain.ErrNotFound.Error())
+		s.mockUsecase.AssertExpectations(s.T())
 	})
 }
