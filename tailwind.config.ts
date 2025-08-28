@@ -18,8 +18,8 @@ const config = {
           dark: '#44776A',
         },
         accent: {
-          DEFAULT: '#1C3B2E', // Everglade
-          light: '#3D5E4F',
+          DEFAULT: 'rgba(58,106,141,0.1)', // light blue
+          light: 'rgba(58,106,141,0.1)',
         },
         neutral: {
           DEFAULT: '#A7B3B9', // Hit Gray

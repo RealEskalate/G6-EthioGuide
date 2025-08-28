@@ -83,7 +83,7 @@ export function UserSidebar({
               />
               {!collapsed && (
                 <span className={cn("transition-opacity duration-200", item.active ? "font-medium" : "")}>
-                  {item.label}
+                  {item.iconAlt}
                 </span>
               )}
             </div>
