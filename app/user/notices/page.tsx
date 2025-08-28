@@ -7,8 +7,8 @@ const departmentColors: Record<string, string> = {
 };
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "../../../components/ui/card";
+import { Badge } from "../../../components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@radix-ui/react-select";
 import { Calendar, Heart, Share2, FileText } from "lucide-react";
 

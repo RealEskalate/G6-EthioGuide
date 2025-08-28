@@ -8,7 +8,11 @@ export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
 
+<<<<<<< HEAD
   // Map menu items to their hrefs
+=======
+  // Define menu items with hrefs
+>>>>>>> main
   const menuItems = [
     { iconSrc: "/icons/dashboard.svg", iconAlt: "Dashboard", label: "Dashboard", href: "/user/home" },
     { iconSrc: "/icons/workspace.svg", iconAlt: "My workspace", label: "My workspace", href: "/user/workspace" },
