@@ -1,3 +1,7 @@
 export default function Loading() {
-  return <div>Loading...</div>;
+  return (
+    <div role="status" aria-live="polite">
+      Loading...
+    </div>
+  );
 }
