@@ -1,4 +1,5 @@
 import 'package:ethioguide/core/config/route_names.dart';
+import 'package:ethioguide/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ethioguide/features/splashscreen/presentation/screens/placeholder_screen.dart';
 import 'package:ethioguide/features/splashscreen/presentation/screens/splash_screen.dart';
@@ -22,6 +23,12 @@ final GoRouter router = GoRouter(
       path: '/placeholder', 
       name: 'placeholder',
       builder: (context, state) => const PlaceholderScreen(),
+    ),
+
+    GoRoute(
+      path: '/onboarding',
+      name: 'onboarding',
+      builder: (context, state) => const OnboardingScreen(),
     ),
 
     
