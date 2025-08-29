@@ -6,60 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Heart, Share2, FileText } from "lucide-react";
 
-interface Notice {
-  id: number;
-  title: string;
-  status: "Active" | "Upcoming" | "Expired";
-  statusColor: string;
-  description: string;
-  published: string;
-  department: string;
-  organization: string;
-  likes: number;
-}
+import { notices } from "@/lib/noticesData";
 
-const notices: Notice[] = [
-  {
-    id: 1,
-    title: "New Employee Onboarding Process Updates",
-    status: "Active",
-    statusColor: "bg-green-100 text-green-800",
-    description:
-      "Updated guidelines for the employee onboarding process, including new documentation requirements and digital workflow procedures.",
-    published: "Dec 15, 2024",
-    department: "HR Department",
-    organization: "TechCorp Solutions",
-    likes: 12,
-  },
-  {
-    id: 2,
-    title: "System Maintenance Schedule",
-    status: "Upcoming",
-    statusColor: "bg-yellow-100 text-yellow-800",
-    description:
-      "Scheduled system maintenance on December 25th from 2:00 AM to 6:00 AM. All services will be temporarily unavailable during this period.",
-    published: "Dec 14, 2024",
-    department: "IT Operations",
-    organization: "TechCorp Solutions",
-    likes: 8,
-  },
-  {
-    id: 3,
-    title: "Holiday Policy Updates",
-    status: "Expired",
-    statusColor: "bg-gray-100 text-gray-500",
-    description:
-      "Updates to the company holiday policy for 2024, including new national holidays and revised vacation request procedures.",
-    published: "Nov 30, 2024",
-    department: "HR Department",
-    organization: "TechCorp Solutions",
-    likes: 25,
-  },
-];
+import { useRouter } from "next/navigation";
 
 export default function NoticesPage() {
   const [status, setStatus] = useState("all");
   const [department, setDepartment] = useState("all");
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -114,7 +68,11 @@ export default function NoticesPage() {
         {/* Notices List */}
         <div className="space-y-6">
           {notices.map((notice, index) => (
-            <Card key={notice.id} className={`bg-white p-6 animate-in fade-in slide-in-from-bottom-4`} style={{ animationDelay: `${index * 100}ms` }}>
+            <Card
+              key={notice.id}
+              className={`bg-white p-6 animate-in fade-in slide-in-from-bottom-4 hover:shadow-lg transition-all duration-300`}
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
               <CardContent className="p-0">
                 <div className="flex items-center gap-3 mb-2">
                   <h2 className="text-lg font-semibold text-gray-900 mr-2">
@@ -136,9 +94,12 @@ export default function NoticesPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-6 pt-2 text-sm text-gray-500">
-                  <a href="#" className="hover:underline flex items-center gap-1">
+                  <button
+                    className="hover:underline flex items-center gap-1 text-blue-700"
+                    onClick={() => router.push(`/user/notices/${notice.id}`)}
+                  >
                     View Full Notice
-                  </a>
+                  </button>
                   <button className="flex items-center gap-1 hover:text-blue-700">
                     <Share2 className="w-4 h-4" /> Share
                   </button>
