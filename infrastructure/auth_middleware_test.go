@@ -80,6 +80,15 @@ func (m *MockJWTService) GetRefreshTokenExpiry() time.Duration {
 	return args.Get(0).(time.Duration)
 }
 
+func (m *MockJWTService) GenerateUtilityToken(userID string) (string, *domain.JWTClaims, error) {
+	args := m.Called(userID)
+	var claims *domain.JWTClaims
+	if args.Get(1) != nil {
+		claims = args.Get(1).(*domain.JWTClaims)
+	}
+	return args.String(0), claims, args.Error(2)
+}
+
 // --- Test Suite Definition ---
 
 type MiddlewareTestSuite struct {

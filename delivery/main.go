@@ -47,8 +47,9 @@ func main() {
 
 	// --- Infrastructure Services ---
 	// These are concrete implementations of external services.
+	emailservice := infrastructure.NewSMTPEmailService(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPass, cfg.SMTPFrom, cfg.VerificationFrontendUrl, cfg.ResetPasswordFrontendUrl)
 	passwordService := infrastructure.NewPasswordService()
-	jwtService := infrastructure.NewJWTService(cfg.JWTSecret, cfg.JWTIssuer, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	jwtService := infrastructure.NewJWTService(cfg.JWTSecret, cfg.JWTIssuer, cfg.JWTAccessTTL, cfg.JWTRefreshTTL, cfg.JWTUtilityTTL)
 	aiService, err := infrastructure.NewGeminiAIService(cfg.GeminiAPIKey, cfg.GeminiModel)
 	if err != nil {
 		log.Printf("WARN: Failed to initialize AI service: %v. AI features will be unavailable.", err)
@@ -62,6 +63,7 @@ func main() {
 		tokenRepo, // Added the missing token repository
 		passwordService,
 		jwtService,
+		emailservice,
 		cfg.UsecaseTimeout,
 	)
 	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency

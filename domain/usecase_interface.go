@@ -10,8 +10,8 @@ type IUserUsecase interface {
 	RefreshTokenForMobile(ctx context.Context, refreshToken string) (string, string, error)
 
 	// // Password Management
-	// ForgetPassword(ctx context.Context, email string) error
-	// ResetPassword(ctx context.Context, resetToken, newPassword string) error
+	ForgetPassword(ctx context.Context, email string) (string, error)
+	ResetPassword(ctx context.Context, resetToken, newPassword string) error
 }
 
 type IGeminiUseCase interface {

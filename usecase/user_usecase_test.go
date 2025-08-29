@@ -19,7 +19,9 @@ import (
 type MockAccountRepository struct{ mock.Mock }
 
 func (m *MockAccountRepository) Create(ctx context.Context, user *domain.Account) error {
-	return m.Called(ctx, user).Error(0)
+	args := m.Called(ctx, user)
+	user.ID = "user-123"
+	return args.Error(0)
 }
 func (m *MockAccountRepository) GetById(ctx context.Context, id string) (*domain.Account, error) {
 	args := m.Called(ctx, id)
@@ -54,6 +56,11 @@ func (m *MockAccountRepository) GetByPhoneNumber(ctx context.Context, phone stri
 	return acc, args.Error(1)
 }
 
+func (m *MockAccountRepository) UpdateUserFields(ctx context.Context, userID string, fields map[string]interface{}) error {
+	args := m.Called(ctx, userID, fields)
+	return args.Error(0)
+}
+
 // MockTokenRepository mocks ITokenRepository
 type MockTokenRepository struct{ mock.Mock }
 
@@ -86,6 +93,22 @@ func (m *MockPasswordService) ComparePassword(hashedPassword, password string) e
 
 // MockJWTService mocks IJWTService
 type MockJWTService struct{ mock.Mock }
+
+type MockEmailService struct{
+	mock.Mock
+	EmailSent chan bool
+}
+
+func (m *MockEmailService) SendPasswordResetEmail(toEmail, username, resetToken string) error {
+	args := m.Called(toEmail, username, resetToken)
+	return args.Error(0)
+}
+
+func (m *MockEmailService) SendVerificationEmail(toEmail, username, activationToken string) error {
+	args := m.Called(toEmail, username, activationToken)
+	m.EmailSent <- true
+	return args.Error(0)
+}
 
 func (m *MockJWTService) GenerateAccessToken(userID string, role domain.Role) (string, *domain.JWTClaims, error) {
 	args := m.Called(userID, role)
@@ -128,6 +151,15 @@ func (m *MockJWTService) GetRefreshTokenExpiry() time.Duration {
 	return args.Get(0).(time.Duration)
 }
 
+func (m *MockJWTService) GenerateUtilityToken(userID string) (string, *domain.JWTClaims, error) {
+	args := m.Called(userID)
+	var claims *domain.JWTClaims
+	if args.Get(1) != nil {
+		claims = args.Get(1).(*domain.JWTClaims)
+	}
+	return args.String(0), claims, args.Error(2)
+}
+
 // Setup domain errors for testing
 func setupDomainErrors() {
 	domain.ErrNotFound = errors.New("not found")
@@ -144,6 +176,7 @@ type UserUsecaseTestSuite struct {
 	mockTokenRepo *MockTokenRepository
 	mockPassSvc   *MockPasswordService
 	mockJwtSvc    *MockJWTService
+	mockEmailSvc  *MockEmailService
 	usecase       domain.IUserUsecase
 }
 
@@ -156,12 +189,14 @@ func (s *UserUsecaseTestSuite) SetupTest() {
 	s.mockTokenRepo = new(MockTokenRepository)
 	s.mockPassSvc = new(MockPasswordService)
 	s.mockJwtSvc = new(MockJWTService)
+	s.mockEmailSvc = new(MockEmailService)
 
 	s.usecase = NewUserUsecase(
 		s.mockUserRepo,
 		s.mockTokenRepo,
 		s.mockPassSvc,
 		s.mockJwtSvc,
+		s.mockEmailSvc,
 		5*time.Second, // Default timeout for tests
 	)
 }
@@ -177,19 +212,34 @@ func (s *UserUsecaseTestSuite) TestRegister() {
 		PasswordHash: "password123",
 		UserDetail:   &domain.UserDetail{Username: "testuser"},
 	}
+	activationClaims := &domain.JWTClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        "token-abc",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+		},
+	}
 
 	s.Run("Success", func() {
 		s.SetupTest()
+		s.mockEmailSvc.EmailSent = make(chan bool, 1)
 		s.mockUserRepo.On("GetByEmail", mock.Anything, user.Email).Return(nil, domain.ErrNotFound).Once()
 		s.mockUserRepo.On("GetByUsername", mock.Anything, user.UserDetail.Username).Return(nil, domain.ErrNotFound).Once()
 		s.mockPassSvc.On("HashPassword", user.PasswordHash).Return("hashed_password", nil).Once()
 		s.mockUserRepo.On("Create", mock.Anything, mock.Anything).Return(nil).Once()
+		s.mockJwtSvc.On("GenerateUtilityToken", mock.AnythingOfType("string")).Return("activation_token", activationClaims, nil).Once()
+		s.mockTokenRepo.On("CreateToken", mock.Anything, mock.AnythingOfType("*domain.Token")).Return(nil, nil).Once()
+		s.mockEmailSvc.On("SendVerificationEmail", user.Email, user.UserDetail.Username, "activation_token").Return(nil).Once()
 
 		err := s.usecase.Register(context.Background(), user)
+
+		<-s.mockEmailSvc.EmailSent
 
 		s.NoError(err)
 		s.mockUserRepo.AssertExpectations(s.T())
 		s.mockPassSvc.AssertExpectations(s.T())
+		s.mockJwtSvc.AssertExpectations(s.T())
+		s.mockTokenRepo.AssertExpectations(s.T())
+		s.mockEmailSvc.AssertExpectations(s.T())
 	})
 
 	s.Run("Failure - Email Exists", func() {
@@ -348,5 +398,153 @@ func (s *UserUsecaseTestSuite) TestRefreshToken() {
 
 		s.ErrorIs(err, domain.ErrAuthenticationFailed)
 		s.mockJwtSvc.AssertNotCalled(s.T(), "GenerateAccessToken")
+	})
+}
+
+func (s *UserUsecaseTestSuite) TestVerifyAccount() {
+	activationToken := "valid_activation_token"
+	claims := &domain.JWTClaims{
+		UserID: "user-123",
+	}
+
+	s.Run("Success", func() {
+		s.SetupTest()
+		s.mockJwtSvc.On("ValidateToken", activationToken).Return(claims, nil).Once()
+		s.mockTokenRepo.On("GetToken", mock.Anything, string(domain.VerificationToken), activationToken).Return("some_token", nil).Once()
+		s.mockUserRepo.On("GetById", mock.Anything, claims.UserID).Return(&domain.Account{}, nil).Once()
+		s.mockUserRepo.On("UpdateUserFields", mock.Anything, claims.UserID, mock.Anything).Return(nil).Once()
+
+		err := s.usecase.VerifyAccount(context.Background(), activationToken)
+
+		s.NoError(err)
+		s.mockJwtSvc.AssertExpectations(s.T())
+		s.mockTokenRepo.AssertExpectations(s.T())
+		s.mockUserRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - Invalid Token", func() {
+		s.SetupTest()
+		s.mockJwtSvc.On("ValidateToken", activationToken).Return(nil, errors.New("invalid token")).Once()
+
+		err := s.usecase.VerifyAccount(context.Background(), activationToken)
+
+		s.ErrorIs(err, domain.ErrInvalidActivationToken)
+		s.mockTokenRepo.AssertNotCalled(s.T(), "GetToken")
+	})
+
+	s.Run("Failure - Token Not Found", func() {
+		s.SetupTest()
+		s.mockJwtSvc.On("ValidateToken", activationToken).Return(claims, nil).Once()
+		s.mockTokenRepo.On("GetToken", mock.Anything, string(domain.VerificationToken), activationToken).Return("", domain.ErrNotFound).Once()
+
+		err := s.usecase.VerifyAccount(context.Background(), activationToken)
+
+		s.ErrorIs(err, domain.ErrInvalidActivationToken)
+		s.mockUserRepo.AssertNotCalled(s.T(), "GetById")
+	})
+
+	s.Run("Failure - User Not Found", func() {
+		s.SetupTest()
+		s.mockJwtSvc.On("ValidateToken", activationToken).Return(claims, nil).Once()
+		s.mockTokenRepo.On("GetToken", mock.Anything, string(domain.VerificationToken), activationToken).Return("some_token", nil).Once()
+		s.mockUserRepo.On("GetById", mock.Anything, claims.UserID).Return(nil, domain.ErrUserNotFound).Once()
+
+		err := s.usecase.VerifyAccount(context.Background(), activationToken)
+
+		s.ErrorIs(err, domain.ErrUserNotFound)
+		s.mockUserRepo.AssertNotCalled(s.T(), "UpdateUserFields")
+	})
+}
+
+func (s *UserUsecaseTestSuite) TestForgetPassword() {
+	email := "test@example.com"
+	account := &domain.Account{
+		ID: "user-123",
+	}
+	passwordClaims := &domain.JWTClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        "token-abc",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+		},
+	}
+
+	s.Run("Success", func() {
+		s.SetupTest()
+		s.mockUserRepo.On("GetByEmail", mock.Anything, email).Return(account, nil).Once()
+		s.mockJwtSvc.On("GenerateUtilityToken", account.ID).Return("reset_token", passwordClaims, nil).Once()
+		s.mockTokenRepo.On("CreateToken", mock.Anything, mock.AnythingOfType("*domain.Token")).Return(nil, nil).Once()
+
+		token, err := s.usecase.ForgetPassword(context.Background(), email)
+
+		s.NoError(err)
+		s.Equal("reset_token", token)
+		s.mockUserRepo.AssertExpectations(s.T())
+		s.mockJwtSvc.AssertExpectations(s.T())
+		s.mockTokenRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - User Not Found", func() {
+		s.SetupTest()
+		s.mockUserRepo.On("GetByEmail", mock.Anything, email).Return(nil, domain.ErrUserNotFound).Once()
+
+		_, err := s.usecase.ForgetPassword(context.Background(), email)
+
+		s.ErrorIs(err, domain.ErrUserNotFound)
+		s.mockJwtSvc.AssertNotCalled(s.T(), "GenerateUtilityToken")
+	})
+}
+
+func (s *UserUsecaseTestSuite) TestResetPassword() {
+	resetToken := "valid_reset_token"
+	newPassword := "new_password_123"
+	claims := &domain.JWTClaims{
+		UserID: "user-123",
+	}
+
+	s.Run("Success", func() {
+		s.SetupTest()
+		s.mockJwtSvc.On("ValidateToken", resetToken).Return(claims, nil).Once()
+		s.mockTokenRepo.On("GetToken", mock.Anything, string(domain.ResetPasswordToken), resetToken).Return("some_token", nil).Once()
+		s.mockPassSvc.On("HashPassword", newPassword).Return("hashed_password", nil).Once()
+		s.mockUserRepo.On("UpdateUserFields", mock.Anything, claims.UserID, mock.Anything).Return(nil).Once()
+		s.mockTokenRepo.On("DeleteToken", mock.Anything, string(domain.ResetPasswordToken), resetToken).Return(nil).Once()
+
+		err := s.usecase.ResetPassword(context.Background(), resetToken, newPassword)
+
+		s.NoError(err)
+		s.mockJwtSvc.AssertExpectations(s.T())
+		s.mockTokenRepo.AssertExpectations(s.T())
+		s.mockPassSvc.AssertExpectations(s.T())
+		s.mockUserRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - Invalid Token", func() {
+		s.SetupTest()
+		s.mockJwtSvc.On("ValidateToken", resetToken).Return(nil, errors.New("invalid token")).Once()
+
+		err := s.usecase.ResetPassword(context.Background(), resetToken, newPassword)
+
+		s.ErrorContains(err, "invalid token")
+		s.mockTokenRepo.AssertNotCalled(s.T(), "GetToken")
+	})
+
+	s.Run("Failure - Token Not Found", func() {
+		s.SetupTest()
+		s.mockJwtSvc.On("ValidateToken", resetToken).Return(claims, nil).Once()
+		s.mockTokenRepo.On("GetToken", mock.Anything, string(domain.ResetPasswordToken), resetToken).Return("", domain.ErrNotFound).Once()
+
+		err := s.usecase.ResetPassword(context.Background(), resetToken, newPassword)
+
+		s.ErrorIs(err, domain.ErrInvalidResetToken)
+		s.mockPassSvc.AssertNotCalled(s.T(), "HashPassword")
+	})
+
+	s.Run("Failure - Password Too Short", func() {
+		s.SetupTest()
+
+		err := s.usecase.ResetPassword(context.Background(), resetToken, "123")
+
+		s.ErrorIs(err, domain.ErrPasswordTooShort)
+		s.mockJwtSvc.AssertNotCalled(s.T(), "ValidateToken")
 	})
 }

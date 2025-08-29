@@ -54,3 +54,16 @@ type LoginResponse struct {
 	AccessToken  string         `json:"access_token"`
 	RefreshToken string         `json:"refresh_token,omitempty"`
 }
+
+type ForgotDTO struct {
+	Email string `json:"email"`
+}
+
+type ResetDTO struct {
+	ResetToken  string `json:"resetToken"`
+	NewPassword string `json:"new_password"`
+}
+
+type ActivateDTO struct {
+	ActivateToken string `json:"activatationToken"`
+}

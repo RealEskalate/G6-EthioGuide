@@ -121,6 +121,53 @@ func (ctrl *UserController) Login(c *gin.Context) {
 	}
 }
 
+func (ctrl *UserController) HandleForgot(c *gin.Context) {
+	var req ForgotDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	resetToken, err := ctrl.userUsecase.ForgetPassword(c.Request.Context(), req.Email)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"resetToken": resetToken})
+}
+
+func (ctrl *UserController) HandleReset(c *gin.Context) {
+	var req ResetDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	err := ctrl.userUsecase.ResetPassword(c.Request.Context(), req.ResetToken, req.NewPassword)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password Updated Successfully"})
+}
+
+func (ctrl *UserController) HandleVerify(c *gin.Context) {
+	var req ActivateDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	if err := ctrl.userUsecase.VerifyAccount(c.Request.Context(), req.ActivateToken); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User Activated Successfully"})
+}
+
 // --- HELPER FUNCTIONS ---
 
 // extractBearerToken is a helper to get the token from the Authorization header.

@@ -15,6 +15,7 @@ type UserUsecase struct {
 	tokenRepo       domain.ITokenRepository
 	passwordService domain.IPasswordService
 	jwtService      domain.IJWTService
+	emailService    domain.IEmailService
 	contextTimeout  time.Duration
 }
 
@@ -23,6 +24,7 @@ func NewUserUsecase(
 	tr domain.ITokenRepository,
 	ps domain.IPasswordService,
 	js domain.IJWTService,
+	es domain.IEmailService,
 	timeout time.Duration,
 ) domain.IUserUsecase {
 	return &UserUsecase{
@@ -30,6 +32,7 @@ func NewUserUsecase(
 		tokenRepo:       tr,
 		passwordService: ps,
 		jwtService:      js,
+		emailService:    es,
 		contextTimeout:  timeout,
 	}
 }
@@ -76,6 +79,31 @@ func (uc *UserUsecase) Register(c context.Context, user *domain.Account) error {
 		return fmt.Errorf("failed to create user in repository: %w", err)
 	}
 
+	activationToken, activateclaim, errToken := uc.jwtService.GenerateUtilityToken(user.ID)
+	if errToken != nil {
+		return errToken
+	}
+
+	activateToken := domain.Token{
+		Id:        activateclaim.ID,
+		Token:     activationToken,
+		TokenType: domain.VerificationToken,
+		ExpiresAt: activateclaim.ExpiresAt.Time,
+	}
+
+	if _, err := uc.tokenRepo.CreateToken(ctx, &activateToken); err != nil {
+		return err
+	}
+	// saving the token to database
+	// how it is handled by frontend
+
+	go func() {
+		err := uc.emailService.SendVerificationEmail(user.Email, user.UserDetail.Username, activationToken)
+		if err != nil {
+			fmt.Printf("Failed to send activation email: %v\n", err)
+		}
+	}()
+
 	return nil
 }
 
@@ -97,12 +125,16 @@ func (uc *UserUsecase) VerifyAccount(ctx context.Context, activationTokenValue s
 		return domain.ErrUserNotFound
 	}
 
-	update:= map[string]interface{
-		""
+	update := map[string]interface{}{
+		"user_detail.is_verified": true,
 	}
 
-	errUpdate:= uc.userRepo.UpdateUserFields(ctx, claims.UserID, )
+	errUpdate := uc.userRepo.UpdateUserFields(ctx, claims.UserID, update)
+	if errUpdate != nil {
+		return errUpdate
+	}
 
+	return nil
 }
 
 // Login method is already quite good. Minimal changes for consistency.
@@ -228,4 +260,73 @@ func (uc *UserUsecase) RefreshTokenForMobile(ctx context.Context, refreshToken s
 	}
 
 	return newAccessToken, newRefreshToken, nil
+}
+
+func (uc *UserUsecase) ForgetPassword(ctx context.Context, email string) (string, error) {
+	if email == "" {
+		return "", fmt.Errorf("empty email field")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+
+	user, err := uc.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		return "", domain.ErrUserNotFound
+	}
+
+	passwordString, passwordclaim, err := uc.jwtService.GenerateUtilityToken(user.ID)
+	if err != nil {
+		return "", err
+	}
+
+	passwordToken := domain.Token{
+		Id:        passwordclaim.ID,
+		Token:     passwordString,
+		TokenType: domain.ResetPasswordToken,
+		ExpiresAt: passwordclaim.ExpiresAt.Time,
+	}
+
+	if _, err := uc.tokenRepo.CreateToken(ctx, &passwordToken); err != nil {
+		return "", err
+	}
+
+	return passwordString, nil
+}
+
+func (uc *UserUsecase) ResetPassword(ctx context.Context, resetToken, newPassword string) error {
+	if resetToken == "" || newPassword == "" {
+		return fmt.Errorf("empty field")
+	}
+
+	if len(newPassword) < 8 {
+		return domain.ErrPasswordTooShort
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+
+	claims, err := uc.jwtService.ValidateToken(resetToken)
+	if err != nil {
+		return fmt.Errorf("invalid refresh token: %w", err)
+	}
+
+	if _, err := uc.tokenRepo.GetToken(ctx, string(domain.ResetPasswordToken), resetToken); err != nil {
+		return domain.ErrInvalidResetToken
+	}
+
+	hashedNewPassword, _ := uc.passwordService.HashPassword(newPassword)
+	update := map[string]interface{}{
+		"password_hash": hashedNewPassword,
+	}
+
+	if err := uc.userRepo.UpdateUserFields(ctx, claims.UserID, update); err != nil {
+		return err
+	}
+
+	if err := uc.tokenRepo.DeleteToken(ctx, string(domain.ResetPasswordToken), resetToken); err != nil {
+		return err
+	}
+
+	return nil
 }

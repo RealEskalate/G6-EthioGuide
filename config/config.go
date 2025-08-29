@@ -28,6 +28,7 @@ type Config struct {
 	JWTIssuer     string
 	JWTAccessTTL  time.Duration
 	JWTRefreshTTL time.Duration
+	JWTUtilityTTL time.Duration
 
 	GeminiAPIKey string
 	GeminiModel  string
@@ -58,6 +59,7 @@ func Load() *Config {
 	// Read and parse all environment variables
 	accessTTL, _ := strconv.Atoi(getEnv("JWT_ACCESS_TTL_MIN", "15"))
 	refreshTTL, _ := strconv.Atoi(getEnv("JWT_REFRESH_TTL_HR", "72"))
+	utilityTTL, _ := strconv.Atoi(getEnv("JWT_UTILITY_TTL_HR", "72"))
 	redisDB, _ := strconv.Atoi(getEnv("REDIS_DB", "0"))
 	smtpPort, _ := strconv.Atoi(getEnv("SMTP_PORT", "2525"))
 
@@ -78,6 +80,7 @@ func Load() *Config {
 		JWTIssuer:     "ethio-guide-api",
 		JWTAccessTTL:  time.Duration(accessTTL) * time.Minute,
 		JWTRefreshTTL: time.Duration(refreshTTL) * time.Hour,
+		JWTUtilityTTL: time.Duration(utilityTTL) * time.Hour,
 
 		GeminiAPIKey: getEnv("GEMINI_API_KEY", ""),
 		GeminiModel:  getEnv("GEMINI_MODEL", "gemini-2.5-pro"),
