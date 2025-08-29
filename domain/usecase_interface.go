@@ -17,6 +17,7 @@ type IUserUsecase interface {
 	RegisterOrg(ctx context.Context, Name, Email, OrgType string) error
 	GetOrgs(ctx context.Context, filter GetOrgsFilter) ([]*Account, int64, error)
 	GetOrgById(ctx context.Context, orgId string) (*Account, error)
+	UpdateOrgFields(ctx context.Context, orgId string, update map[string]interface{}) error
 }
 
 type IGeminiUseCase interface {

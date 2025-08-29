@@ -11,6 +11,7 @@ type IAccountRepository interface {
 	GetByUsername(ctx context.Context, username string) (*Account, error)
 	GetOrgs(ctx context.Context, filter GetOrgsFilter) ([]*Account, int64, error)
 	// GetByPhoneNumber(ctx context.Context, phone string) (*Account, error)
+	UpdateUserFields(ctx context.Context, userIDstr string, update map[string]interface{}) error
 }
 
 type ITokenRepository interface {

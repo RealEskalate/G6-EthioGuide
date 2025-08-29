@@ -264,3 +264,14 @@ func (uc *UserUsecase) GetOrgById(ctx context.Context, orgId string) (*domain.Ac
 
 	return uc.userRepo.GetById(ctx, orgId)
 }
+
+func (uc *UserUsecase) UpdateOrgFields(ctx context.Context, orgId string, update map[string]interface{}) error {
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+
+	if orgId == "" {
+		return domain.ErrInvalidID
+	}
+
+	return uc.userRepo.UpdateUserFields(ctx, orgId, update)
+}

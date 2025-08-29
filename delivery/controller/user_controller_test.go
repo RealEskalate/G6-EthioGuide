@@ -50,6 +50,35 @@ func (m *MockUserUsecase) RefreshTokenForMobile(ctx context.Context, refreshToke
 	return args.String(0), args.String(1), args.Error(2)
 }
 
+func (m *MockUserUsecase) GetOrgs(ctx context.Context, filter domain.GetOrgsFilter) ([]*domain.Account, int64, error) {
+    args := m.Called(ctx, filter)
+    var accounts []*domain.Account
+    if args.Get(0) != nil {
+        accounts = args.Get(0).([]*domain.Account)
+    }
+    return accounts, int64(args.Int(1)), args.Error(2)
+}
+
+func (m *MockUserUsecase) UpdateOrgFields(ctx context.Context, orgID string, update map[string]interface{}) error {
+    args := m.Called(ctx, orgID, update)
+    return args.Error(0)
+}
+
+func (m *MockUserUsecase) GetOrgById(ctx context.Context, orgID string) (*domain.Account, error) {
+    args := m.Called(ctx, orgID)
+    var acc *domain.Account
+    if args.Get(0) != nil {
+        acc = args.Get(0).(*domain.Account)
+    }
+    return acc, args.Error(1)
+}
+
+func (m *MockUserUsecase) RegisterOrg(ctx context.Context, name, email, orgType string) error {
+    args := m.Called(ctx, name, email, orgType)
+    return args.Error(0)
+}
+
+
 // --- Test Suite Definition ---
 
 type UserControllerTestSuite struct {
@@ -78,6 +107,8 @@ func (s *UserControllerTestSuite) SetupTest() {
 	s.router.POST("/register", s.controller.Register)
 	s.router.POST("/login", s.controller.Login)
 	s.router.POST("/refresh", s.controller.HandleRefreshToken)
+    s.router.GET("/orgs", s.controller.HandleGetOrgs)
+    s.router.PATCH("/orgs/:id", s.controller.HandleUpdateOrgs)
 }
 
 func TestUserControllerTestSuite(t *testing.T) {
@@ -269,4 +300,40 @@ func (s *UserControllerTestSuite) TestHandleRefreshToken() {
 		s.Equal(http.StatusUnauthorized, s.recorder.Code)
 		s.mockUsecase.AssertNotCalled(s.T(), "RefreshTokenForMobile")
 	})
+}
+
+func (s *UserControllerTestSuite) TestHandleGetOrgs() {
+    s.Run("Success", func() {
+        s.SetupTest()
+        mockOrgs := []*domain.Account{
+            {ID: "org1", Name: "Org One", OrganizationDetail: &domain.OrganizationDetail{}},
+        }
+
+        s.mockUsecase.On("GetOrgs", mock.Anything, mock.AnythingOfType("domain.GetOrgsFilter")).Return(mockOrgs, 1, nil).Once()
+
+        req, _ := http.NewRequest(http.MethodGet, "/orgs?page=1&pageSize=10", nil)
+        s.router.ServeHTTP(s.recorder, req)
+
+        s.Equal(http.StatusOK, s.recorder.Code)
+        s.mockUsecase.AssertExpectations(s.T())
+    })
+}
+
+func (s *UserControllerTestSuite) TestHandleUpdateOrgs() {
+    s.Run("Success", func() {
+        s.SetupTest()
+        orgID := "org-123"
+        updateReq := UpdateOrgRequest{Name: new(string)}
+        *updateReq.Name = "New Name"
+        jsonBody, _ := json.Marshal(updateReq)
+
+        s.mockUsecase.On("UpdateOrgFields", mock.Anything, orgID, mock.Anything).Return(nil).Once()
+
+        req, _ := http.NewRequest(http.MethodPatch, "/orgs/"+orgID, bytes.NewBuffer(jsonBody))
+        req.Header.Set("Content-Type", "application/json")
+        s.router.ServeHTTP(s.recorder, req)
+
+        s.Equal(http.StatusOK, s.recorder.Code)
+        s.mockUsecase.AssertExpectations(s.T())
+    })
 }

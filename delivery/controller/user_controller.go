@@ -2,6 +2,7 @@ package controller
 
 import (
 	"EthioGuide/domain"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -170,7 +171,7 @@ func (ctrl *UserController) HandleGetOrgs(c *gin.Context) {
 }
 
 func (ctrl *UserController) HandleGetOrgById(c *gin.Context) {
-	orgId := c.Query("id")
+	orgId := c.Param("id")
 	account, err := ctrl.userUsecase.GetOrgById(c.Request.Context(), orgId)
 	if err != nil {
 		HandleError(c, err)
@@ -178,6 +179,58 @@ func (ctrl *UserController) HandleGetOrgById(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": ToOrganizationDetailDTO(account)})
+}
+
+func (ctrl *UserController) HandleUpdateOrgs(c *gin.Context) {
+	orgId := c.Param("id")
+	var req UpdateOrgRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	update := make(map[string]interface{})
+
+	if req.Name != nil {
+		update["name"] = *req.Name
+	}
+	if req.ProfilePicURL != nil {
+		update["profile_pic_url"] = *req.ProfilePicURL
+	}
+	if req.Description != nil {
+		update["organization_detail.description"] = *req.Description
+	}
+	if req.Location != nil {
+		update["organization_detail.location"] = *req.Location
+	}
+	if req.PhoneNumbers != nil {
+		update["organization_detail.phone_numbers"] = req.PhoneNumbers
+	}
+	if req.ContactInfo != nil {
+		if req.ContactInfo.Website != nil {
+			update["organization_detail.contact_info.website"] = *req.ContactInfo.Website
+		}
+		if req.ContactInfo.Socials != nil {
+			update["organization_detail.contact_info.socials"] = req.ContactInfo.Socials
+		}
+	}
+
+	if len(update) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no fields to update"})
+		return
+	}
+
+	err := ctrl.userUsecase.UpdateOrgFields(c.Request.Context(), orgId, update)
+	if err != nil {
+		if errors.Is(err, domain.ErrUserNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "organization not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update organization"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "organization updated successfully"})
 }
 
 // --- HELPER FUNCTIONS ---

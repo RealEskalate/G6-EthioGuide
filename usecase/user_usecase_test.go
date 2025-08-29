@@ -54,6 +54,21 @@ func (m *MockAccountRepository) GetByPhoneNumber(ctx context.Context, phone stri
 	return acc, args.Error(1)
 }
 
+func (m *MockAccountRepository) GetOrgs(ctx context.Context, filter domain.GetOrgsFilter) ([]*domain.Account, int64, error) {
+    args := m.Called(ctx, filter)
+    var accounts []*domain.Account
+    if args.Get(0) != nil {
+        accounts = args.Get(0).([]*domain.Account)
+    }
+    return accounts, int64(args.Int(1)), args.Error(2)
+}
+
+func (m *MockAccountRepository) UpdateUserFields(ctx context.Context, userIDstr string, update map[string]interface{}) error {
+    args := m.Called(ctx, userIDstr, update)
+    return args.Error(0)
+}
+
+
 // MockTokenRepository mocks ITokenRepository
 type MockTokenRepository struct{ mock.Mock }
 
@@ -349,4 +364,38 @@ func (s *UserUsecaseTestSuite) TestRefreshToken() {
 		s.ErrorIs(err, domain.ErrAuthenticationFailed)
 		s.mockJwtSvc.AssertNotCalled(s.T(), "GenerateAccessToken")
 	})
+}
+
+func (s *UserUsecaseTestSuite) TestGetOrgs() {
+    s.Run("Success", func() {
+        s.SetupTest()
+        mockOrgs := []*domain.Account{
+            {ID: "org1", Name: "Org One"},
+        }
+        filter := domain.GetOrgsFilter{Page: 1, PageSize: 10}
+
+        s.mockUserRepo.On("GetOrgs", mock.Anything, filter).Return(mockOrgs, 1, nil).Once()
+
+        orgs, total, err := s.usecase.GetOrgs(context.Background(), filter)
+
+        s.NoError(err)
+        s.Equal(int64(1), total)
+        s.Equal(mockOrgs, orgs)
+        s.mockUserRepo.AssertExpectations(s.T())
+    })
+}
+
+func (s *UserUsecaseTestSuite) TestUpdateOrgFields() {
+    s.Run("Success", func() {
+        s.SetupTest()
+        orgID := "org-123"
+        updateMap := map[string]interface{}{"name": "New Name"}
+
+        s.mockUserRepo.On("UpdateUserFields", mock.Anything, orgID, updateMap).Return(nil).Once()
+
+        err := s.usecase.UpdateOrgFields(context.Background(), orgID, updateMap)
+
+        s.NoError(err)
+        s.mockUserRepo.AssertExpectations(s.T())
+    })
 }

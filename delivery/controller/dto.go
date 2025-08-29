@@ -40,6 +40,21 @@ func toUserResponse(a *domain.Account) UserResponse {
 	}
 }
 
+type ContactInfoUpdate struct {
+    Socials map[string]string `json:"socials"`
+    Website *string           `json:"website"`
+}
+
+type UpdateOrgRequest struct {
+    Name          *string            `json:"name"`
+    ProfilePicURL *string            `json:"profile_pic_url"`
+    Description   *string            `json:"description"`
+    Location      *string            `json:"location"`
+    ContactInfo   *ContactInfoUpdate `json:"contact_info"`
+    PhoneNumbers  []string           `json:"phone_numbers"`
+}
+
+
 type TranslateDTO struct {
 	Content string `json:"content" binding:"required"`
 }
