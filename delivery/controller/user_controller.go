@@ -3,6 +3,7 @@ package controller
 import (
 	"EthioGuide/domain"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -119,6 +120,64 @@ func (ctrl *UserController) Login(c *gin.Context) {
 			AccessToken: accessToken,
 		})
 	}
+}
+
+func (ctrl *UserController) HandleCreateOrg(c *gin.Context) {
+	var req OrgCreateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	err := ctrl.userUsecase.RegisterOrg(c.Request.Context(), req.Name, req.Email, req.OrgType)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Organization created Successsfully"})
+}
+
+func (ctrl *UserController) HandleGetOrgs(c *gin.Context) {
+	var filter domain.GetOrgsFilter
+	filter.Type = c.Query("type")
+	filter.Query = c.Query("q")
+
+	page, _ := strconv.ParseInt(c.DefaultQuery("page", "1"), 10, 64)
+	pageSize, _ := strconv.ParseInt(c.DefaultQuery("pageSize", "1"), 10, 64)
+
+	filter.Page = page
+	filter.PageSize = pageSize
+
+	accounts, total, err := ctrl.userUsecase.GetOrgs(c.Request.Context(), filter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "could not get organizations"})
+		return
+	}
+
+	orgsResponse := make([]OrganizationResponseDTO, len(accounts))
+	for i, acc := range accounts {
+		orgsResponse[i] = ToOrganizationDTO(acc)
+	}
+
+	pagination := &PaginatedOrgsResponse{
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": orgsResponse, "pagination": pagination})
+}
+
+func (ctrl *UserController) HandleGetOrgById(c *gin.Context) {
+	orgId := c.Query("id")
+	account, err := ctrl.userUsecase.GetOrgById(c.Request.Context(), orgId)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": ToOrganizationDetailDTO(account)})
 }
 
 // --- HELPER FUNCTIONS ---

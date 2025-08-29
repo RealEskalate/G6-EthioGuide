@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // --- Database Models ---
@@ -198,4 +199,44 @@ func (r *AccountRepository) GetByUsername(ctx context.Context, username string) 
 		return nil, err
 	}
 	return toDomainAccount(&model), nil
+}
+
+func (r *AccountRepository) GetOrgs(ctx context.Context, filter domain.GetOrgsFilter) ([]*domain.Account, int64, error) {
+	query := bson.M{}
+	if filter.Type != "" {
+		query["type"] = filter.Type
+	}
+
+	if filter.Query != "" {
+		query["$or"] = []bson.M{
+			{"name": bson.M{"$regex": filter.Query, "$options": "i"}},
+			{"organization_detail.description": bson.M{"$regex": filter.Query, "$options": "i"}},
+		}
+	}
+
+	findoption := options.FindOptions{}
+	findoption.SetLimit(filter.PageSize)
+	findoption.SetSkip((filter.Page - 1) * filter.PageSize)
+
+	cursor, err := r.collection.Find(ctx, filter, &findoption)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var res []*domain.Account
+	for cursor.Next(ctx) {
+		var model AccountModel
+		if err := cursor.Decode(&model); err != nil {
+			return nil, 0, err
+		}
+
+		res = append(res, toDomainAccount(&model))
+	}
+
+	total, err := r.collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return res, total, nil
 }

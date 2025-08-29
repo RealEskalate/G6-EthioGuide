@@ -9,6 +9,7 @@ type IAccountRepository interface {
 	GetById(ctx context.Context, id string) (*Account, error)
 	GetByEmail(ctx context.Context, email string) (*Account, error)
 	GetByUsername(ctx context.Context, username string) (*Account, error)
+	GetOrgs(ctx context.Context, filter GetOrgsFilter) ([]*Account, int64, error)
 	// GetByPhoneNumber(ctx context.Context, phone string) (*Account, error)
 }
 

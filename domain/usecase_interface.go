@@ -1,6 +1,8 @@
 package domain
 
-import "context"
+import (
+	"context"
+)
 
 type IUserUsecase interface {
 	Register(ctx context.Context, user *Account) error
@@ -12,6 +14,9 @@ type IUserUsecase interface {
 	// // Password Management
 	// ForgetPassword(ctx context.Context, email string) error
 	// ResetPassword(ctx context.Context, resetToken, newPassword string) error
+	RegisterOrg(ctx context.Context, Name, Email, OrgType string) error
+	GetOrgs(ctx context.Context, filter GetOrgsFilter) ([]*Account, int64, error)
+	GetOrgById(ctx context.Context, orgId string) (*Account, error)
 }
 
 type IGeminiUseCase interface {
