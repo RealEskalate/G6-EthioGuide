@@ -5,6 +5,7 @@ import { Search, Plus, MessageSquare, Heart, Eye, Share2, Pin } from "lucide-rea
 import { Flag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
@@ -163,9 +164,11 @@ export default function CommunityPage() {
                 >
                   <CardContent className="p-0">
                     <div className="flex gap-4">
-                      <img
+                      <Image
                         src={discussion.avatar || "/placeholder.svg"}
                         alt={discussion.author}
+                        width={48}
+                        height={48}
                         className="w-12 h-12 rounded-full object-cover"
                       />
                       <div className="flex-1">
@@ -251,9 +254,11 @@ export default function CommunityPage() {
               <div className="space-y-3">
                 {topContributors.map((contributor) => (
                   <div key={contributor.name} className="flex items-center gap-3">
-                    <img
+                    <Image
                       src={contributor.avatar || "/placeholder.svg"}
                       alt={contributor.name}
+                      width={32}
+                      height={32}
                       className="w-8 h-8 rounded-full object-cover"
                     />
                     <div>
