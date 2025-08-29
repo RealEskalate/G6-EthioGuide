@@ -1,0 +1,19 @@
+{
+  "welcome": "እንኳን ወደ EthioGuide በደህና መጡ",
+  "hero_description": "ቢሮክራሲን በቀላሉ ያቃልሉ",
+  "login": "ግባ",
+  "categories": "አገልግሎቶችን ያስሱ",
+  "category": {
+    "passport": "የፓስፖርት አገልግሎቶች",
+    "id": "የመታወቂያ አገልግሎቶች",
+    "business": "የቢዝነስ አገልግሎቶች",
+    "banking": "የባንክ አገልግሎቶች"
+  },
+  "explore": "አስስ",
+  "footer": {
+    "about": "ስለ",
+    "contact": "እውቂያ",
+    "terms": "ውሎች",
+    "privacy": "ግላዊነት"
+  }
+}
