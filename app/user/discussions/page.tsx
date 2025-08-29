@@ -7,15 +7,17 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useRouter } from "next/navigation"
 
 export default function CommunityPage() {
   const [searchQuery, setSearchQuery] = useState("")
+  const router = useRouter()
 
   const discussions = [
     {
       id: 1,
       author: "Alex Chen",
-      avatar: "/user-avatar.png",
+      avatar: "/images/profile-photo.jpg",
       timestamp: "2h ago",
       title: "How to integrate AI tools into daily study routine?",
       content:
@@ -29,7 +31,7 @@ export default function CommunityPage() {
     {
       id: 2,
       author: "Sarah Johnson",
-      avatar: "/user-avatar.png",
+      avatar: "/images/profile-photo.jpg",
       timestamp: "4h ago",
       title: "📌 Welcome to the Community Guidelines",
       content:
@@ -45,7 +47,7 @@ export default function CommunityPage() {
     {
       id: 3,
       author: "Mike Rodriguez",
-      avatar: "/user-avatar.png",
+      avatar: "/images/profile-photo.jpg",
       timestamp: "6h ago",
       title: "Best note-taking apps for university students?",
       content:
@@ -67,9 +69,9 @@ export default function CommunityPage() {
   ]
 
   const topContributors = [
-    { name: "Emma Wilson", posts: "42 contributions", avatar: "/user-avatar.png" },
-    { name: "David Kim", posts: "38 contributions", avatar: "/user-avatar.png" },
-    { name: "Lisa Chang", posts: "35 contributions", avatar: "/user-avatar.png" },
+    { name: "Emma Wilson", posts: "42 contributions", avatar: "/images/profile-photo.jpg" },
+    { name: "David Kim", posts: "38 contributions", avatar: "/images/profile-photo.jpg"},
+    { name: "Lisa Chang", posts: "35 contributions", avatar: "/images/profile-photo.jpg" },
   ]
 
   const pinnedDiscussions = [{ title: "Community Guidelines", author: "Sarah Johnson" }]
@@ -88,10 +90,13 @@ export default function CommunityPage() {
             </div>
             <p className="text-gray-600">Join the conversation. Share, ask, and collaborate.</p>
           </div>
-          <Button className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Discussion
-          </Button>
+        <Button
+          className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
+          onClick={() => router.push("/user/create-post")}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Discussion
+        </Button>
         </div>
         {/* Search and Filters */}
         <Card className="p-4 mb-6">
@@ -130,20 +135,21 @@ export default function CommunityPage() {
               </Select>
             </div>
           </div>
-        </Card>
-
-        {/* Quick Tags */}
-        <div className="flex flex-wrap gap-3 mb-6">
+          {/* Quick Tags */}
+        <div className="flex flex-wrap gap-3 mb-3">
           {quickTags.map((tag) => (
             <Badge
               key={tag}
               variant="outline"
-              className="cursor-pointer hover:bg-blue-100 hover:text-blue-700 transition-colors"
+              className="cursor-pointer hover:bg-blue-100 hover:text-blue-700 transition-colors "
             >
               {tag}
             </Badge>
           ))}
         </div>
+        </Card>
+
+        
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Content */}
@@ -222,7 +228,7 @@ export default function CommunityPage() {
           {/* Sidebar */}
           <div className="lg:col-span-3 space-y-6">
             {/* Popular Tags */}
-            <Card className="p-4 bg-white">
+            <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-105">
               <h3 className="font-semibold text-gray-900 mb-4">Popular Tags</h3>
               <div className="space-y-2">
                 {popularTags.map((tag) => (
@@ -240,7 +246,7 @@ export default function CommunityPage() {
             </Card>
 
             {/* Top Contributors */}
-            <Card className="p-4 bg-white">
+            <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-105">
               <h3 className="font-semibold text-gray-900 mb-4">Top Contributors</h3>
               <div className="space-y-3">
                 {topContributors.map((contributor) => (
@@ -260,7 +266,7 @@ export default function CommunityPage() {
             </Card>
 
             {/* Pinned Discussions */}
-            <Card className="p-4 bg-white">
+            <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-105">
               <h3 className="font-semibold text-gray-900 mb-4">Pinned Discussions</h3>
               <div className="space-y-2">
                 {pinnedDiscussions.map((discussion, index) => (

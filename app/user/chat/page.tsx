@@ -169,7 +169,7 @@ export default function ChatPage() {
           {chatHistory.map((chat) => (
             <Card
               key={chat.id}
-              className="cursor-pointer hover:shadow-md transition-shadow duration-200 border border-gray-200"
+              className="bg-white cursor-pointer hover:shadow-md transition-shadow duration-200 border border-gray-200"
             >
               <CardContent className="p-3">
                 <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-1">{chat.title}</h3>
@@ -190,7 +190,7 @@ export default function ChatPage() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 p-6">
+        <div className=" border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-1">Chat with Your AI Guide</h1>
@@ -209,6 +209,7 @@ export default function ChatPage() {
 
         {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
           {messages.map((message) => (
             <div key={message.id} className="animate-fade-in">
               {message.type === "assistant" ? (
@@ -238,7 +239,7 @@ export default function ChatPage() {
                           return (
                             <Card
                               key={step.id}
-                              className="border border-gray-200 hover:shadow-md transition-shadow duration-200"
+                              className="bg-white border border-gray-200 hover:shadow-md transition-shadow duration-200"
                             >
                               <CardContent className="p-4">
                                 <div className="flex items-center space-x-3 mb-3">
@@ -265,7 +266,7 @@ export default function ChatPage() {
                         {/* Additional Info Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <Card
-                            className="border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-in-out animate-fade-in"
+                            className="bg-white border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-in-out animate-fade-in"
                             style={{ animationDelay: "0.1s" }}
                           >
                             <CardContent className="p-4">
@@ -280,7 +281,7 @@ export default function ChatPage() {
                           </Card>
 
                           <Card
-                            className="border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-in-out animate-fade-in"
+                            className="bg-white border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-in-out animate-fade-in"
                             style={{ animationDelay: "0.2s" }}
                           >
                             <CardContent className="p-4">
@@ -295,7 +296,7 @@ export default function ChatPage() {
                           </Card>
 
                           <Card
-                            className="border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-in-out animate-fade-in"
+                            className="bg-white border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-in-out animate-fade-in"
                             style={{ animationDelay: "0.3s" }}
                           >
                             <CardContent className="p-4">
