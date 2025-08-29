@@ -28,9 +28,14 @@ Future<void> init() async {
 
   //! External
   sl.registerLazySingleton(() => const FlutterSecureStorage());
-  // todo: replace with actural base url
+  // TODO: replace with actural base url
   sl.registerLazySingleton<Dio>(() {
-    final dio = Dio(BaseOptions(baseUrl: 'YOUR_API_BASE_URL'));
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: 'YOUR_API_BASE_URL',
+        headers: {'X-Platform': 'mobile'},
+      ),
+    );
     dio.interceptors.add(sl<AuthInterceptor>());
     // You might add other interceptors here too
     return dio;
