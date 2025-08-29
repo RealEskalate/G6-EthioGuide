@@ -54,3 +54,9 @@ type LoginResponse struct {
 	AccessToken  string         `json:"access_token"`
 	RefreshToken string         `json:"refresh_token,omitempty"`
 }
+
+type CreateCategoryRequest struct {
+	OrganizationID string `json:"organization_id" binding:"required"`
+	ParentID       string `json:"parent_id"`
+	Title          string `json:"title" binding:"required"`
+}

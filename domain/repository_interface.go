@@ -17,3 +17,7 @@ type ITokenRepository interface {
 	GetToken(ctx context.Context, tokentype, token string) (string, error)
 	DeleteToken(ctx context.Context, tokentype, token string) error
 }
+
+type ICategoryRepository interface {
+	Create(ctx context.Context, category *Category) error	
+}
