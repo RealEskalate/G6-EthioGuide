@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { use } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, FileText, User } from "lucide-react";
 
@@ -8,8 +9,7 @@ import { notices } from "@/lib/noticesData";
 
 export default function NoticeDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { id } = params;
-  const noticeId = Number(id);
+  const noticeId = Number(params.id);
   const notice = notices.find(n => n.id === noticeId);
 
   if (!notice) {
