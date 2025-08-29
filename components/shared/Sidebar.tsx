@@ -3,7 +3,7 @@
 import { UserSidebar } from "./UserSidebar"
 
 const defaultMenuItems = [
-  { iconSrc: "/icons/dashboard.svg", iconAlt: "Dashboard", label: "Dashboard", active: true },
+  { iconSrc: "/icons/dashboard.svg", iconAlt: "Dashboard", label: "Dashboard", active: true, href: "/user/home" },
   { iconSrc: "/icons/workspace.svg", iconAlt: "My workspace", label: "My workspace", active: false },
   { iconSrc: "/icons/ai-chat.svg", iconAlt: "AI Chat", label: "AI Chat", active: false },
   { iconSrc: "/icons/discussions.svg", iconAlt: "Discussions", label: "Discussions", active: false },
