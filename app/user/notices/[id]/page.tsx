@@ -8,9 +8,10 @@ import { Calendar, FileText, User } from "lucide-react";
 import { notices } from "@/lib/noticesData";
 
 export default function NoticeDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
   const noticeId = Number(params.id);
   const notice = notices.find(n => n.id === noticeId);
-  
+
   if (!notice) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -23,8 +24,6 @@ export default function NoticeDetailPage({ params }: { params: { id: string } })
       </div>
     );
   }
-
-  const router = useRouter();
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-3xl mx-auto space-y-6">
