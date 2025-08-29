@@ -3,7 +3,7 @@ import 'package:ethioguide/core/config/end_points.dart';
 import 'package:ethioguide/core/domain/repositories/auth_repository.dart';
 import 'package:get_it/get_it.dart';
 
-// todo: check if we can remove this instance
+// TODO: check if we can remove this instance
 final getIt =
     GetIt.instance; // Re-declare getIt here if not globally accessible
 
@@ -25,7 +25,10 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
+    // Prevent infinite loop: only refresh if not already retried
+    final isRetry = err.requestOptions.extra['retry'] == true;
+
+    if (err.response?.statusCode == 401 && !isRetry) {
       // if token expired (401), try to refresh
       final refreshToken = await _authRepository.getRefreshToken();
       if (refreshToken != null) {
@@ -40,9 +43,13 @@ class AuthInterceptor extends Interceptor {
             // save new accesss token
             await _authRepository.updateAccessToken(newAccessToken);
 
+            final retryOptions = err.requestOptions;
+
             // Update headers and retry the original request
-            err.requestOptions.headers['Authorization'] =
-                'Bearer $newAccessToken';
+            retryOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+            // Mark this request as a retry to prevent infinite loop
+            retryOptions.extra['retry'] = true;
+            
             final retryResponse = await _dio.fetch(err.requestOptions);
             return handler.resolve(retryResponse);
           }
