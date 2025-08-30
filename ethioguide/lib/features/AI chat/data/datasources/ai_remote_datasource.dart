@@ -18,47 +18,62 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
 
   Exception throwsException(int statusCode) {
     if (statusCode == 400) {
-      throw ServerException(message: 'Bad request. Please check your input.');
+      return ServerException(
+        message: 'Bad request. Please check your input.',
+        statusCode: statusCode,
+      );
     } else if (statusCode == 401) {
-      throw ServerException(
+      return ServerException(
         message: 'Couldn\'t authenticate user. Please log in again.',
+        statusCode: statusCode,
       );
     } else if (statusCode == 403) {
-      throw ServerException(
+      return ServerException(
         message: 'Forbidden content. User doesn\'t have permission.',
+        statusCode: statusCode,
       );
     } else if (statusCode == 404) {
-      throw ServerException(message: 'Requested resource not found.');
+      return ServerException(
+        message: 'Requested resource not found.',
+        statusCode: statusCode,
+      );
     } else if (statusCode == 409) {
-      throw ServerException(
+      return ServerException(
         message: 'Conflict detected. The request could not be completed.',
+        statusCode: statusCode,
       );
     } else if (statusCode == 422) {
-      throw ServerException(
+      return ServerException(
         message: 'Unprocessable entity. Validation failed.',
+        statusCode: statusCode,
       );
     } else if (statusCode == 429) {
-      throw ServerException(
+      return ServerException(
         message: 'Too many requests. Please try again later.',
+        statusCode: statusCode,
       );
     } else if (statusCode == 500) {
-      throw ServerException(
+      return ServerException(
         message: 'Internal server error. Please try again later.',
+        statusCode: statusCode,
       );
     } else if (statusCode == 502) {
-      throw ServerException(
+      return ServerException(
         message: 'Bad gateway. Received invalid response from upstream server.',
+        statusCode: statusCode,
       );
     } else if (statusCode == 503) {
-      throw ServerException(
+      return ServerException(
         message: 'Service unavailable. Please try again later.',
+        statusCode: statusCode,
       );
     } else if (statusCode == 504) {
-      throw ServerException(
+      return ServerException(
         message: 'Gateway timeout. The server took too long to respond.',
+        statusCode: statusCode,
       );
     } else {
-      throw ServerException(
+      return ServerException(
         message: 'Unexpected error occurred. Status code: $statusCode',
       );
     }
@@ -81,10 +96,12 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
 
       if (statusCode! >= 300) {
         // TODO: remove debug print
+        debugPrint('Status code: $statusCode');
+
         debugPrint('##################################################');
         debugPrint('ServerException at AiRemoteDataSourceImpl sendQuery');
         debugPrint('##################################################');
-        throwsException(statusCode);
+        throw throwsException(statusCode);
       }
 
       return ConversationModel.fromJson(response.data);
@@ -100,6 +117,8 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
         message: e.response?.data['message'] ?? 'Failed to send query',
         statusCode: e.response?.statusCode,
       );
+    } on ServerException {
+      rethrow;
     } catch (e) {
       // TODO: remove debug print
       debugPrint('##################################################');
@@ -131,7 +150,7 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
         debugPrint('##################################################');
         debugPrint('ServerException at AiRemoteDataSourceImpl getHisotry');
         debugPrint('##################################################');
-        throwsException(statusCode);
+        throw throwsException(statusCode);
       }
       final List<dynamic> jsonList = response.data;
       return jsonList.map((json) => ConversationModel.fromJson(json)).toList();
@@ -147,6 +166,8 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
         message: e.response?.data['message'] ?? 'Failed to fetch history',
         statusCode: e.response?.statusCode,
       );
+    } on ServerException {
+      rethrow;
     } catch (e) {
       // TODO: remove debug print
       debugPrint('##################################################');
@@ -181,7 +202,7 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
         debugPrint('##################################################');
         debugPrint('ServerException at AiRemoteDataSourceImpl translate');
         debugPrint('##################################################');
-        throwsException(statusCode);
+        throw throwsException(statusCode);
       }
       return response.data['translated'] as String;
     } on DioException catch (e) {
@@ -196,6 +217,8 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
         message: e.response?.data['message'] ?? 'Failed to translate',
         statusCode: e.response?.statusCode,
       );
+    } on ServerException {
+      rethrow;
     } catch (e) {
       // TODO: remove debug print
       debugPrint('##################################################');
