@@ -22,7 +22,7 @@ class TranslateContentEvent extends AiEvent {
   final String content;
   final String lang;
 
-  const TranslateContentEvent(this.content, this.lang);
+  const TranslateContentEvent({required this.content, required this.lang});
 
   @override
   List<Object> get props => [content, lang];
