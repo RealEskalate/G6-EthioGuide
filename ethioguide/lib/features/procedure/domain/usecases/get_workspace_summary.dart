@@ -1,0 +1,16 @@
+import 'package:dartz/dartz.dart';
+import 'package:ethioguide/core/error/failures.dart';
+import 'package:ethioguide/features/procedure/domain/entities/workspace_procedure.dart';
+import 'package:ethioguide/features/procedure/domain/repositories/workspace_procedure_repository.dart';
+
+/// Use case for getting workspace summary statistics
+class GetWorkspaceSummary  {
+  final WorkspaceProcedureRepository repository;
+
+  const GetWorkspaceSummary(this.repository);
+
+  @override
+  Future<Either<Failure, WorkspaceSummary>> call() async {
+    return await repository.getWorkspaceSummary();
+  }
+}
