@@ -57,7 +57,6 @@ export function UserSidebar({
 
       <div className="flex flex-col h-full">
         <nav className="p-4 space-y-2 flex-1">
-<<<<<<< HEAD
           {menuItems.map((item, index) => {
             if (item.href) {
               const Link = require("next/link").default;
@@ -119,7 +118,6 @@ export function UserSidebar({
               </div>
             );
           })}
-=======
           {menuItems.map((item, index) => (
             <div
               key={index}
@@ -151,7 +149,6 @@ export function UserSidebar({
               )}
             </div>
           ))}
->>>>>>> main
         </nav>
 
         <div className="p-4 space-y-2 border-t border-gray-100">
