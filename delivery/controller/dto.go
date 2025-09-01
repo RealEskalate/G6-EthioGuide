@@ -67,3 +67,14 @@ type ResetDTO struct {
 type ActivateDTO struct {
 	ActivateToken string `json:"activatationToken"`
 }
+
+type Procedure struct {
+	ID             int                    `json:"id"`
+	GroupID        *int                   `json:"group_id,omitempty"`
+	OrganizationID int                    `json:"organization_id" `
+	Name           string                 `json:"name"`
+	Content        map[string]interface{} `json:"content,omitempty"`
+	Fees           map[string]interface{} `json:"fees,omitempty"`
+	ProcessingTime map[string]interface{} `json:"processing_time,omitempty"`
+	CreatedAt      time.Time              `json:"created_at"`
+}
