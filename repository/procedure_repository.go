@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ProcedureContentModel struct {
@@ -37,3 +38,16 @@ type ProcedureModel struct {
 	// For M-M relationship with Notice
 	NoticeIDs []primitive.ObjectID `bson:"notice_ids,omitempty"`
 }
+
+type ProcedureRepository struct {
+	collection *mongo.Collection
+}
+
+func NewProcedureRepository(db *mongo.Database) *ProcedureRepository {
+	coll := db.Collection("procedures")
+	return &ProcedureRepository{
+		collection: coll,
+	}
+}
+
+

@@ -68,7 +68,7 @@ type ActivateDTO struct {
 	ActivateToken string `json:"activatationToken"`
 }
 
-type Procedure struct {
+type ProcedureResponse struct {
 	ID             int                    `json:"id"`
 	GroupID        *int                   `json:"group_id,omitempty"`
 	OrganizationID int                    `json:"organization_id" `
@@ -77,4 +77,38 @@ type Procedure struct {
 	Fees           map[string]interface{} `json:"fees,omitempty"`
 	ProcessingTime map[string]interface{} `json:"processing_time,omitempty"`
 	CreatedAt      time.Time              `json:"created_at"`
+}
+
+type SearchResult struct {
+	Procedures    []domain.Procedure `json:"procedures"`
+	Organizations []AccountOrgSearch `json:"organizations"`
+}
+
+type AccountOrgSearch struct {
+	ID                 string                      `json:"id"`
+	Name               string                      `json:"name"`
+	Email              string                      `json:"email"`
+	ProfilePicURL      string                      `json:"profile_pic_url"`
+	Role               domain.Role                 `json:"role"`
+	CreatedAt          time.Time                   `json:"created_at"`
+	OrganizationDetail *OrganizationDetailResponse `json:"organization_detail,omitempty"`
+}
+
+type OrganizationDetailResponse struct {
+	Description  string                  `json:"description"`
+	Location     string                  `json:"location"`
+	Type         domain.OrganizationType `json:"type"`
+	ContactInfo  ContactInfoResponse     `json:"contact_info"`
+	PhoneNumbers []string                `json:"phone_numbers"`
+}
+
+type ContactInfoResponse struct {
+	Socials map[string]string `json:"socials"`
+	Website string            `json:"website"`
+}
+
+type SearchFilterRequest struct {
+	Query string `json:"query"`
+	Page  string `json:"page"`
+	Limit string `json:"limit"`
 }
