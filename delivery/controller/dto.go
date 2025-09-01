@@ -43,6 +43,9 @@ func toUserResponse(a *domain.Account) UserResponse {
 type TranslateDTO struct {
 	Content string `json:"content" binding:"required"`
 }
+type ChatRequest struct{
+	Content string `json:"content" binding:"required"`
+}
 
 type LoginRequest struct {
 	Identifier string `json:"identifier" binding:"required"`

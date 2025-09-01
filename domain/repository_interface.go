@@ -20,5 +20,11 @@ type ITokenRepository interface {
 
 
 type IProcedureRepository interface{
-	SearchByEmbedding()
+	SearchByEmbedding(ctx context.Context, queryVec []float64, limit int) ([]*Procedure, error)
+}
+
+type AIChatRepository interface {
+    Save(ctx context.Context, chat *AIChat) error
+    GetByUser(ctx context.Context, userID int, limit int) ([]*AIChat, error)
+    DeleteByUser(ctx context.Context, userID int) error
 }
