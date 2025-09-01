@@ -90,10 +90,7 @@ export default function WorkspacePage() {
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">My Workspace</h1>
                 <p className="text-gray-600">Track and manage your ongoing procedures</p>
               </div>
-              <Button className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white transition-all duration-200">
-                <Bot className="w-4 h-4 mr-2" />
-                AI Assistant
-              </Button>
+              
             </div>
 
             {/* Stats Cards */}
@@ -121,7 +118,7 @@ export default function WorkspacePage() {
             {/* Filters */}
             <div className="flex gap-4 mb-6">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Status:</span>
+              <span className="text-sm font-medium text-gray-700 ">Status:</span>
               <Select defaultValue="all">
                 <SelectTrigger className="w-32">
                   <SelectValue />
@@ -134,8 +131,8 @@ export default function WorkspacePage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Organization:</span>
+            <div className="flex items-center gap-2 ">
+              <span className="text-sm  font-medium text-gray-700">Organization:</span>
               <Select defaultValue="all">
                 <SelectTrigger className="w-48">
                   <SelectValue />
