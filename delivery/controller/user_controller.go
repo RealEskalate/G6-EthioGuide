@@ -3,6 +3,7 @@ package controller
 import (
 	"EthioGuide/domain"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -10,14 +11,16 @@ import (
 )
 
 type UserController struct {
-	userUsecase     domain.IUserUsecase
-	refreshTokenTTL int
+	userUsecase      domain.IUserUsecase
+	procedureUsecase domain.ISearchUseCase
+	refreshTokenTTL  int
 }
 
-func NewUserController(uc domain.IUserUsecase, refreshTokenTTL time.Duration) *UserController {
+func NewUserController(uc domain.IUserUsecase, puc domain.ISearchUseCase, refreshTokenTTL time.Duration) *UserController {
 	return &UserController{
-		userUsecase:     uc,
-		refreshTokenTTL: int(refreshTokenTTL.Seconds()),
+		userUsecase:      uc,
+		procedureUsecase: puc,
+		refreshTokenTTL:  int(refreshTokenTTL.Seconds()),
 	}
 }
 
@@ -90,7 +93,7 @@ func (ctrl *UserController) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "user": toUserResponse(account)})
+	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "user": account})
 }
 
 func (ctrl *UserController) Login(c *gin.Context) {
@@ -108,14 +111,14 @@ func (ctrl *UserController) Login(c *gin.Context) {
 
 	if isMobileClient(c) {
 		c.JSON(http.StatusOK, &LoginResponse{
-			User:         *account,
+			User:         ToUserResponse(account),
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		})
 	} else {
 		setAuthCookie(c, refreshToken, ctrl.refreshTokenTTL)
 		c.JSON(http.StatusOK, &LoginResponse{
-			User:        *account,
+			User:        ToUserResponse(account),
 			AccessToken: accessToken,
 		})
 	}
@@ -166,6 +169,35 @@ func (ctrl *UserController) HandleVerify(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User Activated Successfully"})
+}
+
+func (ctrl *UserController) HandleSearch(c *gin.Context) {
+	query := c.Param("q")
+	page, err := strconv.ParseInt(c.Param("page"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	limit, errlimit := strconv.ParseInt(c.Param("limit"), 10, 64)
+	if errlimit != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	result := &domain.SearchFilterRequest{
+		Query: query,
+		Page:  page,
+		Limit: limit,
+	}
+
+	searchResult, err := ctrl.procedureUsecase.Search(c.Request.Context(), *result)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to search"})
+		return
+	}
+
+	c.JSON(http.StatusOK, ToSearchJSON(searchResult))
 }
 
 // --- HELPER FUNCTIONS ---

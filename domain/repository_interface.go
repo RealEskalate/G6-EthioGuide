@@ -18,3 +18,9 @@ type ITokenRepository interface {
 	GetToken(ctx context.Context, tokentype, token string) (string, error)
 	DeleteToken(ctx context.Context, tokentype, token string) error
 }
+
+type ISearchRepository interface {
+	Search(ctx context.Context, filter SearchFilterRequest) (*SearchResult, error)
+	FindProcedures(ctx context.Context, filter SearchFilterRequest) ([]*Procedure, error)
+	FindOrganizations(ctx context.Context, filter SearchFilterRequest) ([]*AccountOrgSearch, error)
+}

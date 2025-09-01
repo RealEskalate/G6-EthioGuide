@@ -17,3 +17,7 @@ type IUserUsecase interface {
 type IGeminiUseCase interface {
 	TranslateContent(ctx context.Context, content, targetLang string) (string, error)
 }
+
+type ISearchUseCase interface {
+	Search(ctx context.Context, filter SearchFilterRequest) (*SearchResult, error)
+}

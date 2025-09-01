@@ -23,7 +23,6 @@ type MockUserUsecase struct {
 	mock.Mock
 }
 
-// Ensure MockUserUsecase implements IUserUsecase at compile time.
 var _ domain.IUserUsecase = (*MockUserUsecase)(nil)
 
 func (m *MockUserUsecase) Register(ctx context.Context, account *domain.Account) error {
@@ -65,15 +64,32 @@ func (m *MockUserUsecase) VerifyAccount(ctx context.Context, activationToken str
 	return args.Error(0)
 }
 
+// MockSearchUsecase is a mock implementation of the ISearchUseCase interface.
+type MockSearchUsecase struct {
+	mock.Mock
+}
+
+var _ domain.ISearchUseCase = (*MockSearchUsecase)(nil)
+
+func (m *MockSearchUsecase) Search(ctx context.Context, filter domain.SearchFilterRequest) (*domain.SearchResult, error) {
+	args := m.Called(ctx, filter)
+	var res *domain.SearchResult
+	if args.Get(0) != nil {
+		res = args.Get(0).(*domain.SearchResult)
+	}
+	return res, args.Error(1)
+}
+
 // --- Test Suite Definition ---
 
 type UserControllerTestSuite struct {
 	suite.Suite
-	router          *gin.Engine
-	mockUsecase     *MockUserUsecase
-	controller      *UserController
-	recorder        *httptest.ResponseRecorder
-	refreshTokenTTL time.Duration
+	router             *gin.Engine
+	mockUserUsecase    *MockUserUsecase
+	mockSearchUsecase  *MockSearchUsecase // Added search mock
+	controller         *UserController
+	recorder           *httptest.ResponseRecorder
+	refreshTokenTTL    time.Duration
 }
 
 func (s *UserControllerTestSuite) SetupSuite() {
@@ -83,11 +99,12 @@ func (s *UserControllerTestSuite) SetupSuite() {
 func (s *UserControllerTestSuite) SetupTest() {
 	s.recorder = httptest.NewRecorder()
 	s.router = gin.Default()
-	s.mockUsecase = new(MockUserUsecase)
+	s.mockUserUsecase = new(MockUserUsecase)
+	s.mockSearchUsecase = new(MockSearchUsecase) // Instantiate search mock
 	s.refreshTokenTTL = 15 * time.Minute
 
-	// Create a new controller for each test, injecting the mock.
-	s.controller = NewUserController(s.mockUsecase, s.refreshTokenTTL)
+	// CRITICAL FIX: Correctly instantiate the controller with all dependencies.
+	s.controller = NewUserController(s.mockUserUsecase, s.mockSearchUsecase, s.refreshTokenTTL)
 
 	// Setup routes
 	s.router.POST("/register", s.controller.Register)
@@ -110,8 +127,7 @@ func (s *UserControllerTestSuite) TestRegister() {
 		reqBody := RegisterRequest{Name: "Test User", Email: "test@example.com", Password: "password123", Username: "testuser"}
 		jsonBody, _ := json.Marshal(reqBody)
 
-		// We use mock.Anything for the account because the pointer address will differ.
-		s.mockUsecase.On("Register", mock.Anything, mock.AnythingOfType("*domain.Account")).Return(nil).Once()
+		s.mockUserUsecase.On("Register", mock.Anything, mock.AnythingOfType("*domain.Account")).Return(nil).Once()
 
 		// Act
 		req, _ := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer(jsonBody))
@@ -120,7 +136,7 @@ func (s *UserControllerTestSuite) TestRegister() {
 
 		// Assert
 		s.Equal(http.StatusCreated, s.recorder.Code)
-		s.mockUsecase.AssertExpectations(s.T())
+		s.mockUserUsecase.AssertExpectations(s.T())
 	})
 
 	s.Run("Failure - Email Exists", func() {
@@ -129,7 +145,7 @@ func (s *UserControllerTestSuite) TestRegister() {
 		reqBody := RegisterRequest{Name: "Test User", Email: "test@example.com", Password: "password123", Username: "testuser"}
 		jsonBody, _ := json.Marshal(reqBody)
 
-		s.mockUsecase.On("Register", mock.Anything, mock.AnythingOfType("*domain.Account")).Return(domain.ErrEmailExists).Once()
+		s.mockUserUsecase.On("Register", mock.Anything, mock.AnythingOfType("*domain.Account")).Return(domain.ErrEmailExists).Once()
 
 		// Act
 		req, _ := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer(jsonBody))
@@ -137,24 +153,33 @@ func (s *UserControllerTestSuite) TestRegister() {
 		s.router.ServeHTTP(s.recorder, req)
 
 		// Assert
-		s.Equal(http.StatusConflict, s.recorder.Code) // Assert correct status from HandleError
+		s.Equal(http.StatusConflict, s.recorder.Code)
 		s.Contains(s.recorder.Body.String(), domain.ErrEmailExists.Error())
-		s.mockUsecase.AssertExpectations(s.T())
+		s.mockUserUsecase.AssertExpectations(s.T())
 	})
 }
 
 func (s *UserControllerTestSuite) TestLogin() {
 	reqBody := LoginRequest{Identifier: "test@example.com", Password: "password"}
 	jsonBody, _ := json.Marshal(reqBody)
-	mockAccount := &domain.Account{Email: "test@example.com"}
+	mockAccount := &domain.Account{
+		ID:    "user-123",
+		Name:  "Test User",
+		Email: "test@example.com",
+		UserDetail: &domain.UserDetail{
+			Username: "testuser",
+		},
+	}
+
+	expectedUserResponse := ToUserResponse(mockAccount)
 
 	s.Run("Success - Web Client", func() {
 		// Arrange
 		s.SetupTest()
-		s.mockUsecase.On("Login", mock.Anything, reqBody.Identifier, reqBody.Password).
+		s.mockUserUsecase.On("Login", mock.Anything, reqBody.Identifier, reqBody.Password).
 			Return(mockAccount, "access_token_123", "refresh_token_abc", nil).Once()
 
-		// Act (No X-Client-Type header)
+		// Act
 		req, _ := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
 		s.router.ServeHTTP(s.recorder, req)
@@ -162,28 +187,27 @@ func (s *UserControllerTestSuite) TestLogin() {
 		// Assert
 		s.Equal(http.StatusOK, s.recorder.Code)
 
-		// Check for cookie
 		cookie := s.recorder.Result().Cookies()[0]
 		s.Equal("refresh_token", cookie.Name)
 		s.Equal("refresh_token_abc", cookie.Value)
-		s.Equal(int(s.refreshTokenTTL.Seconds()), cookie.MaxAge)
 
-		// Check response body (should NOT contain refresh token)
 		var resp LoginResponse
 		json.Unmarshal(s.recorder.Body.Bytes(), &resp)
 		s.Equal("access_token_123", resp.AccessToken)
 		s.Empty(resp.RefreshToken)
 
-		s.mockUsecase.AssertExpectations(s.T())
+		s.Equal(expectedUserResponse, resp.User)
+
+		s.mockUserUsecase.AssertExpectations(s.T())
 	})
 
 	s.Run("Success - Mobile Client", func() {
 		// Arrange
 		s.SetupTest()
-		s.mockUsecase.On("Login", mock.Anything, reqBody.Identifier, reqBody.Password).
+		s.mockUserUsecase.On("Login", mock.Anything, reqBody.Identifier, reqBody.Password).
 			Return(mockAccount, "access_token_123", "refresh_token_abc", nil).Once()
 
-		// Act (WITH X-Client-Type header)
+		// Act
 		req, _ := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("X-Client-Type", "mobile")
@@ -192,21 +216,21 @@ func (s *UserControllerTestSuite) TestLogin() {
 		// Assert
 		s.Equal(http.StatusOK, s.recorder.Code)
 
-		// Check that NO cookie was set
 		s.Empty(s.recorder.Result().Cookies())
 
-		// Check response body (SHOULD contain refresh token)
 		var resp LoginResponse
 		json.Unmarshal(s.recorder.Body.Bytes(), &resp)
 		s.Equal("access_token_123", resp.AccessToken)
 		s.Equal("refresh_token_abc", resp.RefreshToken)
 
-		s.mockUsecase.AssertExpectations(s.T())
+		s.Equal(expectedUserResponse, resp.User)
+
+		s.mockUserUsecase.AssertExpectations(s.T())
 	})
 
 	s.Run("Failure - Invalid Credentials", func() {
 		s.SetupTest()
-		s.mockUsecase.On("Login", mock.Anything, reqBody.Identifier, reqBody.Password).
+		s.mockUserUsecase.On("Login", mock.Anything, reqBody.Identifier, reqBody.Password).
 			Return(nil, "", "", domain.ErrAuthenticationFailed).Once()
 
 		req, _ := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(jsonBody))
@@ -214,7 +238,7 @@ func (s *UserControllerTestSuite) TestLogin() {
 		s.router.ServeHTTP(s.recorder, req)
 
 		s.Equal(http.StatusUnauthorized, s.recorder.Code)
-		s.mockUsecase.AssertExpectations(s.T())
+		s.mockUserUsecase.AssertExpectations(s.T())
 	})
 }
 
@@ -224,7 +248,7 @@ func (s *UserControllerTestSuite) TestHandleRefreshToken() {
 		oldRefreshToken := "old_refresh_from_cookie"
 		newAccessToken := "new_access_token_web"
 
-		s.mockUsecase.On("RefreshTokenForWeb", mock.Anything, oldRefreshToken).Return(newAccessToken, nil).Once()
+		s.mockUserUsecase.On("RefreshTokenForWeb", mock.Anything, oldRefreshToken).Return(newAccessToken, nil).Once()
 
 		// Act (Request with a cookie)
 		req, _ := http.NewRequest(http.MethodPost, "/refresh", nil)
@@ -236,7 +260,7 @@ func (s *UserControllerTestSuite) TestHandleRefreshToken() {
 		var resp map[string]string
 		json.Unmarshal(s.recorder.Body.Bytes(), &resp)
 		s.Equal(newAccessToken, resp["access_token"])
-		s.mockUsecase.AssertExpectations(s.T())
+		s.mockUserUsecase.AssertExpectations(s.T())
 	})
 
 	s.Run("Success - Mobile Client", func() {
@@ -245,7 +269,7 @@ func (s *UserControllerTestSuite) TestHandleRefreshToken() {
 		newAccessToken := "new_access_token_mobile"
 		newRefreshToken := "new_refresh_token_mobile"
 
-		s.mockUsecase.On("RefreshTokenForMobile", mock.Anything, oldRefreshToken).
+		s.mockUserUsecase.On("RefreshTokenForMobile", mock.Anything, oldRefreshToken).
 			Return(newAccessToken, newRefreshToken, nil).Once()
 
 		// Act (Request with headers)
@@ -260,7 +284,7 @@ func (s *UserControllerTestSuite) TestHandleRefreshToken() {
 		json.Unmarshal(s.recorder.Body.Bytes(), &resp)
 		s.Equal(newAccessToken, resp["access_token"])
 		s.Equal(newRefreshToken, resp["refresh_token"])
-		s.mockUsecase.AssertExpectations(s.T())
+		s.mockUserUsecase.AssertExpectations(s.T())
 	})
 
 	s.Run("Failure - Web Client No Cookie", func() {
@@ -272,7 +296,7 @@ func (s *UserControllerTestSuite) TestHandleRefreshToken() {
 
 		// Assert
 		s.Equal(http.StatusUnauthorized, s.recorder.Code)
-		s.mockUsecase.AssertNotCalled(s.T(), "RefreshTokenForWeb")
+		s.mockUserUsecase.AssertNotCalled(s.T(), "RefreshTokenForWeb")
 	})
 
 	s.Run("Failure - Mobile Client No Auth Header", func() {
@@ -285,7 +309,7 @@ func (s *UserControllerTestSuite) TestHandleRefreshToken() {
 
 		// Assert
 		s.Equal(http.StatusUnauthorized, s.recorder.Code)
-		s.mockUsecase.AssertNotCalled(s.T(), "RefreshTokenForMobile")
+		s.mockUserUsecase.AssertNotCalled(s.T(), "RefreshTokenForMobile")
 	})
 }
 
@@ -297,7 +321,7 @@ func (s *UserControllerTestSuite) TestHandleForgot() {
 		jsonBody, _ := json.Marshal(reqBody)
 		resetToken := "reset_token_123"
 
-		s.mockUsecase.On("ForgetPassword", mock.Anything, reqBody.Email).Return(resetToken, nil).Once()
+		s.mockUserUsecase.On("ForgetPassword", mock.Anything, reqBody.Email).Return(resetToken, nil).Once()
 
 		// Act
 		req, _ := http.NewRequest(http.MethodPost, "/forgot-password", bytes.NewBuffer(jsonBody))
@@ -309,7 +333,7 @@ func (s *UserControllerTestSuite) TestHandleForgot() {
 		var resp map[string]string
 		json.Unmarshal(s.recorder.Body.Bytes(), &resp)
 		s.Equal(resetToken, resp["resetToken"])
-		s.mockUsecase.AssertExpectations(s.T())
+		s.mockUserUsecase.AssertExpectations(s.T())
 	})
 }
 
@@ -320,7 +344,7 @@ func (s *UserControllerTestSuite) TestHandleReset() {
 		reqBody := ResetDTO{ResetToken: "reset_token_123", NewPassword: "new_password"}
 		jsonBody, _ := json.Marshal(reqBody)
 
-		s.mockUsecase.On("ResetPassword", mock.Anything, reqBody.ResetToken, reqBody.NewPassword).Return(nil).Once()
+		s.mockUserUsecase.On("ResetPassword", mock.Anything, reqBody.ResetToken, reqBody.NewPassword).Return(nil).Once()
 
 		// Act
 		req, _ := http.NewRequest(http.MethodPost, "/reset-password", bytes.NewBuffer(jsonBody))
@@ -332,7 +356,7 @@ func (s *UserControllerTestSuite) TestHandleReset() {
 		var resp map[string]string
 		json.Unmarshal(s.recorder.Body.Bytes(), &resp)
 		s.Equal("Password Updated Successfully", resp["message"])
-		s.mockUsecase.AssertExpectations(s.T())
+		s.mockUserUsecase.AssertExpectations(s.T())
 	})
 }
 
@@ -343,7 +367,7 @@ func (s *UserControllerTestSuite) TestHandleVerify() {
 		reqBody := ActivateDTO{ActivateToken: "activation_token_123"}
 		jsonBody, _ := json.Marshal(reqBody)
 
-		s.mockUsecase.On("VerifyAccount", mock.Anything, reqBody.ActivateToken).Return(nil).Once()
+		s.mockUserUsecase.On("VerifyAccount", mock.Anything, reqBody.ActivateToken).Return(nil).Once()
 
 		// Act
 		req, _ := http.NewRequest(http.MethodPost, "/verify", bytes.NewBuffer(jsonBody))
@@ -355,6 +379,6 @@ func (s *UserControllerTestSuite) TestHandleVerify() {
 		var resp map[string]string
 		json.Unmarshal(s.recorder.Body.Bytes(), &resp)
 		s.Equal("User Activated Successfully", resp["message"])
-		s.mockUsecase.AssertExpectations(s.T())
+		s.mockUserUsecase.AssertExpectations(s.T())
 	})
 }

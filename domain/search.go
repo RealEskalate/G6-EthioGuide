@@ -1,8 +1,8 @@
 package domain
 
 type SearchResult struct {
-	Procedures    []Procedure
-	Organizations []AccountOrgSearch
+	Procedures    []*Procedure
+	Organizations []*AccountOrgSearch
 }
 
 type AccountOrgSearch struct {
@@ -27,7 +27,7 @@ func ToSearch(orgs *Account) *AccountOrgSearch {
 }
 
 type SearchFilterRequest struct {
-	Query string 
-	Page  string 
-	Limit string
+	Query string
+	Page  int64
+	Limit int64
 }
