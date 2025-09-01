@@ -25,3 +25,9 @@ func ToSearch(orgs *Account) *AccountOrgSearch {
 		OrganizationDetail: orgs.OrganizationDetail,
 	}
 }
+
+type SearchFilterRequest struct {
+	Query string 
+	Page  string 
+	Limit string
+}
