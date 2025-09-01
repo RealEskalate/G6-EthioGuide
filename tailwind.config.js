@@ -10,27 +10,27 @@ const config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#3A6A8D', // Calypso
+          DEFAULT: '#3A6A8D',
           light: '#5B8DB1',
           dark: '#2A4B66',
         },
         secondary: {
-          DEFAULT: '#5E9C8D', // Patina
+          DEFAULT: '#5E9C8D',
           light: '#80B7A9',
           dark: '#44776A',
         },
         accent: {
-          DEFAULT: 'rgba(58,106,141,0.1)', // light blue
+          DEFAULT: 'rgba(58,106,141,0.1)',
           light: 'rgba(58,106,141,0.1)',
         },
         neutral: {
-          DEFAULT: '#A7B3B9', // Hit Gray
+          DEFAULT: '#A7B3B9',
           light: '#C8D1D6',
           dark: '#85939A',
         },
         background: {
           light: '#F5F7F8',
-          dark: '#2E4D57', // Pickled Bluewood
+          dark: '#2E4D57',
         },
         error: '#DC2626',
       },
@@ -44,4 +44,4 @@ const config = {
   darkMode: 'class',
 };
 
-export default config;
+module.exports = config;
