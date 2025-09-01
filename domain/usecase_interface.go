@@ -17,3 +17,7 @@ type IUserUsecase interface {
 type IGeminiUseCase interface {
 	TranslateContent(ctx context.Context, content, targetLang string) (string, error)
 }
+
+type ICategoryUsecase interface {
+	GetCategories(ctx context.Context, options *CategorySearchAndFilter) ([]*Category, int64, error)
+}

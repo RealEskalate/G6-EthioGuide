@@ -54,3 +54,24 @@ type LoginResponse struct {
 	AccessToken  string         `json:"access_token"`
 	RefreshToken string         `json:"refresh_token,omitempty"`
 }
+
+type CreateCategoryRequest struct {
+	ID             string `json:"id"`
+	OrganizationID string `json:"organization_id" binding:"required"`
+	ParentID       string `json:"parent_id"`
+	Title          string `json:"title" binding:"required"`
+}
+
+type CategoryResponse struct {
+	ID             string `json:"id"`
+	OrganizationID string `json:"organization_id"`
+	ParentID       string `json:"parent_id,omitempty"`
+	Title          string `json:"title"`
+}
+
+type PaginatedCategoryResponse struct {
+	Data    []*CategoryResponse `json:"data"`
+	Total   int64               `json:"total"`
+	Page    int64               `json:"page"`
+	Limit   int64               `json:"limit"`
+}
