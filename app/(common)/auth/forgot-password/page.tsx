@@ -17,12 +17,21 @@ import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { newPasswordSchema, NewPasswordFormData } from "@/lib/validation/new-password";
 import Image from "next/image";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useState } from "react";
 
 export default function NewPasswordPage() {
+  return (
+    <Suspense>
+      <NewPasswordPageContent />
+    </Suspense>
+  );
+}
+
+function NewPasswordPageContent() {
   const { t, i18n } = useTranslation("auth");
   const searchParams = useSearchParams();
   let token = searchParams.get("token"); // Get reset token from URL

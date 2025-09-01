@@ -2,7 +2,7 @@
 
 
 import { useState } from "react"
-import { ChevronDown, User } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { NotificationDropdown } from "./NotificationDropdown"

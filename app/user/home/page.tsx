@@ -31,7 +31,7 @@ export default function UserHomePage() {
         <h2 className="text-xl font-semibold text-gray-800 mb-6">Quick Access Procedures</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Passport Renewal */}
-          <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
               <Image src="/icons/business.svg" alt="Passport" width={24} height={24} className="w-6 h-6" />
             </div>
@@ -44,8 +44,8 @@ export default function UserHomePage() {
           </div>
 
           {/* Business Registration */}
-          <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+            <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mb-4">
               <Image
                 src="/icons/business-registration.svg"
                 alt="Business Registration"
@@ -63,7 +63,7 @@ export default function UserHomePage() {
           </div>
 
           {/* National ID Card */}
-          <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
               <Image src="/icons/passport.svg" alt="National ID Card" width={24} height={24} className="w-6 h-6" />
             </div>
@@ -76,7 +76,7 @@ export default function UserHomePage() {
           </div>
 
           {/* Driver's License */}
-          <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
               <Image
                 src="/icons/driver-license.svg"
