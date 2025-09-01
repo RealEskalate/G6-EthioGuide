@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:ethioguide/core/config/end_points.dart';
 import 'package:ethioguide/core/data/repositories/auth_repository_impl.dart';
 import 'package:ethioguide/core/domain/repositories/auth_repository.dart';
 import 'package:ethioguide/core/network/interceptors/auth_interceptor.dart';
@@ -25,7 +26,6 @@ Future<void> init() async {
 
   // Datasources
 
-  
   //* Features - Ai chat
   // Bloc
   sl.registerFactory<AiBloc>(
@@ -71,11 +71,10 @@ Future<void> init() async {
 
   //! External
   sl.registerLazySingleton(() => const FlutterSecureStorage());
-  // TODO: replace with actural base url
   sl.registerLazySingleton<Dio>(() {
     final dio = Dio(
       BaseOptions(
-        baseUrl: 'YOUR_API_BASE_URL',
+        baseUrl: EndPoints.baseUrl,
         headers: {'X-Platform': 'mobile'},
       ),
     );
