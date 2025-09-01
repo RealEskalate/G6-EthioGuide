@@ -14,7 +14,7 @@ const (
 	SubscriptionNone Subscription = "none"
 	SubscriptionPro  Subscription = "pro"
 
-	OrgTypeGov OrganizationType = "gov"
+	OrgTypeGov     OrganizationType = "gov"
 	OrgTypePrivate OrganizationType = "private"
 )
 
@@ -50,17 +50,17 @@ type Account struct {
 	PasswordHash  string
 	ProfilePicURL string
 	Role          Role
-	CreatedAt     time.Time 
+	CreatedAt     time.Time
 
 	UserDetail         *UserDetail
 	OrganizationDetail *OrganizationDetail
 }
 
 type UserDetail struct {
-	Username string
+	Username         string
 	SubscriptionPlan Subscription
-	IsBanned bool
-	IsVerified bool
+	IsBanned         bool
+	IsVerified       bool
 }
 
 type OrganizationDetail struct {

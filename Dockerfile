@@ -18,7 +18,7 @@ COPY . .
 # -o /app/server specifies the output path for the binary.
 # CGO_ENABLED=0 is important for creating a static binary that doesn't depend on system C libraries.
 # -ldflags="-w -s" strips debugging information, making the binary smaller.
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/server ./Delivery/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/server ./delivery/main.go
 
 
 # --- Stage 2: Final Image ---
