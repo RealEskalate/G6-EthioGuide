@@ -55,9 +55,8 @@ class ConversationModel extends Conversation {
     request: request,
     response: response,
     source: source,
-    procedures: procedures
-        .map((e) => ProcedureModel.fromEntity(e).toEntity())
-        .toList(),
+    procedures: procedures.isNotEmpty ? procedures.map((e) => ProcedureModel.fromEntity(e!).toEntity())
+        .toList() : []
   );
 
   static ConversationModel fromEntity(Conversation conversation) {
@@ -66,9 +65,9 @@ class ConversationModel extends Conversation {
       request: conversation.request,
       response: conversation.response,
       source: conversation.source,
-      procedures: conversation.procedures
-          .map((e) => ProcedureModel.fromEntity(e))
-          .toList(),
+      procedures: conversation.procedures.isNotEmpty ? conversation.procedures
+          .map((e) => ProcedureModel.fromEntity(e!))
+          .toList(): [],
     );
   }
 }

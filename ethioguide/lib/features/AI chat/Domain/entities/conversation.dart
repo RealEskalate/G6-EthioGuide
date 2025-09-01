@@ -15,7 +15,7 @@ class Conversation extends Equatable {
   final String request;
   final String response;
   final String source; // "official" or "ai-generated"
-  final List<Procedure> procedures;
+  final List<Procedure?> procedures;
 
   const Conversation({
     required this.id,
