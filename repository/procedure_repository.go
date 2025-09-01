@@ -37,3 +37,8 @@ type ProcedureModel struct {
 	// For M-M relationship with Notice
 	NoticeIDs []primitive.ObjectID `bson:"notice_ids,omitempty"`
 }
+
+
+type ProcedureRepository struct{
+	
+}

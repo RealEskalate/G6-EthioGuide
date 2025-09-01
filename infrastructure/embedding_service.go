@@ -21,7 +21,7 @@ type HuggingFaceEmbedding struct {
 // NewHuggingFaceEmbedding creates an embedding client with a list of API keys and a model name
 func NewHuggingFaceEmbedding(apiKeys []string, model, embeddingUrl string) domain.IEmbeddingService {
     if len(apiKeys) == 0 {
-        panic("at least one API key must be provided")
+        panic("at least one vector Embedding API key must be provided")
     }
     return &HuggingFaceEmbedding{
         APIKeys: apiKeys,
