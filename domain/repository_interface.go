@@ -17,3 +17,7 @@ type ITokenRepository interface {
 	GetToken(ctx context.Context, tokentype, token string) (string, error)
 	DeleteToken(ctx context.Context, tokentype, token string) error
 }
+
+type IProcedureRepository interface {
+	Create(ctx context.Context, procedure *Procedure) error
+}

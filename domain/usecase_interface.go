@@ -17,3 +17,7 @@ type IUserUsecase interface {
 type IGeminiUseCase interface {
 	TranslateContent(ctx context.Context, content, targetLang string) (string, error)
 }
+
+type IProcedureUsecase interface {
+	CreateProcedure(ctx context.Context, procedure *Procedure) error
+}
