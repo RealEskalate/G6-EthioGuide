@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { IoMegaphoneOutline } from "react-icons/io5";
 import { MdOutlineFeedback } from "react-icons/md";
@@ -64,10 +65,12 @@ export default function OrgDashboard() {
           <Plus className="w-4 h-4" />
           <span>Add New Procedure</span>
         </Button>
-        <Button className="flex items-center space-x-2 bg-[#5E9C8D] hover:bg-[#7FB4A6]">
-          <Megaphone className="w-4 h-4" />
-          <span>Create Notice</span>
-        </Button>
+        <Link href="/organization/notices/create">
+          <Button className="flex items-center space-x-2 bg-[#5E9C8D] hover:bg-[#7FB4A6]">
+            <Megaphone className="w-4 h-4" />
+            <span>Create Notice</span>
+          </Button>
+        </Link>
       </div>
 
       {/* Stats */}
