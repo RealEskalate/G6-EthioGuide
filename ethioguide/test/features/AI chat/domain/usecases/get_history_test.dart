@@ -18,6 +18,7 @@ void main() {
 
   final String tQuery = 'How to get a passport';
   final Conversation tConversation = Conversation(
+    id: 'id',
     request: tQuery,
     response: 'Steps to get a Passport...',
     source: 'official',

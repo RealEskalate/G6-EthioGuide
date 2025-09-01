@@ -24,6 +24,7 @@ void main() {
   group('getCachedHistory', () {
     final tHistory = [
       ConversationModel(
+        id: 'id',
         request: 'How to get a passport?',
         response: 'Steps to get a passport...',
         source: 'official',
@@ -97,6 +98,7 @@ void main() {
   group('cacheHistory', () {
     final tHistory = [
       ConversationModel(
+        id: 'id',
         request: 'How to get a passport?',
         response: 'Steps to get a passport...',
         source: 'official',

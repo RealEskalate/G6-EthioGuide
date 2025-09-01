@@ -21,6 +21,7 @@ class ProcedureModel extends Procedure {
 
 class ConversationModel extends Conversation {
   const ConversationModel({
+    required super.id,
     required super.request,
     required super.response,
     required super.source,
@@ -29,6 +30,7 @@ class ConversationModel extends Conversation {
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
     return ConversationModel(
+      id: json['id'] as String,
       request: json['request'] as String,
       response: json['response'] as String,
       source: json['source'] as String,
@@ -39,6 +41,7 @@ class ConversationModel extends Conversation {
   }
 
   Map<String, dynamic> toJson() => {
+    'id': id,
     'request': request,
     'response': response,
     'source': source,
@@ -48,6 +51,7 @@ class ConversationModel extends Conversation {
   };
 
   Conversation toEntity() => Conversation(
+    id: id,
     request: request,
     response: response,
     source: source,
@@ -58,6 +62,7 @@ class ConversationModel extends Conversation {
 
   static ConversationModel fromEntity(Conversation conversation) {
     return ConversationModel(
+      id: conversation.id,
       request: conversation.request,
       response: conversation.response,
       source: conversation.source,

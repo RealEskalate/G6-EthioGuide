@@ -37,6 +37,7 @@ void main() {
   group('SendQueryEvent', () {
     const tQuery = 'How to get a passport?';
     final tConversation = ConversationModel(
+      id: 'id',
       request: tQuery,
       response: 'Steps to get a passport...',
       source: 'official',
@@ -102,6 +103,7 @@ void main() {
   group('GetHistoryEvent', () {
     final tHistory = [
       ConversationModel(
+        id: 'id',
         request: 'How to get a passport?',
         response: 'Steps to get a passport...',
         source: 'official',

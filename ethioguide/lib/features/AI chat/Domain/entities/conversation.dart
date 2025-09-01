@@ -11,12 +11,14 @@ class Procedure extends Equatable {
 }
 
 class Conversation extends Equatable {
+  final String id;
   final String request;
   final String response;
   final String source; // "official" or "ai-generated"
   final List<Procedure> procedures;
 
   const Conversation({
+    required this.id,
     required this.request,
     required this.response,
     required this.source,

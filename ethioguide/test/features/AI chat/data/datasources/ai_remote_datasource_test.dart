@@ -29,12 +29,14 @@ void main() {
   group('sendQuery', () {
     const tQuery = 'How to get a passport?';
     final tConversationModel = ConversationModel(
+      id: 'id',
       request: tQuery,
       response: 'Steps to get a passport...',
       source: 'official',
       procedures: [ProcedureModel(id: '1', name: 'Passport Application')],
     );
     final tResponseData = {
+      'id': 'id',
       'request': tQuery,
       'response': 'Steps to get a passport...',
       'source': 'official',
@@ -135,6 +137,7 @@ void main() {
   group('getHistory', () {
     final tHistory = [
       ConversationModel(
+        id: 'id',
         request: 'How to get a passport?',
         response: 'Steps to get a passport...',
         source: 'official',
@@ -143,6 +146,7 @@ void main() {
     ];
     final tResponseData = [
       {
+        'id': 'id',
         'request': 'How to get a passport?',
         'response': 'Steps to get a passport...',
         'source': 'official',

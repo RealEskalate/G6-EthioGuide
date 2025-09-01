@@ -33,6 +33,7 @@ void main() {
   group('sendQuery', () {
     const tQuery = 'How to get a passport?';
     final tConversation = ConversationModel(
+      id: 'id',
       request: tQuery,
       response: 'Steps to get a passport...',
       source: 'official',
@@ -40,6 +41,7 @@ void main() {
     );
     final tCachedHistory = [
       ConversationModel(
+        id: 'id',
         request: 'Previous query',
         response: 'Previous response',
         source: 'official',
@@ -141,6 +143,7 @@ void main() {
   group('getHistory', () {
     final tHistory = [
       ConversationModel(
+        id: 'id',
         request: 'How to get a passport?',
         response: 'Steps to get a passport...',
         source: 'official',
