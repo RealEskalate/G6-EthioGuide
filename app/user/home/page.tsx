@@ -4,20 +4,21 @@ import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
+import Link from "next/link"
 
 export default function UserHomePage() {
   return (
-    <>
-      {/* Welcome Section */}
-  <div className="mb-8">
+    <div className="min-h-screen w-full bg-[#E5E7EB]">
+  {/* Welcome Section */}
+  <div className="mb-8 w-full">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 text-balance">Welcome to EthioGuide!</h1>
         <p className="text-gray-600 text-pretty">
           Your trusted partner for navigating Ethiopian government procedures with ease.
         </p>
       </div>
 
-      {/* Search Bar */}
-  <div className="relative mb-8" style={{ animationDelay: "0.1s" }}>
+  {/* Search Bar */}
+  <div className="relative mb-8 w-full" style={{ animationDelay: "0.1s" }}>
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         <Input
           placeholder="Search government procedures..."
@@ -25,8 +26,8 @@ export default function UserHomePage() {
         />
       </div>
 
-      {/* Quick Access Procedures */}
-  <section className="mb-8" style={{ animationDelay: "0.2s" }}>
+  {/* Quick Access Procedures */}
+  <section className="mb-8 w-full" style={{ animationDelay: "0.2s" }}>
         <h2 className="text-xl font-semibold text-gray-800 mb-6">Quick Access Procedures</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Passport Renewal */}
@@ -35,9 +36,11 @@ export default function UserHomePage() {
               <Image src="/icons/business.svg" alt="Passport" width={24} height={24} className="w-6 h-6" />
             </div>
             <h3 className="font-medium text-gray-800 mb-4">Passport Renewal</h3>
-            <Button className="w-full bg-[#6986af] hover:bg-[#3a6a8d] text-white transition-colors duration-200">
-              Start Procedure
-            </Button>
+            <Link href="/user/procedures-list">
+              <Button className="w-full bg-[#6986af] hover:bg-[#3a6a8d] text-white transition-colors duration-200">
+                Start Procedure
+              </Button>
+            </Link>
           </div>
 
           {/* Business Registration */}
@@ -52,9 +55,11 @@ export default function UserHomePage() {
               />
             </div>
             <h3 className="font-medium text-gray-800 mb-4">Business Registration</h3>
-            <Button className="w-full bg-[#6986af] hover:bg-[#3a6a8d] text-white transition-colors duration-200">
-              Start Procedure
-            </Button>
+            <Link href="/user/procedures-list">
+              <Button className="w-full bg-[#6986af] hover:bg-[#3a6a8d] text-white transition-colors duration-200">
+                Start Procedure
+              </Button>
+            </Link>
           </div>
 
           {/* National ID Card */}
@@ -63,9 +68,11 @@ export default function UserHomePage() {
               <Image src="/icons/passport.svg" alt="National ID Card" width={24} height={24} className="w-6 h-6" />
             </div>
             <h3 className="font-medium text-gray-800 mb-4">National ID Card</h3>
-            <Button className="w-full bg-[#6986af] hover:bg-[#3a6a8d] text-white transition-colors duration-200">
-              Start Procedure
-            </Button>
+            <Link href="/user/procedures-list">
+              <Button className="w-full bg-[#6986af] hover:bg-[#3a6a8d] text-white transition-colors duration-200">
+                Start Procedure
+              </Button>
+            </Link>
           </div>
 
           {/* Driver's License */}
@@ -87,8 +94,8 @@ export default function UserHomePage() {
         </div>
       </section>
 
-      {/* Recent Activity Feed */}
-  <section className="" style={{ animationDelay: "0.3s" }}>
+  {/* Recent Activity Feed */}
+  <section className="w-full" style={{ animationDelay: "0.3s" }}>
         <h2 className="text-xl font-semibold text-gray-800 mb-6">Recent Activity Feed</h2>
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
           <div className="space-y-4">
@@ -195,6 +202,6 @@ export default function UserHomePage() {
           </div>
         </div>
       </section>
-    </>
+    </div>
   )
 }
