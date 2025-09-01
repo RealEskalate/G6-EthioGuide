@@ -52,5 +52,48 @@ type LoginRequest struct {
 type LoginResponse struct {
 	User         domain.Account `json:"user"`
 	AccessToken  string         `json:"access_token"`
-	RefreshToken string         `json:"refresh_token,omitempty"`
+	RefreshToken string         `json:"refresh_token"`
+}
+
+
+// procedure-related DTOs
+type ProcedureDTO struct {
+	ID             string   				`json:"id"`
+	GroupID        *string  				`json:"group_id"`
+	OrganizationID string   				 `json:"organization_id"`
+	Name           string   				`json:"name"`
+	Content        domain.ProcedureContent `json:"content"`
+	Fees           domain.ProcedureFee     `json:"fees"`
+	ProcessingTime domain.ProcessingTime   `json:"processing_time"`
+	CreatedAt      time.Time               `json:"created_at"`
+	NoticeIDs      []string                 `json:"notice_ids"`
+}
+
+func (dto *ProcedureDTO) FromDTOToDomainProcedure() *domain.Procedure {
+
+	return &domain.Procedure{
+		ID:             dto.ID,
+		GroupID:        dto.GroupID,
+		OrganizationID: dto.OrganizationID,
+		Name:           dto.Name,
+		Content:        dto.Content,
+		Fees:           dto.Fees,
+		ProcessingTime: dto.ProcessingTime,
+		CreatedAt:      dto.CreatedAt,
+		NoticeIDs:      dto.NoticeIDs,
+	}
+}
+
+func FromDomainProcedureToDTO(p *domain.Procedure) *ProcedureDTO {
+	return &ProcedureDTO{
+		ID:             p.ID,
+		GroupID:        p.GroupID,
+		OrganizationID: p.OrganizationID,
+		Name:           p.Name,
+		Content:        p.Content,
+		Fees:           p.Fees,
+		ProcessingTime: p.ProcessingTime,
+		CreatedAt:      p.CreatedAt,
+		NoticeIDs:      p.NoticeIDs,
+	}
 }
