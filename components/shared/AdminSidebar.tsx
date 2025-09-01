@@ -52,7 +52,7 @@ export function AdminSidebar() {
   };
 
   const handleMenuItemClick = (label: string) => {
-    route.push(`/${label}`);
+    route.push(`/admin/${label}`);
   };
 
   const menuItemsWithHandlers = adminMenuItems.map((item) => ({
