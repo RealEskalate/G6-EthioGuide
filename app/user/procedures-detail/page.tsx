@@ -2,18 +2,16 @@
 
 import { useState } from "react"
 import {
-  Bell,
   Clock,
   DollarSign,
   Download,
   ThumbsUp,
-  ArrowLeft,
   FileText,
   Globe,
   MessageCircle,
   Share,
-  Settings,
 } from "lucide-react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -32,10 +30,10 @@ export default function ProcedureDetail() {
               {/* Header Section */}
               <div className="mb-6">
                 <h1 className="text-2xl font-bold text-[#111827] mb-1 animate-in fade-in duration-500">
-                  Driver's License Renewal
+                  Driver&#39;s License Renewal
                 </h1>
                 <p className="text-[#6b7280] text-sm animate-in fade-in duration-700">
-                  Complete guide to renew your driver's license in Ethiopia
+                  Complete guide to renew your driver&#39;s license in Ethiopia
                 </p>
               </div>
 
@@ -225,7 +223,7 @@ export default function ProcedureDetail() {
                   <div className="space-y-3 animate-in fade-in duration-500">
                     <div className="flex gap-3 p-3 rounded-lg hover:bg-[#f8fafc] transition-all duration-300 transform hover:-translate-y-1">
                       <div className="w-8 h-8 rounded-full bg-[#ced4da] flex items-center justify-center text-xs font-semibold transition-transform duration-300 hover:scale-110 overflow-hidden">
-                        <img src="/sarah-profile.png" alt="Sarah" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        <Image src="/sarah-profile.png" alt="Sarah" width={100} height={100} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                         <span>SM</span>
                       </div>
                       <div className="flex-1">
@@ -248,7 +246,7 @@ export default function ProcedureDetail() {
 
                     <div className="flex gap-3 p-3 rounded-lg hover:bg-[#f8fafc] transition-all duration-300 transform hover:-translate-y-1">
                       <div className="w-8 h-8 rounded-full bg-[#ced4da] flex items-center justify-center text-xs font-semibold transition-transform duration-300 hover:scale-110 overflow-hidden">
-                        <img src="/michael-profile.png" alt="Michael" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        <Image src="/michael-profile.png" alt="Michael" width={100} height={100} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                         <span>MT</span>
                       </div>
                       <div className="flex-1">
@@ -256,7 +254,7 @@ export default function ProcedureDetail() {
                           <span className="text-sm font-medium text-[#111827]">Michael T.</span>
                         </div>
                         <p className="text-xs text-[#6b7280] mb-1">
-                          Make sure to bring exact change for fees. They don't always have change available.
+                          Make sure to bring exact change for fees. They don&#39;t always have change available.
                         </p>
                         <div className="flex items-center gap-3 text-xs text-[#9ca3af]">
                           <div className="flex items-center gap-1 hover:text-[#4A90E2] transition-colors duration-300 cursor-pointer">
@@ -337,7 +335,7 @@ export default function ProcedureDetail() {
                     <div className="bg-white border border-[#e5e7eb] rounded-lg p-4 hover:bg-[#f8fafc] transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#4A90E2] flex items-center justify-center text-white text-sm font-semibold transition-transform duration-300 hover:scale-110 overflow-hidden">
-                          <img src="/user-profile-illustration.png" alt="User" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                          <Image src="/user-profile-illustration.png" alt="User" width={100} height={100} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                           <span>AC</span>
                         </div>
                         <div className="flex-1">
@@ -348,7 +346,7 @@ export default function ProcedureDetail() {
                             How to integrate AI tools into daily study routine?
                           </h4>
                           <p className="text-sm text-[#6b7280] mb-3">
-                            I've been experimenting with various AI tools for studying and note-taking. Would love to
+                            I&#39;ve been experimenting with various AI tools for studying and note-taking. Would love to
                             hear your experiences and recommendations for the best workflow...
                           </p>
                           <div className="flex items-center gap-2 mb-3">

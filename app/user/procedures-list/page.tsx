@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
+import Link from "next/link"
 
 export default function ProceduresPage() {
   const procedures = [
@@ -202,14 +203,9 @@ export default function ProceduresPage() {
                         <td className="py-4 px-6 text-[#4b5563]">{procedure.lastUpdated}</td>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
-                            {(() => {
-                              const Link = require("next/link").default;
-                              return (
-                                <Link href={`/user/procedures-detail?id=${procedure.id}`}>
-                                  <Button className="bg-[#3a6a8d] hover:bg-[#2e4d57] text-white">Start</Button>
-                                </Link>
-                              );
-                            })()}
+                            <Link href={`/user/procedures-detail?id=${procedure.id}`}>
+                              <Button className="bg-[#3a6a8d] hover:bg-[#2e4d57] text-white">Start</Button>
+                            </Link>
                             <Button variant="ghost" size="sm" className="hover:bg-gray-200 hover:text-gray-900 font-medium">
                               {procedure.bookmarked ? (
                                 <Star className="w-4 h-4 fill-[#ffb703] text-[#ffb703]" />

@@ -2,16 +2,11 @@
 
 import { useState, useEffect } from "react"
 import {
-  Bell,
   Download,
   Upload,
   FileText,
   AlertTriangle,
   Info,
-  Facebook,
-  Instagram,
-  Twitter,
-  Youtube,
   Calendar,
   CreditCard,
 } from "lucide-react"
@@ -138,7 +133,7 @@ export default function CityGovPortal() {
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (file) {
-        updateStepCompletion(stepKey, { [requirementKey]: true } as any)
+        updateStepCompletion(stepKey, { [requirementKey]: true } as Record<string, boolean>)
         alert(`${file.name} uploaded successfully!`)
       }
     }
@@ -425,7 +420,7 @@ export default function CityGovPortal() {
                       <h3 className="font-medium text-[#2e4d57]">Provide Proof of Identity</h3>
                     </div>
                     <p className="text-sm text-[#a7b3b9] mb-3">
-                      Upload a clear copy of your government-issued photo ID (driver's license, passport, or state ID).
+                      Upload a clear copy of your government-issued photo ID (driver&#39;s license, passport, or state ID).
                     </p>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">

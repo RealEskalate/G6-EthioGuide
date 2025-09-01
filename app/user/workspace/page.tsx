@@ -1,10 +1,14 @@
+"use client";
+
 import { Bot, Calendar, CheckCircle, Clock, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CardContent, Card } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { useRouter } from "next/navigation"
 
 export default function WorkspacePage() {
+  const router = useRouter();
   const stats = [
     {
       title: "Total Procedures",
@@ -179,6 +183,7 @@ export default function WorkspacePage() {
                               ? "bg-[#3A6A8D] hover:bg-[#2d5470] text-white transition-all duration-200 hover:scale-105"
                               : "transition-all duration-200"
                           }
+                          onClick={() => router.push("/user/checklist")}
                         >
                           {procedure.buttonText}
                         </Button>

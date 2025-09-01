@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { CustomIcon } from "./CustomIcon"
 import { cn } from "@/lib/utils"
@@ -59,7 +60,6 @@ export function UserSidebar({
         <nav className="p-4 space-y-2 flex-1">
           {menuItems.map((item, index) => {
             if (item.href) {
-              const Link = require("next/link").default;
               return (
                 <Link
                   key={index}
