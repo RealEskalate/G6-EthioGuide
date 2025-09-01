@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:ethioguide/core/config/end_points.dart';
 import 'package:ethioguide/core/error/exception.dart';
 import 'package:ethioguide/core/network/network_info.dart';
 import 'package:ethioguide/features/AI%20chat/data/models/conversation_model.dart';
@@ -91,7 +92,7 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
 
     /// if device is online
     try {
-      final response = await dio.post('/ai/guide', data: {'query': query});
+      final response = await dio.post(EndPoints.sendQueryEndPoint, data: {'query': query});
       final statusCode = response.statusCode;
 
       if (statusCode! >= 300) {
@@ -142,7 +143,7 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
 
     /// if device is online
     try {
-      final response = await dio.get('/ai/history');
+      final response = await dio.get(EndPoints.getHistoryEndPoint);
       final statusCode = response.statusCode;
 
       if (statusCode! >= 300) {
@@ -192,7 +193,7 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
     /// if device is online
     try {
       final response = await dio.post(
-        '/translate',
+        EndPoints.translateContentEndPoint,
         data: {'content': content, 'lang': lang},
       );
 
