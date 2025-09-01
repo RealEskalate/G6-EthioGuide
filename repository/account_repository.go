@@ -203,8 +203,9 @@ func (r *AccountRepository) GetByUsername(ctx context.Context, username string) 
 
 func (r *AccountRepository) GetOrgs(ctx context.Context, filter domain.GetOrgsFilter) ([]*domain.Account, int64, error) {
 	query := bson.M{}
+	query["role"] = domain.RoleOrg
 	if filter.Type != "" {
-		query["type"] = filter.Type
+		query["organization_detail.type"] = filter.Type
 	}
 
 	if filter.Query != "" {
@@ -218,7 +219,7 @@ func (r *AccountRepository) GetOrgs(ctx context.Context, filter domain.GetOrgsFi
 	findoption.SetLimit(filter.PageSize)
 	findoption.SetSkip((filter.Page - 1) * filter.PageSize)
 
-	cursor, err := r.collection.Find(ctx, filter, &findoption)
+	cursor, err := r.collection.Find(ctx, query, &findoption)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -233,7 +234,7 @@ func (r *AccountRepository) GetOrgs(ctx context.Context, filter domain.GetOrgsFi
 		res = append(res, toDomainAccount(&model))
 	}
 
-	total, err := r.collection.CountDocuments(ctx, filter)
+	total, err := r.collection.CountDocuments(ctx, query)
 	if err != nil {
 		return nil, 0, err
 	}
