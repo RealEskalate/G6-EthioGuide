@@ -3,6 +3,7 @@ import 'package:ethioguide/core/config/end_points.dart';
 import 'package:ethioguide/core/data/repositories/auth_repository_impl.dart';
 import 'package:ethioguide/core/domain/repositories/auth_repository.dart';
 import 'package:ethioguide/core/network/interceptors/auth_interceptor.dart';
+import 'package:ethioguide/core/network/network_info.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/repository/ai_repository.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/usecases/get_history.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/usecases/send_query.dart';
@@ -13,6 +14,7 @@ import 'package:ethioguide/features/AI%20chat/data/datasources/ai_remote_datasou
 import 'package:ethioguide/features/AI%20chat/data/repository/ai_repository_impl.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 
 final sl = GetIt.instance;
 
@@ -61,25 +63,21 @@ Future<void> init() async {
   );
 
   //! Core
+  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
   //* Data Layer (Repositories)
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(secureStorage: sl()),
   );
 
   //* Network (Dio & Interceptors)
-  sl.registerLazySingleton(() => AuthInterceptor());
+  // sl.registerLazySingleton(() => AuthInterceptor());
 
   //! External
   sl.registerLazySingleton(() => const FlutterSecureStorage());
   sl.registerLazySingleton<Dio>(() {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: EndPoints.baseUrl,
-        headers: {'X-Platform': 'mobile'},
-      ),
-    );
-    dio.interceptors.add(sl<AuthInterceptor>());
-    // You might add other interceptors here too
+    final dio = Dio();
+    dio.interceptors.add(AuthInterceptor(sl<AuthRepository>(), dio));
     return dio;
   });
+  sl.registerLazySingleton(() => InternetConnectionChecker.createInstance());
 }
