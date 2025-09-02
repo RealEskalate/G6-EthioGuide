@@ -5,13 +5,20 @@ export const newPasswordSchema = z
     password: z
       .string()
       .min(8, { message: 'Password must be at least 8 characters' })
-      .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
-      .regex(/[a-z]/, { message: 'Password must contain at least one lowercase letter' })
-      .regex(/[0-9]/, { message: 'Password must contain at least one number' })
-      .regex(/[^A-Za-z0-9]/, { message: 'Password must contain at least one special character' }),
+      .refine(
+        (val) =>
+          /[A-Z]/.test(val) && // uppercase
+          /[a-z]/.test(val) && // lowercase
+          /[0-9]/.test(val) && // number
+          /[^A-Za-z0-9]/.test(val), // special character
+        {
+          message:
+            'Password must contain at least one uppercase, one lowercase, one number, and one special character',
+        }
+      ),
     confirmPassword: z
       .string()
-      .min(8, { message: 'Confirm password must be at least 8 characters' }),
+      // .min(8, { message: 'Confirm password must be at least 8 characters' }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
