@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { Header } from "@/components/auth/Header"
-import Footer from "@/components/shared/Footer"
+import {Footer} from "@/components/shared/Footer"
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
