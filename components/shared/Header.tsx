@@ -51,7 +51,7 @@ export function Header() {
             variant="ghost"
             size="sm"
             className="p-0 rounded-full hover:bg-gray-100"
-            onClick={() => window.location.href = '/profile'}
+            onClick={() => window.location.href = '/admin/profile'}
             aria-label="Go to profile"
           >
             <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200">

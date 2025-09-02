@@ -86,37 +86,7 @@ export function UserSidebar({
                 </Link>
               );
             }
-            return (
-              <div
-                key={index}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200",
-                  item.active
-                    ? "text-gray-800 bg-gray-100 shadow-sm"
-                    : "text-gray-600 hover:bg-gray-200 hover:text-gray-900 font-medium",
-                  collapsed ? "justify-center" : "",
-                )}
-                onClick={item.onClick}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    item.onClick?.();
-                  }
-                }}
-              >
-                <CustomIcon
-                  src={item.iconSrc}
-                  alt={item.iconAlt}
-                  className={cn("flex-shrink-0", collapsed ? "w-8 h-8" : "w-5 h-5")}
-                />
-                {!collapsed && (
-                  <span className={cn("transition-opacity duration-200", item.active ? "font-medium" : "")}> 
-                    {item.iconAlt}
-                  </span>
-                )}
-              </div>
-            );
+           
           })}
           {menuItems.map((item, index) => (
             <div
@@ -152,27 +122,6 @@ export function UserSidebar({
         </nav>
 
         <div className="p-4 space-y-2 border-t border-gray-100">
-          <div
-            className={cn(
-              "flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-200 hover:text-gray-900 font-medium rounded-lg cursor-pointer transition-all duration-200",
-              collapsed ? "justify-center" : "",
-            )}
-            onClick={onSettingsClick}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                onSettingsClick?.();
-              }
-            }}
-          >
-            <CustomIcon
-              src="/icons/settings.svg"
-              alt="Settings"
-              className={cn("flex-shrink-0", collapsed ? "w-8 h-8" : "w-5 h-5")}
-            />
-            {!collapsed && <span>{settingsLabel}</span>}
-          </div>
 
 <div
             className={cn(
