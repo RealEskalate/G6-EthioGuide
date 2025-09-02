@@ -53,13 +53,17 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error
 	if err != nil {
 		return "", err
 	}
+	source := "unofficial"
+	if len(docs) > 0 {
+		source = "official"
+	}
     // After: return answer, nil
 
     // Example: Save chat history (pseudo, adjust as needed)
     userID, _ := ctx.Value("userID").(string)
     chat := &domain.AIChat{
         UserID:   userID, // You need to get this from context or as a parameter
-        Source:   "ai_chat",
+        Source:   source,
         Request:  query,
         Response: answer,
         // Timestamp will be set in the repository
