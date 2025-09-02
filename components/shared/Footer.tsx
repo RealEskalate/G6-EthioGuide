@@ -1,63 +1,97 @@
-import { Facebook, Twitter, Instagram, Youtube } from "lucide-react"
-import Image from "next/image"
+import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="bg-[#2e4d57] text-white py-8 mt-12">
-      <div className="max-w-7xl mx-auto px-8">
-        <div className="flex items-center justify-between">
+    <footer className="bg-primary-dark text-white py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           {/* Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 justify-center sm:justify-start">
             <Image
               src="/images/ethioguide-symbol.png"
               alt="EthioGuide Symbol"
-              width={40}
-              height={40}
-              className="h-10 w-10"
+              width={32}
+              height={32}
+              className="h-8 w-8 sm:h-10 sm:w-10"
             />
-            <span className="font-semibold text-xl">EthioGuide</span>
+            <span className="font-semibold text-lg sm:text-xl">EthioGuide</span>
           </div>
 
           {/* Navigation Links */}
-          <div className="flex items-center gap-8">
-            <a href="#" className="text-[#a7b3b9] hover:text-white text-sm transition-colors duration-200">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+            <Link
+              href="/about"
+              className="text-[#a7b3b9] hover:text-primary text-xs sm:text-sm transition-colors duration-200"
+            >
               About Us
-            </a>
-            <a href="#" className="text-[#a7b3b9] hover:text-white text-sm transition-colors duration-200">
+            </Link>
+            <Link
+              href="/contact"
+              className="text-[#a7b3b9] hover:text-primary text-xs sm:text-sm transition-colors duration-200"
+            >
               Contact
-            </a>
-            <a href="#" className="text-[#a7b3b9] hover:text-white text-sm transition-colors duration-200">
+            </Link>
+            <Link
+              href="/privacy"
+              className="text-[#a7b3b9] hover:text-primary text-xs sm:text-sm transition-colors duration-200"
+            >
               Privacy Policy
-            </a>
-            <a href="#" className="text-[#a7b3b9] hover:text-white text-sm transition-colors duration-200">
+            </Link>
+            <Link
+              href="/terms"
+              className="text-[#a7b3b9] hover:text-primary text-xs sm:text-sm transition-colors duration-200"
+            >
               Terms of Service
-            </a>
-            <a href="#" className="text-[#a7b3b9] hover:text-white text-sm transition-colors duration-200">
+            </Link>
+            <Link
+              href="/help"
+              className="text-[#a7b3b9] hover:text-primary text-xs sm:text-sm transition-colors duration-200"
+            >
               Help Center
-            </a>
+            </Link>
           </div>
 
           {/* Social Icons */}
-          <div className="flex items-center gap-4">
-            <a href="#" className="text-[#a7b3b9] hover:text-white transition-colors duration-200">
-              <Facebook className="w-5 h-5" />
+          <div className="flex items-center justify-center gap-3 sm:gap-4">
+            <a
+              href="https://facebook.com"
+              className="text-[#a7b3b9] hover:text-primary transition-colors duration-200"
+              aria-label="Follow us on Facebook"
+            >
+              <Facebook className="w-4 h-4 sm:w-5 sm:h-5" />
             </a>
-            <a href="#" className="text-[#a7b3b9] hover:text-white transition-colors duration-200">
-              <Instagram className="w-5 h-5" />
+            <a
+              href="https://instagram.com"
+              className="text-[#a7b3b9] hover:text-primary transition-colors duration-200"
+              aria-label="Follow us on Instagram"
+            >
+              <Instagram className="w-4 h-4 sm:w-5 sm:h-5" />
             </a>
-            <a href="#" className="text-[#a7b3b9] hover:text-white transition-colors duration-200">
-              <Twitter className="w-5 h-5" />
+            <a
+              href="https://twitter.com"
+              className="text-[#a7b3b9] hover:text-primary transition-colors duration-200"
+              aria-label="Follow us on Twitter"
+            >
+              <Twitter className="w-4 h-4 sm:w-5 sm:h-5" />
             </a>
-            <a href="#" className="text-[#a7b3b9] hover:text-white transition-colors duration-200">
-              <Youtube className="w-5 h-5" />
+            <a
+              href="https://youtube.com"
+              className="text-[#a7b3b9] hover:text-primary transition-colors duration-200"
+              aria-label="Follow us on YouTube"
+            >
+              <Youtube className="w-4 h-4 sm:w-5 sm:h-5" />
             </a>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-[#4b5563] text-center">
-          <p className="text-[#a7b3b9] text-sm">© 2025 EthioGuide. All rights reserved.</p>
+        <div className="mt-4 pt-4 border-t border-[#4b5563] text-center">
+          <p className="text-[#a7b3b9] text-xs sm:text-sm">
+            © {new Date().getFullYear()} EthioGuide. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
-  )
+  );
 }

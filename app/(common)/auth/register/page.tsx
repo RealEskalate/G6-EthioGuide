@@ -23,7 +23,6 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { useState } from "react";
 import Image from "next/image";
 
-
 export default function RegisterPage() {
   const { t, i18n } = useTranslation("auth");
   const [showPassword, setShowPassword] = useState(false);
@@ -51,26 +50,31 @@ export default function RegisterPage() {
   // console.log('Auth translations:', i18n.getResourceBundle(i18n.language, 'auth'));
 
   return (
-    <div className="bg-neutral-light text-foreground min-h-screen flex flex-col items-center justify-center p-4 font-sans space-y-4">
-      <Image
-        src="/logo/logo.png"
-        alt="EthioGuide Logo"
-        width={240}
-        height={240}
-        className="object-contain"
-        priority
-      />
-      <Card className="bg-background-light w-full max-w-md border-neutral">
+    <div className="bg-neutral-light text-foreground flex flex-col items-center p-4 font-sans min-h-full">
+      <div className="flex items-center gap-3">
+        <Image
+          src="/images/ethioguide-symbol.png"
+          alt="EthioGuide Symbol"
+          width={50}
+          height={50}
+          // className="h-10 w-10"
+          priority
+        />
+        <span className="text-gray-800 font-semibold text-3xl">EthioGuide</span>
+      </div>
+      <Card className="bg-background-light w-full max-w-md border-neutral mt-6 mb-8">
         <CardHeader>
           <div className="flex flex-col items-center space-y-4">
-            <div className="flex justify-start items-center w-full">
+            <div className="flex justify-center items-center w-full">
               <CardTitle className="text-2xl font-bold text-center font-amharic">
                 {t("register.title")}
               </CardTitle>
               {/* <LanguageSwitcher /> */}
             </div>
           </div>
-          <p className="text-sm text-neutral-dark ">{t("register.sub_title")}</p>
+          <p className="text-sm text-center text-neutral-dark ">
+            {t("register.sub_title")}
+          </p>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -183,9 +187,15 @@ export default function RegisterPage() {
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral hover:text-primary"
-                          aria-label={showPassword ? "Hide password" : "Show password"}
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
                         >
-                          {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                          {showPassword ? (
+                            <FaEyeSlash className="h-5 w-5" />
+                          ) : (
+                            <FaEye className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
                     </FormControl>
@@ -205,17 +215,29 @@ export default function RegisterPage() {
                       <div className="relative">
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
-                          placeholder={t("register.confirm_password_placeholder")}
+                          placeholder={t(
+                            "register.confirm_password_placeholder"
+                          )}
                           className="border-neutral focus:border-primary pr-10"
                           {...field}
                         />
                         <button
                           type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                           className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral hover:text-primary"
-                          aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                          aria-label={
+                            showConfirmPassword
+                              ? "Hide confirm password"
+                              : "Show confirm password"
+                          }
                         >
-                          {showConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                          {showConfirmPassword ? (
+                            <FaEyeSlash className="h-5 w-5" />
+                          ) : (
+                            <FaEye className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
                     </FormControl>

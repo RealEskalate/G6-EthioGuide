@@ -1,3 +1,4 @@
+import { Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BiSolidEdit } from "react-icons/bi";
 import { FaEye } from "react-icons/fa";
@@ -11,7 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trash2 } from "lucide-react";
+
+import Link from "next/link";
 
 export default function OrgNoticeMangement() {
   const notices = [
@@ -146,9 +148,11 @@ export default function OrgNoticeMangement() {
 
       {/* Create New Notice */}
       <div className="flex justify-end">
-        <Button className="bg-primary hover:bg-primary-light text-white px-6 py-1 rounded-full flex items-center space-x-2">
-          <span>+ Create New Notice</span>
-        </Button>
+        <Link href="/organization/notices/create">
+          <Button className="bg-primary hover:bg-primary-light text-white px-6 py-1 rounded-full flex items-center space-x-2">
+            <span>+ Create New Notice</span>
+          </Button>
+        </Link>
       </div>
     </div>
   );
