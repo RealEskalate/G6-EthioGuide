@@ -3,6 +3,7 @@ package repository
 import (
 	"EthioGuide/domain"
 	"context"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -56,6 +57,23 @@ func NewCategoryRepository(db *mongo.Database, collectionName string) *categoryR
 	return &categoryRepository{
 		collection: db.Collection("Group"),
 	}
+}
+
+func (r *categoryRepository) Create(ctx context.Context, category *domain.Category) error {
+	model, err := fromDomainCategory(category)
+	if err != nil {
+		return fmt.Errorf("failed to map domain category to model: %w", err)
+	}
+
+	model.ID = primitive.NewObjectID()
+
+	_, err = r.collection.InsertOne(ctx, model)
+	if err != nil {
+		return fmt.Errorf("failed to insert category: %w", err)
+	}
+
+	category.ID = model.ID.Hex()
+	return nil
 }
 
 func (r *categoryRepository) GetCategories(ctx context.Context, opts *domain.CategorySearchAndFilter) ([]*domain.Category, int64, error) {

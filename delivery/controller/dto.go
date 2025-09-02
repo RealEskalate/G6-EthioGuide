@@ -55,6 +55,57 @@ type LoginResponse struct {
 	RefreshToken string         `json:"refresh_token,omitempty"`
 }
 
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required"`
+}
+
+type ProcedureCreateRequest struct {
+	Name           string `json:"name"`
+	GroupID        string `json:"groupId"`
+	OrganizationID string `json:"organizationId"`
+
+	// content
+	Prerequisites []string `json:"prerequisites"`
+	Steps         []string `json:"steps"`
+	Result        []string `json:"result"`
+
+	// Fees
+	Label    string  `json:"label"`
+	Currency string  `json:"currency"`
+	Amount   float64 `json:"amount"`
+
+	// ProcessingTime
+	MinDays int `json:"minDays"`
+	MaxDays int `json:"maxDays"`
+}
+
+func toDomainProcedure(p *ProcedureCreateRequest) *domain.Procedure {
+	content := domain.Content{
+		Prerequisites: p.Prerequisites,
+		Steps:         p.Steps,
+		Result:        p.Result,
+	}
+	fees := domain.Fees{
+		Label:    p.Label,
+		Currency: p.Currency,
+		Amount:   p.Amount,
+	}
+	processingTime := domain.ProcessingTime{
+		MinDays: p.MinDays,
+		MaxDays: p.MaxDays,
+	}
+
+	return &domain.Procedure{
+		GroupID:        p.GroupID,
+		OrganizationID: p.OrganizationID,
+		Name:           p.Name,
+		Content:        content,
+		Fees:           fees,
+		ProcessingTime: processingTime,
+	}
+}
+
 type CreateCategoryRequest struct {
 	ID             string `json:"id"`
 	OrganizationID string `json:"organization_id" binding:"required"`
