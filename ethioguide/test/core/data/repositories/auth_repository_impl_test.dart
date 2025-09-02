@@ -9,11 +9,11 @@ import 'auth_repository_impl_test.mocks.dart';
 
 void main() {
   late MockFlutterSecureStorage mockSecureStorage;
-  late AuthRepositoryImpl authRepository;
+  late CoreAuthRepositoryImpl authRepository;
 
   setUp(() {
     mockSecureStorage = MockFlutterSecureStorage();
-    authRepository = AuthRepositoryImpl(secureStorage: mockSecureStorage);
+    authRepository = CoreAuthRepositoryImpl(secureStorage: mockSecureStorage);
   });
 
   group('AuthRepositoryImpl', () {

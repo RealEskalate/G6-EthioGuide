@@ -8,7 +8,7 @@ import 'package:ethioguide/core/domain/repositories/auth_repository.dart';
 //     GetIt.instance; // Re-declare getIt here if not globally accessible
 
 class AuthInterceptor extends Interceptor {
-  final AuthRepository _authRepository;
+  final CoreAuthRepository _authRepository;
   final Dio _dio;
 
   AuthInterceptor(this._authRepository, this._dio);

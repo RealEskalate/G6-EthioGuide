@@ -86,8 +86,8 @@ Future<void> init() async {
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
 
   //* Data Layer (Repositories)
-  sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(secureStorage: sl()),
+  sl.registerLazySingleton<CoreAuthRepository>(
+    () => CoreAuthRepositoryImpl(secureStorage: sl()),
   );
 
   //* Network (Dio & Interceptors)
@@ -102,7 +102,7 @@ Future<void> init() async {
         headers: {'X-Platform': 'mobile'},
       ),
     );
-    dio.interceptors.add(AuthInterceptor(sl<AuthRepository>(), dio));
+    dio.interceptors.add(AuthInterceptor(sl<CoreAuthRepository>(), dio));
     return dio;
   });
   sl.registerLazySingleton(() => InternetConnectionChecker.createInstance());
