@@ -8,7 +8,7 @@ import Link from "next/link"
 
 export default function UserHomePage() {
   return (
-    <div className="min-h-screen w-full bg-[#E5E7EB]">
+    <div className="min-h-screen w-full bg-gray-50 p-4 ">
   {/* Welcome Section */}
   <div className="mb-8 w-full">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 text-balance">Welcome to EthioGuide!</h1>
@@ -96,10 +96,10 @@ export default function UserHomePage() {
 
   {/* Recent Activity Feed */}
   <section className="w-full" style={{ animationDelay: "0.3s" }}>
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">Recent Activity Feed</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-6">Current Progress</h2>
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
           <div className="space-y-4">
-            {/* Activity Items */}
+            {/* Activity Items (only completed and progress) */}
             {[
               {
                 status: "completed",
@@ -114,20 +114,6 @@ export default function UserHomePage() {
                 statusText: "In Progress",
                 time: "1 day ago",
                 color: "blue"
-              },
-              {
-                status: "pending",
-                title: "Tax Certificate Request",
-                statusText: "Pending Review",
-                time: "3 days ago",
-                color: "yellow"
-              },
-              {
-                status: "error",
-                title: "Work Permit Application",
-                statusText: "Documents Missing",
-                time: "5 days ago",
-                color: "red"
               },
               {
                 status: "completed",
@@ -146,31 +132,19 @@ export default function UserHomePage() {
                     className={`w-8 h-8 rounded-full flex items-center justify-center ${
                       item.color === "green"
                         ? "bg-green-100"
-                        : item.color === "blue"
-                          ? "bg-blue-100"
-                          : item.color === "yellow"
-                            ? "bg-yellow-100"
-                            : "bg-red-100"
+                        : "bg-blue-100"
                     }`}
                   >
                     <div
                       className={`w-4 h-4 flex items-center justify-center text-xs font-bold ${
                         item.color === "green"
                           ? "text-green-600"
-                          : item.color === "blue"
-                            ? "text-blue-600"
-                            : item.color === "yellow"
-                              ? "text-yellow-600"
-                              : "text-red-600"
+                          : "text-blue-600"
                       }`}
                     >
                       {item.status === "completed"
                         ? "✓"
-                        : item.status === "progress"
-                          ? "i"
-                          : item.status === "pending"
-                            ? "⚠"
-                            : "!"}
+                        : "i"}
                     </div>
                   </div>
                   <div>
@@ -179,11 +153,7 @@ export default function UserHomePage() {
                       className={`text-sm ${
                         item.color === "green"
                           ? "text-green-600"
-                          : item.color === "blue"
-                            ? "text-blue-600"
-                            : item.color === "yellow"
-                              ? "text-yellow-600"
-                              : "text-red-600"
+                          : "text-blue-600"
                       }`}
                     >
                       {item.statusText}
@@ -196,9 +166,11 @@ export default function UserHomePage() {
           </div>
 
           <div className="mt-6 pt-4 border-t border-gray-100 flex justify-center">
-            <Button variant="link" className="text-[#3a6a8d] hover:text-[#2d5a7b] transition-colors duration-200">
-              View All Activities
-            </Button>
+            <Link href="/user/workspace">
+              <Button variant="link" className="text-[#3a6a8d] hover:text-[#2d5a7b] transition-colors duration-200">
+                View All Activities
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
