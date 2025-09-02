@@ -105,3 +105,9 @@ func toDomainProcedure(p *ProcedureCreateRequest) *domain.Procedure {
 		ProcessingTime: processingTime,
 	}
 }
+
+type CreateCategoryRequest struct {
+	OrganizationID string `json:"organization_id" binding:"required"`
+	ParentID       string `json:"parent_id"`
+	Title          string `json:"title" binding:"required"`
+}

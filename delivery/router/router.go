@@ -12,6 +12,7 @@ import (
 func SetupRouter(
 	userController *controller.UserController,
 	procedureController *controller.ProcedureController,
+	catagorieController *controller.CategoryController,
 	geminiController *controller.GeminiController,
 	authMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
@@ -85,6 +86,11 @@ func SetupRouter(
 				procedures.POST("", requireAdminOrOrgRole, procedureController.CreateProcedure)
 			}
 
+			categories := v1.Group("/categories")
+			{
+				categories.POST("", requireAdminOrOrgRole, catagorieController.CreateCategory)
+			}
+
 		}
 	}
 
@@ -125,7 +131,6 @@ func SetupRouter(
 		categories := v1.Group("/categories")
 		{
 			categories.GET("", handleGetCategories)
-			categories.POST("", handleCreateCategory)
 			categories.PATCH("/:id", handleUpdateCategory)
 		}
 
@@ -456,10 +461,6 @@ func handleGetCategories(c *gin.Context) {
 			},
 		},
 	})
-}
-
-func handleCreateCategory(c *gin.Context) {
-	c.JSON(http.StatusCreated, gin.H{"id": "cat_new", "name": "New Category"})
 }
 
 func handleUpdateCategory(c *gin.Context) {

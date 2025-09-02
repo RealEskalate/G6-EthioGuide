@@ -20,6 +20,10 @@ type ITokenRepository interface {
 	DeleteToken(ctx context.Context, tokentype, token string) error
 }
 
+type ICategoryRepository interface {
+	Create(ctx context.Context, category *Category) error
+}
+
 type IProcedureRepository interface {
 	Create(ctx context.Context, procedure *Procedure) error
 }
