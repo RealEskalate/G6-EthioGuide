@@ -12,7 +12,6 @@ import (
 	"log"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -39,8 +38,6 @@ func main() {
 	}()
 	db := client.Database(cfg.DBName)
 	log.Println("Successfully connected to MongoDB.")
-
-	repository.CreateEmbeddingVectorIndex()
 
 	// --- Repositories ---
 	// Repositories are the first layer to be initialized as they only depend on the database.
