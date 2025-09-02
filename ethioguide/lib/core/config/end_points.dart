@@ -1,3 +1,3 @@
 class EndPoints {
-  static final refreshTokenEndPoint = '';
+  static final refreshTokenEndPoint = '/auth/refresh';
 }

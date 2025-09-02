@@ -1,12 +1,13 @@
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 
-/// To check if our device is online
-///
+// The abstract contract.
 abstract class NetworkInfo {
   Future<bool> get isConnected;
 }
 
-class NetworkInfoImpl extends NetworkInfo {
+// The concrete implementation for mobile.
+// It requires an InternetConnectionChecker to be passed into its constructor.
+class NetworkInfoImpl implements NetworkInfo {
   final InternetConnectionChecker connectionChecker;
   NetworkInfoImpl(this.connectionChecker);
 

@@ -69,7 +69,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                     child: TextButton(
                       onPressed: () {
                         // 5. Navigate to the next flow when "Skip" is pressed.
-                        context.go('/placeholder');
+                        context.go('/auth');
                       },
                       child: const Text(
                         'Skip',
@@ -131,7 +131,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                         onTap: () {
                           if (state.isLastPage) {
                             // 8. On the last page, navigate to the next flow.
-                            context.go('/placeholder');
+                            context.go('/auth');
                           } else {
                             // 9. Otherwise, animate to the next page.
                             _pageController.nextPage(
