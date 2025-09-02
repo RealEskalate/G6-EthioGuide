@@ -121,22 +121,37 @@ func (ctrl *UserController) Login(c *gin.Context) {
 	}
 }
 
+func (ctrl *UserController) GetProfile(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+
+	account, err := ctrl.userUsecase.GetProfile(c.Request.Context(), userID.(string))
+	if err != nil {
+		HandleError(c, err)
+	}
+
+	c.JSON(http.StatusOK, toUserResponse(account))
+}
+
 func (ctrl *UserController) UpdatePassword(c *gin.Context) {
 	accountID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
 		return
 	}
-	
+
 	var req ChangePasswordRequest
-	if err := c.ShouldBindJSON(&req); err != nil{
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
 	}
 
 	err := ctrl.userUsecase.UpdatePassword(c.Request.Context(), accountID.(string), req.OldPassword, req.NewPassword)
 	if err != nil {
 		HandleError(c, err)
-		return 
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
