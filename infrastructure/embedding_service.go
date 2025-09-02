@@ -13,34 +13,40 @@ import (
 
 type HuggingFaceEmbedding struct {
 	APIKeys      []string
-	Model        string
 	EmbeddingUrl string
-	counter      uint64
+	counter      *uint64
 }
 
 // NewHuggingFaceEmbedding creates an embedding client with a list of API keys and a model name
-func NewEmbeddingService(apiKeys []string, model, embeddingUrl string) (domain.IEmbeddingService, error) {
+func NewEmbeddingService(apiKeys []string, embeddingUrl string) (domain.IEmbeddingService, error) {
 	if len(apiKeys) == 0 {
 		panic("at least one vector Embedding API key must be provided")
 	}
+	var counter uint64 = 0
 	return &HuggingFaceEmbedding{
 		APIKeys:      apiKeys,
-		Model:        model,
 		EmbeddingUrl: embeddingUrl,
+		counter:      &counter,
 	}, nil
 }
 
 // getNextKey rotates through the available API keys in a thread-safe way
 func (h *HuggingFaceEmbedding) getNextKey() string {
-	idx := atomic.AddUint64(&h.counter, 1)
+	idx := atomic.AddUint64(h.counter, 1)
 	return h.APIKeys[int(idx-1)%len(h.APIKeys)]
 }
 
 func (h *HuggingFaceEmbedding) GenerateEmbedding(ctx context.Context, text string) ([]float64, error) {
-	url := h.EmbeddingUrl + h.Model
+	if text == "" {
+		return nil, errors.New("text input cannot be empty")
+	}
+	url := h.EmbeddingUrl
 
-	reqBody, _ := json.Marshal(map[string]string{"inputs": text})
-	req, _ := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(reqBody))
+	reqBody, _ := json.Marshal(map[string][]string{"inputs": {text}})
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(reqBody))
+	if err != nil {
+		return nil, err
+	}
 	req.Header.Set("Authorization", "Bearer "+h.getNextKey())
 	req.Header.Set("Content-Type", "application/json")
 

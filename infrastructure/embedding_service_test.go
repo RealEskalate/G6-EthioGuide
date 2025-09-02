@@ -12,10 +12,9 @@ import (
 
 type EmbeddingServiceSuite struct {
 	suite.Suite
-	apiURL        string
-	apiKey        []string
-	embeddingMode string
-	service       domain.IEmbeddingService
+	apiURL  string
+	apiKey  []string
+	service domain.IEmbeddingService
 }
 
 func (s *EmbeddingServiceSuite) SetupSuite() {
@@ -25,11 +24,14 @@ func (s *EmbeddingServiceSuite) SetupSuite() {
 		s.T().Skip("Skipping EmbeddingService integration tests: EMBEDDING_URL not set.")
 	}
 	s.apiKey = append(s.apiKey, cfg.EmbeddingApiKey)
-	s.embeddingMode = cfg.EmbeddingModel
+	if len(s.apiKey) == 0 {
+		s.T().Skip("Skipping EmbeddingService integration tests: api key not set.")
+
+	}
 }
 
 func (s *EmbeddingServiceSuite) SetupTest() {
-	service, err := NewEmbeddingService(s.apiKey, s.apiURL,s.embeddingMode)
+	service, err := NewEmbeddingService(s.apiKey, s.apiURL)
 	s.Require().NoError(err, "Failed to create a new Embedding Service instance")
 	s.service = service
 }
