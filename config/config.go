@@ -98,7 +98,7 @@ func Load() *Config {
 		VerificationFrontendUrl:  getEnv("VERIFICATION_FRONTEND-URL", "http://localhost:8080/api/v1/auth/verify"),
 		ResetPasswordFrontendUrl: getEnv("RESET_PASSWORD_FRONTEND_URL", "http://localhost:8080/api/v1/password/reset"),
 		EmbeddingUrl: getEnv("EMBEDDING_URL","https://api-inference.huggingface.co/pipeline/feature-extraction/"),
-		EmbeddingApiKey: getEnv("EMBEDDING_API_KEY", ""),
+		EmbeddingApiKey: getEnv("HF_EMBEDDING_API_KEY", ""),
 		EmbeddingModel: getEnv("EMBEDDING_MODELL", "sentence-transformers/all-MiniLM-L6-v2"),
 	} 
 }

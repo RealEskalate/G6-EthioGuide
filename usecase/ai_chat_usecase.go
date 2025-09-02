@@ -3,7 +3,9 @@ package usecase
 import (
 	"EthioGuide/domain"
 	"context"
+	"errors"
 	"fmt"
+	"log"
 )
 
 type AIChatUsecase struct {
@@ -18,6 +20,22 @@ func NewChatUsecase(e domain.IEmbeddingService, s domain.IProcedureRepository, l
 }
 
 func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error) {
+	// detect the language
+	prompt := fmt.Sprintf("I want you to identify the language of this promt %s and i want to give me the only the language in small later like if it is Amharic give me amharic. and if you do not know the language just give me only  a word 'unkown'.", query)
+	orglang, err := u.llmService.GenerateCompletion(ctx, prompt)
+	if err != nil{
+		return "", err
+	}
+	if orglang != "english"{
+		prompt := fmt.Sprintf("translate this query %s in to English lanuage. And i do not want you to add another thing by yourself")
+		query, err = u.llmService.GenerateCompletion(ctx, prompt)
+		if err != nil{
+			return "", nil
+		}
+	}else if orglang != "unkown"{
+		return "", errors.New("unknown language")
+	}
+
 	// 1. embed query
 	vec, err := u.embedService.GenerateEmbedding(ctx, query)
 	if err != nil {
@@ -44,7 +62,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error
     )
 	}
 
-	prompt := fmt.Sprintf(`You are an assistant helping Ethiopians navigate bureaucracy.
+	prompt = fmt.Sprintf(`You are an assistant helping Ethiopians navigate bureaucracy.
     Here are the most relevant procedures:
     %s
     Now answer the user query: %s`, contextText, query)
@@ -71,49 +89,20 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error
     err = u.aiChatRepo.Save(ctx, chat)
     if err != nil {
         // Optionally log or handle the error, but don't block the user
-}
+		log.Println("the chat is not saved")
+	}
+	if orglang != "english"{
+		prompt := fmt.Sprintf(`I want you to translate procedure into this %s language by keeping its format as it is.
+		here is the procedure
+		%s
+		`,orglang, answer)
+		answer, err = u.llmService.GenerateCompletion(ctx, prompt)
+		if err != nil{
+			return "", err
+		}
+	}
 
 	return answer, nil
 }
 
-////
-// func (r *ProcedureRepositoryMongo) SearchByEmbedding(ctx context.Context, queryVec []float64, limit int) ([]*domain.Procedure, error) {
-//     filter := bson.M{}
-//     opts := options.Find().
-//         SetLimit(int64(limit)).
-//         SetSort(bson.D{{"embedding", bson.D{{"$meta", "vectorSearch"}}}})
 
-//     // vector search stage
-//     searchStage := bson.D{
-//         {"$vectorSearch", bson.D{
-//             {"queryVector", queryVec},
-//             {"path", "embedding"},
-//             {"numCandidates", 100},  // wider search, filtered down to limit
-//             {"limit", limit},
-//             {"index", "embedding_index"},
-//         }},
-//     }
-
-//     cursor, err := r.collection.Aggregate(ctx, mongo.Pipeline{searchStage})
-//     if err != nil {
-//         return nil, err
-//     }
-//     defer cursor.Close(ctx)
-
-//     var results []*domain.Procedure
-//     if err := cursor.All(ctx, &results); err != nil {
-//         return nil, err
-//     }
-//     return results, nil
-// }
-// 🔸 Before this works:
-
-// You must create a vector index on embedding:
-
-// js
-// Copy code
-// db.procedures.createIndex(
-//   { embedding: "vector" },
-//   { vectorOptions: { dims: 384, similarity: "cosine" } }
-// )
-///

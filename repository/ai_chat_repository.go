@@ -37,7 +37,7 @@ func (r *AIUserChatRepositoryMongo) GetByUser(ctx context.Context, userID string
 		return nil, err
 	}
 	filter := bson.M{"user_id": userObjID}
-	opts := options.Find().SetSort(bson.D{{"timestamp", -1}}).SetLimit(int64(limit))
+	opts := options.Find().SetSort(bson.D{{"timestamp", int32(-1)}}).SetLimit(int64(limit))
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {

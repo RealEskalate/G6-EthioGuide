@@ -1,3 +1,4 @@
+// CreateEmbeddingVectorIndex creates a vector index on the 'embedding' field for vector search.
 package repository
 
 import (
@@ -6,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -13,7 +15,7 @@ import (
 type ProcedureContentModel struct {
 	Prerequisites []string `bson:"prerequisites,omitempty"`
 	Steps         []string `bson:"steps,omitempty"`
-	Result        []string   `bson:"result,omitempty"`
+	Result        []string `bson:"result,omitempty"`
 }
 
 // ProcedureFee is a nested struct for the Procedure.fees field.
@@ -35,6 +37,7 @@ type ProcedureModel struct {
 	OrganizationID primitive.ObjectID    `bson:"organization_id"`
 	Name           string                `bson:"name"`
 	Content        ProcedureContentModel `bson:"content,omitempty"`
+	embedding      []float64             `bson:"embedding,omitempty"`
 	Fees           ProcedureFeeModel     `bson:"fees,omitempty"`
 	ProcessingTime ProcessingTimeModel   `bson:"processing_time,omitempty"`
 	CreatedAt      time.Time             `bson:"created_at"`
@@ -63,7 +66,7 @@ func fromDomainProcedure(p *domain.Procedure) (*ProcedureModel, error) {
 			Result:        p.Content.Result,
 		},
 		Fees: ProcedureFeeModel{
-			Label:    p.Fees.Label,	
+			Label:    p.Fees.Label,
 			Currency: p.Fees.Currency,
 			Amount:   p.Fees.Amount,
 		},
@@ -81,7 +84,7 @@ type procedureRepository struct {
 }
 
 func NewProcedureRepository(db *mongo.Database) domain.IProcedureRepository {
-	return &procedureRepository {
+	return &procedureRepository{
 		collection: db.Collection("procedures"),
 	}
 }
@@ -102,4 +105,43 @@ func (r *procedureRepository) Create(ctx context.Context, procedure *domain.Proc
 
 	procedure.ID = model.ID.Hex()
 	return nil
+}
+
+func (r *procedureRepository) SearchByEmbedding(ctx context.Context, queryVec []float64, limit int) ([]*domain.Procedure, error) {
+	// Vector search stage
+	searchStage := bson.D{
+		{"$vectorSearch", bson.D{
+			{"index", "vector_index"}, // must match your Atlas vector index name
+			{"path", "embedding"},     // the field that stores vectors
+			{"queryVector", queryVec}, // the query embedding
+			{"numCandidates", 100},    // candidate pool before top-k filtering
+			{"limit", limit},          // top-k results
+		}},
+	}
+
+	// // You can add a $project stage if you want only specific fields
+	// projectStage := bson.D{
+	//     {"$project", bson.D{
+	//         {"title", 1},
+	//         {"requirements", 1},
+	//         {"steps", 1},
+	//         {"fees", 1},
+	//         {"score", bson.D{{"$meta", "vectorSearchScore"}}}, // optional score
+	//     }},
+	// }
+
+	// pipeline := mongo.Pipeline{searchStage, projectStage}
+	pipeline := mongo.Pipeline{searchStage}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []*domain.Procedure
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+	return results, nil
 }
