@@ -52,30 +52,30 @@ export default function LoginPage() {
     }
   };
 
-  // Debug translation loading
-  // console.log("Current language:", i18n.language);
-  // console.log("Auth translations:", i18n.getResourceBundle(i18n.language, "auth"));
-
   return (
-    <div className="bg-neutral-light text-foreground min-h-screen flex flex-col items-center justify-center p-4 font-sans space-y-4">
-      <Image
-        src="/logo/logo.png"
-        alt="EthioGuide Logo"
-        width={240}
-        height={240}
-        className="object-contain"
-        priority
-      />
+    <div className="flex bg-neutral-light flex-col items-center pt-4  pb-10  space-y-1">
+      <div className="flex items-center gap-3">
+        <Image
+          src="/images/ethioguide-symbol.png"
+          alt="EthioGuide Symbol"
+          width={50}
+          height={50}
+          priority
+        />
+        <span className="text-gray-800 font-semibold text-3xl">EthioGuide</span>
+      </div>
       <Card className="bg-background-light w-full max-w-md border-neutral">
         <CardHeader>
-          <div className="flex flex-col items-center space-y-4">
-            <div className="flex justify-start items-center w-full">
+          <div className="flex flex-col items-center space-y-2">
+            <div className="flex justify-center items-center w-full">
               <CardTitle className="text-2xl font-bold text-center font-amharic">
                 {t("login.title")}
               </CardTitle>
-              {/* <LanguageSwitcher /> */}
             </div>
           </div>
+          <p className="text-sm text-center text-neutral-dark">
+            {t("register.sub_title")}
+          </p>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -85,7 +85,9 @@ export default function LoginPage() {
                 name="identifier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-amharic">{t("login.identifier")}</FormLabel>
+                    <FormLabel className="font-amharic">
+                      {t("login.identifier")}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder={t("login.identifier_placeholder")}
@@ -102,7 +104,9 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-amharic">{t("login.password")}</FormLabel>
+                    <FormLabel className="font-amharic">
+                      {t("login.password")}
+                    </FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
@@ -115,9 +119,15 @@ export default function LoginPage() {
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral hover:text-primary"
-                          aria-label={showPassword ? "Hide password" : "Show password"}
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
                         >
-                          {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                          {showPassword ? (
+                            <FaEyeSlash className="h-5 w-5" />
+                          ) : (
+                            <FaEye className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
                     </FormControl>
@@ -132,18 +142,23 @@ export default function LoginPage() {
                     id="remember-me"
                     className="h-4 w-4 text-primary focus:ring-primary border-neutral rounded"
                   />
-                  <label htmlFor="remember-me" className="text-sm text-black ">
+                  <label htmlFor="remember-me" className="text-sm text-black">
                     {t("login.remember_me")}
                   </label>
                 </div>
                 <div className="text-sm text-neutral-dark">
-                  <Link href="/auth/reset-password" className="text-primary hover:underline">
+                  <Link
+                    href="/auth/reset-password"
+                    className="text-primary hover:underline"
+                  >
                     {t("login.change_password")}
                   </Link>
                 </div>
               </div>
               {form.formState.errors.root && (
-                <p className="text-error text-sm">{form.formState.errors.root.message}</p>
+                <p className="text-error text-sm">
+                  {form.formState.errors.root.message}
+                </p>
               )}
               <Button
                 type="submit"
@@ -155,7 +170,10 @@ export default function LoginPage() {
           </Form>
           <p className="mt-2 text-sm text-center text-neutral-dark">
             {t("login.new_to_ethioguide")}{" "}
-            <Link href="/auth/register" className="text-primary hover:underline">
+            <Link
+              href="/auth/register"
+              className="text-primary hover:underline"
+            >
               {t("login.create_account")}
             </Link>
           </p>
