@@ -9,7 +9,8 @@ import { notices } from "@/lib/noticesData";
 
 export default function NoticeDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const noticeId = Number(params.id);
+  const { id } = React.use(params);
+  const noticeId = Number(id);
   const notice = notices.find(n => n.id === noticeId);
 
   if (!notice) {

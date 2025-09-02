@@ -1,3 +1,4 @@
+"use client"
 import { Search, Bookmark, Star, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -6,8 +7,10 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 import Link from "next/link"
+import { useState } from "react"
 
 export default function ProceduresPage() {
+
   const procedures = [
     {
       id: 1,
@@ -83,6 +86,18 @@ export default function ProceduresPage() {
     },
   ]
 
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("all");
+
+  const filteredProcedures = procedures.filter((procedure) => {
+    const matchesSearch = procedure.name.toLowerCase().includes(search.toLowerCase()) || procedure.description.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = category === "all" ||
+      (category === "visa" && procedure.category === "Visa Applications") ||
+      (category === "work" && procedure.category === "Work Permits") ||
+      (category === "citizenship" && procedure.category === "Citizenship");
+    return matchesSearch && matchesCategory;
+  });
+
   const updates = [
     {
       type: "warning",
@@ -109,7 +124,7 @@ export default function ProceduresPage() {
 
   return (
     <div className="relative w-full h-full min-h-screen">
-      <div className="absolute inset-0 w-full h-full bg-[#f9fafb] -z-10"></div>
+      <div className="absolute inset-0 w-full h-full bg-gray-50 -z-10"></div>
       <div className="flex">
         {/* Main Content */}
         <main className="flex-1 p-8">
@@ -128,9 +143,14 @@ export default function ProceduresPage() {
               <div className="flex items-center gap-4">
                 <div className="relative flex-1 max-w-md">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#4b5563]" />
-                  <Input placeholder="Search procedures by keyword..." className="pl-10 bg-white border-[#d1d5db]" />
+                  <Input
+                    placeholder="Search procedures by keyword..."
+                    className="pl-10 bg-white border-[#d1d5db]"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                  />
                 </div>
-                <Select defaultValue="all">
+                <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger className="w-48 bg-white border-[#d1d5db] hover:!bg-gray-100 font-medium">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
@@ -139,20 +159,6 @@ export default function ProceduresPage() {
                     <SelectItem value="visa" className="hover:!bg-gray-100 font-medium border-0">Visa Applications</SelectItem>
                     <SelectItem value="work" className="hover:!bg-gray-100 font-medium border-0">Work Permits</SelectItem>
                     <SelectItem value="citizenship" className="hover:!bg-gray-100 font-medium border-0">Citizenship</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-[#4b5563]">
-                <span>Sort by:</span>
-                <Select defaultValue="popular">
-                  <SelectTrigger className="w-32 bg-white border-[#d1d5db] hover:!bg-gray-100 font-medium">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value="popular" className="hover:!bg-gray-100 font-medium border-0">Most Popular</SelectItem>
-                    <SelectItem value="recent" className="hover:!bg-gray-100 font-medium border-0">Most Recent</SelectItem>
-                    <SelectItem value="name" className="hover:!bg-gray-100 font-medium border-0">Name</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -172,7 +178,7 @@ export default function ProceduresPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {procedures.map((procedure, index) => (
+                    {filteredProcedures.map((procedure, index) => (
                       <tr
                         key={procedure.id}
                         className={(index !== procedures.length - 1 ? "border-b border-[#f3f4f6] " : "") + " hover:bg-gray-100 transition-colors"}
@@ -202,18 +208,9 @@ export default function ProceduresPage() {
                         <td className="py-4 px-6 text-[#4b5563]">{procedure.processingTime}</td>
                         <td className="py-4 px-6 text-[#4b5563]">{procedure.lastUpdated}</td>
                         <td className="py-4 px-6">
-                          <div className="flex items-center gap-2">
-                            <Link href={`/user/procedures-detail?id=${procedure.id}`}>
-                              <Button className="bg-[#3a6a8d] hover:bg-[#2e4d57] text-white">Start</Button>
-                            </Link>
-                            <Button variant="ghost" size="sm" className="hover:bg-gray-200 hover:text-gray-900 font-medium">
-                              {procedure.bookmarked ? (
-                                <Star className="w-4 h-4 fill-[#ffb703] text-[#ffb703]" />
-                              ) : (
-                                <Bookmark className="w-4 h-4 text-[#4b5563]" />
-                              )}
-                            </Button>
-                          </div>
+                          <Link href={`/user/procedures-detail?id=${procedure.id}`}>
+                            <Button className="bg-[#3a6a8d] hover:bg-[#2e4d57] text-white">Start</Button>
+                          </Link>
                         </td>
                       </tr>
                     ))}
@@ -252,9 +249,11 @@ export default function ProceduresPage() {
                           <p className="text-sm text-[#4b5563] mb-3">{update.description}</p>
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-[#a7b3b9]">{update.date}</span>
-                            <Button variant="link" className="text-[#3a6a8d] p-0 h-auto text-sm">
-                              Read more
-                            </Button>
+                            <Link href={`/user/notices?id=${index}`}>
+                              <Button variant="link" className="text-[#3a6a8d] p-0 h-auto text-sm">
+                                Read more
+                              </Button>
+                            </Link>
                           </div>
                         </div>
                       </div>
