@@ -11,10 +11,12 @@ import (
 // SetupRouter initializes the Gin router and registers all application routes.
 func SetupRouter(
 	userController *controller.UserController,
+	procedureController *controller.ProcedureController,
 	geminiController *controller.GeminiController,
 	authMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
 	requireAdminRole gin.HandlerFunc,
+	requireAdminOrOrgRole gin.HandlerFunc,
 ) *gin.Engine {
 
 	router := gin.Default()
@@ -78,6 +80,11 @@ func SetupRouter(
 				authGroup.PATCH("/me/password", userController.UpdatePassword)
 			}
 
+			procedures := v1.Group("/procedures")
+			{
+				procedures.POST("", requireAdminOrOrgRole, procedureController.CreateProcedure)
+			}
+
 		}
 	}
 
@@ -125,7 +132,6 @@ func SetupRouter(
 		// 5) Procedures (core)
 		procedures := v1.Group("/procedures")
 		{
-			procedures.POST("", handleCreateProcedure)
 			procedures.GET("", handleGetProcedures)
 			procedures.GET("/:id", handleGetProcedure)
 			procedures.PATCH("/:id", handleUpdateProcedure)
@@ -461,9 +467,6 @@ func handleUpdateCategory(c *gin.Context) {
 }
 
 // 5) Procedures (core)
-func handleCreateProcedure(c *gin.Context) {
-	c.JSON(http.StatusCreated, gin.H{"id": "prc_new", "title": "Newly Created Procedure"})
-}
 
 func handleGetProcedures(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
