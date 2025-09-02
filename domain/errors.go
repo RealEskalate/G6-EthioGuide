@@ -32,5 +32,14 @@ var (
 	ErrAccountNotActive       = errors.New("this account has not been activated")
 	ErrInvalidActivationToken = errors.New("invalid or expired activation token")
 
+	// Request errors
+	ErrInvalidBody = errors.New("invalid request body")
 	ErrUnsupportedLanguage = errors.New("unsupported language used")
+
+	//Database errors
+	ErrUnableToEnterData = errors.New("unable to enter data into database")
+	ErrUnableToFetchData = errors.New("unable to fetch data from database")
+	ErrUnableToUpdateData = errors.New("unable to update data in database")
+	ErrUnableToDeleteData = errors.New("unable to delete data from database")
+
 )

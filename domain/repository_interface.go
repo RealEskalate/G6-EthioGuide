@@ -17,3 +17,12 @@ type ITokenRepository interface {
 	GetToken(ctx context.Context, tokentype, token string) (string, error)
 	DeleteToken(ctx context.Context, tokentype, token string) error
 }
+
+
+type IPostRepository interface {
+	CreatePost(ctx context.Context, Post *Post) error
+	// GetPosts(ctx context.Context) ([]*Post, error)
+	// GetPostByID(ctx context.Context, id int) (*Post, error)
+	// UpdatePost(ctx context.Context, Post *Post) error
+	// DeletePost(ctx context.Context, id int) error
+}

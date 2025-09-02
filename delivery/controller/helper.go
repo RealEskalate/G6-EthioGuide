@@ -18,6 +18,7 @@ func HandleError(c *gin.Context, err error) {
 		errors.Is(err, domain.ErrInvalidRole),
 		errors.Is(err, domain.ErrUsernameEmpty),
 		errors.Is(err, domain.ErrUsernameTooLong),
+		errors.Is(err, domain.ErrInvalidBody),
 		errors.Is(err, domain.ErrUnsupportedLanguage):
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 

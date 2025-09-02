@@ -54,3 +54,10 @@ type LoginResponse struct {
 	AccessToken  string         `json:"access_token"`
 	RefreshToken string         `json:"refresh_token,omitempty"`
 }
+
+type CreatePostDTO struct {
+	Title 	 string   `json:"title" binding:"required"`
+	Content     string   `json:"content" binding:"required"`
+	Procedures []string `json:"procedures,omitempty"`
+	Tags		[]string `json:"tags,omitempty"`
+}

@@ -17,3 +17,12 @@ type IUserUsecase interface {
 type IGeminiUseCase interface {
 	TranslateContent(ctx context.Context, content, targetLang string) (string, error)
 }
+
+
+type IPostUseCase interface {
+	CreatePost(ctx context.Context, discussion *Post) error
+	// GetPosts(ctx context.Context) ([]*Post, error)
+	// GetPostByID(ctx context.Context, id int) (*Post, error)
+	// UpdatePost(ctx context.Context, Post *Post) error
+	// DeletePost(ctx context.Context, id int) error
+}

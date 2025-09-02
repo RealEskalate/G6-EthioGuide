@@ -11,6 +11,7 @@ import (
 func SetupRouter(
 	userController *controller.UserController,
 	geminiController *controller.GeminiController,
+	postController *controller.PostController,
 	authMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
 	requireAdminRole gin.HandlerFunc,
@@ -46,7 +47,9 @@ func SetupRouter(
 			{
 				aiGroup.POST("/translate", geminiController.Translate)
 			}
-
+			
+			apiGroup.POST("/discussions", postController.CreatePost)
+			
 			// --- PRO Subscription Routes ---
 			// These routes require the user to be logged in AND have a "pro" subscription.
 			// We chain the ProOnlyMiddleware after the main auth middleware.
