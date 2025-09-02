@@ -1,17 +1,14 @@
 import 'package:ethioguide/core/config/app_theme.dart';
+import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
 import 'package:flutter/material.dart';
-import 'core/config/app_router.dart';
-import 'injection_container.dart' as di; // Import the container with a prefix
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'core/config/app_router.dart'; // <-- 1. Import your new router file.
+import 'injection_container.dart' as di; // --> for dependency injection
 
-// The main function now needs to be `async`
-Future<void> main() async {
-  // This line is required to ensure that plugin services are initialized
-  // before `runApp()` is called when `main` is async.
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // Await the initialization of all our dependencies
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized;
   await di.init();
-  
+
   runApp(MyApp());
 }
 
@@ -25,13 +22,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      themeMode: _themeMode,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      routerConfig: router,
-      title: 'EthioGuide',
-      debugShowCheckedModeBanner: false,
+    // 2. Use the MaterialApp.router constructor.
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => di.sl<AiBloc>())
+      ],
+      child: MaterialApp.router(
+        themeMode: _themeMode,
+        theme:AppTheme.lightTheme,
+        darkTheme:AppTheme.darkTheme,
+        routerConfig: router,
+        title: 'EthioGuide',
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }

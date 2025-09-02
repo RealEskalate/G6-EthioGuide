@@ -1,19 +1,60 @@
 import 'package:dio/dio.dart';
+import 'package:ethioguide/core/config/end_points.dart';
+import 'package:ethioguide/core/domain/repositories/auth_repository.dart';
+// import 'package:get_it/get_it.dart';
 
-// A minimal interceptor that does nothing for now.
+// TODO: check if we can remove this instance
+// final getIt =
+//     GetIt.instance; // Re-declare getIt here if not globally accessible
+
 class AuthInterceptor extends Interceptor {
+  final AuthRepository _authRepository;
+  final Dio _dio;
+
+  AuthInterceptor(this._authRepository, this._dio);
+
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
-  ) {
-    // We will add the token logic back here later when the API is ready.
+  ) async {
+    if (await _authRepository.isAuthenticated()) {
+      final accessToken = await _authRepository.getAccessToken();
+      options.headers['Authorization'] = 'Bearer $accessToken';
+    }
     return handler.next(options);
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    // We will add the refresh logic back here later.
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final isRetry = err.requestOptions.extra['retry'] == true;
+
+    if (err.response?.statusCode == 401 && !isRetry) {
+      final refreshToken = await _authRepository.getRefreshToken();
+      if (refreshToken != null) {
+        try {
+          final refreshResponse = await _dio.post(
+            EndPoints.refreshTokenEndPoint,
+            data: {'refreshToken': refreshToken},
+          );
+
+          final newAccessToken = refreshResponse.data['accessToken'];
+          if (newAccessToken != null) {
+            await _authRepository.updateAccessToken(newAccessToken);
+
+            final retryOptions = err.requestOptions;
+            retryOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+            retryOptions.extra['retry'] = true;
+
+            final retryResponse = await _dio.fetch(retryOptions);
+            return handler.resolve(retryResponse);
+          }
+        } catch (refreshError) {
+          await _authRepository.clearTokens();
+          return handler.next(err);
+        }
+      }
+    }
     return handler.next(err);
   }
 }
