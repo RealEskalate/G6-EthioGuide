@@ -10,6 +10,8 @@ type IAccountRepository interface {
 	GetByEmail(ctx context.Context, email string) (*Account, error)
 	GetByUsername(ctx context.Context, username string) (*Account, error)
 	// GetByPhoneNumber(ctx context.Context, phone string) (*Account, error)
+
+	UpdatePassword(ctx context.Context, accountID, newPassword string) error
 }
 
 type ITokenRepository interface {

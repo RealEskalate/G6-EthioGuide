@@ -53,6 +53,9 @@ func (m *MockAccountRepository) GetByPhoneNumber(ctx context.Context, phone stri
 	}
 	return acc, args.Error(1)
 }
+func (m *MockAccountRepository) UpdatePassword(ctx context.Context, accountID, newPassword string) error {
+	return m.Called(ctx, accountID, newPassword).Error(0)
+}
 
 // MockTokenRepository mocks ITokenRepository
 type MockTokenRepository struct{ mock.Mock }
@@ -136,6 +139,7 @@ func setupDomainErrors() {
 	domain.ErrAuthenticationFailed = errors.New("authentication failed")
 	domain.ErrAccountNotActive = errors.New("account not active")
 	domain.ErrUserNotFound = errors.New("user not found")
+	domain.ErrPasswordTooShort = errors.New("password too short")
 }
 
 // --- Test Suite Definition ---
@@ -354,50 +358,133 @@ func (s *UserUsecaseTestSuite) TestRefreshToken() {
 
 // --- Profile Tests ---
 func (s *UserUsecaseTestSuite) TestGetProfile() {
-    userID := "user-123"
-    account := &domain.Account{
-        ID:    userID,
-        Email: "profile@example.com",
-        Name:  "Profile User",
-        UserDetail: &domain.UserDetail{
-            Username:         "profileuser",
-            SubscriptionPlan: domain.SubscriptionNone,
-            IsBanned:         false,
-            IsVerified:       true,
-        },
-    }
+	userID := "user-123"
+	account := &domain.Account{
+		ID:    userID,
+		Email: "profile@example.com",
+		Name:  "Profile User",
+		UserDetail: &domain.UserDetail{
+			Username:         "profileuser",
+			SubscriptionPlan: domain.SubscriptionNone,
+			IsBanned:         false,
+			IsVerified:       true,
+		},
+	}
 
-    s.Run("Success", func() {
-        s.SetupTest()
-        s.mockUserRepo.On("GetById", mock.Anything, userID).Return(account, nil).Once()
+	s.Run("Success", func() {
+		s.SetupTest()
+		s.mockUserRepo.On("GetById", mock.Anything, userID).Return(account, nil).Once()
 
-        result, err := s.usecase.GetProfile(context.Background(), userID)
+		result, err := s.usecase.GetProfile(context.Background(), userID)
 
-        s.NoError(err)
-        s.NotNil(result)
-        s.Equal(account.ID, result.ID)
-        s.mockUserRepo.AssertExpectations(s.T())
-    })
+		s.NoError(err)
+		s.NotNil(result)
+		s.Equal(account.ID, result.ID)
+		s.mockUserRepo.AssertExpectations(s.T())
+	})
 
-    s.Run("Failure - User Not Found", func() {
-        s.SetupTest()
-        s.mockUserRepo.On("GetById", mock.Anything, userID).Return(nil, domain.ErrNotFound).Once()
+	s.Run("Failure - User Not Found", func() {
+		s.SetupTest()
+		s.mockUserRepo.On("GetById", mock.Anything, userID).Return(nil, domain.ErrNotFound).Once()
 
-        result, err := s.usecase.GetProfile(context.Background(), userID)
+		result, err := s.usecase.GetProfile(context.Background(), userID)
 
-        s.ErrorIs(err, domain.ErrUserNotFound)
-        s.Nil(result)
-        s.mockUserRepo.AssertExpectations(s.T())
-    })
+		s.ErrorIs(err, domain.ErrUserNotFound)
+		s.Nil(result)
+		s.mockUserRepo.AssertExpectations(s.T())
+	})
 
-    s.Run("Failure - Repo Error", func() {
-        s.SetupTest()
-        s.mockUserRepo.On("GetById", mock.Anything, userID).Return(nil, errors.New("db error")).Once()
+	s.Run("Failure - Repo Error", func() {
+		s.SetupTest()
+		s.mockUserRepo.On("GetById", mock.Anything, userID).Return(nil, errors.New("db error")).Once()
 
-        result, err := s.usecase.GetProfile(context.Background(), userID)
+		result, err := s.usecase.GetProfile(context.Background(), userID)
 
-        s.ErrorIs(err, domain.ErrUserNotFound)
-        s.Nil(result)
-        s.mockUserRepo.AssertExpectations(s.T())
-    })
+		s.ErrorIs(err, domain.ErrUserNotFound)
+		s.Nil(result)
+		s.mockUserRepo.AssertExpectations(s.T())
+	})
+}
+
+// --- Update Password Tests ---
+func (s *UserUsecaseTestSuite) TestUpdatePassword() {
+	userID := "user-123"
+	currentPassword := "oldpass"
+	newPassword := "newpass123"
+	hashedCurrent := "hashed_oldpass"
+	hashedNew := "hashed_newpass"
+
+	account := &domain.Account{
+		ID:           userID,
+		PasswordHash: hashedCurrent,
+		UserDetail:   &domain.UserDetail{},
+	}
+
+	s.Run("Success", func() {
+		s.SetupTest()
+		s.mockUserRepo.On("GetById", mock.Anything, userID).Return(account, nil).Once()
+		s.mockPassSvc.On("ComparePassword", hashedCurrent, currentPassword).Return(nil).Once()
+		s.mockPassSvc.On("HashPassword", newPassword).Return(hashedNew, nil).Once()
+		s.mockUserRepo.On("UpdatePassword", mock.Anything, userID, hashedNew).Return(nil).Once()
+
+		err := s.usecase.UpdatePassword(context.Background(), userID, currentPassword, newPassword)
+
+		s.NoError(err)
+		s.mockUserRepo.AssertExpectations(s.T())
+		s.mockPassSvc.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - User Not Found", func() {
+		s.SetupTest()
+		s.mockUserRepo.On("GetById", mock.Anything, userID).Return(nil, domain.ErrUserNotFound).Once()
+
+		err := s.usecase.UpdatePassword(context.Background(), userID, currentPassword, newPassword)
+
+		s.ErrorIs(err, domain.ErrUserNotFound)
+		s.mockUserRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - Incorrect Current Password", func() {
+		s.SetupTest()
+		s.mockUserRepo.On("GetById", mock.Anything, userID).Return(account, nil).Once()
+		s.mockPassSvc.On("ComparePassword", hashedCurrent, currentPassword).Return(errors.New("wrong password")).Once()
+
+		err := s.usecase.UpdatePassword(context.Background(), userID, currentPassword, newPassword)
+
+		s.ErrorIs(err, domain.ErrAuthenticationFailed)
+		s.mockPassSvc.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - New Password Too Short", func() {
+		s.SetupTest()
+		s.mockUserRepo.On("GetById", mock.Anything, userID).Return(account, nil).Once()
+		s.mockPassSvc.On("ComparePassword", hashedCurrent, currentPassword).Return(nil).Once()
+
+		err := s.usecase.UpdatePassword(context.Background(), userID, currentPassword, "short")
+
+		s.ErrorIs(err, domain.ErrPasswordTooShort)
+	})
+
+	s.Run("Failure - Hashing Error", func() {
+		s.SetupTest()
+		s.mockUserRepo.On("GetById", mock.Anything, userID).Return(account, nil).Once()
+		s.mockPassSvc.On("ComparePassword", hashedCurrent, currentPassword).Return(nil).Once()
+		s.mockPassSvc.On("HashPassword", newPassword).Return("", errors.New("hash error")).Once()
+
+		err := s.usecase.UpdatePassword(context.Background(), userID, currentPassword, newPassword)
+
+		s.Error(err)
+	})
+
+	s.Run("Failure - Repo Update Error", func() {
+		s.SetupTest()
+		s.mockUserRepo.On("GetById", mock.Anything, userID).Return(account, nil).Once()
+		s.mockPassSvc.On("ComparePassword", hashedCurrent, currentPassword).Return(nil).Once()
+		s.mockPassSvc.On("HashPassword", newPassword).Return(hashedNew, nil).Once()
+		s.mockUserRepo.On("UpdatePassword", mock.Anything, userID, hashedNew).Return(errors.New("db error")).Once()
+
+		err := s.usecase.UpdatePassword(context.Background(), userID, currentPassword, newPassword)
+
+		s.Error(err)
+	})
 }

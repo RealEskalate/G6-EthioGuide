@@ -75,6 +75,7 @@ func SetupRouter(
 			authGroup.Use(authMiddleware)
 			{
 				authGroup.GET("/me", userController.GetProfile)
+				authGroup.PATCH("/me/password", userController.UpdatePassword)
 			}
 
 		}
@@ -90,7 +91,6 @@ func SetupRouter(
 			auth.POST("/reset", handleReset)
 			auth.POST("/social", handleSocialLogin)
 			auth.PATCH("/me", handleUpdateMe)
-			auth.PATCH("/me/password", handleUpdatePassword)
 		}
 
 		// 2) Users & Profiles
@@ -308,10 +308,6 @@ func handleUpdateMe(c *gin.Context) {
 		"avatarUrl":     "https://example.com/new_avatar.png",
 		"roles":         []string{"user", "pro"},
 	})
-}
-
-func handleUpdatePassword(c *gin.Context) {
-	c.Status(http.StatusNoContent)
 }
 
 // 2) Users & Profiles
