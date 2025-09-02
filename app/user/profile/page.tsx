@@ -43,7 +43,7 @@ export default function AccountSettingsPage() {
                 <p className="text-sm text-gray-500">{userInfo.email}</p>
                 <span className="inline-flex items-center 
                 p-1 text-secondary px-3 bg-secondary-light rounded-2xl bg-opacity-20 text-sm mt-1">
-                  <FaCrown size={16} className="mr-1" /> Admin Status
+                  <FaCrown size={16} className="mr-1" /> Paid User
                 </span>
               </div>
             </CardContent>
@@ -104,7 +104,7 @@ export default function AccountSettingsPage() {
         {/* Right side */}
         <div className="space-y-6">
           {/* Subscription Plan */}
-          {/* <Card className="border-neutral-100">
+          <Card className="border-neutral-100">
             <CardContent className="p-6">
               <h3 className="font-semibold mb-2">Subscription Plan</h3>
               <div className="relative bg-gradient-to-r from-primary-light to-secondary-light text-white p-4 rounded-xl">
@@ -126,7 +126,7 @@ export default function AccountSettingsPage() {
                 </li>
               </ul>
             </CardContent>
-          </Card> */}
+          </Card>
 
           {/* Logout + Delete */}
           <div className="space-y-3">
