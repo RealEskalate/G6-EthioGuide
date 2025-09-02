@@ -40,6 +40,11 @@ func (m *MockProcedureUsecase) UpdateProcedure(ctx context.Context, id string, p
 	return args.Error(0)
 }
 
+func (m *MockProcedureUsecase) DeleteProcedure(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 // --- Test Suite Definition ---
 
 type ProcedureControllerTestSuite struct {

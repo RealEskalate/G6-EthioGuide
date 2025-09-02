@@ -31,6 +31,10 @@ func (m *MockProcedureRepository) Update(ctx context.Context, id string, procedu
 	return m.Called(ctx, id, procedure).Error(0)
 }
 
+func (m *MockProcedureRepository) Delete(ctx context.Context, id string) error {
+	return m.Called(ctx, id).Error(0)
+}
+
 // --- Test Suite Definition ---
 type ProcedureUsecaseTestSuite struct {
 	suite.Suite

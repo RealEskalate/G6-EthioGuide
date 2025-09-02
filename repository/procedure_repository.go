@@ -127,3 +127,8 @@ func (pr *ProcedureRepository) Update(ctx context.Context, id string, procedure 
 	_, err := pr.db.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": ToDTO(procedure)})
 	return err
 }
+
+func (pr *ProcedureRepository) Delete(ctx context.Context, id string) error {
+	_, err := pr.db.DeleteOne(ctx, bson.M{"_id": id})
+	return err
+}

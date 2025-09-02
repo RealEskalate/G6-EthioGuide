@@ -22,4 +22,5 @@ type ITokenRepository interface {
 type IProcedureRepository interface {
 	GetByID(ctx context.Context, id string) (*Procedure, error)
 	Update(ctx context.Context, id string, procedure *Procedure) error
+	Delete(ctx context.Context, id string) error
 }

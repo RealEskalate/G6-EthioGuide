@@ -21,4 +21,5 @@ type IGeminiUseCase interface {
 type IProcedureUseCase interface {
 	UpdateProcedure(ctx context.Context, id string, procedure *Procedure) error
 	GetProcedureByID(ctx context.Context, id string) (*Procedure, error)
+	DeleteProcedure(ctx context.Context, id string) error
 }
