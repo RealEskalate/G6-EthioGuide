@@ -16,7 +16,10 @@ import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { resetPasswordSchema, ResetPasswordFormData } from "@/lib/validation/reset-password";
+import {
+  resetPasswordSchema,
+  ResetPasswordFormData,
+} from "@/lib/validation/reset-password";
 import Image from "next/image";
 
 export default function ResetPasswordPage() {
@@ -50,18 +53,24 @@ export default function ResetPasswordPage() {
 
   // Debug translation loading
   console.log("Current language:", i18n.language);
-  console.log("Auth translations:", i18n.getResourceBundle(i18n.language, "auth"));
+  console.log(
+    "Auth translations:",
+    i18n.getResourceBundle(i18n.language, "auth")
+  );
 
   return (
-    <div className="bg-neutral-light text-foreground min-h-screen flex flex-col items-center justify-center p-4 font-sans space-y-4">
-      <Image
-        src="/logo/logo.png"
-        alt="EthioGuide Logo"
-        width={240}
-        height={240}
-        className="object-contain"
-        priority
-      />
+    <div className="bg-neutral-light text-foreground min-h-[73dvh] flex flex-col flex-1 items-center p-4 sm:pt-6 space-y-2">
+      <div className="flex items-center gap-3 p-5">
+        <Image
+          src="/images/ethioguide-symbol.png"
+          alt="EthioGuide Symbol"
+          width={50}
+          height={50}
+          // className="h-10 w-10"
+          priority
+        />
+        <span className="text-gray-800 font-semibold text-3xl">EthioGuide</span>
+      </div>
       <Card className="bg-background-light w-full max-w-md border-neutral">
         <CardHeader>
           <div className="flex flex-col items-center space-y-4">
@@ -72,7 +81,9 @@ export default function ResetPasswordPage() {
               {/* <LanguageSwitcher /> */}
             </div>
           </div>
-          <p className="text-sm text-center text-neutral-dark ">{t("reset_password.sub_title")}</p>
+          <p className="text-sm text-center text-neutral-dark ">
+            {t("reset_password.sub_title")}
+          </p>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -82,7 +93,9 @@ export default function ResetPasswordPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-amharic">{t("reset_password.email")}</FormLabel>
+                    <FormLabel className="font-amharic">
+                      {t("reset_password.email")}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
@@ -96,7 +109,9 @@ export default function ResetPasswordPage() {
                 )}
               />
               {form.formState.errors.root && (
-                <p className="text-error text-sm">{form.formState.errors.root.message}</p>
+                <p className="text-error text-sm">
+                  {form.formState.errors.root.message}
+                </p>
               )}
               <Button
                 type="submit"
