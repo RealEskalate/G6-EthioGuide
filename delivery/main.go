@@ -43,6 +43,7 @@ func main() {
 	// Repositories are the first layer to be initialized as they only depend on the database.
 	userRepo := repository.NewAccountRepository(db)
 	procedureRepo := repository.NewProcedureRepository(db)
+	catagoryRepo := repository.NewCategoryRepository(db, "catagories")
 	// FIX 1: Initialize the TokenRepository, as it's a required dependency for UserUsecase.
 	tokenRepo := repository.NewTokenRepository(db)
 
@@ -66,12 +67,14 @@ func main() {
 		cfg.UsecaseTimeout,
 	)
 	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, cfg.UsecaseTimeout)
+	catagoryUsecase := usecase.NewCategoryUsecase(catagoryRepo, cfg.UsecaseTimeout)
 	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
 
 	// --- Controllers ---
 	// Controllers handle the HTTP layer, delegating logic to use cases.
 	userController := controller.NewUserController(userUsecase, cfg.JWTRefreshTTL)
 	procedureController := controller.NewProcedureController(procedureUsecase)
+	catagoryController := controller.NewCategoryController(catagoryUsecase)
 	geminiController := controller.NewGeminiController(geminiUsecase)
 
 	// --- Middleware ---
@@ -86,6 +89,7 @@ func main() {
 	appRouter := router.SetupRouter(
 		userController,
 		procedureController,
+		catagoryController,
 		geminiController,
 		authMiddleware,
 		proOnlyMiddleware,
