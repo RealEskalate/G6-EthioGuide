@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { UserSidebar } from "./UserSidebar";
 
 const adminMenuItems = [
@@ -7,42 +7,28 @@ const adminMenuItems = [
     iconSrc: "/icons/dashboard.svg",
     iconAlt: "Dashboard",
     label: "dashboard",
-    active: true,
   },
   {
     iconSrc: "/icons/official-notices.svg",
     iconAlt: "Notices",
     label: "notices",
-    active: false,
-  },
-  {
-    iconSrc: "/icons/ai-chat.svg",
-    iconAlt: "AI Chat",
-    label: "AI-Chat",
-    active: false,
   },
   {
     iconSrc: "/icons/discussions.svg",
-    iconAlt: "View Feedback",
+    iconAlt: "View Feedbacks",
     label: "feedback",
-    active: false,
-  },
-  {
-    iconSrc: "/icons/user-managemnet.svg",
-    iconAlt: "User Management",
-    label: "userManagement",
-    active: false,
   },
   {
     iconSrc: "/icons/manage-procedure.svg",
-    iconAlt: "Manage Procedure",
+    iconAlt: "Manage Procedures",
     label: "procedures",
-    active: false,
   },
 ];
 
 export function AdminSidebar() {
-  const route = useRouter();
+  const router = useRouter();
+  const pathname = usePathname(); // 👈 gets current URL path
+
   const handleSettingsClick = () => {
     // Admin settings logic
   };
@@ -51,14 +37,14 @@ export function AdminSidebar() {
     // Admin logout logic
   };
 
-  const handleMenuItemClick = (label: string) => {
-    route.push(`/admin/${label}`);
-  };
-
-  const menuItemsWithHandlers = adminMenuItems.map((item) => ({
-    ...item,
-    onClick: () => handleMenuItemClick(item.label),
-  }));
+  const menuItemsWithHandlers = adminMenuItems.map((item) => {
+    const isActive = pathname.startsWith(`/admin/${item.label}`);
+    return {
+      ...item,
+      active: isActive, // 👈 mark active based on URL
+      onClick: () => router.push(`/admin/${item.label}`),
+    };
+  });
 
   return (
     <UserSidebar
