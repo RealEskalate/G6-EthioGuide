@@ -140,7 +140,6 @@ func SetupRouter(
 			checklists.POST("", handleCreateChecklist)
 			checklists.GET("/:userProcedureId", handleGetChecklistByUserProcedureId) // Assuming this mapping
 			checklists.PATCH("/:checklistID", handleUpdateChecklistItem)
-			checklists.PATCH("/:id/autotick", handleAutoTickChecklist)
 		}
 		v1.GET("/myProcedures", handleGetMyProcedures)
 
@@ -618,10 +617,6 @@ func handleGetChecklistByUserProcedureId(c *gin.Context) {
 
 func handleUpdateChecklistItem(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"checklistID": c.Param("checklistID"), "done": true})
-}
-
-func handleAutoTickChecklist(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"id": c.Param("id"), "message": "Autotick process initiated."})
 }
 
 // 8) Documents & File Vault
