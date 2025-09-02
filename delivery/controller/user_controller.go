@@ -130,12 +130,7 @@ func (ctrl *UserController) GetProfile(c *gin.Context) {
 
 	account, err := ctrl.userUsecase.GetProfile(c.Request.Context(), userID.(string))
 	if err != nil {
-		if err == domain.ErrUserNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		}
-		return
+		HandleError(c, err)
 	}
 
 	c.JSON(http.StatusOK, toUserResponse(account))
