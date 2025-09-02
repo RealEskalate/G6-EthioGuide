@@ -12,6 +12,9 @@ type IUserUsecase interface {
 	// // Password Management
 	// ForgetPassword(ctx context.Context, email string) error
 	// ResetPassword(ctx context.Context, resetToken, newPassword string) error
+
+	GetProfile(ctx context.Context, userID string) (*Account, error)
+	UpdatePassword(ctx context.Context, userID, currentPassword, newPassword string) error
 }
 
 type IGeminiUseCase interface {
@@ -19,5 +22,10 @@ type IGeminiUseCase interface {
 }
 
 type ICategoryUsecase interface {
+	CreateCategory(ctx context.Context, category *Category) error
 	GetCategories(ctx context.Context, options *CategorySearchAndFilter) ([]*Category, int64, error)
+}
+
+type IProcedureUsecase interface {
+	CreateProcedure(ctx context.Context, procedure *Procedure) error
 }

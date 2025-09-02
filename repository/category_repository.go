@@ -59,9 +59,9 @@ func NewCategoryRepository(db *mongo.Database, collectionName string) *categoryR
 }
 
 func (r *categoryRepository) GetCategories(ctx context.Context, opts *domain.CategorySearchAndFilter) ([]*domain.Category, int64, error) {
-	// 1. Make the filter 
+	// 1. Make the filter
 	filter := buildFilter(opts)
-	
+
 	// 2. Get the  total count
 	total, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
@@ -101,7 +101,7 @@ func (r *categoryRepository) GetCategories(ctx context.Context, opts *domain.Cat
 }
 
 // --- helper ---
-func buildFilter(options *domain.CategorySearchAndFilter) (bson.M) {
+func buildFilter(options *domain.CategorySearchAndFilter) bson.M {
 	var conditions []bson.M
 
 	if options.Title != "" {
@@ -109,9 +109,9 @@ func buildFilter(options *domain.CategorySearchAndFilter) (bson.M) {
 	}
 
 	if options.ParentID != "" {
-    	if parentID, err := primitive.ObjectIDFromHex(options.ParentID); err == nil {
-        	conditions = append(conditions, bson.M{"parent_id": parentID})
-    	}
+		if parentID, err := primitive.ObjectIDFromHex(options.ParentID); err == nil {
+			conditions = append(conditions, bson.M{"parent_id": parentID})
+		}
 	}
 
 	if options.OrganizationID != "" {

@@ -70,8 +70,8 @@ type CategoryResponse struct {
 }
 
 type PaginatedCategoryResponse struct {
-	Data    []*CategoryResponse `json:"data"`
-	Total   int64               `json:"total"`
-	Page    int64               `json:"page"`
-	Limit   int64               `json:"limit"`
+	Data  []*CategoryResponse `json:"data"`
+	Total int64               `json:"total"`
+	Page  int64               `json:"page"`
+	Limit int64               `json:"limit"`
 }

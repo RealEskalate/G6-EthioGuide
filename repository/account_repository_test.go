@@ -205,3 +205,45 @@ func (s *AccountRepositoryTestSuite) TestMappingLogic() {
 		s.Equal("Test Location", foundOrg.OrganizationDetail.Location)
 	})
 }
+
+func (s *AccountRepositoryTestSuite) TestUpdatePassword() {
+    ctx := context.Background()
+
+    // Arrange: Create a user to update password for
+    account := &domain.Account{
+        Name:         "Password User",
+        Email:        "passworduser@example.com",
+        PasswordHash: "old_hash",
+        Role:         domain.RoleUser,
+        UserDetail: &domain.UserDetail{
+            Username: "passworduser",
+        },
+    }
+    err := s.repo.Create(ctx, account)
+    s.Require().NoError(err)
+    s.Require().NotEmpty(account.ID)
+
+    s.Run("Success", func() {
+        newPassword := "new_hash"
+        err := s.repo.UpdatePassword(ctx, account.ID, newPassword)
+        s.NoError(err)
+
+        // Verify in DB
+        var model AccountModel
+        objID, _ := primitive.ObjectIDFromHex(account.ID)
+        err = s.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&model)
+        s.NoError(err)
+        s.Equal(newPassword, model.PasswordHash)
+    })
+
+    s.Run("Failure - Invalid ID", func() {
+        err := s.repo.UpdatePassword(ctx, "badid", "irrelevant")
+        s.ErrorIs(err, domain.ErrNotFound)
+    })
+
+    s.Run("Failure - Not Found", func() {
+        nonExistentID := primitive.NewObjectID().Hex()
+        err := s.repo.UpdatePassword(ctx, nonExistentID, "irrelevant")
+        s.ErrorIs(err, domain.ErrNotFound)
+    })
+}

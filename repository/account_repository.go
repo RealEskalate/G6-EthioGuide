@@ -199,3 +199,25 @@ func (r *AccountRepository) GetByUsername(ctx context.Context, username string) 
 	}
 	return toDomainAccount(&model), nil
 }
+
+func (r *AccountRepository) UpdatePassword(ctx context.Context, userID, newPassword string) error {
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return domain.ErrNotFound
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"password_hash": newPassword,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": objectID}, update)
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+	if result.MatchedCount == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
+}

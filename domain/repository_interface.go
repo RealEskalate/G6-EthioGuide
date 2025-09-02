@@ -10,6 +10,8 @@ type IAccountRepository interface {
 	GetByEmail(ctx context.Context, email string) (*Account, error)
 	GetByUsername(ctx context.Context, username string) (*Account, error)
 	// GetByPhoneNumber(ctx context.Context, phone string) (*Account, error)
+
+	UpdatePassword(ctx context.Context, accountID, newPassword string) error
 }
 
 type ITokenRepository interface {
@@ -19,5 +21,10 @@ type ITokenRepository interface {
 }
 
 type ICategoryRepository interface {
+	Create(ctx context.Context, category *Category) error
 	GetCategories(ctx context.Context, options *CategorySearchAndFilter) ([]*Category, int64, error)
+}
+
+type IProcedureRepository interface {
+	Create(ctx context.Context, procedure *Procedure) error
 }

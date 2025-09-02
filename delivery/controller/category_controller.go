@@ -19,6 +19,29 @@ func NewCategoryController(cc domain.ICategoryUsecase) *CategoryController {
 	}
 }
 
+func (ctrl *CategoryController) CreateCategory(c *gin.Context) {
+	// Implementation for creating a category will go here
+	var req CreateCategoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	category := &domain.Category{
+		OrganizationID: req.OrganizationID,
+		ParentID:       req.ParentID,
+		Title:          req.Title,
+	}
+
+	err := ctrl.categoryUsecase.CreateCategory(c.Request.Context(), category)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Category created successfully", "category": category})
+}
+
 func (ctrl *CategoryController) GetCategory(c *gin.Context) {
 	// Implementation for creating a category will go here
 	options := domain.CategorySearchAndFilter{}
@@ -74,9 +97,9 @@ func toPaginatedCategoryResponse(categories []*domain.Category, total, page, lim
 	}
 
 	return PaginatedCategoryResponse{
-		Data: catResponse,
+		Data:  catResponse,
 		Total: total,
-		Page: page,
+		Page:  page,
 		Limit: limit,
 	}
 }
