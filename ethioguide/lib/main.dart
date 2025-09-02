@@ -1,8 +1,13 @@
 import 'package:ethioguide/core/config/app_theme.dart';
+import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/config/app_router.dart'; // <-- 1. Import your new router file.
+import 'injection_container.dart' as di; // --> for dependency injection
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized;
+  await di.init();
   runApp(MyApp());
 }
 
@@ -17,13 +22,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 2. Use the MaterialApp.router constructor.
-    return MaterialApp.router(
-      themeMode: _themeMode,
-      theme:AppTheme.lightTheme,
-      darkTheme:AppTheme.darkTheme,
-      routerConfig: router,
-      title: 'EthioGuide',
-      debugShowCheckedModeBanner: false,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => di.sl<AiBloc>())
+      ],
+      child: MaterialApp.router(
+        themeMode: _themeMode,
+        theme:AppTheme.lightTheme,
+        darkTheme:AppTheme.darkTheme,
+        routerConfig: router,
+        title: 'EthioGuide',
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }
