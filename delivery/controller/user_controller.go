@@ -121,6 +121,21 @@ func (ctrl *UserController) Login(c *gin.Context) {
 	}
 }
 
+func (ctrl *UserController) GetProfile(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+
+	account, err := ctrl.userUsecase.GetProfile(c.Request.Context(), userID.(string))
+	if err != nil {
+		HandleError(c, err)
+	}
+
+	c.JSON(http.StatusOK, toUserResponse(account))
+}
+
 // --- HELPER FUNCTIONS ---
 
 // extractBearerToken is a helper to get the token from the Authorization header.

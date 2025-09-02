@@ -135,6 +135,7 @@ func setupDomainErrors() {
 	domain.ErrUsernameExists = errors.New("username already exists")
 	domain.ErrAuthenticationFailed = errors.New("authentication failed")
 	domain.ErrAccountNotActive = errors.New("account not active")
+	domain.ErrUserNotFound = errors.New("user not found")
 }
 
 // --- Test Suite Definition ---
@@ -349,4 +350,54 @@ func (s *UserUsecaseTestSuite) TestRefreshToken() {
 		s.ErrorIs(err, domain.ErrAuthenticationFailed)
 		s.mockJwtSvc.AssertNotCalled(s.T(), "GenerateAccessToken")
 	})
+}
+
+// --- Profile Tests ---
+func (s *UserUsecaseTestSuite) TestGetProfile() {
+    userID := "user-123"
+    account := &domain.Account{
+        ID:    userID,
+        Email: "profile@example.com",
+        Name:  "Profile User",
+        UserDetail: &domain.UserDetail{
+            Username:         "profileuser",
+            SubscriptionPlan: domain.SubscriptionNone,
+            IsBanned:         false,
+            IsVerified:       true,
+        },
+    }
+
+    s.Run("Success", func() {
+        s.SetupTest()
+        s.mockUserRepo.On("GetById", mock.Anything, userID).Return(account, nil).Once()
+
+        result, err := s.usecase.GetProfile(context.Background(), userID)
+
+        s.NoError(err)
+        s.NotNil(result)
+        s.Equal(account.ID, result.ID)
+        s.mockUserRepo.AssertExpectations(s.T())
+    })
+
+    s.Run("Failure - User Not Found", func() {
+        s.SetupTest()
+        s.mockUserRepo.On("GetById", mock.Anything, userID).Return(nil, domain.ErrNotFound).Once()
+
+        result, err := s.usecase.GetProfile(context.Background(), userID)
+
+        s.ErrorIs(err, domain.ErrUserNotFound)
+        s.Nil(result)
+        s.mockUserRepo.AssertExpectations(s.T())
+    })
+
+    s.Run("Failure - Repo Error", func() {
+        s.SetupTest()
+        s.mockUserRepo.On("GetById", mock.Anything, userID).Return(nil, errors.New("db error")).Once()
+
+        result, err := s.usecase.GetProfile(context.Background(), userID)
+
+        s.ErrorIs(err, domain.ErrUserNotFound)
+        s.Nil(result)
+        s.mockUserRepo.AssertExpectations(s.T())
+    })
 }

@@ -203,3 +203,16 @@ func (uc *UserUsecase) RefreshTokenForMobile(ctx context.Context, refreshToken s
 
 	return newAccessToken, newRefreshToken, nil
 }
+
+func (uc *UserUsecase) GetProfile(c context.Context, userID string) (*domain.Account, error) {
+	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
+	defer cancel()
+
+	account, err := uc.userRepo.GetById(ctx, userID)
+	if err != nil || account == nil{
+		return nil, domain.ErrUserNotFound
+
+	}
+
+	return account, nil
+}

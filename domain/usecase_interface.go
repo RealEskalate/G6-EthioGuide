@@ -12,6 +12,8 @@ type IUserUsecase interface {
 	// // Password Management
 	// ForgetPassword(ctx context.Context, email string) error
 	// ResetPassword(ctx context.Context, resetToken, newPassword string) error
+
+	GetProfile(ctx context.Context, userID string) (*Account, error)
 }
 
 type IGeminiUseCase interface {

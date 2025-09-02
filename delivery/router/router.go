@@ -68,6 +68,15 @@ func SetupRouter(
 				// You would need to create this controller method.
 				// adminGroup.GET("/users", userController.GetAllUsers)
 			}
+
+			// --- User Profile Routes ---
+			// Any logged in user can access these routes to manage their profile
+			authGroup := apiGroup.Group("/auth")
+			authGroup.Use(authMiddleware)
+			{
+				authGroup.GET("/me", userController.GetProfile)
+			}
+
 		}
 	}
 
@@ -80,7 +89,6 @@ func SetupRouter(
 			auth.POST("/forgot", handleForgot)
 			auth.POST("/reset", handleReset)
 			auth.POST("/social", handleSocialLogin)
-			auth.GET("/me", handleGetMe)
 			auth.PATCH("/me", handleUpdateMe)
 			auth.PATCH("/me/password", handleUpdatePassword)
 		}
@@ -288,18 +296,6 @@ func handleSocialLogin(c *gin.Context) {
 			"id":   "user_456",
 			"name": "Social User",
 		},
-	})
-}
-
-func handleGetMe(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":            "user_123",
-		"name":          "Current User",
-		"email":         "current@example.com",
-		"phone":         "+251911123456",
-		"preferredLang": "en",
-		"avatarUrl":     "https://example.com/avatar.png",
-		"roles":         []string{"user", "pro"},
 	})
 }
 
