@@ -8,16 +8,17 @@ import 'injection_container.dart' as di; // --> for dependency injection
 void main() async {
   WidgetsFlutterBinding.ensureInitialized;
   await di.init();
+
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  
   MyApp({super.key});
 
-    // default light
-    ThemeMode _themeMode = ThemeMode.light; 
-
+  // NOTE: This _themeMode variable should be managed by a state management solution
+  // (like a ThemeCubit) in a real app, not as a local variable here.
+  // For now, this is okay.
+  final ThemeMode _themeMode = ThemeMode.light;
 
   @override
   Widget build(BuildContext context) {

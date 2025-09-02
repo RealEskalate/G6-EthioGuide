@@ -1,4 +1,19 @@
 import 'package:dio/dio.dart';
+
+import 'package:ethioguide/features/authentication/data/datasources/auth_local_data_source.dart';
+import 'package:ethioguide/features/authentication/data/datasources/auth_remote_data_source.dart';
+import 'package:ethioguide/features/authentication/data/repositories/auth_repositoryy_impl.dart';
+import 'package:ethioguide/features/authentication/domain/repositories/auth_repositoryy.dart';
+import 'package:ethioguide/features/authentication/domain/usecases/forgot_password.dart';
+import 'package:ethioguide/features/authentication/domain/usecases/login_user.dart';
+import 'package:ethioguide/features/authentication/domain/usecases/register_user.dart';
+import 'package:ethioguide/features/authentication/domain/usecases/reset_password.dart';
+import 'package:ethioguide/features/authentication/domain/usecases/sign_in_with_google.dart';
+import 'package:ethioguide/features/authentication/presentation/bloc/auth_bloc.dart';
+// REMOVED: No longer need to import google_sign_in here.
+
+import 'core/network/interceptors/auth_interceptor.dart';
+
 import 'package:ethioguide/core/config/end_points.dart';
 import 'package:ethioguide/core/data/repositories/auth_repository_impl.dart';
 import 'package:ethioguide/core/domain/repositories/auth_repository.dart';
@@ -16,17 +31,22 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  //* Features -
-  // Bloc
-
-  // Usecase
-
-  // Repositories
-
-  // Datasources
+  //* Features - Authentication
+  sl.registerFactory(() => AuthBloc(loginUser: sl(), registerUser: sl(), forgotPassword: sl(), resetPassword: sl(), signInWithGoogle: sl()));
+  sl.registerLazySingleton(() => LoginUser(sl()));
+  sl.registerLazySingleton(() => RegisterUser(sl()));
+  sl.registerLazySingleton(() => ForgotPassword(sl()));
+  sl.registerLazySingleton(() => ResetPassword(sl()));
+  sl.registerLazySingleton(() => SignInWithGoogle(sl()));
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(remoteDataSource: sl(), localDataSource: sl(), secureStorage: sl(), networkInfo: sl()));
+  sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(dio: sl()));
+  
+  // THE FIX: The AuthLocalDataSourceImpl now has an empty constructor.
+  sl.registerLazySingleton<AuthLocalDataSource>(() => AuthLocalDataSourceImpl());
 
   //* Features - Ai chat
   // Bloc
@@ -64,6 +84,7 @@ Future<void> init() async {
 
   //! Core
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
+
   //* Data Layer (Repositories)
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(secureStorage: sl()),
