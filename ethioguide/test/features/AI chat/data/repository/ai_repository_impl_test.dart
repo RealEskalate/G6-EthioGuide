@@ -192,9 +192,7 @@ void main() {
 
         // Assert
         expect(result, Right(tHistory));
-        verify(
-          mockRemoteDataSource.getHistory(),
-        ).called(1); // Called twice due to retry
+        verify(mockRemoteDataSource.getHistory()).called(1);
         verify(mockLocalDataSource.cacheHistory(tHistory)).called(1);
         verifyNoMoreInteractions(mockRemoteDataSource);
         verifyNoMoreInteractions(mockLocalDataSource);
@@ -235,7 +233,7 @@ void main() {
       verifyNever(mockLocalDataSource.cacheHistory(any));
     });
 
-    test('should return ServerFailure on ServerException', () async {
+    test('should return cached history when online but remote fails', () async {
       // Arrange
       when(mockNetworkInfo.isConnected).thenAnswer((_) async => true);
       when(mockRemoteDataSource.getHistory()).thenThrow(
@@ -244,22 +242,53 @@ void main() {
           statusCode: 500,
         ),
       );
+      when(
+        mockLocalDataSource.getCachedHistory(),
+      ).thenAnswer((_) async => tHistory);
 
       // Act
       final result = await repository.getHistory();
 
       // Assert
-      expect(
-        result,
-        Left(
-          ServerFailure(
-            message: 'Internal server error. Please try again later.',
-          ),
-        ),
-      );
+      expect(result, Right(tHistory));
       verify(mockRemoteDataSource.getHistory()).called(1);
+      verify(mockLocalDataSource.getCachedHistory()).called(1);
       verifyNever(mockLocalDataSource.cacheHistory(any));
     });
+
+    test(
+      'should return ServerFailure when online, remote fails and no cache',
+      () async {
+        // Arrange
+        when(mockNetworkInfo.isConnected).thenAnswer((_) async => true);
+        when(mockRemoteDataSource.getHistory()).thenThrow(
+          ServerException(
+            message: 'Internal server error. Please try again later.',
+            statusCode: 500,
+          ),
+        );
+        when(
+          mockLocalDataSource.getCachedHistory(),
+        ).thenThrow(CacheException(message: 'No cache found'));
+
+        // Act
+        final result = await repository.getHistory();
+
+        // Assert
+        expect(
+          result,
+          Left(
+            ServerFailure(
+              message:
+                  'Remote failed: ServerException: Internal server error. Please try again later. (Status code: 500)',
+            ),
+          ),
+        );
+        verify(mockRemoteDataSource.getHistory()).called(1);
+        verify(mockLocalDataSource.getCachedHistory()).called(1);
+        verifyNever(mockLocalDataSource.cacheHistory(any));
+      },
+    );
   }); // get history group
 
   group('translateContent', () {

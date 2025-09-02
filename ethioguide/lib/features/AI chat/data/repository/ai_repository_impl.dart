@@ -51,24 +51,26 @@ class AiRepositoryImpl implements AiRepository {
         try {
           await localDatasource.cacheHistory(remoteHistory);
         } on CacheException {
-          // If caching fails, return the sucessful remote result
-          //TODO: log this
+          //TODO: Log but ignore
         }
         return Right(remoteHistory);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
       } catch (e) {
-        return Left(ServerFailure(message: 'Unexpected error: $e'));
+        // Remote failed → fallback to cache
+        try {
+          final localHistory = await localDatasource.getCachedHistory();
+          return Right(localHistory);
+        } on CacheException {
+          // No cache either → then fail
+          return Left(ServerFailure(message: 'Remote failed: $e'));
+        }
       }
     } else {
-      // Get cached chat if offline
+      // Offline → always fallback to cache
       try {
         final localHistory = await localDatasource.getCachedHistory();
         return Right(localHistory);
       } on CacheException catch (e) {
         return Left(CachedFailure(message: e.message));
-      } catch (e) {
-        return Left(CachedFailure(message: 'Unexpected cache error: $e'));
       }
     }
   }
