@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Eye, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -67,11 +67,11 @@ export default function CreatePostPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">Content <span className="text-red-500">*</span></label>
             {/* Simple toolbar mockup */}
             <div className="flex items-center gap-2 mb-2 text-gray-400">
-              <span className="font-bold">B</span>
+              {/* <span className="font-bold">B</span>
               <span className="italic">I</span>
               <span className="underline">U</span>
               <span className="">•</span>
-              <span className="">@</span>
+              <span className="">@</span> */}
             </div>
             <Textarea
               value={content}
@@ -87,10 +87,11 @@ export default function CreatePostPage() {
 
         {/* Actions */}
         <div className="flex gap-4">
-          <Button variant="outline" className="flex items-center gap-2 px-6 py-2">
-            <Eye className="w-4 h-4" /> Preview Post
-          </Button>
-          <Button className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-[#2d5470] text-white">
+          <Button
+            className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-[#2d5470] text-white"
+            disabled={title.trim() === "" || content.trim() === ""}
+            onClick={() => router.push("./discussions")}
+          >
             <Send className="w-4 h-4" /> Publish Post
           </Button>
         </div>

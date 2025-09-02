@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { Search, Plus, MessageSquare, Heart, Eye, Share2, Pin } from "lucide-react"
-import { Flag } from "lucide-react"
+import { Search, Plus, MessageSquare, Pin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,8 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useRouter } from "next/navigation"
 
 export default function CommunityPage() {
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const router = useRouter()
+  const [expanded, setExpanded] = useState<{ [key: number]: boolean }>({});
 
   const discussions = [
     {
@@ -79,41 +81,84 @@ export default function CommunityPage() {
 
   const quickTags = ["#AI", "#passport", "#tax", "#business"]
 
+  // Filter discussions by search query (title or content) and category
+  const filteredDiscussions = discussions.filter(
+    (discussion) => {
+      const matchesSearch =
+        discussion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        discussion.content.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "all" ||
+        (selectedCategory === "ai" && discussion.tags.some(tag => tag.toLowerCase().includes("ai"))) ||
+        (selectedCategory === "study" && discussion.tags.some(tag => tag.toLowerCase().includes("study"))) ||
+        (selectedCategory === "business" && discussion.tags.some(tag => tag.toLowerCase().includes("business")));
+      return matchesSearch && matchesCategory;
+    }
+  );
+
+  const handleToggleExpand = (id: number) => {
+    setExpanded((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const guidelinesList = [
+    "Be respectful and courteous to others.",
+    "No spam, self-promotion, or irrelevant links.",
+    "Keep discussions constructive and on-topic.",
+    "Use clear language and avoid offensive terms.",
+    "Report inappropriate content to moderators.",
+    "Help others and share your knowledge.",
+    "Follow all applicable laws and platform rules.",
+    "Thank you for making this a great place to learn and collaborate!"
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-2 sm:p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <MessageSquare className="h-8 w-8 text-[#3A6A8D]" />
-              <h1 className="text-3xl font-bold text-gray-900">Community Discussions</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Community Discussions</h1>
             </div>
-            <p className="text-gray-600">Join the conversation. Share, ask, and collaborate.</p>
+            <p className="text-gray-600 text-sm sm:text-base">Join the conversation. Share, ask, and collaborate.</p>
           </div>
-        <Button
-          className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
-          onClick={() => router.push("/user/create-post")}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Discussion
-        </Button>
+          <Button
+            className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white w-full sm:w-auto"
+            onClick={() => router.push("/user/create-post")}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Discussion
+          </Button>
         </div>
         {/* Search and Filters */}
         <Card className="p-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4 w-full mb-2">
-            <div className="relative flex-1">
+          <div className="flex flex-col gap-4 w-full mb-2 sm:flex-row">
+            <div className="relative flex-1 flex">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search discussions..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent"
               />
+              <Button
+                type="button"
+                className="ml-2 px-4 py-2 bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
+                onClick={() => setSearchQuery(searchInput)}
+              >
+                Search
+              </Button>
             </div>
             <div className="flex gap-2 flex-1">
-              <Select defaultValue="all">
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
@@ -137,42 +182,39 @@ export default function CommunityPage() {
             </div>
           </div>
           {/* Quick Tags */}
-        <div className="flex flex-wrap gap-3 mb-3">
-          {quickTags.map((tag) => (
-            <Badge
-              key={tag}
-              variant="outline"
-              className="cursor-pointer hover:bg-blue-100 hover:text-blue-700 transition-colors "
-            >
-              {tag}
-            </Badge>
-          ))}
-        </div>
+          <div className="flex flex-wrap gap-3 mb-3">
+            {quickTags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="outline"
+                className="cursor-pointer hover:bg-blue-100 hover:text-blue-700 transition-colors "
+              >
+                {tag}
+              </Badge>
+            ))}
+          </div>
         </Card>
-
-        
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-9 space-y-6">
             <div className="space-y-6 mt-2">
-              {discussions.map((discussion, index) => (
+              {filteredDiscussions.map((discussion, index) => (
                 <Card
                   key={discussion.id}
-                  className={`p-6 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer animate-in fade-in slide-in-from-bottom-4`}
+                  className={`p-4 sm:p-6 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer animate-in fade-in slide-in-from-bottom-4`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <CardContent className="p-0">
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 flex-col sm:flex-row">
                       <Image
                         src={discussion.avatar || "/placeholder.svg"}
                         alt={discussion.author}
                         width={48}
                         height={48}
-                        className="w-12 h-12 rounded-full object-cover"
+                        className="w-12 h-12 rounded-full object-cover mx-auto sm:mx-0"
                       />
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2">
                           <span className="text-lg font-semibold text-gray-900">{discussion.author}</span>
                           {discussion.isModerator && (
                             <Badge variant="secondary" className="text-xs">
@@ -182,42 +224,41 @@ export default function CommunityPage() {
                           {discussion.isPinned && <Pin className="h-4 w-4 text-[#3A6A8D]" />}
                           <span className="text-gray-500 text-sm">{discussion.timestamp}</span>
                         </div>
-
                         <h3 className="text-base font-semibold text-gray-900 mb-2 ">
                           {discussion.title}
                         </h3>
-
-                        <p className="text-gray-600 mb-4 line-clamp-2">{discussion.content}</p>
-
-                        <div className="flex items-center justify-between">
+                        <div>
+                          <p
+                            className={`text-gray-700 mb-4 ${
+                              expanded[discussion.id] ? "" : "line-clamp-2"
+                            }`}
+                          >
+                            {discussion.title.includes("Community Guidelines") && expanded[discussion.id] ? (
+                              <ul className="list-disc pl-6 space-y-2">
+                                {guidelinesList.map((item, idx) => (
+                                  <li key={idx}>{item}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              discussion.content
+                            )}
+                          </p>
                           <div className="flex flex-wrap gap-2 pb-6">
                             {discussion.tags.map((tag) => (
-                              <Badge key={tag} variant="outline" className="text-xs cursor-pointer  hover:bg-blue-100 hover:text-blue-700">
+                              <Badge key={tag} variant="outline" className="text-xs cursor-pointer hover:bg-blue-100 hover:text-blue-700">
                                 {tag}
                               </Badge>
                             ))}
                           </div>
-
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <Heart className="h-4 w-4" />
-                              <span>{discussion.likes}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MessageSquare className="h-4 w-4" />
-                              <span>{discussion.replies}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Eye className="h-4 w-4" />
-                              <span>{discussion.views}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Share2 className="h-4 w-4" />
-                              <span>{discussion.shares}</span>
-                            </div>
-                            <button title="Flag this discussion" className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors">
-                              <Flag className="h-4 w-4" />
-                            </button>
+                          <div className="flex justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-[#3A6A8D] hover:bg-blue-100 hover:text-blue-700"
+                              onClick={() => handleToggleExpand(discussion.id)}
+                            >
+                              {expanded[discussion.id] ? "View Less" : "View More"}
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -227,7 +268,6 @@ export default function CommunityPage() {
               ))}
             </div>
           </div>
-
           {/* Sidebar */}
           <div className="lg:col-span-3 space-y-6">
             {/* Popular Tags */}
@@ -288,3 +328,5 @@ export default function CommunityPage() {
     </div>
   )
 }
+
+
