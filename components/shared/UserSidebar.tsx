@@ -58,36 +58,6 @@ export function UserSidebar({
 
       <div className="flex flex-col h-full">
         <nav className="p-4 space-y-2 flex-1">
-          {menuItems.map((item, index) => {
-            if (item.href) {
-              return (
-                <Link
-                  key={index}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
-                    item.active
-                      ? "text-gray-800 bg-gray-100 shadow-sm"
-                      : "text-gray-600 hover:bg-gray-200 hover:text-gray-900 font-medium",
-                    collapsed ? "justify-center" : "",
-                  )}
-                  tabIndex={0}
-                >
-                  <CustomIcon
-                    src={item.iconSrc}
-                    alt={item.iconAlt}
-                    className={cn("flex-shrink-0", collapsed ? "w-8 h-8" : "w-5 h-5")}
-                  />
-                  {!collapsed && (
-                    <span className={cn("transition-opacity duration-200", item.active ? "font-medium" : "")}> 
-                      {item.iconAlt}
-                    </span>
-                  )}
-                </Link>
-              );
-            }
-           
-          })}
           {menuItems.map((item, index) => (
             <div
               key={index}
