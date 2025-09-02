@@ -89,6 +89,7 @@ func SetupRouter(
 			categories := v1.Group("/categories")
 			{
 				categories.POST("", requireAdminOrOrgRole, catagorieController.CreateCategory)
+				categories.GET("", catagorieController.GetCategory)
 			}
 
 		}
@@ -130,7 +131,6 @@ func SetupRouter(
 		// 4) Categories & Taxonomy
 		categories := v1.Group("/categories")
 		{
-			categories.GET("", handleGetCategories)
 			categories.PATCH("/:id", handleUpdateCategory)
 		}
 
@@ -443,25 +443,6 @@ func handleGetOrgFeedback(c *gin.Context) {
 }
 
 // 4) Categories & Taxonomy
-func handleGetCategories(c *gin.Context) {
-	c.JSON(http.StatusOK, []gin.H{
-		{
-			"id":       "cat_1",
-			"name":     "Passport",
-			"children": []gin.H{},
-		},
-		{
-			"id":   "cat_2",
-			"name": "License",
-			"children": []gin.H{
-				{
-					"id":   "cat_3",
-					"name": "Driving License",
-				},
-			},
-		},
-	})
-}
 
 func handleUpdateCategory(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": c.Param("id"), "name": "Updated Category Name"})

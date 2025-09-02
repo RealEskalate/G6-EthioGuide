@@ -26,6 +26,19 @@ func (m *MockCategoryUsecase) CreateCategory(ctx context.Context, category *doma
 	return args.Error(0)
 }
 
+func (m *MockCategoryUsecase) GetCategories(c context.Context, options *domain.CategorySearchAndFilter) ([]*domain.Category, int64, error) {
+	args := m.Called(c, options)
+	var catagories []*domain.Category
+	if args.Get(0) != nil {
+		catagories = args.Get(0).([]*domain.Category)
+	}
+	var total int64
+	if args.Get(1) != nil {
+		total = args.Get(1).(int64)
+	}
+	return catagories, total, args.Error(2)
+}
+
 // --- Test Suite ---
 type CategoryControllerTestSuite struct {
 	suite.Suite

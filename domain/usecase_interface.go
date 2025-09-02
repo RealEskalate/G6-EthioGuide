@@ -23,6 +23,7 @@ type IGeminiUseCase interface {
 
 type ICategoryUsecase interface {
 	CreateCategory(ctx context.Context, category *Category) error
+	GetCategories(ctx context.Context, options *CategorySearchAndFilter) ([]*Category, int64, error)
 }
 
 type IProcedureUsecase interface {

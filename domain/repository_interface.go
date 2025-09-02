@@ -22,6 +22,7 @@ type ITokenRepository interface {
 
 type ICategoryRepository interface {
 	Create(ctx context.Context, category *Category) error
+	GetCategories(ctx context.Context, options *CategorySearchAndFilter) ([]*Category, int64, error)
 }
 
 type IProcedureRepository interface {
