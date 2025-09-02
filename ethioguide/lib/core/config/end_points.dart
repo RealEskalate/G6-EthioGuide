@@ -1,5 +1,5 @@
 class EndPoints {
-  static final baseUrl = '';
+  static final baseUrl = 'https://ethio-guide-backend.onrender.com';
   static final refreshTokenEndPoint = '';
   static final sendQueryEndPoint = '/ai/guide';
   static final getHistoryEndPoint = '/ai/history';

@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:ethioguide/core/config/end_points.dart';
 import 'package:ethioguide/core/domain/repositories/auth_repository.dart';
-import 'package:get_it/get_it.dart';
+// import 'package:get_it/get_it.dart';
 
 // TODO: check if we can remove this instance
 // final getIt =
