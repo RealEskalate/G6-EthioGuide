@@ -19,5 +19,8 @@ type IGeminiUseCase interface {
 }
 type IAIChatUsecase interface{
 	AIchat(ctx context.Context, query string) (string, error)
+}
 
+type IProcedureUsecase interface {
+	CreateProcedure(ctx context.Context, procedure *Procedure) error
 }

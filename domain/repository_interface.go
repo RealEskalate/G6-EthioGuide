@@ -18,13 +18,13 @@ type ITokenRepository interface {
 	DeleteToken(ctx context.Context, tokentype, token string) error
 }
 
-
-type IProcedureRepository interface{
+type IProcedureRepository interface {
+	Create(ctx context.Context, procedure *Procedure) error
 	SearchByEmbedding(ctx context.Context, queryVec []float64, limit int) ([]*Procedure, error)
 }
 
 type AIChatRepository interface {
-    Save(ctx context.Context, chat *AIChat) error
-    GetByUser(ctx context.Context, userID int, limit int) ([]*AIChat, error)
-    DeleteByUser(ctx context.Context, userID int) error
+	Save(ctx context.Context, chat *AIChat) error
+	GetByUser(ctx context.Context, userID int, limit int) ([]*AIChat, error)
+	DeleteByUser(ctx context.Context, userID int) error
 }
