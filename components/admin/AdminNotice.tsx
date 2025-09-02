@@ -11,6 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+import Link from "next/link";
 import { Trash2 } from "lucide-react";
 
 export default function NoticeManagement() {
@@ -146,9 +148,11 @@ export default function NoticeManagement() {
 
       {/* Create New Notice */}
       <div className="flex justify-end">
-        <Button className="bg-primary hover:bg-primary-light text-white px-6 py-1 rounded-full flex items-center space-x-2">
-          <span>+ Create New Notice</span>
-        </Button>
+        <Link href="/admin/notices/create">
+          <Button className="bg-primary hover:bg-primary-light text-white px-6 py-1 rounded-full flex items-center space-x-2">
+            <span>+ Create New Notice</span>
+          </Button>
+        </Link>
       </div>
     </div>
   );

@@ -25,6 +25,14 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useState } from "react";
 
 export default function NewPasswordPage() {
+  return (
+    <Suspense>
+      <NewPasswordPageContent />
+    </Suspense>
+  );
+}
+
+function NewPasswordPageContent() {
   const { t, i18n } = useTranslation("auth");
   const searchParams = useSearchParams();
   let token = searchParams.get("token"); // Get reset token from URL
