@@ -203,3 +203,46 @@ func (uc *UserUsecase) RefreshTokenForMobile(ctx context.Context, refreshToken s
 
 	return newAccessToken, newRefreshToken, nil
 }
+
+func (uc *UserUsecase) GetProfile(c context.Context, userID string) (*domain.Account, error) {
+	ctx, cancel := context.WithTimeout(c, uc.contextTimeout)
+	defer cancel()
+
+	account, err := uc.userRepo.GetById(ctx, userID)
+	if err != nil || account == nil {
+		return nil, domain.ErrUserNotFound
+
+	}
+
+	return account, nil
+}
+
+func (uc *UserUsecase) UpdatePassword(ctx context.Context, userID, currentPassword, newPassword string) error {
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+
+	account, err := uc.userRepo.GetById(ctx, userID)
+	if err != nil || account == nil {
+		return domain.ErrUserNotFound
+	}
+
+	err = uc.passwordService.ComparePassword(account.PasswordHash, currentPassword)
+	if err != nil {
+		return domain.ErrAuthenticationFailed
+	}
+
+	if len(newPassword) < 8 {
+		return domain.ErrPasswordTooShort
+	}
+
+	hashedNewPassword, err := uc.passwordService.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	err = uc.userRepo.UpdatePassword(ctx, userID, hashedNewPassword)
+	if err != nil {
+		return err
+	}
+	return nil
+}

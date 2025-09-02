@@ -55,38 +55,43 @@ type LoginResponse struct {
 	RefreshToken string         `json:"refresh_token,omitempty"`
 }
 
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required"`
+}
+
 type ProcedureCreateRequest struct {
-	Name           string   `json:"name"`
-	GroupID        string   `json:"groupId"`
-	OrganizationID string   `json:"organizationId"`
+	Name           string `json:"name"`
+	GroupID        string `json:"groupId"`
+	OrganizationID string `json:"organizationId"`
 
 	// content
-	Prerequisites  []string `json:"prerequisites"`
-	Steps          []string `json:"steps"`
-	Result         []string `json:"result"`
+	Prerequisites []string `json:"prerequisites"`
+	Steps         []string `json:"steps"`
+	Result        []string `json:"result"`
 
 	// Fees
-	Label          string   `json:"label"`
-	Currency       string   `json:"currency"`
-	Amount         float64  `json:"amount"` 
+	Label    string  `json:"label"`
+	Currency string  `json:"currency"`
+	Amount   float64 `json:"amount"`
 
 	// ProcessingTime
-	MinDays        int      `json:"minDays"`
-	MaxDays        int      `json:"maxDays"`
+	MinDays int `json:"minDays"`
+	MaxDays int `json:"maxDays"`
 }
 
 func toDomainProcedure(p *ProcedureCreateRequest) *domain.Procedure {
 	content := domain.Content{
 		Prerequisites: p.Prerequisites,
-		Steps: p.Steps,
-		Result: p.Result,
+		Steps:         p.Steps,
+		Result:        p.Result,
 	}
-	fees := domain.Fees {
-		Label: p.Label,
+	fees := domain.Fees{
+		Label:    p.Label,
 		Currency: p.Currency,
-		Amount: p.Amount,
+		Amount:   p.Amount,
 	}
-	processingTime := domain.ProcessingTime {
+	processingTime := domain.ProcessingTime{
 		MinDays: p.MinDays,
 		MaxDays: p.MaxDays,
 	}

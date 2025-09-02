@@ -50,6 +50,21 @@ func (m *MockUserUsecase) RefreshTokenForMobile(ctx context.Context, refreshToke
 	return args.String(0), args.String(1), args.Error(2)
 }
 
+// Add missing GetProfile method to satisfy domain.IUserUsecase
+func (m *MockUserUsecase) GetProfile(ctx context.Context, userID string) (*domain.Account, error) {
+	args := m.Called(ctx, userID)
+	var acc *domain.Account
+	if args.Get(0) != nil {
+		acc = args.Get(0).(*domain.Account)
+	}
+	return acc, args.Error(1)
+}
+
+func (m *MockUserUsecase) UpdatePassword(ctx context.Context, userID, currentPassword, newPassword string) error {
+	args := m.Called(ctx, userID, currentPassword, newPassword)
+	return args.Error(0)
+}
+
 // --- Test Suite Definition ---
 
 type UserControllerTestSuite struct {
@@ -268,5 +283,168 @@ func (s *UserControllerTestSuite) TestHandleRefreshToken() {
 		// Assert
 		s.Equal(http.StatusUnauthorized, s.recorder.Code)
 		s.mockUsecase.AssertNotCalled(s.T(), "RefreshTokenForMobile")
+	})
+}
+
+func (s *UserControllerTestSuite) TestGetProfile() {
+	// Add the route for testing
+	s.router.GET("/profile", func(c *gin.Context) {
+		// Simulate middleware setting userID in context
+		c.Set("userID", "user123")
+		s.controller.GetProfile(c)
+	})
+
+	mockAccount := &domain.Account{
+		ID:    "user123",
+		Email: "test@example.com",
+		Name:  "Test User",
+		UserDetail: &domain.UserDetail{
+			Username:         "testuser",
+			SubscriptionPlan: domain.SubscriptionNone,
+			IsBanned:         false,
+			IsVerified:       true,
+		},
+	}
+
+	s.Run("Success", func() {
+		s.SetupTest()
+		// Add the route again after SetupTest
+		s.router.GET("/profile", func(c *gin.Context) {
+			c.Set("userID", "user123")
+			s.controller.GetProfile(c)
+		})
+
+		s.mockUsecase.On("GetProfile", mock.Anything, "user123").Return(mockAccount, nil).Once()
+
+		req, _ := http.NewRequest(http.MethodGet, "/profile", nil)
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusOK, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "testuser")
+		s.mockUsecase.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - User Not Found", func() {
+		s.SetupTest()
+		s.router.GET("/profile", func(c *gin.Context) {
+			c.Set("userID", "user123")
+			s.controller.GetProfile(c)
+		})
+
+		s.mockUsecase.On("GetProfile", mock.Anything, "user123").Return(nil, domain.ErrUserNotFound).Once()
+
+		req, _ := http.NewRequest(http.MethodGet, "/profile", nil)
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusNotFound, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), domain.ErrUserNotFound.Error())
+		s.mockUsecase.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - No userID in context", func() {
+		s.SetupTest()
+		// Route without setting userID
+		s.router.GET("/profile", func(c *gin.Context) {
+			s.controller.GetProfile(c)
+		})
+
+		req, _ := http.NewRequest(http.MethodGet, "/profile", nil)
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusUnauthorized, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "User ID not found")
+	})
+}
+
+func (s *UserControllerTestSuite) TestUpdatePassword() {
+	// Setup route for PATCH /me/password
+	s.router.PATCH("/me/password", func(c *gin.Context) {
+		// Simulate middleware setting userID in context
+		c.Set("userID", "user-123")
+		s.controller.UpdatePassword(c)
+	})
+
+	s.Run("Success", func() {
+		s.SetupTest()
+		s.router.PATCH("/me/password", func(c *gin.Context) {
+			c.Set("userID", "user-123")
+			s.controller.UpdatePassword(c)
+		})
+
+		reqBody := ChangePasswordRequest{
+			OldPassword: "oldpass",
+			NewPassword: "newpass123",
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		s.mockUsecase.On("UpdatePassword", mock.Anything, "user-123", "oldpass", "newpass123").Return(nil).Once()
+
+		req, _ := http.NewRequest(http.MethodPatch, "/me/password", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusOK, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "Password updated successfully")
+		s.mockUsecase.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - No userID in context", func() {
+		s.SetupTest()
+		// Route without setting userID
+		s.router.PATCH("/me/password", func(c *gin.Context) {
+			s.controller.UpdatePassword(c)
+		})
+
+		reqBody := ChangePasswordRequest{
+			OldPassword: "oldpass",
+			NewPassword: "newpass123",
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		req, _ := http.NewRequest(http.MethodPatch, "/me/password", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusUnauthorized, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "User ID not found")
+	})
+
+	s.Run("Failure - Invalid request body", func() {
+		s.SetupTest()
+		s.router.PATCH("/me/password", func(c *gin.Context) {
+			c.Set("userID", "user-123")
+			s.controller.UpdatePassword(c)
+		})
+
+		req, _ := http.NewRequest(http.MethodPatch, "/me/password", bytes.NewBuffer([]byte("not-json")))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusBadRequest, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "Invalid request body")
+	})
+
+	s.Run("Failure - Usecase error", func() {
+		s.SetupTest()
+		s.router.PATCH("/me/password", func(c *gin.Context) {
+			c.Set("userID", "user-123")
+			s.controller.UpdatePassword(c)
+		})
+
+		reqBody := ChangePasswordRequest{
+			OldPassword: "oldpass",
+			NewPassword: "newpass123",
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		s.mockUsecase.On("UpdatePassword", mock.Anything, "user-123", "oldpass", "newpass123").Return(domain.ErrAuthenticationFailed).Once()
+
+		req, _ := http.NewRequest(http.MethodPatch, "/me/password", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusUnauthorized, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), domain.ErrAuthenticationFailed.Error())
+		s.mockUsecase.AssertExpectations(s.T())
 	})
 }
