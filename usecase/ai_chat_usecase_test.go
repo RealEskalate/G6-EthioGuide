@@ -1,139 +1,175 @@
 package usecase_test
 
-// import (
-// 	"context"
-// 	"errors"
-// 	"testing"
+import (
+	"context"
+	// "errors"
+	"testing"
 
-// 	"github.com/stretchr/testify/assert"
-// 	"github.com/stretchr/testify/mock"
-// 	"github.com/stretchr/testify/suite"
+	"EthioGuide/domain"
+	"EthioGuide/usecase"
 
-// 	"EthioGuide/domain"
-// 	"EthioGuide/usecase"
-// )
+	"github.com/stretchr/testify/suite"
 
-// type MockEmbeddingService struct {
-// 	GenerateEmbeddingFunc func(ctx context.Context, query string) ([]float64, error)
-// }
+    "github.com/stretchr/testify/mock"
+)
 
-// func (m *MockEmbeddingService) GenerateEmbedding(ctx context.Context, query string) ([]float64, error) {
-// 	return m.GenerateEmbeddingFunc(ctx, query)
-// }
+// --- Mock for IProcedureRepository ---
+type MockProcedureRepository struct {
+    mock.Mock
+}
 
-// type MockProcedureRepository struct {
-// 	SearchByEmbeddingFunc func(ctx context.Context, vec []float64, topK int) ([]domain.Procedure, error)
-// }
+func (m *MockProcedureRepository) Create(ctx context.Context, procedure *domain.Procedure) error {
+    args := m.Called(ctx, procedure)
+    return args.Error(0)
+}
 
-// func (m *MockProcedureRepository) SearchByEmbedding(ctx context.Context, vec []float64, topK int) ([]domain.Procedure, error) {
-// 	return m.SearchByEmbeddingFunc(ctx, vec, topK)
-// }
+func (m *MockProcedureRepository) SearchByEmbedding(ctx context.Context, queryVec []float64, limit int) ([]*domain.Procedure, error) {
+    args := m.Called(ctx, queryVec, limit)
+    if args.Get(0) != nil {
+        return args.Get(0).([]*domain.Procedure), args.Error(1)
+    }
+    return nil, args.Error(1)
+}
 
-// // type MockAIService struct {
-// //     mock.Mock
-// // }
+// --- Mock for AIChatRepository ---
+type MockAIChatRepository struct {
+    mock.Mock
+}
 
-// // func (m *MockAIService) GenerateCompletion(ctx context.Context, prompt string) (string, error) {
-// //     args := m.Called(ctx, prompt)
-// //     if rf, ok := args.Get(0).(func(context.Context, string) (string, error)); ok {
-// //         return rf(ctx, prompt)
-// //     }
-// //     return args.String(0), args.Error(1)
-// // }
+func (m *MockAIChatRepository) Save(ctx context.Context, chat *domain.AIChat) error {
+    args := m.Called(ctx, chat)
+    return args.Error(0)
+}
 
-// type ChatUsecaseTestSuite struct {
-// 	suite.Suite
-// 	usecase   *usecase.AIChatUsecase
-// 	embedMock *MockEmbeddingService
-// 	procMock  *MockProcedureRepository
-// 	llmMock   *MockAIService
-// }
+func (m *MockAIChatRepository) GetByUser(ctx context.Context, userID int, limit int) ([]*domain.AIChat, error) {
+    args := m.Called(ctx, userID, limit)
+    if args.Get(0) != nil {
+        return args.Get(0).([]*domain.AIChat), args.Error(1)
+    }
+    return nil, args.Error(1)
+}
 
-// func (s *ChatUsecaseTestSuite) TestAIchat_Success() {
-// 	s.embedMock.GenerateEmbeddingFunc = func(ctx context.Context, query string) ([]float64, error) {
-// 		return []float64{1.0, 2.0, 3.0}, nil
-// 	}
-// 	s.procMock.SearchByEmbeddingFunc = func(ctx context.Context, vec []float64, topK int) ([]domain.Procedure, error) {
-// 		return []domain.Procedure{{
-// 			Name: "Test",
-// 			Content: domain.Content{
-// 				Prerequisites: []string{"Req1", "Req2"},
-// 				Steps:         []string{"Step1", "Step2"},
-// 				Result:        []string{"Result1"},
-// 			},
-// 			Fees: domain.Fees{
-// 				Label:    "Service Fee",
-// 				Currency: "ETB",
-// 				Amount:   100.0,
-// 			},
-// 			ProcessingTime: domain.ProcessingTime{
-// 				MinDays: 1,
-// 				MaxDays: 3,
-// 			},
-// 		}}, nil
-// 	}
-// 	s.llmMock.On("GenerateCompletion", mock.Anything, mock.Anything).Return("AI answer", nil)
+func (m *MockAIChatRepository) DeleteByUser(ctx context.Context, userID int) error {
+    args := m.Called(ctx, userID)
+    return args.Error(0)
+}
 
-// 	answer, err := s.usecase.AIchat(context.Background(), "How to do X?")
-// 	assert.NoError(s.T(), err)
-// 	assert.Equal(s.T(), "AI answer", answer)
-// 	s.llmMock.AssertExpectations(s.T())
-// }
+type MockEmbeddingService struct {
+    mock.Mock
+}
 
-// func (s *ChatUsecaseTestSuite) TestAIchat_EmbeddingError() {
-// 	s.embedMock.GenerateEmbeddingFunc = func(ctx context.Context, query string) ([]float64, error) {
-// 		return nil, errors.New("embedding error")
-// 	}
+func (m *MockEmbeddingService) GenerateEmbedding(ctx context.Context, query string) ([]float64, error) {
+    args := m.Called(ctx, query)
+    if args.Get(0) != nil {
+        return args.Get(0).([]float64), args.Error(1)
+    }
+    return nil, args.Error(1)
+}
 
-// 	answer, err := s.usecase.AIchat(context.Background(), "fail embedding")
-// 	assert.Error(s.T(), err)
-// 	assert.Empty(s.T(), answer)
-// }
+type MockLLMService struct {
+    mock.Mock
+}
 
-// func (s *ChatUsecaseTestSuite) TestAIchat_SearchError() {
-// 	s.embedMock.GenerateEmbeddingFunc = func(ctx context.Context, query string) ([]float64, error) {
-// 		return []float64{1.0}, nil
-// 	}
-// 	s.procMock.SearchByEmbeddingFunc = func(ctx context.Context, vec []float64, topK int) ([]domain.Procedure, error) {
-// 		return nil, errors.New("search error")
-// 	}
+func (m *MockLLMService) GenerateCompletion(ctx context.Context, prompt string) (string, error) {
+    args := m.Called(ctx, prompt)
+    return args.String(0), args.Error(1)
+}
 
-// 	answer, err := s.usecase.AIchat(context.Background(), "fail search")
-// 	assert.Error(s.T(), err)
-// 	assert.Empty(s.T(), answer)
-// }
+type AIChatUsecaseSuite struct {
+    suite.Suite
+    embedMock *MockEmbeddingService
+    procMock  *MockProcedureRepository
+    chatRepo  *MockAIChatRepository
+    llmMock   *MockLLMService
+    usecase   domain.IAIChatUsecase
+}
 
-// func (s *ChatUsecaseTestSuite) TestAIchat_LLMError() {
-// 	s.embedMock.GenerateEmbeddingFunc = func(ctx context.Context, query string) ([]float64, error) {
-// 		return []float64{1.0}, nil
-// 	}
-// 	s.procMock.SearchByEmbeddingFunc = func(ctx context.Context, vec []float64, topK int) ([]domain.Procedure, error) {
-// 		return []domain.Procedure{{
-// 			Name: "Test",
-// 			Content: domain.Content{
-// 				Prerequisites: []string{"Req1", "Req2"},
-// 				Steps:         []string{"Step1", "Step2"},
-// 				Result:        []string{"Result1"},
-// 			},
-// 			Fees: domain.Fees{
-// 				Label:    "Service Fee",
-// 				Currency: "ETB",
-// 				Amount:   100.0,
-// 			},
-// 			ProcessingTime: domain.ProcessingTime{
-// 				MinDays: 1,
-// 				MaxDays: 3,
-// 			},
-// 		}}, nil
-// 	}
-// 	s.llmMock.On("GenerateCompletion", mock.Anything, mock.Anything).Return("", errors.New("llm error"))
+func (s *AIChatUsecaseSuite) SetupTest() {
+    s.embedMock = &MockEmbeddingService{}
+    s.procMock = &MockProcedureRepository{}
+    s.chatRepo = &MockAIChatRepository{}
+    s.llmMock = &MockLLMService{}
+    s.usecase = &usecase.AIChatUsecase{
+        EmbedService:  s.embedMock,
+        ProcedureRepo: s.procMock,
+        AiChatRepo:    s.chatRepo,
+        LLMService:    s.llmMock,
+    }
+}
 
-// 	answer, err := s.usecase.AIchat(context.Background(), "fail llm")
-// 	assert.Error(s.T(), err)
-// 	assert.Empty(s.T(), answer)
-// 	s.llmMock.AssertExpectations(s.T())
-// }
+func TestAIChatUsecaseSuite(t *testing.T) {
+    suite.Run(t, new(AIChatUsecaseSuite))
+}
+func (s *AIChatUsecaseSuite) TestAIchat_OfficialSource() {
+    ctx := context.WithValue(context.Background(), "userID", "user123")
 
-// func TestChatUsecaseTestSuite(t *testing.T) {
-// 	suite.Run(t, new(ChatUsecaseTestSuite))
-// }
+    // 1. LLM: language detection returns "english"
+    s.llmMock.On("GenerateCompletion", ctx, mock.AnythingOfType("string")).Return("english", nil).Once()
+    // 2. LLM: main answer
+    s.llmMock.On("GenerateCompletion", ctx, mock.AnythingOfType("string")).Return("AI answer", nil).Once()
+
+    // Embedding
+    s.embedMock.On("GenerateEmbedding", ctx, mock.AnythingOfType("string")).Return([]float64{0.1, 0.2, 0.3}, nil)
+
+    // Vector search returns one procedure
+    s.procMock.On("SearchByEmbedding", ctx, []float64{0.1, 0.2, 0.3}, 3).Return([]*domain.Procedure{
+        {
+            Name: "Procedure1",
+            Content: domain.Content{
+                Prerequisites: []string{"A"},
+                Steps:         []string{"Step1"},
+                Result:        []string{"Result1"},
+            },
+            Fees: domain.Fees{
+                Currency: "ETB",
+                Amount:   100,
+                Label:    "Fee",
+            },
+            ProcessingTime: domain.ProcessingTime{
+                MinDays: 1,
+                MaxDays: 2,
+            },
+        },
+    }, nil)
+
+    // Chat repo save
+    s.chatRepo.On("Save", ctx, mock.MatchedBy(func(chat *domain.AIChat) bool {
+        return chat.UserID == "user123" && chat.Source == "official"
+    })).Return(nil)
+
+    answer, err := s.usecase.AIchat(ctx, "How do I get a license?")
+    s.NoError(err)
+    s.Equal("AI answer", answer)
+    s.llmMock.AssertExpectations(s.T())
+    s.embedMock.AssertExpectations(s.T())
+    s.procMock.AssertExpectations(s.T())
+    s.chatRepo.AssertExpectations(s.T())
+}
+
+func (s *AIChatUsecaseSuite) TestAIchat_UnofficialSource() {
+    ctx := context.WithValue(context.Background(), "userID", "user456")
+
+    // 1. LLM: language detection returns "english"
+    s.llmMock.On("GenerateCompletion", ctx, mock.AnythingOfType("string")).Return("english", nil).Once()
+    // 2. LLM: main answer
+    s.llmMock.On("GenerateCompletion", ctx, mock.AnythingOfType("string")).Return("AI answer", nil).Once()
+
+    // Embedding
+    s.embedMock.On("GenerateEmbedding", ctx, mock.AnythingOfType("string")).Return([]float64{0.1, 0.2, 0.3}, nil)
+
+    // Vector search returns no procedures
+    s.procMock.On("SearchByEmbedding", ctx, []float64{0.1, 0.2, 0.3}, 3).Return([]*domain.Procedure{}, nil)
+
+    // Chat repo save
+    s.chatRepo.On("Save", ctx, mock.MatchedBy(func(chat *domain.AIChat) bool {
+        return chat.UserID == "user456" && chat.Source == "unofficial"
+    })).Return(nil)
+
+    answer, err := s.usecase.AIchat(ctx, "What is the weather?")
+    s.NoError(err)
+    s.Equal("AI answer", answer)
+    s.llmMock.AssertExpectations(s.T())
+    s.embedMock.AssertExpectations(s.T())
+    s.procMock.AssertExpectations(s.T())
+    s.chatRepo.AssertExpectations(s.T())
+}
