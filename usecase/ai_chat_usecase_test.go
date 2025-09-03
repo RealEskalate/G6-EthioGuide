@@ -41,7 +41,7 @@ func (m *MockAIChatRepository) Save(ctx context.Context, chat *domain.AIChat) er
     return args.Error(0)
 }
 
-func (m *MockAIChatRepository) GetByUser(ctx context.Context, userID int, limit int) ([]*domain.AIChat, error) {
+func (m *MockAIChatRepository) GetByUser(ctx context.Context, userID string, limit int) ([]*domain.AIChat, error) {
     args := m.Called(ctx, userID, limit)
     if args.Get(0) != nil {
         return args.Get(0).([]*domain.AIChat), args.Error(1)
@@ -49,7 +49,7 @@ func (m *MockAIChatRepository) GetByUser(ctx context.Context, userID int, limit 
     return nil, args.Error(1)
 }
 
-func (m *MockAIChatRepository) DeleteByUser(ctx context.Context, userID int) error {
+func (m *MockAIChatRepository) DeleteByUser(ctx context.Context, userID string) error {
     args := m.Called(ctx, userID)
     return args.Error(0)
 }

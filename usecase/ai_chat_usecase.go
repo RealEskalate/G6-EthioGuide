@@ -11,11 +11,11 @@ import (
 type AIChatUsecase struct {
 	EmbedService  domain.IEmbeddingService
 	ProcedureRepo domain.IProcedureRepository // abstracts Mongo / vector DB
-    AiChatRepo  domain.AIChatRepository
+    AiChatRepo  domain.IAIChatRepository
 	LLMService    domain.IAIService           // abstracts Gemini / OpenAI
 }
 
-func NewChatUsecase(e domain.IEmbeddingService, s domain.IProcedureRepository, aiChatRepo domain.AIChatRepository, l domain.IAIService) domain.IAIChatUsecase {
+func NewChatUsecase(e domain.IEmbeddingService, s domain.IProcedureRepository, aiChatRepo domain.IAIChatRepository, l domain.IAIService) domain.IAIChatUsecase {
 	return &AIChatUsecase{EmbedService: e, ProcedureRepo: s, AiChatRepo: aiChatRepo, LLMService: l}
 }
 
