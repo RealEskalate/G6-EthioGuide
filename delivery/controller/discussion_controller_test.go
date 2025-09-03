@@ -47,26 +47,25 @@ type PostControllerTestSuite struct {
 }
 
 func (s *PostControllerTestSuite) SetupTest() {
-    s.mockUseCase = new(MockPostUseCase)
-    pc := controller.NewPostController(s.mockUseCase)
+	s.mockUseCase = new(MockPostUseCase)
+	pc := controller.NewPostController(s.mockUseCase)
 
-    gin.SetMode(gin.TestMode)
-    s.router = gin.Default()
+	gin.SetMode(gin.TestMode)
+	s.router = gin.Default()
 
-    // Set both userID and userRole in the context
-    s.router.Use(func(c *gin.Context) {
-        c.Set("userID", "123")
-        c.Set("userRole", "admin")
-        c.Next()
-    })
+	// Set both userID and userRole in the context
+	s.router.Use(func(c *gin.Context) {
+		c.Set("userID", "123")
+		c.Set("userRole", domain.RoleAdmin)
+		c.Next()
+	})
 
-    s.router.POST("/discussions", pc.CreatePost)
-    s.router.GET("/discussions", pc.GetPosts)
-    s.router.GET("/discussions/:id", pc.GetPostByID)
-    s.router.PUT("/discussions/:id", pc.UpdatePost)
-    s.router.DELETE("/discussions/:id", pc.DeletePost)
+	s.router.POST("/discussions", pc.CreatePost)
+	s.router.GET("/discussions", pc.GetPosts)
+	s.router.GET("/discussions/:id", pc.GetPostByID)
+	s.router.PUT("/discussions/:id", pc.UpdatePost)
+	s.router.DELETE("/discussions/:id", pc.DeletePost)
 }
-
 
 func (s *PostControllerTestSuite) TestCreatePost_Success() {
 	body := `{"title": "Hello", "content": "World", "procedures": [], "tags": []}`
@@ -145,30 +144,29 @@ func (s *PostControllerTestSuite) TestUpdatePost_Success() {
 }
 
 func (s *PostControllerTestSuite) TestDeletePost_Success() {
-    // Set up expected behavior
-    s.mockUseCase.On("DeletePost", mock.Anything, "1", "123", "admin").Return(nil)
+	// Set up expected behavior
+	s.mockUseCase.On("DeletePost", mock.Anything, "1", "123", string(domain.RoleAdmin)).Return(nil)
 
-    // Create request
-    req := httptest.NewRequest(http.MethodDelete, "/discussions/1", nil)
-    w := httptest.NewRecorder()
+	// Create request
+	req := httptest.NewRequest(http.MethodDelete, "/discussions/1", nil)
+	w := httptest.NewRecorder()
 
-    // Inject userRole into context
-    s.router.Use(func(c *gin.Context) {
-        c.Set("userRole", "admin")
-        c.Next()
-    })
+	// Inject userRole into context
+	s.router.Use(func(c *gin.Context) {
+		c.Set("userRole", domain.RoleAdmin)
+		c.Next()
+	})
 
-    // Serve request
-    s.router.ServeHTTP(w, req)
+	// Serve request
+	s.router.ServeHTTP(w, req)
 
-    // Assert
-    s.Equal(http.StatusNoContent, w.Code)
-    s.mockUseCase.AssertCalled(s.T(), "DeletePost", mock.Anything, "1", "123", "admin")
+	// Assert
+	s.Equal(http.StatusNoContent, w.Code)
+	s.mockUseCase.AssertExpectations(s.T())
 }
 
-
 func (s *PostControllerTestSuite) TestDeletePost_Failure() {
-	s.mockUseCase.On("DeletePost", mock.Anything, "1", "123", "admin").Return(errors.New("delete failed"))
+	s.mockUseCase.On("DeletePost", mock.Anything, "1", "123", string(domain.RoleAdmin)).Return(errors.New("delete failed"))
 
 	req := httptest.NewRequest(http.MethodDelete, "/discussions/1", nil)
 	w := httptest.NewRecorder()
@@ -176,12 +174,12 @@ func (s *PostControllerTestSuite) TestDeletePost_Failure() {
 	// Create a test context and set the userRole
 	c, _ := gin.CreateTestContext(w)
 	c.Request = req
-	c.Set("userRole", "admin") // Set the userRole in the Gin context
+	c.Set("userRole", domain.RoleAdmin) // Set the userRole in the Gin context
 
 	s.router.ServeHTTP(w, req)
 
-	s.Equal(http.StatusInternalServerError, w.Code) // assuming HandleError maps to 500
-	s.mockUseCase.AssertCalled(s.T(), "DeletePost", mock.Anything, "1", "123", "admin")
+	s.Equal(http.StatusInternalServerError, w.Code)
+	s.mockUseCase.AssertExpectations(s.T())
 }
 
 func TestPostControllerTestSuite(t *testing.T) {
