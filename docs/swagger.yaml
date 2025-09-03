@@ -1,0 +1,102 @@
+basePath: /api/v1
+definitions:
+  controller.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      preferredLang:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - username
+    type: object
+  controller.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      is_verified:
+        type: boolean
+      name:
+        type: string
+      profile_picture:
+        type: string
+      role:
+        $ref: '#/definitions/domain.Role'
+      username:
+        type: string
+    type: object
+  domain.Role:
+    enum:
+    - user
+    - admin
+    - org
+    type: string
+    x-enum-varnames:
+    - RoleUser
+    - RoleAdmin
+    - RoleOrg
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is the API server for the EthioGuide application.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: EthioGuide API
+  version: "1.0"
+paths:
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account with the provided details.
+      parameters:
+      - description: User Registration Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created Successfully
+          schema:
+            $ref: '#/definitions/controller.UserResponse'
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "409":
+          description: invalid
+          schema:
+            type: string
+      summary: Register a new user
+      tags:
+      - Authentication
+securityDefinitions:
+  BearerAuth:
+    description: '"Type ''Bearer'' followed by a space and a JWT token."'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

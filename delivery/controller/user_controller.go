@@ -64,7 +64,17 @@ func (ctrl *UserController) HandleRefreshToken(c *gin.Context) {
 	}
 }
 
-// Register is now much cleaner, delegating all error handling to the helper.
+// Register godoc
+// @Summary      Register a new user
+// @Description  Creates a new user account with the provided details.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body RegisterRequest true "User Registration Details"
+// @Success      201 {object} UserResponse "User created Successfully"
+// @Failure      400 {object} string "invalid
+// @Failure      409 {object} string "invalid"
+// @Router       /auth/register [post]
 func (ctrl *UserController) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -6,6 +6,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	_ "EthioGuide/docs"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // SetupRouter initializes the Gin router and registers all application routes.
@@ -26,6 +31,8 @@ func SetupRouter(
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "UP"})
 	})
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Group all routes under a versioned prefix
 	v1 := router.Group("/api/v1")
