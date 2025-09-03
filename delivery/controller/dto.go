@@ -61,3 +61,10 @@ type CreatePostDTO struct {
 	Procedures []string `json:"procedures,omitempty"`
 	Tags		[]string `json:"tags,omitempty"`
 }
+
+type UpdatePostDTO struct{
+	Title 	 	string 		`json:"title"`
+	Content     string   `json:"content"`
+	Procedures []string `json:"procedures,omitempty"`
+	Tags		[]string `json:"tags,omitempty"`
+}

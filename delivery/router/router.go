@@ -49,6 +49,10 @@ func SetupRouter(
 			}
 			
 			apiGroup.POST("/discussions", postController.CreatePost)
+			apiGroup.GET("/discussions", postController.GetPosts)
+			apiGroup.GET("/discussions/:id", postController.GetPostByID)
+			apiGroup.PATCH("/discussions/:id", postController.UpdatePost)
+			apiGroup.DELETE("/discussions/:id", postController.DeletePost)
 			
 			// --- PRO Subscription Routes ---
 			// These routes require the user to be logged in AND have a "pro" subscription.

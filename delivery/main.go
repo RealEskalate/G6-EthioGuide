@@ -66,7 +66,7 @@ func main() {
 		cfg.UsecaseTimeout,
 	)
 	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
-	postUsecase := usecase.NewPostUseCase(postRepo)
+	postUsecase := usecase.NewPostUseCase(postRepo, cfg.UsecaseTimeout)
 	// --- Controllers ---
 	// Controllers handle the HTTP layer, delegating logic to use cases.
 	userController := controller.NewUserController(userUsecase, cfg.JWTRefreshTTL)

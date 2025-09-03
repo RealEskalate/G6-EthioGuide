@@ -35,11 +35,18 @@ var (
 	// Request errors
 	ErrInvalidBody = errors.New("invalid request body")
 	ErrUnsupportedLanguage = errors.New("unsupported language used")
+	ErrInvalidQueryParam    = errors.New("invalid query parameter")
+	ErrInvalidIDFormat	 = errors.New("invalid ID format")
+	ErrEmptyParamField	 = errors.New("empty parameter field")
 
 	//Database errors
 	ErrUnableToEnterData = errors.New("unable to enter data into database")
 	ErrUnableToFetchData = errors.New("unable to fetch data from database")
 	ErrUnableToUpdateData = errors.New("unable to update data in database")
 	ErrUnableToDeleteData = errors.New("unable to delete data from database")
+
+	ErrPostNotFound = errors.New("post not found")
+	ErrProcedureNotFound = errors.New("procedure not found")
+
 
 )
