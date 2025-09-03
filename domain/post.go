@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type Post struct {
-	ID			string
+	ID         string
 	UserID     string
 	Title      string
 	Content    string
@@ -14,23 +14,14 @@ type Post struct {
 }
 
 type GlobalLogic string
-type SortOrder string
 type ActionType string
-
-const (
-
-	SortOrderASC  SortOrder = "ASC"
-	SortOrderDESC SortOrder = "DESC"
-)
 
 type PostFilters struct {
 	Title *string
-	
 
 	// List of tags
 	ProcedureID []string
 	Tags        []string
-	
 
 	StartDate *time.Time
 	EndDate   *time.Time
