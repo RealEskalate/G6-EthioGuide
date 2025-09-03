@@ -33,19 +33,17 @@ func (pu *ProcedureUsecase) UpdateProcedure(ctx context.Context, id string, proc
 
 	// 2. Authorization Check:
 	// Get userRole and organizationID from context (set by Gin middleware)
-	userRole, _ := ctx.Value("userRole").(string)
+	userRole, _ := ctx.Value("userRole").(domain.Role)
 	userOrgID, _ := ctx.Value("userID").(string)
 
-	if procedureToUpdate.OrganizationID == "" || procedureToUpdate.OrganizationID == "nil" {
-		// Only admin can update if no organization owns the procedure
-		if userRole != "admin" {
-			return domain.ErrPermissionDenied
-		}
-	} else {
-		// Only the owning organization can update
+	switch userRole {
+	case domain.RoleAdmin:
+	case domain.RoleOrg:
 		if procedureToUpdate.OrganizationID != userOrgID {
 			return domain.ErrPermissionDenied
 		}
+	default:
+		return domain.ErrPermissionDenied
 	}
 
 	// 3. Update the procedure.
@@ -65,19 +63,17 @@ func (pu *ProcedureUsecase) DeleteProcedure(ctx context.Context, id string) erro
 	}
 
 	// 2. Authorization Check:
-	userRole, _ := ctx.Value("userRole").(string)
+	userRole, _ := ctx.Value("userRole").(domain.Role)
 	userOrgID, _ := ctx.Value("userID").(string)
 
-	if procedureToDelete.OrganizationID == "" || procedureToDelete.OrganizationID == "nil" {
-		// Only admin can delete if no organization owns the procedure
-		if userRole != "admin" {
-			return domain.ErrPermissionDenied
-		}
-	} else {
-		// Only the owning organization can delete
+	switch userRole {
+	case domain.RoleAdmin:
+	case domain.RoleOrg:
 		if procedureToDelete.OrganizationID != userOrgID {
 			return domain.ErrPermissionDenied
 		}
+	default:
+		return domain.ErrPermissionDenied
 	}
 
 	// 3. Delete the procedure.

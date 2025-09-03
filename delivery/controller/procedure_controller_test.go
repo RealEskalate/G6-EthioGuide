@@ -121,12 +121,12 @@ func (s *ProcedureControllerTestSuite) TestGetProcedureByID() {
 
 		// Assert
 		s.Equal(http.StatusNotFound, s.recorder.Code)
-		
+
 		var response gin.H
 		err := json.Unmarshal(s.recorder.Body.Bytes(), &response)
 		s.NoError(err)
 		s.Equal(notFoundError.Error(), response["error"])
-		
+
 		s.mockUsecase.AssertExpectations(s.T())
 	})
 
@@ -145,12 +145,12 @@ func (s *ProcedureControllerTestSuite) TestGetProcedureByID() {
 
 		// Assert
 		s.Equal(http.StatusNotFound, s.recorder.Code)
-		
+
 		var response gin.H
 		err := json.Unmarshal(s.recorder.Body.Bytes(), &response)
 		s.NoError(err)
 		s.Equal(dbError.Error(), response["error"])
-		
+
 		s.mockUsecase.AssertExpectations(s.T())
 	})
 }
@@ -193,7 +193,7 @@ func (s *ProcedureControllerTestSuite) TestUpdateProcedure() {
 
 		// Assert
 		s.Equal(http.StatusBadRequest, s.recorder.Code)
-		
+
 		var response gin.H
 		err := json.Unmarshal(s.recorder.Body.Bytes(), &response)
 		s.NoError(err)
@@ -201,7 +201,7 @@ func (s *ProcedureControllerTestSuite) TestUpdateProcedure() {
 		s.Contains(response, "error")
 		// The specific error message might vary, so we just check that it exists
 		s.NotEmpty(response["error"])
-		
+
 		s.mockUsecase.AssertNotCalled(s.T(), "UpdateProcedure")
 	})
 
@@ -226,12 +226,12 @@ func (s *ProcedureControllerTestSuite) TestUpdateProcedure() {
 
 		// Assert
 		s.Equal(http.StatusNotFound, s.recorder.Code)
-		
+
 		var response gin.H
 		err := json.Unmarshal(s.recorder.Body.Bytes(), &response)
 		s.NoError(err)
 		s.Equal(notFoundError.Error(), response["error"])
-		
+
 		s.mockUsecase.AssertExpectations(s.T())
 	})
 
@@ -256,12 +256,12 @@ func (s *ProcedureControllerTestSuite) TestUpdateProcedure() {
 
 		// Assert
 		s.Equal(http.StatusNotFound, s.recorder.Code)
-		
+
 		var response gin.H
 		err := json.Unmarshal(s.recorder.Body.Bytes(), &response)
 		s.NoError(err)
 		s.Equal(validationError.Error(), response["error"])
-		
+
 		s.mockUsecase.AssertExpectations(s.T())
 	})
 
@@ -286,12 +286,12 @@ func (s *ProcedureControllerTestSuite) TestUpdateProcedure() {
 
 		// Assert
 		s.Equal(http.StatusNotFound, s.recorder.Code)
-		
+
 		var response gin.H
 		err := json.Unmarshal(s.recorder.Body.Bytes(), &response)
 		s.NoError(err)
 		s.Equal(dbError.Error(), response["error"])
-		
+
 		s.mockUsecase.AssertExpectations(s.T())
 	})
 }

@@ -19,9 +19,9 @@ func NewProcedureController(procedureUsecase domain.IProcedureUseCase) *Procedur
 
 func (pc *ProcedureController) GetProcedureByID(ctx *gin.Context) {
 	id := ctx.Param("id")
-	procedure, err := pc.procedureUsecase.GetProcedureByID(ctx, id)
+	procedure, err := pc.procedureUsecase.GetProcedureByID(ctx.Request.Context(), id)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		HandleError(ctx, err)
 		return
 	}
 	ctx.JSON(http.StatusOK, FromDomainProcedureToDTO(procedure))
@@ -34,9 +34,9 @@ func (pc *ProcedureController) UpdateProcedure(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err := pc.procedureUsecase.UpdateProcedure(ctx, id, dto.FromDTOToDomainProcedure())
+	err := pc.procedureUsecase.UpdateProcedure(ctx.Request.Context(), id, dto.FromDTOToDomainProcedure())
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		HandleError(ctx, err)
 		return
 	}
 	ctx.JSON(http.StatusOK, "Updated Procedure Successfully.")
@@ -44,10 +44,10 @@ func (pc *ProcedureController) UpdateProcedure(ctx *gin.Context) {
 
 func (pc *ProcedureController) DeleteProcedure(ctx *gin.Context) {
 	id := ctx.Param("id")
-	err := pc.procedureUsecase.DeleteProcedure(ctx, id)
+	err := pc.procedureUsecase.DeleteProcedure(ctx.Request.Context(), id)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		HandleError(ctx, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, "Deleted Procedure Successfully.")
+	ctx.Status(http.StatusNoContent)
 }
