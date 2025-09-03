@@ -20,6 +20,7 @@ func SetupRouter(
 	procedureController *controller.ProcedureController,
 	catagorieController *controller.CategoryController,
 	geminiController *controller.GeminiController,
+	feedbackController *controller.FeedbackController,
 	authMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
 	requireAdminRole gin.HandlerFunc,
@@ -108,6 +109,13 @@ func SetupRouter(
 			procedures := v1.Group("/procedures")
 			{
 				procedures.POST("", authMiddleware, requireAdminOrOrgRole, procedureController.CreateProcedure)
+				procedures.POST("/:id/feedback", authMiddleware, feedbackController.SubmitFeedback)
+				procedures.GET("/:id/feedback", feedbackController.GetAllFeedbacksForProcedure)
+			}
+
+			feedback := v1.Group("/feedback")
+			{
+				feedback.PATCH("/:id", authMiddleware, requireAdminOrOrgRole, feedbackController.UpdateFeedbackStatus)
 			}
 
 			categories := v1.Group("/categories")
@@ -167,9 +175,6 @@ func SetupRouter(
 			procedures.GET("/:id/audit", handleGetProcedureAudit)
 			procedures.GET("/popular", handleGetPopularProcedures)
 			procedures.GET("/recent", handleGetRecentProcedures)
-			// Feedback is nested under procedures but handled separately in section 11
-			procedures.POST("/:id/feedback", handleCreateProcedureFeedback)
-			procedures.GET("/:id/feedback", handleGetProcedureFeedback)
 		}
 
 		// 6) Search & Discovery
@@ -225,7 +230,6 @@ func SetupRouter(
 		// 11) Feedback (standalone updates)
 		feedback := v1.Group("/feedback")
 		{
-			feedback.PATCH("/:id", handleUpdateFeedback)
 			feedback.POST("/:id/upvote", handleUpvoteFeedback)
 		}
 
@@ -761,43 +765,6 @@ func handleDownvoteDiscussion(c *gin.Context) {
 
 func handleReportDiscussion(c *gin.Context) {
 	c.Status(http.StatusAccepted)
-}
-
-// 11) Feedback
-func handleCreateProcedureFeedback(c *gin.Context) {
-	c.JSON(http.StatusCreated, gin.H{
-		"id":          "fb_new",
-		"procedureId": c.Param("id"),
-		"type":        "inaccuracy",
-		"status":      "new",
-	})
-}
-
-func handleGetProcedureFeedback(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"data": []gin.H{
-			{
-				"id":     "fb_1",
-				"userId": "user_abc",
-				"type":   "thanks",
-				"body":   "This was very accurate!",
-				"votes":  5,
-				"status": "resolved",
-			},
-		},
-		"page":    1,
-		"limit":   20,
-		"total":   1,
-		"hasNext": false,
-	})
-}
-
-func handleUpdateFeedback(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":       c.Param("id"),
-		"status":   "triaged",
-		"response": "Thank you for your feedback, we are looking into it.",
-	})
 }
 
 func handleUpvoteFeedback(c *gin.Context) {

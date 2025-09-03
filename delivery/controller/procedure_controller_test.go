@@ -60,7 +60,7 @@ func (s *ProcedureControllerTestSuite) TestCreateProcedure() {
 		GroupID:       "group123",
 		Prerequisites: []string{"A", "B"},
 		Steps:         []string{"Step1", "Step2"},
-		Result:        []string{"Result1"},
+		Result:        "Result1",
 		Label:         "FeeLabel",
 		Currency:      "ETB",
 		Amount:        100.0,

@@ -27,4 +27,14 @@ type ICategoryRepository interface {
 
 type IProcedureRepository interface {
 	Create(ctx context.Context, procedure *Procedure) error
+	GetByID(ctx context.Context, id string) (*Procedure, error)
+	Update(ctx context.Context, id string, procedure *Procedure) error
+	Delete(ctx context.Context, id string) error
+}
+
+type IFeedbackRepository interface {
+	SubmitFeedback(ctx context.Context, feedback *Feedback) error
+	GetFeedbackByID(ctx context.Context, id string) (*Feedback, error)
+	GetAllFeedbacksForProcedure(ctx context.Context, procedureID string, filter *FeedbackFilter) ([]*Feedback, int64, error)
+	UpdateFeedbackStatus(ctx context.Context, feedbackID string, newFeedback *Feedback) error
 }

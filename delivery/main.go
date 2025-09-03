@@ -65,8 +65,8 @@ func main() {
 	userRepo := repository.NewAccountRepository(db)
 	procedureRepo := repository.NewProcedureRepository(db)
 	catagoryRepo := repository.NewCategoryRepository(db, "catagories")
-	// FIX 1: Initialize the TokenRepository, as it's a required dependency for UserUsecase.
 	tokenRepo := repository.NewTokenRepository(db)
+	feedbackRepo := repository.NewFeedbackRepository(db)
 
 	// --- Infrastructure Services ---
 	// These are concrete implementations of external services.
@@ -93,6 +93,7 @@ func main() {
 	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, cfg.UsecaseTimeout)
 	catagoryUsecase := usecase.NewCategoryUsecase(catagoryRepo, cfg.UsecaseTimeout)
 	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
+	feedbackUsecase := usecase.NewFeedbackUsecase(feedbackRepo, procedureRepo, cfg.UsecaseTimeout)
 
 	// --- Controllers ---
 	// Controllers handle the HTTP layer, delegating logic to use cases.
@@ -100,6 +101,7 @@ func main() {
 	procedureController := controller.NewProcedureController(procedureUsecase)
 	catagoryController := controller.NewCategoryController(catagoryUsecase)
 	geminiController := controller.NewGeminiController(geminiUsecase)
+	feedbackController := controller.NewFeedbackController(feedbackUsecase)
 
 	// --- Middleware ---
 	// Middleware is created to be injected into the router.
@@ -115,6 +117,7 @@ func main() {
 		procedureController,
 		catagoryController,
 		geminiController,
+		feedbackController,
 		authMiddleware,
 		proOnlyMiddleware,
 		requireAdminRole,

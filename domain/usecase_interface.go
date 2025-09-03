@@ -31,3 +31,9 @@ type ICategoryUsecase interface {
 type IProcedureUsecase interface {
 	CreateProcedure(ctx context.Context, procedure *Procedure) error
 }
+
+type IFeedbackUsecase interface {
+	SubmitFeedback(ctx context.Context, feedback *Feedback) error
+	GetAllFeedbacksForProcedure(ctx context.Context, procedureID string, filter *FeedbackFilter) ([]*Feedback, int64, error)
+	UpdateFeedbackStatus(ctx context.Context, feedbackID, userID string, status FeedbackStatus, adminResponse *string) error
+}

@@ -1,14 +1,16 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
-type Content struct {
+type ProcedureContent struct {
 	Prerequisites []string
 	Steps         []string
-	Result        []string
+	Result        string
 }
 
-type Fees struct {
+type ProcedureFee struct {
 	Label    string
 	Currency string
 	Amount   float64
@@ -21,12 +23,12 @@ type ProcessingTime struct {
 
 type Procedure struct {
 	ID             string
-	GroupID        string
+	GroupID        *string
 	OrganizationID string
 	Name           string
-	Content        Content
-	Fees           Fees
+	Content        ProcedureContent
+	Fees           ProcedureFee
 	ProcessingTime ProcessingTime
 	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	NoticeIDs      []string
 }
