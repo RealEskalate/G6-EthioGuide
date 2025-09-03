@@ -68,7 +68,7 @@ type ChangePasswordRequest struct {
 type ProcedureCreateRequest struct {
 	Name           string `json:"name"`
 	GroupID        string `json:"groupId"`
-	OrganizationID string `json:"organizationId"`
+	OrganizationID string `json:"organizationId,omitempty"`
 
 	// content
 	Prerequisites []string `json:"prerequisites"`

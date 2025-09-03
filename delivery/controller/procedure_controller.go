@@ -17,12 +17,32 @@ func NewProcedureController(pu domain.IProcedureUsecase) *ProcedureController {
 	}
 }
 
+// @Summary      Create Procedure
+// @Description  Create new procedure.
+// @Tags         Procedure
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        request body ProcedureCreateRequest true "Procedure Detail"
+// @Success      200 {object} domain.Procedure "Procedure Created"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /procedures [post]
 func (ctrl *ProcedureController) CreateProcedure(c *gin.Context) {
 	var proc ProcedureCreateRequest
 	if err := c.ShouldBindJSON(&proc); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
 		return
 	}
+
+	userID, exists := c.Get("userID")
+	if !exists{
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+
+	proc.OrganizationID = userID.(string)
 
 	domainProc := toDomainProcedure(&proc)
 	err := ctrl.procedureUsecase.CreateProcedure(c.Request.Context(), domainProc)

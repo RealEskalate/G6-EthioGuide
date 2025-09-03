@@ -26,6 +26,17 @@ func isMobileClient(c *gin.Context) bool {
 	return c.GetHeader("X-Client-Type") == "mobile"
 }
 
+// @Summary      Refresh Access Token
+// @Description  Refresh Access Token for web and mobile
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Success      200 {string}  "New Access Token"
+// @Failure      400 {string}  "invalid
+// @Failure      409 {string}  "invalid"
+// @Failure      500 {string}  "invalid"
+// @Router       /auth/refresh [post]
 func (ctrl *UserController) HandleRefreshToken(c *gin.Context) {
 	if isMobileClient(c) {
 		// --- Mobile Client Logic ---
@@ -64,7 +75,6 @@ func (ctrl *UserController) HandleRefreshToken(c *gin.Context) {
 	}
 }
 
-// Register godoc
 // @Summary      Register a new user
 // @Description  Creates a new user account with the provided details.
 // @Tags         Authentication
@@ -72,8 +82,9 @@ func (ctrl *UserController) HandleRefreshToken(c *gin.Context) {
 // @Produce      json
 // @Param        request body RegisterRequest true "User Registration Details"
 // @Success      201 {object} UserResponse "User created Successfully"
-// @Failure      400 {object} string "invalid
-// @Failure      409 {object} string "invalid"
+// @Failure      400 {string}  "invalid
+// @Failure      409 {string}  "invalid"
+// @Failure      500 {string}  "invalid"
 // @Router       /auth/register [post]
 func (ctrl *UserController) Register(c *gin.Context) {
 	var req RegisterRequest
@@ -112,8 +123,8 @@ func (ctrl *UserController) Register(c *gin.Context) {
 // @Produce      json
 // @Param        request body LoginRequest true "User Registration Details"
 // @Success      201 {object} LoginResponse  "Login Successful"
-// @Failure      400 {object} string "invalid
-// @Failure      500 {object} string "invalid
+// @Failure      400 {string}  "invalid
+// @Failure      500 {string}  "invalid
 // @Router       /auth/login [post]
 func (ctrl *UserController) Login(c *gin.Context) {
 	var req LoginRequest
@@ -150,9 +161,9 @@ func (ctrl *UserController) Login(c *gin.Context) {
 // @Produce      json
 // @Param        Authorization header string true "Bearer token"
 // @Success      200 {object} UserResponse "Profile Retrieved"
-// @Failure      400 {object} string "Invalid request"
-// @Failure      404 {object} string "Invalid request"
-// @Failure      500 {object} string "Server error"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      404 {string}  "Invalid request"
+// @Failure      500 {string}  "Server error"
 // @Router       /auth/me [get]
 func (ctrl *UserController) GetProfile(c *gin.Context) {
 	userID, exists := c.Get("userID")
@@ -170,6 +181,18 @@ func (ctrl *UserController) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, toUserResponse(account))
 }
 
+// @Summary      Update password
+// @Description  Update user's password.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        request body ChangePasswordRequest true "Password Change Detail"
+// @Success      200 {string}  "Password changed"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/me/password [patch]
 func (ctrl *UserController) UpdatePassword(c *gin.Context) {
 	accountID, exists := c.Get("userID")
 	if !exists {
@@ -192,6 +215,16 @@ func (ctrl *UserController) UpdatePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }
 
+// @Summary      Social Login
+// @Description  Login with third party auth.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body SocialLoginRequest true "Social Login Detail."
+// @Success      200 {object} LoginResponse "Login successful"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/social [post]
 func (ctrl *UserController) SocialLogin(c *gin.Context) {
 	var req SocialLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

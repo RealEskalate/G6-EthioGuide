@@ -41,10 +41,16 @@ func fromDomainCategory(c *domain.Category) (*CategoryModel, error) {
 }
 
 func toDomainCategory(m *CategoryModel) *domain.Category {
+	var pid string
+	if m.ParentID == primitive.NilObjectID {
+		pid = ""
+	} else {
+		pid = m.ParentID.Hex()
+	}
 	return &domain.Category{
 		ID:             m.ID.Hex(),
 		OrganizationID: m.OrganizationID.Hex(),
-		ParentID:       m.ParentID.Hex(),
+		ParentID:       pid,
 		Title:          m.Title,
 	}
 }

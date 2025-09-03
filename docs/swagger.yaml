@@ -1,5 +1,40 @@
 basePath: /api/v1
 definitions:
+  controller.CategoryResponse:
+    properties:
+      id:
+        type: string
+      organization_id:
+        type: string
+      parent_id:
+        type: string
+      title:
+        type: string
+    type: object
+  controller.ChangePasswordRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  controller.CreateCategoryRequest:
+    properties:
+      id:
+        type: string
+      organization_id:
+        type: string
+      parent_id:
+        type: string
+      title:
+        type: string
+    required:
+    - organization_id
+    - title
+    type: object
   controller.LoginRequest:
     properties:
       identifier:
@@ -18,6 +53,53 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/controller.UserResponse'
+    type: object
+  controller.PaginatedCategoryResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/controller.CategoryResponse'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  controller.ProcedureCreateRequest:
+    properties:
+      amount:
+        type: number
+      currency:
+        type: string
+      groupId:
+        type: string
+      label:
+        description: Fees
+        type: string
+      maxDays:
+        type: integer
+      minDays:
+        description: ProcessingTime
+        type: integer
+      name:
+        type: string
+      organizationId:
+        type: string
+      prerequisites:
+        description: content
+        items:
+          type: string
+        type: array
+      result:
+        items:
+          type: string
+        type: array
+      steps:
+        items:
+          type: string
+        type: array
     type: object
   controller.RegisterRequest:
     properties:
@@ -39,6 +121,16 @@ definitions:
     - password
     - username
     type: object
+  controller.SocialLoginRequest:
+    properties:
+      code:
+        type: string
+      provider:
+        $ref: '#/definitions/domain.AuthProvider'
+    required:
+    - code
+    - provider
+    type: object
   controller.UserResponse:
     properties:
       created_at:
@@ -57,6 +149,80 @@ definitions:
         $ref: '#/definitions/domain.Role'
       username:
         type: string
+    type: object
+  domain.AuthProvider:
+    enum:
+    - local
+    - google
+    - faida
+    type: string
+    x-enum-varnames:
+    - AuthProviderLocal
+    - AuthProviderGoogle
+    - AuthProviderFaida
+  domain.Category:
+    properties:
+      id:
+        type: string
+      organizationID:
+        type: string
+      parentID:
+        type: string
+      title:
+        type: string
+    type: object
+  domain.Content:
+    properties:
+      prerequisites:
+        items:
+          type: string
+        type: array
+      result:
+        items:
+          type: string
+        type: array
+      steps:
+        items:
+          type: string
+        type: array
+    type: object
+  domain.Fees:
+    properties:
+      amount:
+        format: float64
+        type: number
+      currency:
+        type: string
+      label:
+        type: string
+    type: object
+  domain.Procedure:
+    properties:
+      content:
+        $ref: '#/definitions/domain.Content'
+      createdAt:
+        type: string
+      fees:
+        $ref: '#/definitions/domain.Fees'
+      groupID:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      organizationID:
+        type: string
+      processingTime:
+        $ref: '#/definitions/domain.ProcessingTime'
+      updatedAt:
+        type: string
+    type: object
+  domain.ProcessingTime:
+    properties:
+      maxDays:
+        type: integer
+      minDays:
+        type: integer
     type: object
   domain.Role:
     enum:
@@ -145,6 +311,78 @@ paths:
       summary: Get Profile
       tags:
       - Authentication
+  /auth/me/password:
+    patch:
+      consumes:
+      - application/json
+      description: Update user's password.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Password Change Detail
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password changed
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Update password
+      tags:
+      - Authentication
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh Access Token for web and mobile
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New Access Token
+          schema:
+            type: string
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "409":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Refresh Access Token
+      tags:
+      - Authentication
   /auth/register:
     post:
       consumes:
@@ -172,9 +410,164 @@ paths:
           description: invalid
           schema:
             type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
       summary: Register a new user
       tags:
       - Authentication
+  /auth/social:
+    post:
+      consumes:
+      - application/json
+      description: Login with third party auth.
+      parameters:
+      - description: Social Login Detail.
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.SocialLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/controller.LoginResponse'
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Social Login
+      tags:
+      - Authentication
+  /categories:
+    get:
+      consumes:
+      - application/json
+      description: Get list of categories
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: string
+      - description: sortBy
+        in: query
+        name: sortBy
+        type: string
+      - description: parentID
+        in: query
+        name: parentID
+        type: string
+      - description: organizationID
+        in: query
+        name: organizationID
+        type: string
+      - description: title
+        in: query
+        name: title
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of Categories
+          schema:
+            $ref: '#/definitions/controller.PaginatedCategoryResponse'
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Get Categories
+      tags:
+      - Category
+    post:
+      consumes:
+      - application/json
+      description: Create a category for procedures
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Category Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New Category
+          schema:
+            $ref: '#/definitions/domain.Category'
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Create Category
+      tags:
+      - Category
+  /procedures:
+    post:
+      consumes:
+      - application/json
+      description: Create new procedure.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Procedure Detail
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ProcedureCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Procedure Created
+          schema:
+            $ref: '#/definitions/domain.Procedure'
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Create Procedure
+      tags:
+      - Procedure
 securityDefinitions:
   BearerAuth:
     description: '"Type ''Bearer'' followed by a space and a JWT token."'

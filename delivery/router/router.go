@@ -106,12 +106,12 @@ func SetupRouter(
 
 			procedures := v1.Group("/procedures")
 			{
-				procedures.POST("", requireAdminOrOrgRole, procedureController.CreateProcedure)
+				procedures.POST("", authMiddleware, requireAdminOrOrgRole, procedureController.CreateProcedure)
 			}
 
 			categories := v1.Group("/categories")
 			{
-				categories.POST("", requireAdminOrOrgRole, catagorieController.CreateCategory)
+				categories.POST("", authMiddleware, requireAdminOrOrgRole, catagorieController.CreateCategory)
 				categories.GET("", catagorieController.GetCategory)
 			}
 
