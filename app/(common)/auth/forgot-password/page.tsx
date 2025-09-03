@@ -22,7 +22,7 @@ import {
 } from "@/lib/validation/new-password";
 import Image from "next/image";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 
 export default function NewPasswordPage() {
   return (
@@ -33,7 +33,7 @@ export default function NewPasswordPage() {
 }
 
 function NewPasswordPageContent() {
-  const { t, i18n } = useTranslation("auth");
+  const { t } = useTranslation("auth");
   const searchParams = useSearchParams();
   let token = searchParams.get("token"); // Get reset token from URL
   token = "placeholder-token"; // Placeholder token for testing
@@ -63,7 +63,7 @@ function NewPasswordPageContent() {
       } else {
         form.setError("root", { message: t("new_password.error") });
       }
-    } catch (error) {
+    } catch {
       form.setError("root", { message: t("new_password.error") });
     }
   };

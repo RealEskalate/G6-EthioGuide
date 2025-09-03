@@ -1,7 +1,7 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
 
-import type { Session } from "next-auth";
 
 declare module "next-auth" {
   interface Session {
@@ -21,6 +21,11 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const options: NextAuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    }),
+
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -37,7 +42,7 @@ export const options: NextAuthOptions = {
         }
 
         try {
-          const res = await fetch(`${API_URL}/auth/token`, {
+          const res = await fetch(`${API_URL}/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -68,11 +73,11 @@ export const options: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: "/signin",
+    signIn: "/auth/login",
   },
   session: {
     strategy: "jwt",
-    maxAge: 24 * 60 * 60 * 60, // 1 day
+    // maxAge: 24 * 60 * 60 * 60, // 1 day
   },
   callbacks: {
     async jwt({ token, user, trigger }) {

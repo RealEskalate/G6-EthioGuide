@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -19,12 +18,11 @@ import Link from "next/link";
 import { registerSchema, RegisterFormData } from "@/lib/validation/register";
 import { signIn } from "next-auth/react";
 import { FaGoogle, FaEye, FaEyeSlash } from "react-icons/fa";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { useState } from "react";
 import Image from "next/image";
 
 export default function RegisterPage() {
-  const { t, i18n } = useTranslation("auth");
+  const { t } = useTranslation("auth");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 

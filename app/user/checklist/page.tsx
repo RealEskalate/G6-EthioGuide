@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
-import Link from "next/link"
 
 interface ApplicationState {
   step1: {

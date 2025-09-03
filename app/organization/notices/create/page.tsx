@@ -12,10 +12,6 @@ import {
   Eye,
   Copy,
   Bell,
-  Facebook,
-  Instagram,
-  Twitter,
-  Youtube
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
