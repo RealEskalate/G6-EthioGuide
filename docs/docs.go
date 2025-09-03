@@ -509,6 +509,153 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/procedures/{id}": {
+            "get": {
+                "description": "Retrieves a single procedure by its unique ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Procedures"
+                ],
+                "summary": "Get Procedure by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Procedure ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Procedure"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates an existing procedure. Requires admin or organization ownership.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Procedures"
+                ],
+                "summary": "Update Procedure",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Procedure ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Procedure Update Data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.Procedure"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes an existing procedure. Requires admin or organization ownership.",
+                "tags": [
+                    "Procedures"
+                ],
+                "summary": "Delete Procedure",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Procedure ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -651,14 +798,11 @@ const docTemplate = `{
                     }
                 },
                 "result": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "string"
                 },
                 "steps": {
-                    "type": "array",
-                    "items": {
+                    "type": "object",
+                    "additionalProperties": {
                         "type": "string"
                     }
                 }
@@ -767,55 +911,17 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.Content": {
-            "type": "object",
-            "properties": {
-                "prerequisites": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "result": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "steps": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "domain.Fees": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "number",
-                    "format": "float64"
-                },
-                "currency": {
-                    "type": "string"
-                },
-                "label": {
-                    "type": "string"
-                }
-            }
-        },
         "domain.Procedure": {
             "type": "object",
             "properties": {
                 "content": {
-                    "$ref": "#/definitions/domain.Content"
+                    "$ref": "#/definitions/domain.ProcedureContent"
                 },
                 "createdAt": {
                     "type": "string"
                 },
                 "fees": {
-                    "$ref": "#/definitions/domain.Fees"
+                    "$ref": "#/definitions/domain.ProcedureFee"
                 },
                 "groupID": {
                     "type": "string"
@@ -826,13 +932,51 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "noticeIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "organizationID": {
                     "type": "string"
                 },
                 "processingTime": {
                     "$ref": "#/definitions/domain.ProcessingTime"
+                }
+            }
+        },
+        "domain.ProcedureContent": {
+            "type": "object",
+            "properties": {
+                "prerequisites": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "updatedAt": {
+                "result": {
+                    "type": "string"
+                },
+                "steps": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "domain.ProcedureFee": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "format": "float64"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "label": {
                     "type": "string"
                 }
             }

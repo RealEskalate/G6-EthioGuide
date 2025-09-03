@@ -60,7 +60,7 @@ func (ctrl *ProcedureController) CreateProcedure(c *gin.Context) {
 // @Produce      json
 // @Param        id   path      string  true  "Procedure ID"
 // @Success      200  {object}  domain.Procedure
-// @Failure      404  {object}  gin.H{"error": string} "Procedure not found"
+// @Failure      404  {string} Procedure not found
 // @Router       /procedures/{id} [get]
 func (pc *ProcedureController) GetProcedureByID(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -81,10 +81,10 @@ func (pc *ProcedureController) GetProcedureByID(ctx *gin.Context) {
 // @Param        id   path      string  true  "Procedure ID"
 // @Param        request body domain.Procedure true "Procedure Update Data"
 // @Success      200  {string}  success
-// @Failure      400  {object}  gin.H{"error": string} "Invalid request body"
-// @Failure      401  {object}  gin.H{"error": string} "Unauthorized"
-// @Failure      403  {object}  gin.H{"error": string} "Permission Denied"
-// @Failure      404  {object}  gin.H{"error": string} "Procedure not found"
+// @Failure      400  {string} Invalid request body
+// @Failure      401  {string} Unauthorized
+// @Failure      403  {string} Permission Denied
+// @Failure      404  {string} Procedure not found
 // @Router       /procedures/{id} [put]
 func (pc *ProcedureController) UpdateProcedure(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -107,9 +107,9 @@ func (pc *ProcedureController) UpdateProcedure(ctx *gin.Context) {
 // @Security     BearerAuth
 // @Param        id   path      string  true  "Procedure ID"
 // @Success      204  "No Content"
-// @Failure      401  {object}  gin.H{"error": string} "Unauthorized"
-// @Failure      403  {object}  gin.H{"error": string} "Permission Denied"
-// @Failure      404  {object}  gin.H{"error": string} "Procedure not found"
+// @Failure      401  {string} Unauthorized
+// @Failure      403  {string} Permission Denied
+// @Failure      404  {string} Procedure not found
 // @Router       /procedures/{id} [delete]
 func (pc *ProcedureController) DeleteProcedure(ctx *gin.Context) {
 	id := ctx.Param("id")

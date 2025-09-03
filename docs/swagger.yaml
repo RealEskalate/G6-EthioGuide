@@ -93,13 +93,11 @@ definitions:
           type: string
         type: array
       result:
-        items:
-          type: string
-        type: array
+        type: string
       steps:
-        items:
+        additionalProperties:
           type: string
-        type: array
+        type: object
     type: object
   controller.RegisterRequest:
     properties:
@@ -171,22 +169,43 @@ definitions:
       title:
         type: string
     type: object
-  domain.Content:
+  domain.Procedure:
+    properties:
+      content:
+        $ref: '#/definitions/domain.ProcedureContent'
+      createdAt:
+        type: string
+      fees:
+        $ref: '#/definitions/domain.ProcedureFee'
+      groupID:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      noticeIDs:
+        items:
+          type: string
+        type: array
+      organizationID:
+        type: string
+      processingTime:
+        $ref: '#/definitions/domain.ProcessingTime'
+    type: object
+  domain.ProcedureContent:
     properties:
       prerequisites:
         items:
           type: string
         type: array
       result:
-        items:
-          type: string
-        type: array
+        type: string
       steps:
-        items:
+        additionalProperties:
           type: string
-        type: array
+        type: object
     type: object
-  domain.Fees:
+  domain.ProcedureFee:
     properties:
       amount:
         format: float64
@@ -194,27 +213,6 @@ definitions:
       currency:
         type: string
       label:
-        type: string
-    type: object
-  domain.Procedure:
-    properties:
-      content:
-        $ref: '#/definitions/domain.Content'
-      createdAt:
-        type: string
-      fees:
-        $ref: '#/definitions/domain.Fees'
-      groupID:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      organizationID:
-        type: string
-      processingTime:
-        $ref: '#/definitions/domain.ProcessingTime'
-      updatedAt:
         type: string
     type: object
   domain.ProcessingTime:
@@ -568,6 +566,101 @@ paths:
       summary: Create Procedure
       tags:
       - Procedure
+  /procedures/{id}:
+    delete:
+      description: Deletes an existing procedure. Requires admin or organization ownership.
+      parameters:
+      - description: Procedure ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete Procedure
+      tags:
+      - Procedures
+    get:
+      description: Retrieves a single procedure by its unique ID.
+      parameters:
+      - description: Procedure ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Procedure'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get Procedure by ID
+      tags:
+      - Procedures
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing procedure. Requires admin or organization ownership.
+      parameters:
+      - description: Procedure ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Procedure Update Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Procedure'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update Procedure
+      tags:
+      - Procedures
 securityDefinitions:
   BearerAuth:
     description: '"Type ''Bearer'' followed by a space and a JWT token."'
