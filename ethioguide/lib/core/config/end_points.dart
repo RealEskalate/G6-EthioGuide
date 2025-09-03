@@ -4,4 +4,6 @@ class EndPoints {
   static final sendQueryEndPoint = '/ai/guide';
   static final getHistoryEndPoint = '/ai/history';
   static final translateContentEndPoint = '/translate';
+  static final registerEndPoint = '/auth/register';
+  static final loginEndPoint = '/auth/login';
 }
