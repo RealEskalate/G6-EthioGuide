@@ -37,6 +37,7 @@ func SetupRouter(
 			authGroup.POST("/register", userController.Register)
 			authGroup.POST("/login", userController.Login)
 			authGroup.POST("/refresh", userController.HandleRefreshToken)
+			authGroup.POST("/social", userController.SocialLogin)
 		}
 
 		// --- Private Routes (Require Authentication) ---
@@ -103,7 +104,6 @@ func SetupRouter(
 			auth.POST("/verify", handleVerifyEmail)
 			auth.POST("/forgot", handleForgot)
 			auth.POST("/reset", handleReset)
-			auth.POST("/social", handleSocialLogin)
 			auth.PATCH("/me", handleUpdateMe)
 		}
 
@@ -297,17 +297,6 @@ func handleForgot(c *gin.Context) {
 
 func handleReset(c *gin.Context) {
 	c.Status(http.StatusNoContent)
-}
-
-func handleSocialLogin(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"token":        "jwt.social.access.token.string",
-		"refreshToken": "jwt.social.refresh.token.string",
-		"user": gin.H{
-			"id":   "user_456",
-			"name": "Social User",
-		},
-	})
 }
 
 func handleUpdateMe(c *gin.Context) {

@@ -14,6 +14,11 @@ type RegisterRequest struct {
 	PreferredLang string `json:"preferredLang"`
 }
 
+type SocialLoginRequest struct {
+	Provider domain.AuthProvider `json:"provider" binding:"required"`
+	Code     string              `json:"code" binding:"required"`
+}
+
 type UserResponse struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
@@ -50,9 +55,9 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	User         domain.Account `json:"user"`
-	AccessToken  string         `json:"access_token"`
-	RefreshToken string         `json:"refresh_token,omitempty"`
+	User         UserResponse `json:"user"`
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"refresh_token,omitempty"`
 }
 
 type ChangePasswordRequest struct {

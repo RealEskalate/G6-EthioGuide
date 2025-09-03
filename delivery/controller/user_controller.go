@@ -3,6 +3,7 @@ package controller
 import (
 	"EthioGuide/domain"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -109,14 +110,14 @@ func (ctrl *UserController) Login(c *gin.Context) {
 
 	if isMobileClient(c) {
 		c.JSON(http.StatusOK, &LoginResponse{
-			User:         *account,
+			User:         toUserResponse(account),
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		})
 	} else {
 		setAuthCookie(c, refreshToken, ctrl.refreshTokenTTL)
 		c.JSON(http.StatusOK, &LoginResponse{
-			User:        *account,
+			User:        toUserResponse(account),
 			AccessToken: accessToken,
 		})
 	}
@@ -132,6 +133,7 @@ func (ctrl *UserController) GetProfile(c *gin.Context) {
 	account, err := ctrl.userUsecase.GetProfile(c.Request.Context(), userID.(string))
 	if err != nil {
 		HandleError(c, err)
+		return
 	}
 
 	c.JSON(http.StatusOK, toUserResponse(account))
@@ -147,6 +149,7 @@ func (ctrl *UserController) UpdatePassword(c *gin.Context) {
 	var req ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
 	}
 
 	err := ctrl.userUsecase.UpdatePassword(c.Request.Context(), accountID.(string), req.OldPassword, req.NewPassword)
@@ -156,6 +159,40 @@ func (ctrl *UserController) UpdatePassword(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
+}
+
+func (ctrl *UserController) SocialLogin(c *gin.Context) {
+	var req SocialLoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: " + err.Error()})
+		return
+	}
+
+	code, err := url.QueryUnescape(req.Code)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to URL-decode the pasted code: " + err.Error()})
+		return
+	}
+
+	account, accessToken, refreshToken, err := ctrl.userUsecase.LoginWithSocial(c.Request.Context(), req.Provider, code)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	if isMobileClient(c) {
+		c.JSON(http.StatusOK, &LoginResponse{
+			User:         toUserResponse(account),
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		})
+	} else {
+		setAuthCookie(c, refreshToken, ctrl.refreshTokenTTL)
+		c.JSON(http.StatusOK, &LoginResponse{
+			User:        toUserResponse(account),
+			AccessToken: accessToken,
+		})
+	}
 }
 
 // --- HELPER FUNCTIONS ---

@@ -64,6 +64,9 @@ func main() {
 		tokenRepo, // Added the missing token repository
 		passwordService,
 		jwtService,
+		cfg.GoogleClientID,
+		cfg.GoogleClientSecret,
+		cfg.GoogleRedirectURI,
 		cfg.UsecaseTimeout,
 	)
 	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, cfg.UsecaseTimeout)

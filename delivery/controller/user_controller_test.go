@@ -65,6 +65,15 @@ func (m *MockUserUsecase) UpdatePassword(ctx context.Context, userID, currentPas
 	return args.Error(0)
 }
 
+func (m *MockUserUsecase) LoginWithSocial(ctx context.Context, provider domain.AuthProvider, code string) (*domain.Account, string, string, error) {
+	args := m.Called(ctx, provider, code)
+	var acc *domain.Account
+	if args.Get(0) != nil {
+		acc = args.Get(0).(*domain.Account)
+	}
+	return acc, args.String(1), args.String(2), args.Error(3)
+}
+
 // --- Test Suite Definition ---
 
 type UserControllerTestSuite struct {
@@ -93,6 +102,7 @@ func (s *UserControllerTestSuite) SetupTest() {
 	s.router.POST("/register", s.controller.Register)
 	s.router.POST("/login", s.controller.Login)
 	s.router.POST("/refresh", s.controller.HandleRefreshToken)
+	s.router.POST("/social", s.controller.SocialLogin)
 }
 
 func TestUserControllerTestSuite(t *testing.T) {
@@ -143,7 +153,10 @@ func (s *UserControllerTestSuite) TestRegister() {
 func (s *UserControllerTestSuite) TestLogin() {
 	reqBody := LoginRequest{Identifier: "test@example.com", Password: "password"}
 	jsonBody, _ := json.Marshal(reqBody)
-	mockAccount := &domain.Account{Email: "test@example.com"}
+	mockAccount := &domain.Account{
+		Email:      "test@example.com",
+		UserDetail: &domain.UserDetail{Username: "testuser"},
+	}
 
 	s.Run("Success - Web Client", func() {
 		// Arrange
@@ -446,5 +459,100 @@ func (s *UserControllerTestSuite) TestUpdatePassword() {
 		s.Equal(http.StatusUnauthorized, s.recorder.Code)
 		s.Contains(s.recorder.Body.String(), domain.ErrAuthenticationFailed.Error())
 		s.mockUsecase.AssertExpectations(s.T())
+	})
+}
+
+func (s *UserControllerTestSuite) TestSocialLogin() {
+	reqBody := SocialLoginRequest{Provider: "google", Code: "some_google_auth_code"}
+	jsonBody, _ := json.Marshal(reqBody)
+	mockAccount := &domain.Account{
+		Email:        "social.user@example.com",
+		AuthProvider: domain.AuthProviderGoogle,
+		UserDetail:   &domain.UserDetail{Username: "testuser"},
+	}
+
+	s.Run("Success - Web Client", func() {
+		// Arrange
+		s.SetupTest()
+		s.mockUsecase.On("LoginWithSocial", mock.Anything, reqBody.Provider, reqBody.Code).
+			Return(mockAccount, "access_token_social_123", "refresh_token_social_abc", nil).Once()
+
+		// Act (No X-Client-Type header)
+		req, _ := http.NewRequest(http.MethodPost, "/social", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		// Assert
+		s.Equal(http.StatusOK, s.recorder.Code)
+
+		// Check for the auth cookie
+		cookie := s.recorder.Result().Cookies()[0]
+		s.Equal("refresh_token", cookie.Name)
+		s.Equal("refresh_token_social_abc", cookie.Value)
+		s.Equal(int(s.refreshTokenTTL.Seconds()), cookie.MaxAge)
+
+		// Check response body (should NOT contain refresh token)
+		var resp LoginResponse
+		json.Unmarshal(s.recorder.Body.Bytes(), &resp)
+		s.Equal("access_token_social_123", resp.AccessToken)
+		s.Empty(resp.RefreshToken)
+
+		s.mockUsecase.AssertExpectations(s.T())
+	})
+
+	s.Run("Success - Mobile Client", func() {
+		// Arrange
+		s.SetupTest()
+		s.mockUsecase.On("LoginWithSocial", mock.Anything, reqBody.Provider, reqBody.Code).
+			Return(mockAccount, "access_token_social_123", "refresh_token_social_abc", nil).Once()
+
+		// Act (WITH X-Client-Type header)
+		req, _ := http.NewRequest(http.MethodPost, "/social", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Client-Type", "mobile")
+		s.router.ServeHTTP(s.recorder, req)
+
+		// Assert
+		s.Equal(http.StatusOK, s.recorder.Code)
+
+		// Check that NO cookie was set
+		s.Empty(s.recorder.Result().Cookies())
+
+		// Check response body (SHOULD contain refresh token)
+		var resp LoginResponse
+		json.Unmarshal(s.recorder.Body.Bytes(), &resp)
+		s.Equal("access_token_social_123", resp.AccessToken)
+		s.Equal("refresh_token_social_abc", resp.RefreshToken)
+
+		s.mockUsecase.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - Usecase returns an error", func() {
+		s.SetupTest()
+		s.mockUsecase.On("LoginWithSocial", mock.Anything, reqBody.Provider, reqBody.Code).
+			Return(nil, "", "", domain.ErrAuthenticationFailed).Once()
+
+		req, _ := http.NewRequest(http.MethodPost, "/social", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusUnauthorized, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), domain.ErrAuthenticationFailed.Error())
+		s.mockUsecase.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - Invalid Request Body (missing provider)", func() {
+		s.SetupTest()
+		invalidBody := `{"code": "some_code"}` // Missing 'provider'
+
+		req, _ := http.NewRequest(http.MethodPost, "/social", bytes.NewBufferString(invalidBody))
+		req.Header.Set("Content-Type", "application/json")
+		s.router.ServeHTTP(s.recorder, req)
+
+		s.Equal(http.StatusBadRequest, s.recorder.Code)
+		s.Contains(s.recorder.Body.String(), "Invalid request")
+
+		// Ensure the usecase was not called because validation failed first
+		s.mockUsecase.AssertNotCalled(s.T(), "LoginWithSocial")
 	})
 }

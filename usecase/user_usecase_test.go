@@ -4,13 +4,17 @@ import (
 	"EthioGuide/domain"
 	. "EthioGuide/usecase" // Use dot import for convenience in test files
 	"context"
+	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"golang.org/x/oauth2"
 )
 
 // --- Mocks & Placeholders ---
@@ -131,17 +135,6 @@ func (m *MockJWTService) GetRefreshTokenExpiry() time.Duration {
 	return args.Get(0).(time.Duration)
 }
 
-// Setup domain errors for testing
-func setupDomainErrors() {
-	domain.ErrNotFound = errors.New("not found")
-	domain.ErrEmailExists = errors.New("email already exists")
-	domain.ErrUsernameExists = errors.New("username already exists")
-	domain.ErrAuthenticationFailed = errors.New("authentication failed")
-	domain.ErrAccountNotActive = errors.New("account not active")
-	domain.ErrUserNotFound = errors.New("user not found")
-	domain.ErrPasswordTooShort = errors.New("password too short")
-}
-
 // --- Test Suite Definition ---
 type UserUsecaseTestSuite struct {
 	suite.Suite
@@ -150,10 +143,6 @@ type UserUsecaseTestSuite struct {
 	mockPassSvc   *MockPasswordService
 	mockJwtSvc    *MockJWTService
 	usecase       domain.IUserUsecase
-}
-
-func (s *UserUsecaseTestSuite) SetupSuite() {
-	setupDomainErrors()
 }
 
 func (s *UserUsecaseTestSuite) SetupTest() {
@@ -167,7 +156,10 @@ func (s *UserUsecaseTestSuite) SetupTest() {
 		s.mockTokenRepo,
 		s.mockPassSvc,
 		s.mockJwtSvc,
-		5*time.Second, // Default timeout for tests
+		"test-google-client-id",
+		"test-google-client-secret",
+		"http://localhost/callback",
+		5*time.Second,
 	)
 }
 
@@ -486,5 +478,122 @@ func (s *UserUsecaseTestSuite) TestUpdatePassword() {
 		err := s.usecase.UpdatePassword(context.Background(), userID, currentPassword, newPassword)
 
 		s.Error(err)
+	})
+}
+
+func (s *UserUsecaseTestSuite) TestLoginWithSocial() {
+	provider := domain.AuthProviderGoogle
+	code := "some-valid-google-code"
+	emailFromGoogle := "social.user@gmail.com"
+
+	mockGoogleUserInfo := map[string]interface{}{"id": "123456789", "email": emailFromGoogle, "name": "Social User", "picture": "http://example.com/pic.jpg"}
+	mockGoogleTokenResponse := oauth2.Token{AccessToken: "mock-google-access-token", TokenType: "Bearer", Expiry: time.Now().Add(1 * time.Hour)}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/token":
+			json.NewEncoder(w).Encode(mockGoogleTokenResponse)
+		case "/oauth2/v2/userinfo": // The client library will call this full path
+			if r.Header.Get("Authorization") != "Bearer mock-google-access-token" {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			json.NewEncoder(w).Encode(mockGoogleUserInfo)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, server.Client())
+	uc := s.usecase.(*UserUsecase)
+	// Point both endpoints to our mock server
+	uc.GoogleOAuthConfig.Endpoint.TokenURL = server.URL + "/token"
+	uc.GoogleAPIEndpoint = server.URL
+
+	// Your helper function is perfect
+	refreshClaims := &domain.JWTClaims{RegisteredClaims: jwt.RegisteredClaims{ID: "refresh-token-id", ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour))}}
+	mockSuccessfulTokenGeneration := func(userID string, role domain.Role) {
+		s.mockJwtSvc.On("GenerateAccessToken", userID, role).Return("access_token", &domain.JWTClaims{}, nil).Once()
+		s.mockJwtSvc.On("GenerateRefreshToken", userID).Return("refresh_token", refreshClaims, nil).Once()
+		s.mockTokenRepo.On("CreateToken", mock.Anything, mock.AnythingOfType("*domain.Token")).Return(nil, nil).Once()
+	}
+
+	s.Run("Success - New User (Sign-up)", func() {
+		s.SetupTest()
+		uc := s.usecase.(*UserUsecase)
+		uc.GoogleOAuthConfig.Endpoint.TokenURL = server.URL + "/token"
+		uc.GoogleAPIEndpoint = server.URL
+
+		s.mockUserRepo.On("GetByEmail", mock.Anything, emailFromGoogle).Return(nil, domain.ErrUserNotFound).Once()
+		s.mockUserRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Account")).Run(func(args mock.Arguments) {
+			user := args.Get(1).(*domain.Account)
+			user.ID = "new-user-id"
+		}).Return(nil).Once()
+		mockSuccessfulTokenGeneration("new-user-id", domain.RoleUser)
+
+		account, _, _, err := s.usecase.LoginWithSocial(ctx, provider, code)
+
+		s.NoError(err)
+		s.NotNil(account)
+		s.Equal("new-user-id", account.ID)
+		s.mockUserRepo.AssertExpectations(s.T())
+		s.mockJwtSvc.AssertExpectations(s.T())
+		s.mockTokenRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Success - Existing User (Sign-in)", func() {
+		s.SetupTest()
+		uc := s.usecase.(*UserUsecase)
+		uc.GoogleOAuthConfig.Endpoint.TokenURL = server.URL + "/token"
+		uc.GoogleAPIEndpoint = server.URL
+
+		existingUser := &domain.Account{ID: "existing-user-123", Email: emailFromGoogle, AuthProvider: domain.AuthProviderGoogle, Role: domain.RoleUser, UserDetail: &domain.UserDetail{IsVerified: true}}
+		s.mockUserRepo.On("GetByEmail", mock.Anything, emailFromGoogle).Return(existingUser, nil).Once()
+		mockSuccessfulTokenGeneration(existingUser.ID, existingUser.Role)
+
+		account, _, _, err := s.usecase.LoginWithSocial(ctx, provider, code)
+
+		s.NoError(err)
+		s.NotNil(account)
+		s.Equal(existingUser.ID, account.ID)
+		s.mockUserRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - Email Another provider", func() {
+		s.SetupTest()
+		uc := s.usecase.(*UserUsecase)
+		uc.GoogleOAuthConfig.Endpoint.TokenURL = server.URL + "/token"
+		uc.GoogleAPIEndpoint = server.URL
+
+		conflictingUser := &domain.Account{ID: "local-user-456", Email: emailFromGoogle, AuthProvider: domain.AuthProviderFaida, UserDetail: &domain.UserDetail{}}
+		s.mockUserRepo.On("GetByEmail", mock.Anything, emailFromGoogle).Return(conflictingUser, nil).Once()
+
+		_, _, _, err := s.usecase.LoginWithSocial(ctx, provider, code)
+
+		s.ErrorIs(err, domain.ErrConflict)
+	})
+
+	s.Run("Failure - Invalid Provider", func() {
+		s.SetupTest()
+		_, _, _, err := s.usecase.LoginWithSocial(context.Background(), "facebook", code)
+		s.ErrorIs(err, domain.ErrInvalidProvider)
+	})
+
+	s.Run("Failure - DB Error on GetByEmail", func() {
+		s.SetupTest()
+		uc := s.usecase.(*UserUsecase)
+		uc.GoogleOAuthConfig.Endpoint.TokenURL = server.URL + "/token"
+		uc.GoogleAPIEndpoint = server.URL
+
+		dbError := errors.New("unexpected database error")
+		s.mockUserRepo.On("GetByEmail", mock.Anything, emailFromGoogle).Return(nil, dbError).Once()
+
+		_, _, _, err := s.usecase.LoginWithSocial(ctx, provider, code)
+
+		s.Error(err)
+		s.Contains(err.Error(), "database error while fetching user")
+		s.mockUserRepo.AssertExpectations(s.T())
 	})
 }
