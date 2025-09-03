@@ -26,7 +26,7 @@ class SplashScreen extends StatelessWidget {
         listener: (context, state) {
           // 3. When the BLoC emits SplashCompleted...
           if (state is SplashCompleted) {
-            context.go('/placeholder');
+            context.go('/onboarding');
           }
         },
         child: const Scaffold(

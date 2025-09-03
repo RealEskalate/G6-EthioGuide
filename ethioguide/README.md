@@ -11,6 +11,7 @@ ethioguide/
 │   └── misc/                   # Other static assets (e.g., icons, videos)
 ├── lib/                        # Main application source code
 │   ├── main.dart               # Application entry point
+│   ├── injection_container.dart # Dependency Injection file
 │   ├── features/               # Feature-specific modules
 │   │   ├── test_feature/       # Example feature module
 │   │   │   ├── domain/         # Business logic, models, and use cases

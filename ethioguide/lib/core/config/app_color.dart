@@ -18,4 +18,9 @@ class AppColors {
   static const purpleTagColor = Color(0xFFAD46FF);
   static const blueTagColor = Color(0xFF2375FF);
   static const darkGreenColor = Color(0xFF3A6A8D);
+  static const patina = Color.fromARGB(255, 55, 104, 92);
+  static const Color primaryText = Color(0xFF2e4d57); 
+   static const Color secondaryText = Color.fromARGB(255, 75, 97, 102); 
+
+  
 }
