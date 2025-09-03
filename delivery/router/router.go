@@ -11,6 +11,7 @@ import (
 func SetupRouter(
 	userController *controller.UserController,
 	geminiController *controller.GeminiController,
+	feedbackController *controller.FeedbackController,
 	authMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
 	requireAdminRole gin.HandlerFunc,
@@ -27,6 +28,7 @@ func SetupRouter(
 	v1 := router.Group("/api/v1")
 	{
 		// --- Public Routes ---
+		v1.GET("/procedures/:id/feedback", feedbackController.GetAllFeedbacksForProcedure)
 		// These endpoints do not require any authentication.
 		authGroup := v1.Group("/auth")
 		{
@@ -41,6 +43,8 @@ func SetupRouter(
 		apiGroup.Use(authMiddleware)
 		{
 			// --- Standard User Routes ---
+			apiGroup.POST("/procedures/:id/feedback", feedbackController.SubmitFeedback)
+			apiGroup.PATCH("/feedback/:id", feedbackController.UpdateFeedbackStatus)
 			// Any logged-in user (regardless of role or subscription) can access these.
 			aiGroup := apiGroup.Group("/ai")
 			{

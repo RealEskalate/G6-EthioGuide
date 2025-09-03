@@ -44,6 +44,8 @@ func main() {
 	userRepo := repository.NewAccountRepository(db)
 	// FIX 1: Initialize the TokenRepository, as it's a required dependency for UserUsecase.
 	tokenRepo := repository.NewTokenRepository(db)
+	feedbackRepo := repository.NewFeedbackRepository(db)
+	procedureRepo := repository.NewProcedureRepository(db)
 
 	// --- Infrastructure Services ---
 	// These are concrete implementations of external services.
@@ -65,11 +67,13 @@ func main() {
 		cfg.UsecaseTimeout,
 	)
 	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
+	feedbackUsecase := usecase.NewFeedbackUsecase(feedbackRepo, procedureRepo, cfg.UsecaseTimeout)
 
 	// --- Controllers ---
 	// Controllers handle the HTTP layer, delegating logic to use cases.
 	userController := controller.NewUserController(userUsecase, cfg.JWTRefreshTTL)
 	geminiController := controller.NewGeminiController(geminiUsecase)
+	feedbackController := controller.NewFeedbackController(feedbackUsecase)
 
 	// --- Middleware ---
 	// Middleware is created to be injected into the router.
@@ -82,6 +86,7 @@ func main() {
 	appRouter := router.SetupRouter(
 		userController,
 		geminiController,
+		feedbackController,
 		authMiddleware,
 		proOnlyMiddleware,
 		requireAdminRole,
