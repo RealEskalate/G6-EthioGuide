@@ -9,6 +9,7 @@ import (
 
 	_ "EthioGuide/docs"
 
+	"github.com/gin-contrib/cors"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -26,6 +27,20 @@ func SetupRouter(
 ) *gin.Engine {
 
 	router := gin.Default()
+
+	config := cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:3000",
+			"https://ethio-guide.vercel.app",
+			"https://your-production-site.com",
+		},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Client-Type"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
+	router.Use(cors.New(config))
 
 	// Health check endpoint - always public
 	router.GET("/health", func(c *gin.Context) {
