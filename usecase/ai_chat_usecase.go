@@ -9,26 +9,26 @@ import (
 )
 
 type AIChatUsecase struct {
-	embedService  domain.IEmbeddingService
-	procedureRepo domain.IProcedureRepository // abstracts Mongo / vector DB
-    aiChatRepo  domain.AIChatRepository
-	llmService    domain.IAIService           // abstracts Gemini / OpenAI
+	EmbedService  domain.IEmbeddingService
+	ProcedureRepo domain.IProcedureRepository // abstracts Mongo / vector DB
+    AiChatRepo  domain.AIChatRepository
+	LLMService    domain.IAIService           // abstracts Gemini / OpenAI
 }
 
 func NewChatUsecase(e domain.IEmbeddingService, s domain.IProcedureRepository, l domain.IAIService) domain.IAIChatUsecase {
-	return &AIChatUsecase{embedService: e, procedureRepo: s, llmService: l}
+	return &AIChatUsecase{EmbedService: e, ProcedureRepo: s, LLMService: l}
 }
 
 func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error) {
 	// detect the language
 	prompt := fmt.Sprintf("I want you to identify the language of this promt %s and i want to give me the only the language in small later like if it is Amharic give me amharic. and if you do not know the language just give me only  a word 'unkown'.", query)
-	orglang, err := u.llmService.GenerateCompletion(ctx, prompt)
+	orglang, err := u.LLMService.GenerateCompletion(ctx, prompt)
 	if err != nil{
 		return "", err
 	}
 	if orglang != "english"{
-		prompt := fmt.Sprintf("translate this query %s in to English lanuage. And i do not want you to add another thing by yourself")
-		query, err = u.llmService.GenerateCompletion(ctx, prompt)
+		prompt := fmt.Sprintf("translate this query %s in to English lanuage. And i do not want you to add another thing by yourself",query)
+		query, err = u.LLMService.GenerateCompletion(ctx, prompt)
 		if err != nil{
 			return "", nil
 		}
@@ -37,13 +37,13 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error
 	}
 
 	// 1. embed query
-	vec, err := u.embedService.GenerateEmbedding(ctx, query)
+	vec, err := u.EmbedService.GenerateEmbedding(ctx, query)
 	if err != nil {
 		return "", err
 	}
 
 	// 2. vector search
-	docs, err := u.procedureRepo.SearchByEmbedding(ctx, vec, 3)
+	docs, err := u.ProcedureRepo.SearchByEmbedding(ctx, vec, 3)
 	if err != nil {
 		return "", err
 	}
@@ -67,7 +67,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error
     %s
     Now answer the user query: %s`, contextText, query)
 
-	answer, err := u.llmService.GenerateCompletion(ctx, prompt)
+	answer, err := u.LLMService.GenerateCompletion(ctx, prompt)
 	if err != nil {
 		return "", err
 	}
@@ -86,7 +86,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error
         Response: answer,
         // Timestamp will be set in the repository
     }
-    err = u.aiChatRepo.Save(ctx, chat)
+    err = u.AiChatRepo.Save(ctx, chat)
     if err != nil {
         // Optionally log or handle the error, but don't block the user
 		log.Println("the chat is not saved")
@@ -96,7 +96,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error
 		here is the procedure
 		%s
 		`,orglang, answer)
-		answer, err = u.llmService.GenerateCompletion(ctx, prompt)
+		answer, err = u.LLMService.GenerateCompletion(ctx, prompt)
 		if err != nil{
 			return "", err
 		}
