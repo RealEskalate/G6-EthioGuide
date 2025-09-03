@@ -35,7 +35,7 @@ export function UserSidebar({
   return (
     <aside
       className={cn(
-        "bg-white border-r border-gray-200 transition-all duration-300 ease-in-out relative flex-shrink-0 flex flex-col h-full",
+        "bg-white border-r border-gray-200 transition-all duration-300 ease-in-out relative",
         collapsed ? "w-20" : "w-64",
         className,
       )}
@@ -54,7 +54,7 @@ export function UserSidebar({
       </Button>
 
       <div className="flex flex-col h-full">
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 flex-1">
           {menuItems.map((item, index) => (
             <div
               key={index}
@@ -87,9 +87,10 @@ export function UserSidebar({
             </div>
           ))}
         </nav>
-        <div className="flex-1" />
+
         <div className="p-4 space-y-2 border-t border-gray-100">
-          <div
+
+<div
             className={cn(
               "flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-red-100 hover:text-red-700 font-medium rounded-lg cursor-pointer transition-all duration-200",
               collapsed ? "justify-center" : "",
@@ -115,4 +116,3 @@ export function UserSidebar({
     </aside>
   )
 }
-

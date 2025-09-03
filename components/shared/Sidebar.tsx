@@ -4,7 +4,7 @@ import { UserSidebar } from "./UserSidebar"
 import { usePathname, useRouter } from "next/navigation"
 
 
-export function Sidebar({ className }: { className?: string }) {
+export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -34,7 +34,6 @@ export function Sidebar({ className }: { className?: string }) {
       menuItems={menuItemsWithHandlers}
       onSettingsClick={handleSettingsClick}
       onLogoutClick={handleLogoutClick}
-      className={className}
     />
   );
 }
