@@ -3,4 +3,5 @@ class RouteNames {
   static const String onboarding = 'onboarding';
   static const String aiChat = 'Ai chat';
   static const String auth = 'auth';
+  static const String home = 'home';
 }
