@@ -80,7 +80,8 @@ func SetupRouter(
 			{
 				authGroup.GET("/me", userController.GetProfile)
 				authGroup.PATCH("/me/password", userController.UpdatePassword)
-				authGroup.GET("/me/preferences",)
+				authGroup.GET("/me/preferences",PreferencesController.GetUserPreferences)
+				authGroup.PATCH("/me/preferences", PreferencesController.UpdateUserPreferences)
 			}
 
 			procedures := v1.Group("/procedures")
