@@ -44,7 +44,9 @@ func (s *ProcedureControllerTestSuite) SetupTest() {
 	s.router = gin.Default()
 	s.mockUsecase = new(MockProcedureUsecase)
 	s.controller = controller.NewProcedureController(s.mockUsecase)
-	s.router.POST("/procedures", s.controller.CreateProcedure)
+	s.router.POST("/procedures", func(ctx *gin.Context) {
+		ctx.Set("userID", "org456")
+	}, s.controller.CreateProcedure)
 }
 
 func TestProcedureControllerTestSuite(t *testing.T) {
@@ -54,17 +56,16 @@ func TestProcedureControllerTestSuite(t *testing.T) {
 // --- Tests ---
 func (s *ProcedureControllerTestSuite) TestCreateProcedure() {
 	validReq := controller.ProcedureCreateRequest{
-		Name:           "Test Procedure",
-		GroupID:        "group123",
-		OrganizationID: "org456",
-		Prerequisites:  []string{"A", "B"},
-		Steps:          []string{"Step1", "Step2"},
-		Result:         []string{"Result1"},
-		Label:          "FeeLabel",
-		Currency:       "ETB",
-		Amount:         100.0,
-		MinDays:        1,
-		MaxDays:        5,
+		Name:          "Test Procedure",
+		GroupID:       "group123",
+		Prerequisites: []string{"A", "B"},
+		Steps:         []string{"Step1", "Step2"},
+		Result:        []string{"Result1"},
+		Label:         "FeeLabel",
+		Currency:      "ETB",
+		Amount:        100.0,
+		MinDays:       1,
+		MaxDays:       5,
 	}
 
 	s.Run("Success", func() {
