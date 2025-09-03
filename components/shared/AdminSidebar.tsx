@@ -23,6 +23,11 @@ const adminMenuItems = [
     iconAlt: "Manage Procedures",
     label: "procedures",
   },
+  {
+    iconSrc: "/icons/building.svg",
+    iconAlt: "Create Organization",
+    label: "create",
+  },
 ];
 
 export function AdminSidebar() {

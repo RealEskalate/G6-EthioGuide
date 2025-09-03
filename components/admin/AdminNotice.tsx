@@ -102,7 +102,7 @@ export default function NoticeManagement() {
                       <TableCell>
                         <p className="font-medium">{title}</p>
                         <p className="text-sm text-muted-foreground text-neutral">
-                          {detail}
+                          {detail.length > 100 ? detail.slice(0, 100) + "..." : detail}
                         </p>
                       </TableCell>
                       <TableCell className="text-neutral">
