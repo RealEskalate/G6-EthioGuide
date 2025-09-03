@@ -13,9 +13,21 @@ type IUserUsecase interface {
 	// ForgetPassword(ctx context.Context, email string) error
 	// ResetPassword(ctx context.Context, resetToken, newPassword string) error
 
+	GetProfile(ctx context.Context, userID string) (*Account, error)
+	UpdatePassword(ctx context.Context, userID, currentPassword, newPassword string) error
+	LoginWithSocial(ctx context.Context, provider AuthProvider, code string) (*Account, string, string, error)
 	UpdateProfile(ctx context.Context, userID string, updates map[string]interface{}) (*Account, error)
 }
 
 type IGeminiUseCase interface {
 	TranslateContent(ctx context.Context, content, targetLang string) (string, error)
+}
+
+type ICategoryUsecase interface {
+	CreateCategory(ctx context.Context, category *Category) error
+	GetCategories(ctx context.Context, options *CategorySearchAndFilter) ([]*Category, int64, error)
+}
+
+type IProcedureUsecase interface {
+	CreateProcedure(ctx context.Context, procedure *Procedure) error
 }

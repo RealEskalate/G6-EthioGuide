@@ -206,52 +206,94 @@ func (s *AccountRepositoryTestSuite) TestMappingLogic() {
 	})
 }
 
-// func (s *AccountRepositoryTestSuite) TestUpdateProfile() {
-//     ctx := context.Background()
+func (s *AccountRepositoryTestSuite) TestUpdateProfile() {
+	ctx := context.Background()
 
-//     // First, create a user to update
-//     original := &domain.Account{
-//         Name:         "Original Name",
-//         Email:        "updateprofile@example.com",
-//         PasswordHash: "hashedpassword",
-//         Role:         domain.RoleUser,
-//         UserDetail: &domain.UserDetail{
-//             Username:         "updateuser",
-//             SubscriptionPlan: domain.SubscriptionNone,
-//             IsBanned:         false,
-//             IsVerified:       true,
-//         },
-//     }
-//     err := s.repo.Create(ctx, original)
-//     s.Require().NoError(err)
-//     s.Require().NotEmpty(original.ID)
+	// First, create a user to update
+	original := &domain.Account{
+		Name:         "Original Name",
+		Email:        "updateprofile@example.com",
+		PasswordHash: "hashedpassword",
+		Role:         domain.RoleUser,
+		UserDetail: &domain.UserDetail{
+			Username:         "updateuser",
+			SubscriptionPlan: domain.SubscriptionNone,
+			IsBanned:         false,
+			IsVerified:       true,
+		},
+	}
+	err := s.repo.Create(ctx, original)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(original.ID)
 
-//     s.Run("Success", func() {
-//         updated := *original
-//         updated.Name = "Updated Name"
-//         updated.UserDetail.Username = "updateduser"
+	s.Run("Success", func() {
+		updated := *original
+		updated.Name = "Updated Name"
+		updated.UserDetail.Username = "updateduser"
 
-//         err := s.repo.UpdateProfile(ctx, updated)
-//         s.NoError(err)
+		err := s.repo.UpdateProfile(ctx, updated)
+		s.NoError(err)
 
-//         // Fetch and verify
-//         fetched, err := s.repo.GetById(ctx, original.ID)
-//         s.NoError(err)
-//         s.Equal("Updated Name", fetched.Name)
-//         s.Equal("updateduser", fetched.UserDetail.Username)
-//     })
+		// Fetch and verify
+		fetched, err := s.repo.GetById(ctx, original.ID)
+		s.NoError(err)
+		s.Equal("Updated Name", fetched.Name)
+		s.Equal("updateduser", fetched.UserDetail.Username)
+	})
 
-//     s.Run("Failure - Invalid ID", func() {
-//         invalid := *original
-//         invalid.ID = "badid"
-//         err := s.repo.UpdateProfile(ctx, invalid)
-//         s.ErrorIs(err, domain.ErrUserNotFound)
-//     })
+	s.Run("Failure - Invalid ID", func() {
+		invalid := *original
+		invalid.ID = "badid"
+		err := s.repo.UpdateProfile(ctx, invalid)
+		s.ErrorIs(err, domain.ErrUserNotFound)
+	})
 
-//     s.Run("Failure - Not Found", func() {
-//         notFound := *original
-//         notFound.ID = "507f1f77bcf86cd799439011" // valid ObjectID, but not in DB
-//         err := s.repo.UpdateProfile(ctx, notFound)
-//         s.ErrorIs(err, domain.ErrUserNotFound)
-//     })
-// }
+	s.Run("Failure - Not Found", func() {
+		notFound := *original
+		notFound.ID = "507f1f77bcf86cd799439011" // valid ObjectID, but not in DB
+		err := s.repo.UpdateProfile(ctx, notFound)
+		s.ErrorIs(err, domain.ErrUserNotFound)
+	})
+}
+
+func (s *AccountRepositoryTestSuite) TestUpdatePassword() {
+	ctx := context.Background()
+
+	// Arrange: Create a user to update password for
+	account := &domain.Account{
+		Name:         "Password User",
+		Email:        "passworduser@example.com",
+		PasswordHash: "old_hash",
+		Role:         domain.RoleUser,
+		UserDetail: &domain.UserDetail{
+			Username: "passworduser",
+		},
+	}
+	err := s.repo.Create(ctx, account)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(account.ID)
+
+	s.Run("Success", func() {
+		newPassword := "new_hash"
+		err := s.repo.UpdatePassword(ctx, account.ID, newPassword)
+		s.NoError(err)
+
+		// Verify in DB
+		var model AccountModel
+		objID, _ := primitive.ObjectIDFromHex(account.ID)
+		err = s.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&model)
+		s.NoError(err)
+		s.Equal(newPassword, model.PasswordHash)
+	})
+
+	s.Run("Failure - Invalid ID", func() {
+		err := s.repo.UpdatePassword(ctx, "badid", "irrelevant")
+		s.ErrorIs(err, domain.ErrNotFound)
+	})
+
+	s.Run("Failure - Not Found", func() {
+		nonExistentID := primitive.NewObjectID().Hex()
+		err := s.repo.UpdatePassword(ctx, nonExistentID, "irrelevant")
+		s.ErrorIs(err, domain.ErrNotFound)
+	})
+}

@@ -11,6 +11,7 @@ var (
 	ErrPasswordTooShort   = errors.New("password must be at least 8 characters")
 	ErrInvalidEmailFormat = errors.New("invalid email format")
 	ErrInvalidRole        = errors.New("invalid role provided")
+	ErrInvalidProvider    = errors.New("invalid provider")
 	ErrValidation         = errors.New("validation error")
 	ErrConflict           = errors.New("conflict occured")
 
