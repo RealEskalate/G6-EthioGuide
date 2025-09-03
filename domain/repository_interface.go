@@ -23,8 +23,8 @@ type IProcedureRepository interface {
 	SearchByEmbedding(ctx context.Context, queryVec []float64, limit int) ([]*Procedure, error)
 }
 
-type AIChatRepository interface {
+type IAIChatRepository interface {
 	Save(ctx context.Context, chat *AIChat) error
-	GetByUser(ctx context.Context, userID int, limit int) ([]*AIChat, error)
-	DeleteByUser(ctx context.Context, userID int) error
+	GetByUser(ctx context.Context, userID string, limit int) ([]*AIChat, error)
+	DeleteByUser(ctx context.Context, userID string) error
 }

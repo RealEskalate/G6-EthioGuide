@@ -44,6 +44,8 @@ func main() {
 	userRepo := repository.NewAccountRepository(db)
 	// FIX 1: Initialize the TokenRepository, as it's a required dependency for UserUsecase.
 	tokenRepo := repository.NewTokenRepository(db)
+	aiChatRepo := repository.NewAIChatRepository(db)
+	procedureRepo := repository.NewProcedureRepository(db)
 
 	// --- Infrastructure Services ---
 	// These are concrete implementations of external services.
@@ -52,6 +54,12 @@ func main() {
 	aiService, err := infrastructure.NewGeminiAIService(cfg.GeminiAPIKey, cfg.GeminiModel)
 	if err != nil {
 		log.Printf("WARN: Failed to initialize AI service: %v. AI features will be unavailable.", err)
+	}
+	var apiKeys []string
+	apiKeys = append(apiKeys, cfg.EmbeddingApiKey)
+	embeddingService, err := infrastructure.NewEmbeddingService(apiKeys, cfg.EmbeddingUrl)
+	if err != nil{
+		log.Printf("WARN: Failed to initialize the Embedding service: %v. Embedding service will be unavailable.", err)
 	}
 
 	// --- Use Cases ---
@@ -65,11 +73,13 @@ func main() {
 		cfg.UsecaseTimeout,
 	)
 	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
+	aiChatUsecase := usecase.NewChatUsecase(embeddingService, procedureRepo, aiChatRepo,  aiService)
 
 	// --- Controllers ---
 	// Controllers handle the HTTP layer, delegating logic to use cases.
 	userController := controller.NewUserController(userUsecase, cfg.JWTRefreshTTL)
 	geminiController := controller.NewGeminiController(geminiUsecase)
+	aiChatController := controller.NewAIChatController(aiChatUsecase)
 
 	// --- Middleware ---
 	// Middleware is created to be injected into the router.
@@ -82,6 +92,7 @@ func main() {
 	appRouter := router.SetupRouter(
 		userController,
 		geminiController,
+		aiChatController,
 		authMiddleware,
 		proOnlyMiddleware,
 		requireAdminRole,

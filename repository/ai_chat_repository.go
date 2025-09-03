@@ -11,17 +11,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type AIUserChatRepositoryMongo struct {
+type AIChatRepository struct {
     collection *mongo.Collection
 }
 
-func NewAIUserChatRepositoryMongo(db *mongo.Database) *AIUserChatRepositoryMongo {
-    return &AIUserChatRepositoryMongo{
+func NewAIChatRepository(db *mongo.Database) domain.IAIChatRepository{
+    return &AIChatRepository{
         collection: db.Collection("ai_chats"),
     }
 }
 
-func (r *AIUserChatRepositoryMongo) Save(ctx context.Context, chat *domain.AIChat) error {
+func (r *AIChatRepository) Save(ctx context.Context, chat *domain.AIChat) error {
 	chat.Timestamp = time.Now()
 	dto, err := DomainAIChatToMessageModel(chat)
 	if err != nil {
@@ -31,7 +31,7 @@ func (r *AIUserChatRepositoryMongo) Save(ctx context.Context, chat *domain.AICha
 	return err
 }
 
-func (r *AIUserChatRepositoryMongo) GetByUser(ctx context.Context, userID string, limit int) ([]*domain.AIChat, error) {
+func (r *AIChatRepository) GetByUser(ctx context.Context, userID string, limit int) ([]*domain.AIChat, error) {
 	userObjID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (r *AIUserChatRepositoryMongo) GetByUser(ctx context.Context, userID string
 	return chats, nil
 }
 
-func (r *AIUserChatRepositoryMongo) DeleteByUser(ctx context.Context, userID string) error {
+func (r *AIChatRepository) DeleteByUser(ctx context.Context, userID string) error {
 	userObjID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return err

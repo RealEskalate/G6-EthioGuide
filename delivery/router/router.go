@@ -11,6 +11,7 @@ import (
 func SetupRouter(
 	userController *controller.UserController,
 	geminiController *controller.GeminiController,
+	aiChatController *controller.AIChatController,
 	authMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
 	requireAdminRole gin.HandlerFunc,
@@ -45,6 +46,7 @@ func SetupRouter(
 			aiGroup := apiGroup.Group("/ai")
 			{
 				aiGroup.POST("/translate", geminiController.Translate)
+				aiGroup.POST("/translate", aiChatController.AIChatController)
 			}
 
 			// --- PRO Subscription Routes ---

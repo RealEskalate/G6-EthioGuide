@@ -103,3 +103,10 @@ func toDomainProcedure(p *ProcedureCreateRequest) *domain.Procedure {
 		ProcessingTime: processingTime,
 	}
 }
+type AIChatRequest struct {
+    Query string `json:"query" binding:"required"`
+}
+
+type AIChatResponse struct {
+    Answer string `json:"answer"`
+}

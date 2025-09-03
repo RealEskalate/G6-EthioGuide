@@ -15,8 +15,8 @@ type AIChatUsecase struct {
 	LLMService    domain.IAIService           // abstracts Gemini / OpenAI
 }
 
-func NewChatUsecase(e domain.IEmbeddingService, s domain.IProcedureRepository, l domain.IAIService) domain.IAIChatUsecase {
-	return &AIChatUsecase{EmbedService: e, ProcedureRepo: s, LLMService: l}
+func NewChatUsecase(e domain.IEmbeddingService, s domain.IProcedureRepository, aiChatRepo domain.AIChatRepository, l domain.IAIService) domain.IAIChatUsecase {
+	return &AIChatUsecase{EmbedService: e, ProcedureRepo: s, AiChatRepo: aiChatRepo, LLMService: l}
 }
 
 func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error) {

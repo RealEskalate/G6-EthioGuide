@@ -46,7 +46,6 @@ type Config struct {
 	ResetPasswordFrontendUrl string
 	EmbeddingUrl string
 	EmbeddingApiKey string
-	EmbeddingModel string
 }
 
 // Load loads the configuration from .env files and environment variables.
@@ -99,7 +98,6 @@ func Load() *Config {
 		ResetPasswordFrontendUrl: getEnv("RESET_PASSWORD_FRONTEND_URL", "http://localhost:8080/api/v1/password/reset"),
 		EmbeddingUrl: getEnv("EMBEDDING_URL","https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"),
 		EmbeddingApiKey: getEnv("HF_EMBEDDING_API_KEY", ""),
-		// EmbeddingModel: getEnv("EMBEDDING_MODELL", "sentence-transformers/all-MiniLM-L6-v2"),
 	} 
 }
 
