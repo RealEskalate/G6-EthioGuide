@@ -74,13 +74,13 @@ func RequireRole(roles ...domain.Role) gin.HandlerFunc {
 			return
 		}
 
-		role, ok := userRole.(string)
+		role, ok := userRole.(domain.Role)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Invalid role type"})
 			return
 		}
 
-		if slices.Contains(roles, domain.Role(role)) {
+		if slices.Contains(roles, role) {
 			c.Next()
 			return
 		}

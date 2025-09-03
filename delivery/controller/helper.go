@@ -16,6 +16,7 @@ func HandleError(c *gin.Context, err error) {
 	case errors.Is(err, domain.ErrPasswordTooShort),
 		errors.Is(err, domain.ErrInvalidEmailFormat),
 		errors.Is(err, domain.ErrInvalidRole),
+		errors.Is(err, domain.ErrInvalidProvider),
 		errors.Is(err, domain.ErrUsernameEmpty),
 		errors.Is(err, domain.ErrUsernameTooLong),
 		errors.Is(err, domain.ErrInvalidBody),
