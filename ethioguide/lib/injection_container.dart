@@ -98,8 +98,8 @@ Future<void> init() async {
   sl.registerLazySingleton<Dio>(() {
     final dio = Dio(
       BaseOptions(
-        baseUrl: '',
-        headers: {'X-Platform': 'mobile'},
+        baseUrl: EndPoints.baseUrl,
+        headers: {'X-Client-Type': 'mobile'},
       ),
     );
     dio.interceptors.add(AuthInterceptor(sl<CoreAuthRepository>(), dio));
