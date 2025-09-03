@@ -72,6 +72,7 @@ func (ctrl *UserController) Register(c *gin.Context) {
 	}
 
 	userDetail := &domain.UserDetail{
+		Username:         req.Username,
 		SubscriptionPlan: domain.SubscriptionNone,
 		IsBanned:         false,
 		IsVerified:       false,
