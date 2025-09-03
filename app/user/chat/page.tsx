@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -153,7 +153,7 @@ export default function ChatPage() {
       handleSendMessage()
     }
   }
-
+const router = useRouter();
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <div
@@ -190,7 +190,7 @@ export default function ChatPage() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 p-6">
+        {/* <div className="bg-white border-b border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-1">Chat with Your AI Guide</h1>
@@ -205,10 +205,27 @@ export default function ChatPage() {
               {showHistory ? "Hide History" : "Show History"}
             </Button>
           </div>
-        </div>
+        </div> */}
 
         {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="bg-gray-50 border-b border-gray-50 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Chat with Your AI Guide</h1>
+              <p className="text-gray-600">Your Guide, Your Chat</p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowHistory(!showHistory)}
+              className="border-gray-300 text-white hover:text-white bg-[#3A6A8D] hover:bg-[#2d5470]"
+            >
+              <History className="w-4 h-4 mr-2" />
+              {showHistory ? "Hide History" : "Show History"}
+            </Button>
+          </div>
+        </div>
+
           {messages.map((message) => (
             <div key={message.id} className="animate-fade-in">
               {message.type === "assistant" ? (
@@ -238,7 +255,7 @@ export default function ChatPage() {
                           return (
                             <Card
                               key={step.id}
-                              className="border border-gray-200 hover:shadow-md transition-shadow duration-200"
+                              className="border border-white bg-white hover:shadow-md transition-shadow duration-200"
                             >
                               <CardContent className="p-4">
                                 <div className="flex items-center space-x-3 mb-3">
@@ -264,7 +281,7 @@ export default function ChatPage() {
 
                         {/* Additional Info Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <Card
+                          {/* <Card
                             className="border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-in-out animate-fade-in"
                             style={{ animationDelay: "0.1s" }}
                           >
@@ -277,9 +294,9 @@ export default function ChatPage() {
                                 You&apos;ll need documents for proof of identity and business certificate.
                               </p>
                             </CardContent>
-                          </Card>
+                          </Card> */}
 
-                          <Card
+                          {/* <Card
                             className="border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-in-out animate-fade-in"
                             style={{ animationDelay: "0.2s" }}
                           >
@@ -292,9 +309,9 @@ export default function ChatPage() {
                                 The application fee is 350 ETB, payable at the time of submission.
                               </p>
                             </CardContent>
-                          </Card>
+                          </Card> */}
 
-                          <Card
+                          {/* <Card
                             className="border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-in-out animate-fade-in"
                             style={{ animationDelay: "0.3s" }}
                           >
@@ -308,19 +325,19 @@ export default function ChatPage() {
                                 PM).
                               </p>
                             </CardContent>
-                          </Card>
+                          </Card> */}
                         </div>
 
                         {/* Action Buttons */}
                         <div className="flex flex-wrap gap-3 pt-4">
-                          <Button className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white">
+                          <Button className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white" onClick = {() => router.push("./workspace")}>
                             <Bookmark className="w-4 h-4 mr-2" />
                             Save Checklist
                           </Button>
-                          <Button variant="outline" className="border-gray-300 bg-transparent hover:bg-blue-100 hover:text-blue-700">
+                          {/* <Button variant="outline" className="border-gray-300 bg-transparent hover:bg-blue-100 hover:text-blue-700">
                             <Play className="w-4 h-4 mr-2" />
                             Start Procedure
-                          </Button>
+                          </Button> */}
                           <Button variant="outline" className="border-gray-300 bg-transparent hover:bg-blue-100 hover:text-blue-700">
                             <Languages className="w-4 h-4 mr-2" />
                             Translate
@@ -355,7 +372,7 @@ export default function ChatPage() {
               <Mic className="w-5 h-5 text-gray-500" />
             </Button>
 
-            <div className="flex-1 bg-white rounded-full px-4 py-3 shadow-sm border border-gray-200">
+            <div className="flex-1 bg-white rounded-full px-4 py-3 shadow-sm border border-[#3A6A8D] focus-within:ring-2 focus-within:ring-[#3A6A8D] focus-within:border-transparent">
               <input
                 type="text"
                 value={inputMessage}

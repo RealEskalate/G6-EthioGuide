@@ -88,7 +88,7 @@ export default function WorkspacePage() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">My Workspace</h1>
-                <p className="text-gray-600">Track and manage your ongoing procedures</p>
+                <p className="text-neutral">Track and manage your ongoing procedures</p>
               </div>
               
             </div>
@@ -103,7 +103,7 @@ export default function WorkspacePage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
+                        <p className="text-sm font-medium text-neutral mb-1">{stat.title}</p>
                         <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
                       </div>
                       <div className={`p-3 rounded-lg ${stat.bgColor} transition-transform duration-200 hover:scale-110`}>
