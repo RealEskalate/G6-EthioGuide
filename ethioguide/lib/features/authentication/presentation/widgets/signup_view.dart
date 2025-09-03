@@ -15,8 +15,10 @@ class SignUpView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final nameController = TextEditingController();
+    final usernameController = TextEditingController();
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
 
     return Column(
       key: const ValueKey('signUpView'),
@@ -32,18 +34,60 @@ class SignUpView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Full Name", style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text("Name", style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              customTextField(hintText: "Enter your full name", controller: nameController, prefixIcon: Icons.person_outline),
+              customTextField(hintText: "Enter your  name", controller: nameController, prefixIcon: Icons.person_outline),
               const SizedBox(height: 16),
-              // Add Email and Password fields similar to LoginView
+
+               const Text("Username", style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              customTextField(hintText: "Enter your username", controller: usernameController, prefixIcon: Icons.alternate_email),
+              
+              const SizedBox(height: 16),
+
               const Text("Email", style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               customTextField(hintText: "Enter your email", controller: emailController, prefixIcon: Icons.email_outlined),
                const SizedBox(height: 16),
               const Text("Password", style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              customTextField(hintText: "Create a password", controller: passwordController, prefixIcon: Icons.lock_outline, obscureText: true),
+
+               BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, state) {
+                  return customTextField(
+                    hintText: "Create a password",
+                    controller: passwordController,
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: !state.isPasswordVisible, 
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        state.isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        context.read<AuthBloc>().add(PasswordVisibilityToggled());
+                      },
+                    ),
+                  );
+                },
+              ),
+
+               const SizedBox(height: 16),
+
+              // ADDED: Confirm Password field
+              const Text("Confirm Password", style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, state) {
+                   return customTextField(
+                    hintText: "Confirm your password",
+                    controller: confirmPasswordController,
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: !state.isPasswordVisible,
+                  );
+                },
+              ),
+
               const SizedBox(height: 24),
               BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, state) {

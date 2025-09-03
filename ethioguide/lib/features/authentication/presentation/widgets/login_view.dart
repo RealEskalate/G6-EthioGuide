@@ -49,8 +49,18 @@ class LoginView extends StatelessWidget {
                   return customTextField(
                     hintText: "Enter your password",
                     controller: passwordController,
-                    obscureText: !state.isPasswordVisible,
                     prefixIcon: Icons.lock_outline,
+                    obscureText: !state.isPasswordVisible, 
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        state.isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        // Dispatch the event to toggle the state in the BLoC
+                        context.read<AuthBloc>().add(PasswordVisibilityToggled());
+                      },
+                    ),
                   );
                 },
               ),
