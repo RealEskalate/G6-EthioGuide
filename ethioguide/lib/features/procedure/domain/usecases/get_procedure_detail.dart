@@ -1,14 +1,17 @@
 import 'package:dartz/dartz.dart';
+import 'package:ethioguide/features/procedure/domain/repositories/workspace_procedure_repository.dart';
 import '../entities/procedure_detail.dart';
-import '../repositories/workspace_procedure_repository.dart';
 
-/// Use case for fetching procedure details
+
 class GetProcedureDetail {
-  final WorkspaceProcedureRepository repository;
+  final ProcedureDetailRepository repository;
 
-  const GetProcedureDetail(this.repository);
+  GetProcedureDetail(this.repository);
 
-  Future<Either<String, ProcedureDetail>> call(String procedureId) async {
-    return await repository.getProcedureDetail(procedureId);
+  Future<Either<String, ProcedureDetail>> call(String id) {
+    return repository.getProcedureDetail(id);
   }
 }
+
+
+

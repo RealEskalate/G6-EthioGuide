@@ -1,6 +1,7 @@
-import 'package:ethioguide/features/workspace_discussion/domain/repositories/workspace_discussion_repository.dart';
+import 'package:ethioguide/features/workspace_discussion/presentation/bloc/worspace_discustion_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+
 import '../../domain/entities/discussion.dart';
 import '../../domain/entities/comment.dart';
 import '../../domain/entities/community_stats.dart';
@@ -14,7 +15,9 @@ import '../../domain/usecases/add_comment.dart';
 import '../../domain/usecases/like_comment.dart';
 import '../../domain/usecases/report_comment.dart';
 
-// Events
+
+
+// -------- Events ----------
 abstract class WorkspaceDiscussionEvent extends Equatable {
   const WorkspaceDiscussionEvent();
 
@@ -29,168 +32,59 @@ class FetchDiscussions extends WorkspaceDiscussionEvent {
   final String? category;
   final String? filterType;
 
-  const FetchDiscussions({
-    this.tag,
-    this.category,
-    this.filterType,
-  });
-
-  @override
-  List<Object?> get props => [tag, category, filterType];
+  const FetchDiscussions({this.tag, this.category, this.filterType});
 }
 
-class CreateDiscussion extends WorkspaceDiscussionEvent {
+class CreateDiscussionEvent extends WorkspaceDiscussionEvent {
   final String title;
   final String content;
   final List<String> tags;
   final String category;
 
-  const CreateDiscussion(WorkspaceDiscussionRepository workspaceDiscussionRepository, {
+  const CreateDiscussionEvent({
     required this.title,
     required this.content,
     required this.tags,
     required this.category,
   });
-
-  @override
-  List<Object?> get props => [title, content, tags, category];
 }
 
-class LikeDiscussion extends WorkspaceDiscussionEvent {
+class LikeDiscussionEvent extends WorkspaceDiscussionEvent {
   final String discussionId;
-
-  const LikeDiscussion(this.discussionId);
-
-  @override
-  List<Object?> get props => [discussionId];
+  const LikeDiscussionEvent(this.discussionId);
 }
 
-class ReportDiscussion extends WorkspaceDiscussionEvent {
+class ReportDiscussionEvent extends WorkspaceDiscussionEvent {
   final String discussionId;
-
-  const ReportDiscussion(this.discussionId);
-
-  @override
-  List<Object?> get props => [discussionId];
+  const ReportDiscussionEvent(this.discussionId);
 }
 
-class FetchComments extends WorkspaceDiscussionEvent {
+class FetchCommentsEvent extends WorkspaceDiscussionEvent {
   final String discussionId;
-
-  const FetchComments(this.discussionId);
-
-  @override
-  List<Object?> get props => [discussionId];
+  const FetchCommentsEvent(this.discussionId);
 }
 
-class AddComment extends WorkspaceDiscussionEvent {
+class AddCommentEvent extends WorkspaceDiscussionEvent {
   final String discussionId;
   final String content;
 
-  const AddComment(WorkspaceDiscussionRepository workspaceDiscussionRepository, {
+  const AddCommentEvent({
     required this.discussionId,
     required this.content,
   });
-
-  @override
-  List<Object?> get props => [discussionId, content];
 }
 
-class LikeComment extends WorkspaceDiscussionEvent {
+class LikeCommentEvent extends WorkspaceDiscussionEvent {
   final String commentId;
-
-  const LikeComment(this.commentId);
-
-  @override
-  List<Object?> get props => [commentId];
+  const LikeCommentEvent(this.commentId);
 }
 
-class ReportComment extends WorkspaceDiscussionEvent {
+class ReportCommentEvent extends WorkspaceDiscussionEvent {
   final String commentId;
-
-  const ReportComment(this.commentId);
-
-  @override
-  List<Object?> get props => [commentId];
+  const ReportCommentEvent(this.commentId);
 }
 
-// States
-abstract class WorkspaceDiscussionState extends Equatable {
-  const WorkspaceDiscussionState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class DiscussionInitial extends WorkspaceDiscussionState {}
-
-class DiscussionLoading extends WorkspaceDiscussionState {}
-
-class DiscussionLoaded extends WorkspaceDiscussionState {
-  final List<Discussion> discussions;
-  final CommunityStats? communityStats;
-
-  const DiscussionLoaded({
-    required this.discussions,
-    this.communityStats,
-  });
-
-  @override
-  List<Object?> get props => [discussions, communityStats];
-}
-
-class DiscussionError extends WorkspaceDiscussionState {
-  final String message;
-
-  const DiscussionError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class CommentLoading extends WorkspaceDiscussionState {}
-
-class CommentLoaded extends WorkspaceDiscussionState {
-  final List<Comment> comments;
-  final String discussionId;
-
-  const CommentLoaded({
-    required this.comments,
-    required this.discussionId,
-  });
-
-  @override
-  List<Object?> get props => [comments, discussionId];
-}
-
-class CommentError extends WorkspaceDiscussionState {
-  final String message;
-
-  const CommentError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class ActionSuccess extends WorkspaceDiscussionState {
-  final String message;
-
-  const ActionSuccess(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class ActionFailure extends WorkspaceDiscussionState {
-  final String message;
-
-  const ActionFailure(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-// Bloc
+// -------- Bloc ----------
 class WorkspaceDiscussionBloc
     extends Bloc<WorkspaceDiscussionEvent, WorkspaceDiscussionState> {
   final GetCommunityStats getCommunityStats;
@@ -214,145 +108,98 @@ class WorkspaceDiscussionBloc
     required this.likeComment,
     required this.reportComment,
   }) : super(DiscussionInitial()) {
-    on<FetchCommunityStats>(_onFetchCommunityStats);
-    on<FetchDiscussions>(_onFetchDiscussions);
-    on<CreateDiscussion>(_onCreateDiscussion);
-    on<LikeDiscussion>(_onLikeDiscussion);
-    on<ReportDiscussion>(_onReportDiscussion);
-    on<FetchComments>(_onFetchComments);
-    on<AddComment>(_onAddComment);
-    on<LikeComment>(_onLikeComment);
-    on<ReportComment>(_onReportComment);
-  }
+    // --- Community Stats ---
+    on<FetchCommunityStats>((event, emit) async {
+      emit(DiscussionLoading());
+      final result = await getCommunityStats();
+      result.fold(
+        (failure) => emit(DiscussionError(failure)),
+        (stats) => emit(DiscussionLoaded(discussions: [], communityStats: stats)),
+      );
+    });
 
-  Future<void> _onFetchCommunityStats(
-    FetchCommunityStats event,
-    Emitter<WorkspaceDiscussionState> emit,
-  ) async {
-    emit(DiscussionLoading());
-    final result = await getCommunityStats();
-    result.fold(
-      (failure) => emit(DiscussionError(failure)),
-      (communityStats) => emit(DiscussionLoaded(
-        discussions: [],
-        communityStats: communityStats,
-      )),
-    );
-  }
+    // --- Discussions ---
+    on<FetchDiscussions>((event, emit) async {
+      emit(DiscussionLoading());
+      final result = await getDiscussions(
+        tag: event.tag,
+        category: event.category,
+        filterType: event.filterType,
+      );
+      result.fold(
+        (failure) => emit(DiscussionError(failure)),
+        (discussions) => emit(DiscussionLoaded(discussions: discussions)),
+      );
+    });
 
-  Future<void> _onFetchDiscussions(
-    FetchDiscussions event,
-    Emitter<WorkspaceDiscussionState> emit,
-  ) async {
-    emit(DiscussionLoading());
-    final result = await getDiscussions(
-      tag: event.tag,
-      category: event.category,
-      filterType: event.filterType,
-    );
-    result.fold(
-      (failure) => emit(DiscussionError(failure)),
-      (discussions) => emit(DiscussionLoaded(
-        discussions: discussions,
-        communityStats: null,
-      )),
-    );
-  }
+    on<CreateDiscussionEvent>((event, emit) async {
+      final result = await createDiscussion(
+        title: event.title,
+        content: event.content,
+        tags: event.tags,
+        category: event.category,
+      );
+      result.fold(
+        (failure) => emit(ActionFailure(failure)),
+        (_) => emit(const ActionSuccess('Discussion created successfully!')),
+      );
+    });
 
-  Future<void> _onCreateDiscussion(
-    CreateDiscussion event,
-    Emitter<WorkspaceDiscussionState> emit,
-  ) async {
-    final result = await createDiscussion(
-      title: event.title,
-      content: event.content,
-      tags: event.tags,
-      category: event.category,
+    on<LikeDiscussionEvent>((event, emit) async {
+      final result = await likeDiscussion(event.discussionId);
+      result.fold(
+        (failure) => emit(ActionFailure(failure)),
+        (_) => emit(const ActionSuccess('Discussion liked!')),
+      );
+    });
 
-    );
-    
-    /* createDiscussion(
-      title: event.title,
-      content: event.content,
-      tags: event.tags,
-      category: event.category,
-    ); */
-    result.fold(
-      (failure) => emit(ActionFailure(failure)),
-      (discussion) => emit(ActionSuccess('Discussion created successfully!')),
-    );
-  }
+    on<ReportDiscussionEvent>((event, emit) async {
+      final result = await reportDiscussion(event.discussionId);
+      result.fold(
+        (failure) => emit(ActionFailure(failure)),
+        (_) => emit(const ActionSuccess('Discussion reported!')),
+      );
+    });
 
-  Future<void> _onLikeDiscussion(
-    LikeDiscussion event,
-    Emitter<WorkspaceDiscussionState> emit,
-  ) async {
-    final result = await likeDiscussion(event.discussionId);
-    result.fold(
-      (failure) => emit(ActionFailure(failure)),
-      (success) => emit(ActionSuccess('Discussion liked!')),
-    );
-  }
+    // --- Comments ---
+    on<FetchCommentsEvent>((event, emit) async {
+      emit(CommentLoading());
+      final result = await getComments(event.discussionId);
+      result.fold(
+        (failure) => emit(CommentError(failure)),
+        (comments) => emit(CommentLoaded(
+          comments: comments,
+          discussionId: event.discussionId,
+        )),
+      );
+    });
 
-  Future<void> _onReportDiscussion(
-    ReportDiscussion event,
-    Emitter<WorkspaceDiscussionState> emit,
-  ) async {
-    final result = await reportDiscussion(event.discussionId);
-    result.fold(
-      (failure) => emit(ActionFailure(failure)),
-      (success) => emit(ActionSuccess('Discussion reported!')),
-    );
-  }
-
-  Future<void> _onFetchComments(
-    FetchComments event,
-    Emitter<WorkspaceDiscussionState> emit,
-  ) async {
-    emit(CommentLoading());
-    final result = await getComments(event.discussionId);
-    result.fold(
-      (failure) => emit(CommentError(failure)),
-      (comments) => emit(CommentLoaded(
-        comments: comments,
+    on<AddCommentEvent>((event, emit) async {
+      final result = await addComment(
+        
         discussionId: event.discussionId,
-      )),
-    );
-  }
+        content: event.content,
+      );
+      result.fold(
+        (failure) => emit(ActionFailure(failure)),
+        (_) => emit(const ActionSuccess('Comment added successfully!')),
+      );
+    });
 
-  Future<void> _onAddComment(
-    AddComment event,
-    Emitter<WorkspaceDiscussionState> emit,
-  ) async {
-    final result = await addComment(
-      discussionId: event.discussionId,
-      content: event.content,
-    );
-    result.fold(
-      (failure) => emit(ActionFailure(failure)),
-      (comment) => emit(ActionSuccess('Comment added successfully!')),
-    );
-  }
+    on<LikeCommentEvent>((event, emit) async {
+      final result = await likeComment(event.commentId);
+      result.fold(
+        (failure) => emit(ActionFailure(failure)),
+        (_) => emit(const ActionSuccess('Comment liked!')),
+      );
+    });
 
-  Future<void> _onLikeComment(
-    LikeComment event,
-    Emitter<WorkspaceDiscussionState> emit,
-  ) async {
-    final result = await likeComment(event.commentId);
-    result.fold(
-      (failure) => emit(ActionFailure(failure)),
-      (success) => emit(ActionSuccess('Comment liked!')),
-    );
-  }
-
-  Future<void> _onReportComment(
-    ReportComment event,
-    Emitter<WorkspaceDiscussionState> emit,
-  ) async {
-    final result = await reportComment(event.commentId);
-    result.fold(
-      (failure) => emit(ActionFailure(failure)),
-      (success) => emit(ActionSuccess('Comment reported!')),
-    );
+    on<ReportCommentEvent>((event, emit) async {
+      final result = await reportComment(event.commentId);
+      result.fold(
+        (failure) => emit(ActionFailure(failure)),
+        (_) => emit(const ActionSuccess('Comment reported!')),
+      );
+    });
   }
 }

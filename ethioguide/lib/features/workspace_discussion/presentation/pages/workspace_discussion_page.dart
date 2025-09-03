@@ -1,3 +1,7 @@
+import 'package:ethioguide/core/config/app_color.dart';
+import 'package:ethioguide/features/workspace_discussion/domain/entities/community_stats.dart';
+import 'package:ethioguide/features/workspace_discussion/domain/entities/user.dart';
+import 'package:ethioguide/features/workspace_discussion/presentation/bloc/worspace_discustion_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/discussion.dart';
@@ -14,21 +18,43 @@ class WorkspaceDiscussionPage extends StatefulWidget {
   const WorkspaceDiscussionPage({super.key});
 
   @override
-  State<WorkspaceDiscussionPage> createState() => _WorkspaceDiscussionPageState();
+  State<WorkspaceDiscussionPage> createState() =>
+      _WorkspaceDiscussionPageState();
 }
 
 class _WorkspaceDiscussionPageState extends State<WorkspaceDiscussionPage> {
   String? selectedCategory;
   String? selectedFilter = 'recent';
-  final List<String> categories = ['Business', 'General', 'Travel', 'Transportation'];
+  final List<String> categories = [
+    'Business',
+    'General',
+    'Travel',
+    'Transportation',
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    // Load initial data
-    context.read<WorkspaceDiscussionBloc>().add(FetchCommunityStats());
-    context.read<WorkspaceDiscussionBloc>().add(FetchDiscussions());
-  }
+  // Dummy data for UI-only preview
+  final CommunityStats communityStats = CommunityStats(
+    totalMembers: 100,
+    totalDiscussions: 150,
+    activeToday: 10,
+    trendingTags: ['licensing', 'process'],
+  );
+
+  final discussions = List.generate(
+    4,
+    (i) => Discussion(
+      id: 'd$i',
+      title: 'How to complete step ${i + 1}?',
+      content: 'I need help with the requirements for step ${i + 1}. Any tips?',
+      tags: ['licensing', 'process'],
+      category: i % 2 == 0 ? 'General' : 'Business',
+      createdAt: DateTime.now().subtract(Duration(days: i)),
+      createdBy: const User(id: 'u1', name: 'Test User'),
+      likeCount: i * 3,
+      reportCount: 0,
+      commentsCount: i + 1,
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -42,26 +68,22 @@ class _WorkspaceDiscussionPageState extends State<WorkspaceDiscussionPage> {
         ),
         title: Row(
           children: [
-            Icon(
-              Icons.chat_bubble,
-              color: Colors.teal[600],
-              size: 28,
-            ),
+            Icon(Icons.chat_bubble_outline, color: Colors.teal[600], size: 28),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Community Discussions',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 Text(
                   'Share knowledge and get help',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -76,7 +98,7 @@ class _WorkspaceDiscussionPageState extends State<WorkspaceDiscussionPage> {
               style: TextStyle(color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[600],
+              backgroundColor: AppColors.darkGreenColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -84,71 +106,11 @@ class _WorkspaceDiscussionPageState extends State<WorkspaceDiscussionPage> {
           ),
         ],
       ),
-      body: BlocConsumer<WorkspaceDiscussionBloc, WorkspaceDiscussionState>(
-        listener: (context, state) {
-          if (state is ActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
-              ),
-            );
-          } else if (state is ActionFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is DiscussionLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is DiscussionError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading discussions',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    state.message,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<WorkspaceDiscussionBloc>().add(FetchDiscussions());
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          } else if (state is DiscussionLoaded) {
-            return _buildContent(context, state);
-          }
-          
-          return const Center(child: Text('No discussions available'));
-        },
-      ),
+      body: _buildContent(context),
     );
   }
 
-  Widget _buildContent(BuildContext context, DiscussionLoaded state) {
+  Widget _buildContent(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -173,25 +135,18 @@ class _WorkspaceDiscussionPageState extends State<WorkspaceDiscussionPage> {
           ),
           const SizedBox(height: 20),
 
-          // Community stats card
-          if (state.communityStats != null) ...[
-            CommunityStatsCard(communityStats: state.communityStats!),
-            const SizedBox(height: 20),
-          ],
+          // Community stats card (dummy)
+          CommunityStatsCard(communityStats: communityStats),
+          const SizedBox(height: 20),
 
-          // Trending topics
-          if (state.communityStats != null) ...[
-            TrendingTopics(
-              communityStats: state.communityStats!,
-              onTagTap: (tag) {
-                // Filter by tag
-                context.read<WorkspaceDiscussionBloc>().add(
-                  FetchDiscussions(tag: tag),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-          ],
+          // Trending topics (dummy uses communityStats)
+          TrendingTopics(
+            communityStats: communityStats,
+            onTagTap: (tag) {
+              // no-op for UI preview
+            },
+          ),
+          const SizedBox(height: 20),
 
           // Filter controls
           FilterControls(
@@ -202,17 +157,11 @@ class _WorkspaceDiscussionPageState extends State<WorkspaceDiscussionPage> {
               setState(() {
                 selectedCategory = category;
               });
-              context.read<WorkspaceDiscussionBloc>().add(
-                FetchDiscussions(category: category),
-              );
             },
             onFilterChanged: (filter) {
               setState(() {
                 selectedFilter = filter;
               });
-              context.read<WorkspaceDiscussionBloc>().add(
-                FetchDiscussions(filterType: filter),
-              );
             },
           ),
           const SizedBox(height: 20),
@@ -220,50 +169,57 @@ class _WorkspaceDiscussionPageState extends State<WorkspaceDiscussionPage> {
           // Discussions list
           Text(
             'Discussions',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
-          
-          ...state.discussions.map((discussion) => Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
-            child: DiscussionCard(
-              discussion: discussion,
-              onTap: () => _navigateToDiscussionDetail(context, discussion),
-              onLike: () {
-                context.read<WorkspaceDiscussionBloc>().add(
-                  LikeDiscussion(discussion.id),
-                );
-              },
-              onReport: () {
-                context.read<WorkspaceDiscussionBloc>().add(
-                  ReportDiscussion(discussion.id),
-                );
-              },
-              onComment: () => _navigateToDiscussionDetail(context, discussion),
+
+          ...discussions.map(
+            (discussion) => Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: DiscussionCard(
+                discussion: discussion,
+                onTap: () => _navigateToDiscussionDetail(context, discussion),
+                onLike: () {},
+                onReport: () {},
+                onComment: () =>
+                    _navigateToDiscussionDetail(context, discussion),
+              ),
             ),
-          )),
+          ),
         ],
       ),
     );
   }
 
   void _navigateToCreateDiscussion(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const CreateDiscussionPage(),
-      ),
+    showDialog(
+      context: context,
+      barrierDismissible: true, // tap outside to close
+      builder: (context) {
+        return CreateDiscussionPage();
+      },
     );
   }
 
-  void _navigateToDiscussionDetail(BuildContext context, Discussion discussion) {
-    Navigator.push(
+  void _navigateToDiscussionDetail(
+    BuildContext context,
+    Discussion discussion,
+  ) {
+    showDialog(
+      context: context,
+      barrierDismissible: true, // tap outside to close
+      builder: (context) {
+        return DiscussionDetailPage(discussion: discussion);
+      },
+    );
+
+    /*  Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => DiscussionDetailPage(discussion: discussion),
       ),
-    );
+    ); */
   }
 }

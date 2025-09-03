@@ -1,12 +1,15 @@
+import 'package:ethioguide/core/config/route_names.dart';
+import 'package:ethioguide/features/procedure/data/sample_data/workspace_sample_data.dart';
+import 'package:ethioguide/features/procedure/domain/entities/procedure_detail.dart';
+import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ethioguide/core/config/app_color.dart';
 import 'package:ethioguide/core/config/app_theme.dart';
 import 'package:ethioguide/features/procedure/domain/entities/workspace_procedure.dart';
-import 'package:ethioguide/features/procedure/presentation/bloc/workspace_procedure_bloc.dart';
 import 'package:ethioguide/features/procedure/presentation/widgets/workspace_summary_cards.dart';
 import 'package:ethioguide/features/procedure/presentation/widgets/workspace_procedure_card.dart';
 import 'package:ethioguide/features/procedure/presentation/widgets/workspace_filters.dart';
+import 'package:go_router/go_router.dart';
 
 /// Page that displays the workspace with procedures tracking
 class WorkspacePage extends StatefulWidget {
@@ -23,8 +26,6 @@ class _WorkspacePageState extends State<WorkspacePage> {
   @override
   void initState() {
     super.initState();
-    context.read<WorkspaceProcedureBloc>().add(const LoadWorkspaceProcedures());
-    context.read<WorkspaceProcedureBloc>().add(const LoadWorkspaceSummary());
   }
 
   @override
@@ -53,10 +54,9 @@ class _WorkspacePageState extends State<WorkspacePage> {
                 const SizedBox(height: 6),
                 Text(
                   'Track and manage your ongoing procedures.',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: AppColors.graycolor),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.graycolor),
                   softWrap: true,
                   overflow: TextOverflow.visible,
                 ),
@@ -70,7 +70,10 @@ class _WorkspacePageState extends State<WorkspacePage> {
             child: ElevatedButton.icon(
               onPressed: () {},
               icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text('Add New', style: TextStyle(color: Colors.white)),
+              label: const Text(
+                'Add New',
+                style: TextStyle(color: Colors.white),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal,
                 foregroundColor: Colors.white,
@@ -83,53 +86,45 @@ class _WorkspacePageState extends State<WorkspacePage> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () async {
-          context.read<WorkspaceProcedureBloc>().add(const RefreshWorkspaceData());
-        },
+        onRefresh: () async {},
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
-              BlocBuilder<WorkspaceProcedureBloc, WorkspaceProcedureState>(
-                builder: (context, state) {
-                  if (state is WorkspaceSummaryLoaded) {
-                    return WorkspaceSummaryCards(summary: state.summary);
-                  }
-                  return const WorkspaceSummaryCards(
-                    summary: WorkspaceSummary(
-                      totalProcedures: 0,
-                      inProgress: 0,
-                      completed: 0,
-                      totalDocuments: 0,
-                    ),
-                  );
-                },
+              const WorkspaceSummaryCards(
+                summary: WorkspaceSummary(
+                  totalProcedures: 0,
+                  inProgress: 0,
+                  completed: 0,
+                  totalDocuments: 0,
+                ),
               ),
               const SizedBox(height: 24),
               WorkspaceFilters(
                 selectedStatus: selectedStatus,
                 selectedOrganization: selectedOrganization,
                 onStatusChanged: (status) {
-                  setState(() => selectedStatus = status);
+                  /* setState(() => selectedStatus = status);
                   if (status != null) {
-                    context.read<WorkspaceProcedureBloc>().add(
+                    /* context.read<WorkspaceProcedureBloc>().add(
                       FilterProceduresByStatus(status),
-                    );
-                  }
+                    ); */
+                  } */
                 },
                 onOrganizationChanged: (organization) {
                   setState(() => selectedOrganization = organization);
                   if (organization != null) {
-                    context.read<WorkspaceProcedureBloc>().add(
+                    /* context.read<WorkspaceProcedureBloc>().add(
                       FilterProceduresByOrganization(organization),
-                    );
+                    ); */
                   }
                 },
               ),
               const SizedBox(height: 24),
-              BlocBuilder<WorkspaceProcedureBloc, WorkspaceProcedureState>(
+
+              /*    BlocBuilder<WorkspaceProcedureBloc, WorkspaceProcedureState>(
                 builder: (context, state) {
                   if (state is WorkspaceProcedureLoading) {
                     return const Center(child: CircularProgressIndicator());
@@ -138,9 +133,12 @@ class _WorkspacePageState extends State<WorkspacePage> {
                   } else if (state is WorkspaceProceduresFiltered) {
                     return _buildProceduresList(state.procedures);
                   }
-                  return const Center(child: Text('No procedures found'));
+                  return 
+                  
                 },
-              ),
+              ), 
+                  const Center(child: Text('No procedures found')), */
+              _buildProceduresList(WorkspaceSampleData.getSampleProcedures()),
             ],
           ),
         ),
@@ -148,14 +146,17 @@ class _WorkspacePageState extends State<WorkspacePage> {
     );
   }
 
-  Widget _buildProceduresList(List<WorkspaceProcedure> procedures) {
+  Widget _buildProceduresList(List<ProcedureDetail> procedures) {
     if (procedures.isEmpty) {
       return const Center(
         child: Column(
           children: [
             Icon(Icons.inbox_outlined, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text('No procedures found', style: TextStyle(fontSize: 18, color: Colors.grey)),
+            Text(
+              'No procedures found',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+            ),
           ],
         ),
       );
@@ -170,7 +171,9 @@ class _WorkspacePageState extends State<WorkspacePage> {
         final procedure = procedures[index];
         return WorkspaceProcedureCard(
           procedure: procedure,
-          onTap: () {},
+          onTap: () {
+            context.push(RouteNames.workspace_detail, extra: procedure.id);
+          },
         );
       },
     );

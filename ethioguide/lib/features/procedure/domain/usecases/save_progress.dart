@@ -3,7 +3,7 @@ import '../repositories/workspace_procedure_repository.dart';
 
 /// Use case for saving progress
 class SaveProgress {
-  final WorkspaceProcedureRepository repository;
+  final ProcedureDetailRepository repository;
 
   const SaveProgress(this.repository);
 

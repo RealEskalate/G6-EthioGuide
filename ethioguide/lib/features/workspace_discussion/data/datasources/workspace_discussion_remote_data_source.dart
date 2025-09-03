@@ -39,21 +39,15 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
 
   @override
   Future<CommunityStatsModel> getCommunityStats() async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      // Mock response data
-      final mockData = {
-        'totalMembers': 1200,
-        'totalDiscussions': 3,
-        'activeToday': 42,
-        'trendingTags': ['#passport', '#renewal', '#business-license', '#id-card', '#timeline', '#documents', '#fees'],
-      };
-      
-      return CommunityStatsModel.fromJson(mockData);
-    } catch (e) {
-      throw Exception('Failed to fetch community stats: $e');
+    final response = await dio.get('$baseUrl/workspace/community/stats');
+    if (response.statusCode == 200) {
+      return CommunityStatsModel.fromJson(response.data as Map<String, dynamic>);
     }
+    throw DioException(
+      requestOptions: RequestOptions(path: '$baseUrl/workspace/community/stats'),
+      response: response,
+      error: 'Failed to fetch community stats',
+    );
   }
 
   @override
@@ -62,53 +56,23 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
     String? category,
     String? filterType,
   }) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 800));
-      
-      // Mock response data
-      final mockData = [
-        {
-          'id': '1',
-          'title': 'Business license application - timeline and costs?',
-          'content': 'I\'m planning to start a small business and need to get a business license. Can anyone share their recent experience with the process? How long did it take and what were the actual costs involved?',
-          'tags': ['Business Licenses', 'business', 'license', 'timeline', 'costs'],
-          'category': 'Business',
-          'createdAt': '2024-01-15T10:00:00.000Z',
-          'createdBy': {
-            'id': 'user1',
-            'name': 'Yohannes Girma',
-            'avatar': null,
-            'role': null,
-          },
-          'likeCount': 13,
-          'reportCount': 0,
-          'commentsCount': 1,
-          'isPinned': false,
-        },
-        {
-          'id': '2',
-          'title': 'Common mistakes when applying for government services',
-          'content': 'Based on community feedback, here are the most common mistakes people make when applying for government services. Please read this before starting any application process to save time and avoid frustration.',
-          'tags': ['General Help', 'guidelines', 'tips', 'common-mistakes'],
-          'category': 'General',
-          'createdAt': '2024-01-14T15:30:00.000Z',
-          'createdBy': {
-            'id': 'user2',
-            'name': 'Community Manager',
-            'avatar': null,
-            'role': 'Moderator',
-          },
-          'likeCount': 89,
-          'reportCount': 0,
-          'commentsCount': 1,
-          'isPinned': true,
-        },
-      ];
-      
-      return mockData.map((data) => DiscussionModel.fromJson(data)).toList();
-    } catch (e) {
-      throw Exception('Failed to fetch discussions: $e');
+    final response = await dio.get(
+      '$baseUrl/workspace/discussions',
+      queryParameters: {
+        if (tag != null) 'tag': tag,
+        if (category != null) 'category': category,
+        if (filterType != null) 'filterType': filterType,
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = response.data as List<dynamic>;
+      return data.map((e) => DiscussionModel.fromJson(e as Map<String, dynamic>)).toList();
     }
+    throw DioException(
+      requestOptions: RequestOptions(path: '$baseUrl/workspace/discussions'),
+      response: response,
+      error: 'Failed to fetch discussions',
+    );
   }
 
   @override
@@ -118,82 +82,49 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
     required List<String> tags,
     required String category,
   }) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 1000));
-      
-      // Mock response data
-      final mockData = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+    final response = await dio.post(
+      '$baseUrl/workspace/discussions',
+      data: {
         'title': title,
         'content': content,
         'tags': tags,
         'category': category,
-        'createdAt': DateTime.now().toIso8601String(),
-        'createdBy': {
-          'id': 'currentUser',
-          'name': 'Current User',
-          'avatar': null,
-          'role': null,
-        },
-        'likeCount': 0,
-        'reportCount': 0,
-        'commentsCount': 0,
-        'isPinned': false,
-      };
-      
-      return DiscussionModel.fromJson(mockData);
-    } catch (e) {
-      throw Exception('Failed to create discussion: $e');
+      },
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return DiscussionModel.fromJson(response.data as Map<String, dynamic>);
     }
+    throw DioException(
+      requestOptions: RequestOptions(path: '$baseUrl/workspace/discussions'),
+      response: response,
+      error: 'Failed to create discussion',
+    );
   }
 
   @override
   Future<bool> likeDiscussion(String discussionId) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 300));
-      return true;
-    } catch (e) {
-      throw Exception('Failed to like discussion: $e');
-    }
+    final response = await dio.post('$baseUrl/workspace/discussions/$discussionId/like');
+    return (response.statusCode == 200 || response.statusCode == 204);
   }
 
   @override
   Future<bool> reportDiscussion(String discussionId) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 300));
-      return true;
-    } catch (e) {
-      throw Exception('Failed to report discussion: $e');
-    }
+    final response = await dio.post('$baseUrl/workspace/discussions/$discussionId/report');
+    return (response.statusCode == 200 || response.statusCode == 204);
   }
 
   @override
   Future<List<CommentModel>> getComments(String discussionId) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 600));
-      
-      // Mock response data
-      final mockData = [
-        {
-          'id': 'comment1',
-          'discussionId': discussionId,
-          'content': 'yes',
-          'createdAt': DateTime.now().toIso8601String(),
-          'createdBy': {
-            'id': 'currentUser',
-            'name': 'You',
-            'avatar': null,
-            'role': null,
-          },
-          'likeCount': 0,
-          'reportCount': 0,
-        },
-      ];
-      
-      return mockData.map((data) => CommentModel.fromJson(data)).toList();
-    } catch (e) {
-      throw Exception('Failed to fetch comments: $e');
+    final response = await dio.get('$baseUrl/workspace/discussions/$discussionId/comments');
+    if (response.statusCode == 200) {
+      final data = response.data as List<dynamic>;
+      return data.map((e) => CommentModel.fromJson(e as Map<String, dynamic>)).toList();
     }
+    throw DioException(
+      requestOptions: RequestOptions(path: '$baseUrl/workspace/discussions/$discussionId/comments'),
+      response: response,
+      error: 'Failed to fetch comments',
+    );
   }
 
   @override
@@ -201,48 +132,29 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
     required String discussionId,
     required String content,
   }) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      // Mock response data
-      final mockData = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'discussionId': discussionId,
-        'content': content,
-        'createdAt': DateTime.now().toIso8601String(),
-        'createdBy': {
-          'id': 'currentUser',
-          'name': 'Current User',
-          'avatar': null,
-          'role': null,
-        },
-        'likeCount': 0,
-        'reportCount': 0,
-      };
-      
-      return CommentModel.fromJson(mockData);
-    } catch (e) {
-      throw Exception('Failed to add comment: $e');
+    final response = await dio.post(
+      '$baseUrl/workspace/discussions/$discussionId/comments',
+      data: {'content': content},
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return CommentModel.fromJson(response.data as Map<String, dynamic>);
     }
+    throw DioException(
+      requestOptions: RequestOptions(path: '$baseUrl/workspace/discussions/$discussionId/comments'),
+      response: response,
+      error: 'Failed to add comment',
+    );
   }
 
   @override
   Future<bool> likeComment(String commentId) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 300));
-      return true;
-    } catch (e) {
-      throw Exception('Failed to like comment: $e');
-    }
+    final response = await dio.post('$baseUrl/workspace/comments/$commentId/like');
+    return (response.statusCode == 200 || response.statusCode == 204);
   }
 
   @override
   Future<bool> reportComment(String commentId) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 300));
-      return true;
-    } catch (e) {
-      throw Exception('Failed to report comment: $e');
-    }
+    final response = await dio.post('$baseUrl/workspace/comments/$commentId/report');
+    return (response.statusCode == 200 || response.statusCode == 204);
   }
 }

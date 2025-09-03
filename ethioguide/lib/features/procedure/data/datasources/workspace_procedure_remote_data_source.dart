@@ -1,27 +1,21 @@
 import 'package:dio/dio.dart';
+import 'package:ethioguide/core/error/exception.dart';
 import '../../domain/entities/workspace_procedure.dart';
-import '../models/procedure_detail_model.dart';
 import '../models/workspace_procedure_model.dart';
 import '../models/workspace_summary_model.dart';
 
 /// Remote data source for workspace procedure operations
 abstract class WorkspaceProcedureRemoteDataSource {
   // Original methods for workspace procedures
-  Future<List<WorkspaceProcedureModel>> getWorkspaceProcedures();
+  Future<List<WorkspaceProcedureModel>> getMyProcedures();
   Future<WorkspaceSummaryModel> getWorkspaceSummary();
   Future<List<WorkspaceProcedureModel>> getProceduresByStatus(String status);
   Future<List<WorkspaceProcedureModel>> getProceduresByOrganization(String organization);
-  Future<WorkspaceProcedureModel> createWorkspaceProcedure(WorkspaceProcedureModel procedure);
-  Future<WorkspaceProcedureModel> updateWorkspaceProcedure(WorkspaceProcedureModel procedure);
-  Future<bool> deleteWorkspaceProcedure(String id);
-  Future<WorkspaceProcedureModel> updateProgress(String id, int progressPercentage);
-  Future<bool> uploadDocument(String procedureId, String documentPath);
-
-  // New methods for workspace procedure detail feature
-  Future<ProcedureDetailModel> getProcedureDetail(String id);
+  Future<WorkspaceProcedureModel> getProcedureDetail(String id);
   Future<bool> updateStepStatus(String procedureId, String stepId, bool isCompleted);
   Future<bool> saveProgress(String procedureId);
 }
+
 
 class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemoteDataSource {
   final Dio dio;
@@ -34,156 +28,125 @@ class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemote
 
   // Original methods implementation
   @override
-  Future<List<WorkspaceProcedureModel>> getWorkspaceProcedures() async {
+  Future<List<WorkspaceProcedureModel>> getMyProcedures() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      // Mock implementation - return empty list for now
-      return [];
+      final response = await dio.get('$baseUrl/workspace/procedures');
+      if (response.statusCode == 200) {
+        final data = response.data as List<dynamic>;
+        return data.map((e) => WorkspaceProcedureModel.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final msg = e.message ?? 'Network error while fetching workspace procedures';
+      throw ServerException(message: msg, statusCode: status);
     } catch (e) {
-      throw Exception('Failed to fetch workspace procedures: $e');
+      throw ServerException(message: e.toString());
     }
   }
 
   @override
   Future<WorkspaceSummaryModel> getWorkspaceSummary() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
-      // Mock implementation - return default summary
-      return const WorkspaceSummaryModel(
-        totalProcedures: 0,
-        inProgress: 0,
-        completed: 0,
-        totalDocuments: 0,
-      );
+      final response = await dio.get('$baseUrl/workspace/summary');
+      if (response.statusCode == 200) {
+        return WorkspaceSummaryModel.fromJson(response.data as Map<String, dynamic>);
+      }
+      throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final msg = e.message ?? 'Network error while fetching workspace summary';
+      throw ServerException(message: msg, statusCode: status);
     } catch (e) {
-      throw Exception('Failed to fetch workspace summary: $e');
+      throw ServerException(message: e.toString());
     }
   }
 
   @override
   Future<List<WorkspaceProcedureModel>> getProceduresByStatus(String status) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 400));
-      // Mock implementation - return empty list for now
-      return [];
+      final response = await dio.get('$baseUrl/workspace/procedures', queryParameters: {'status': status});
+      if (response.statusCode == 200) {
+        final data = response.data as List<dynamic>;
+        return data.map((e) => WorkspaceProcedureModel.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      final message = e.message ?? 'Network error while fetching procedures by status';
+      throw ServerException(message: message, statusCode: statusCode);
     } catch (e) {
-      throw Exception('Failed to fetch procedures by status: $e');
+      throw ServerException(message: e.toString());
     }
   }
 
   @override
   Future<List<WorkspaceProcedureModel>> getProceduresByOrganization(String organization) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 400));
-      // Mock implementation - return empty list for now
-      return [];
+      final response = await dio.get('$baseUrl/workspace/procedures', queryParameters: {'organization': organization});
+      if (response.statusCode == 200) {
+        final data = response.data as List<dynamic>;
+        return data.map((e) => WorkspaceProcedureModel.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      final message = e.message ?? 'Network error while fetching procedures by organization';
+      throw ServerException(message: message, statusCode: statusCode);
     } catch (e) {
-      throw Exception('Failed to fetch procedures by organization: $e');
-    }
-  }
-
-  @override
-  Future<WorkspaceProcedureModel> createWorkspaceProcedure(WorkspaceProcedureModel procedure) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 600));
-      // Mock implementation - return the same procedure
-      return procedure;
-    } catch (e) {
-      throw Exception('Failed to create workspace procedure: $e');
-    }
-  }
-
-  @override
-  Future<WorkspaceProcedureModel> updateWorkspaceProcedure(WorkspaceProcedureModel procedure) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 600));
-      // Mock implementation - return the same procedure
-      return procedure;
-    } catch (e) {
-      throw Exception('Failed to update workspace procedure: $e');
-    }
-  }
-
-  @override
-  Future<bool> deleteWorkspaceProcedure(String id) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 400));
-      // Mock implementation - return true
-      return true;
-    } catch (e) {
-      throw Exception('Failed to delete workspace procedure: $e');
-    }
-  }
-
-  @override
-  Future<WorkspaceProcedureModel> updateProgress(String id, int progressPercentage) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      // Mock implementation - return a default procedure
-      return  WorkspaceProcedureModel(
-        id: '1',
-        title: 'Test Procedure',
-        organization: 'Test Org',
-        status: ProcedureStatus.inProgress,
-        progressPercentage: 50,
-        documentsUploaded: 2,
-        totalDocuments: 4,
-        startDate: DateTime.now(),
-      );
-    } catch (e) {
-      throw Exception('Failed to update progress: $e');
-    }
-  }
-
-  @override
-  Future<bool> uploadDocument(String procedureId, String documentPath) async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 800));
-      // Mock implementation - return true
-      return true;
-    } catch (e) {
-      throw Exception('Failed to upload document: $e');
+      throw ServerException(message: e.toString());
     }
   }
 
   // New methods for workspace procedure detail feature
   @override
-  Future<ProcedureDetailModel> getProcedureDetail(String id) async {
+  Future<WorkspaceProcedureModel> getProcedureDetail(String id) async {
     try {
-      // Simulate API delay
-      await Future.delayed(const Duration(milliseconds: 800));
-      
-      // Mock response data
-      final mockData = _getMockProcedureDetail(id);
-      return ProcedureDetailModel.fromJson(mockData);
+      final response = await dio.get('$baseUrl/workspace/procedures/$id');
+      if (response.statusCode == 200) {
+        return WorkspaceProcedureModel.fromJson(response.data as Map<String, dynamic>);
+      }
+      throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final msg = e.message ?? 'Network error while fetching procedure detail';
+      throw ServerException(message: msg, statusCode: status);
     } catch (e) {
-      throw Exception('Failed to fetch procedure detail: $e');
+      throw ServerException(message: e.toString());
     }
   }
 
   @override
   Future<bool> updateStepStatus(String procedureId, String stepId, bool isCompleted) async {
     try {
-      // Simulate API delay
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      // Mock successful update
-      return true;
+      final response = await dio.patch('$baseUrl/workspace/procedures/$procedureId/steps/$stepId', data: {'isCompleted': isCompleted});
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return true;
+      }
+      throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final msg = e.message ?? 'Network error while updating step status';
+      throw ServerException(message: msg, statusCode: status);
     } catch (e) {
-      throw Exception('Failed to update step status: $e');
+      throw ServerException(message: e.toString());
     }
   }
 
   @override
   Future<bool> saveProgress(String procedureId) async {
     try {
-      // Simulate API delay
-      await Future.delayed(const Duration(milliseconds: 600));
-      
-      // Mock successful save
-      return true;
+      final response = await dio.post('$baseUrl/workspace/procedures/$procedureId/progress');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      }
+      throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final msg = e.message ?? 'Network error while saving progress';
+      throw ServerException(message: msg, statusCode: status);
     } catch (e) {
-      throw Exception('Failed to save progress: $e');
+      throw ServerException(message: e.toString());
     }
   }
 

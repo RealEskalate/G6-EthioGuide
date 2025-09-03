@@ -1,9 +1,11 @@
+import 'package:ethioguide/features/procedure/domain/entities/procedure_detail.dart';
+import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
 import 'package:flutter/material.dart';
 import 'package:ethioguide/features/procedure/domain/entities/workspace_procedure.dart';
 
 /// Widget that displays a workspace procedure card
 class WorkspaceProcedureCard extends StatelessWidget {
-  final WorkspaceProcedure procedure;
+  final ProcedureDetail procedure;
   final VoidCallback onTap;
 
   const WorkspaceProcedureCard({

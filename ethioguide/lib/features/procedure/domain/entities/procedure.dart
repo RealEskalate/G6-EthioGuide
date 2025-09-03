@@ -9,14 +9,7 @@ class Procedure extends Equatable {
   final String duration; // e.g., 2-3 weeks
   final String cost; // e.g., 1,200 ETB
   final String icon; // a semantic icon name or asset key
-  final bool isQuickAccess; // whether to show in quick access grid
-  final String organization; // a short organization
-  final String description; // a short description
-  final Status status; // a link to the official procedure page
-  
-
-
-
+  final bool isQuickAccess; // whether to show in quick access grid // a link to the official procedure page
   // Detail Page fields
   final List<String> requiredDocuments; // e.g., ["Passport Photo", "Birth Certificate"]
   final List<ProcedureStep> steps; // Step-by-step guide

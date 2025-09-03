@@ -43,6 +43,8 @@ dependencies:
   flutter_bloc: ^9.1.1
   get_it: ^8.2.0
   mime: ^2.0.0
+  flutter_localization:
+  
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +69,7 @@ flutter:
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
+  generate: true
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:

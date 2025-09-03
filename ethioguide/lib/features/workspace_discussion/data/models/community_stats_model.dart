@@ -3,11 +3,19 @@ import '../../domain/entities/community_stats.dart';
 /// Data model for community statistics
 class CommunityStatsModel extends CommunityStats {
   const CommunityStatsModel({
-    required super.totalMembers,
-    required super.totalDiscussions,
-    required super.activeToday,
-    required super.trendingTags,
-  });
+    required int totalMembers,
+    required int totalDiscussions,
+    required int activeToday,
+    required List<String> trendingTags,
+    
+  }) : super(
+         
+          totalMembers: totalMembers,
+          totalDiscussions: totalDiscussions,
+          activeToday: activeToday,
+          trendingTags: trendingTags,
+         
+        );
 
   factory CommunityStatsModel.fromJson(Map<String, dynamic> json) {
     return CommunityStatsModel(

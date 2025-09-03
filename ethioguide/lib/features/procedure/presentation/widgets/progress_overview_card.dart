@@ -1,3 +1,4 @@
+import 'package:ethioguide/core/config/app_color.dart';
 import 'package:flutter/material.dart';
 import '../../domain/entities/procedure_detail.dart';
 
@@ -58,7 +59,7 @@ class ProgressOverviewCard extends StatelessWidget {
             LinearProgressIndicator(
               value: procedureDetail.progressPercentage / 100,
               backgroundColor: Colors.grey[300],
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.darkGreenColor),
               minHeight: 8,
             ),
             const SizedBox(height: 16),

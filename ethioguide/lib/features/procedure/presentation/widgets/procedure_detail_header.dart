@@ -11,20 +11,20 @@ class ProcedureDetailHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _InfoCard(icon: Icons.timer, title: 'Processing Time', value: duration),
-        _InfoCard(icon: Icons.attach_money, title: 'Total Fees', value: cost),
-        _InfoCard(icon: Icons.chat, title: 'AI Assistant', value: 'Chat here'),
+        InfoCard(icon: Icons.timer, title: 'Processing Time', value: duration),
+        InfoCard(icon: Icons.attach_money, title: 'Total Fees', value: cost),
+        InfoCard(icon: Icons.chat, title: 'AI Assistant', value: 'Chat here'),
       ],
     );
   }
 }
 
-class _InfoCard extends StatelessWidget {
+class InfoCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String value;
 
-  const _InfoCard({required this.icon, required this.title, required this.value});
+  const InfoCard({required this.icon, required this.title, required this.value});
 
   @override
   Widget build(BuildContext context) {

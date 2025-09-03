@@ -2,6 +2,8 @@ import 'package:ethioguide/features/procedure/data/models/workspace_procedure_mo
 import 'package:ethioguide/features/procedure/data/models/workspace_summary_model.dart';
 import 'package:ethioguide/features/procedure/domain/entities/workspace_procedure.dart';
 
+import '../../domain/entities/procedure_step.dart';
+
 /// Sample data for workspace procedures
 class WorkspaceSampleData {
   static List<WorkspaceProcedureModel> getSampleProcedures() {
@@ -50,94 +52,7 @@ class WorkspaceSampleData {
         startDate: DateTime(2024, 12, 1),
         estimatedCompletion: DateTime(2025, 2, 15),
       ),
-       WorkspaceProcedureModel(
-        id: '5',
-        title: 'Business License Application',
-        organization: 'Trade Ministry',
-        status: ProcedureStatus.inProgress,
-        progressPercentage: 80,
-        documentsUploaded: 8,
-        totalDocuments: 10,
-        startDate: DateTime(2024, 11, 1),
-        estimatedCompletion: DateTime(2024, 12, 31),
-      ),
-       WorkspaceProcedureModel(
-        id: '6',
-        title: 'Property Tax Payment',
-        organization: 'Revenue Authority',
-        status: ProcedureStatus.completed,
-        progressPercentage: 100,
-        documentsUploaded: 2,
-        totalDocuments: 2,
-        startDate: DateTime(2024, 10, 15),
-        completedDate: DateTime(2024, 11, 30),
-      ),
-       WorkspaceProcedureModel(
-        id: '7',
-        title: 'Student ID Card',
-        organization: 'Education Ministry',
-        status: ProcedureStatus.completed,
-        progressPercentage: 100,
-        documentsUploaded: 1,
-        totalDocuments: 1,
-        startDate: DateTime(2024, 9, 1),
-        completedDate: DateTime(2024, 9, 15),
-      ),
-       WorkspaceProcedureModel(
-        id: '8',
-        title: 'Health Insurance Registration',
-        organization: 'Health Ministry',
-        status: ProcedureStatus.inProgress,
-        progressPercentage: 45,
-        documentsUploaded: 3,
-        totalDocuments: 6,
-        startDate: DateTime(2024, 12, 10),
-        estimatedCompletion: DateTime(2025, 1, 20),
-      ),
-       WorkspaceProcedureModel(
-        id: '9',
-        title: 'Building Permit',
-        organization: 'Urban Development',
-        status: ProcedureStatus.notStarted,
-        progressPercentage: 0,
-        documentsUploaded: 0,
-        totalDocuments: 12,
-        startDate: DateTime(2024, 12, 25),
-        estimatedCompletion: DateTime(2025, 3, 15),
-      ),
-       WorkspaceProcedureModel(
-        id: '10',
-        title: 'Import License',
-        organization: 'Customs Authority',
-        status: ProcedureStatus.completed,
-        progressPercentage: 100,
-        documentsUploaded: 5,
-        totalDocuments: 5,
-        startDate: DateTime(2024, 8, 1),
-        completedDate: DateTime(2024, 10, 15),
-      ),
-       WorkspaceProcedureModel(
-        id: '11',
-        title: 'Social Security Registration',
-        organization: 'Labor Ministry',
-        status: ProcedureStatus.completed,
-        progressPercentage: 100,
-        documentsUploaded: 2,
-        totalDocuments: 2,
-        startDate: DateTime(2024, 7, 1),
-        completedDate: DateTime(2024, 7, 20),
-      ),
-       WorkspaceProcedureModel(
-        id: '12',
-        title: 'Telecom Service Activation',
-        organization: 'Communication Authority',
-        status: ProcedureStatus.inProgress,
-        progressPercentage: 70,
-        documentsUploaded: 2,
-        totalDocuments: 3,
-        startDate: DateTime(2024, 12, 5),
-        estimatedCompletion: DateTime(2024, 12, 28),
-      ),
+
     ];
   }
 

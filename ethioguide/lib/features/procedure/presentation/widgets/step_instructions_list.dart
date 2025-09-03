@@ -1,3 +1,6 @@
+import 'package:ethioguide/core/config/app_color.dart';
+import 'package:ethioguide/features/procedure/domain/entities/procedure.dart';
+import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/procedure_detail.dart';
@@ -55,7 +58,7 @@ class StepInstructionsList extends StatelessWidget {
 }
 
 class _StepItem extends StatelessWidget {
-  final ProcedureStep step;
+  final MyProcedureStep step;
   final String procedureId;
 
   const _StepItem({
@@ -76,7 +79,7 @@ class _StepItem extends StatelessWidget {
             height: 32,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: step.isCompleted ? Colors.green : Colors.grey[300],
+              color: step.isCompleted ? Colors.green : AppColors.darkGreenColor,
             ),
             child: Center(
               child: step.isCompleted
@@ -88,7 +91,7 @@ class _StepItem extends StatelessWidget {
                   : Text(
                       '${step.order}',
                       style: TextStyle(
-                        color: Colors.grey[700],
+                        color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -156,13 +159,13 @@ class _StepItem extends StatelessWidget {
             value: step.isCompleted,
             onChanged: (value) {
               if (value != null) {
-                context.read<WorkspaceProcedureDetailBloc>().add(
+                /* context.read<WorkspaceProcedureDetailBloc>().add(
                   UpdateStepStatus(
                     procedureId: procedureId,
                     stepId: step.id,
                     isCompleted: value,
                   ),
-                );
+                ); */
               }
             },
             activeColor: Colors.green,

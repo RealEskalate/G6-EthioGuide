@@ -5,7 +5,7 @@ import 'package:ethioguide/features/procedure/domain/repositories/workspace_proc
 
 /// Use case for getting workspace summary statistics
 class GetWorkspaceSummary  {
-  final WorkspaceProcedureRepository repository;
+  final ProcedureDetailRepository repository;
 
   const GetWorkspaceSummary(this.repository);
 

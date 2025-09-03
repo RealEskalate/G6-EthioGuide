@@ -1,7 +1,7 @@
 import '../../domain/entities/procedure_step.dart';
 
 /// Data model for procedure steps
-class ProcedureStepModel extends ProcedureStep {
+class ProcedureStepModel extends MyProcedureStep {
   const ProcedureStepModel({
     required super.id,
     required super.title,

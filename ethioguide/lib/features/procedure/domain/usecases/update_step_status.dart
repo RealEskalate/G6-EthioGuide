@@ -3,7 +3,7 @@ import '../repositories/workspace_procedure_repository.dart';
 
 /// Use case for updating step status
 class UpdateStepStatus {
-  final WorkspaceProcedureRepository repository;
+  final ProcedureDetailRepository repository;
 
   const UpdateStepStatus(this.repository);
 

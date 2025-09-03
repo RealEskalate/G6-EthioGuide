@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/workspace_procedure_detail_bloc.dart';
+import 'package:ethioguide/features/procedure/domain/entities/procedure_detail.dart';
+import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
+import 'package:go_router/go_router.dart';
 import '../widgets/progress_overview_card.dart';
 import '../widgets/step_instructions_list.dart';
 import '../widgets/quick_tips_box.dart';
@@ -17,11 +18,7 @@ class WorkspaceProcedureDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => context.read<WorkspaceProcedureDetailBloc>()
-        ..add(FetchProcedureDetail(procedureId)),
-      child: const _WorkspaceProcedureDetailView(),
-    );
+    return const _WorkspaceProcedureDetailView();
   }
 }
 
@@ -30,99 +27,45 @@ class _WorkspaceProcedureDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mockDetail = ProcedureDetail(
+      id: 'mock-1',
+      title: 'Driver\'s License Renewal',
+      organization: 'Transport Authority',
+      status: ProcedureStatus.inProgress,
+      progressPercentage: 40,
+      documentsUploaded: 1,
+      totalDocuments: 3,
+      startDate: DateTime.now().subtract(const Duration(days: 10)),
+      estimatedCompletion: DateTime.now().add(const Duration(days: 5)),
+      completedDate: null,
+      notes: 'Bring original ID.',
+      steps: const [
+        MyProcedureStep(id: 's1', title: 'Fill application form', description: 'Complete the online form.', isCompleted: true, order: 2),
+        MyProcedureStep(id: 's2', title: 'Upload ID', description: 'Upload scanned national ID.', isCompleted: false, order: 1),
+        MyProcedureStep(id: 's3', title: 'Pay fee', description: 'Pay via bank or mobile.', isCompleted: false , order: 3),
+      ],
+      estimatedTime: '2-3 hours',
+      difficulty: 'Medium',
+      officeType: 'Government Office',
+      quickTips: const [
+        'Go early to avoid queues',
+        'Carry extra photocopies',
+      ],
+      requiredDocuments: const [
+        'National ID',
+        'Old License',
+        'Passport Photo',
+      ],
+    );
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Procedure Details'),
+     /*  appBar: AppBar(
+        title: Column(children: [
+          
+        ],),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: BlocConsumer<WorkspaceProcedureDetailBloc, WorkspaceProcedureDetailState>(
-        listener: (context, state) {
-          if (state is ProcedureError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          } else if (state is ProgressSaved) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  state.success 
-                    ? 'Progress saved successfully!' 
-                    : 'Failed to save progress',
-                ),
-                backgroundColor: state.success ? Colors.green : Colors.red,
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is ProcedureLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          } else if (state is ProcedureError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading procedure details',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    state.message,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<WorkspaceProcedureDetailBloc>().add(
-                        FetchProcedureDetail(
-                          context.read<WorkspaceProcedureDetailBloc>().state is ProcedureLoaded
-                            ? (context.read<WorkspaceProcedureDetailBloc>().state as ProcedureLoaded).procedureDetail.id
-                            : '',
-                        ),
-                      );
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          } else if (state is ProcedureLoaded || state is StepStatusUpdated) {
-            final procedureDetail = state is ProcedureLoaded
-                ? state.procedureDetail
-                : (state as StepStatusUpdated).procedureDetail;
-
-            return _ProcedureDetailContent(procedureDetail: procedureDetail);
-          } else if (state is ProgressSaved) {
-            // Return to the last loaded state
-            final bloc = context.read<WorkspaceProcedureDetailBloc>();
-            if (bloc.state is ProcedureLoaded) {
-              return _ProcedureDetailContent(
-                procedureDetail: (bloc.state as ProcedureLoaded).procedureDetail,
-              );
-            }
-            return const Center(child: Text('No procedure data available'));
-          }
-
-          return const Center(
-            child: Text('No procedure data available'),
-          );
-        },
-      ),
+      ), */
+      body: _ProcedureDetailContent(procedureDetail: mockDetail),
     );
   }
 }
@@ -136,13 +79,27 @@ class _ProcedureDetailContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Page title
-          Text(
+
+          Row(children: [
+
+            IconButton(onPressed: (){
+              context.pop();
+            },
+             icon: Icon(Icons.arrow_back)
+            ),
+            const SizedBox(width: 8),
+
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+              Text(
             procedureDetail.title,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
@@ -155,6 +112,12 @@ class _ProcedureDetailContent extends StatelessWidget {
               color: Colors.grey[600],
             ),
           ),
+
+            ],)
+
+          ],),
+          // Page title
+          
           const SizedBox(height: 24),
 
           // Progress Overview Card
@@ -178,8 +141,8 @@ class _ProcedureDetailContent extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                context.read<WorkspaceProcedureDetailBloc>().add(
-                  SaveProgress(procedureDetail.id),
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Progress action (mock)')),
                 );
               },
               style: ElevatedButton.styleFrom(

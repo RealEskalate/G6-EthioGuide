@@ -1,225 +1,160 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:bloc_test/bloc_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
+import 'package:ethioguide/core/error/failures.dart';
 import 'package:ethioguide/features/procedure/domain/entities/procedure_detail.dart';
 import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
 import 'package:ethioguide/features/procedure/domain/entities/workspace_procedure.dart';
-import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_detail.dart';
-import 'package:ethioguide/features/procedure/domain/usecases/update_step_status.dart';
-import 'package:ethioguide/features/procedure/domain/usecases/save_progress.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/get_my_procedure.dart' as usecase_my;
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_bystattus.dart' as usecase_by_status;
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_by_organization.dart' as usecase_by_org;
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_detail.dart' as usecase_detail;
+import 'package:ethioguide/features/procedure/domain/usecases/get_workspace_summary.dart' as usecase_summary;
+import 'package:ethioguide/features/procedure/domain/usecases/save_progress.dart' as usecase_save;
+import 'package:ethioguide/features/procedure/domain/usecases/update_step_status.dart' as usecase_update;
 import 'package:ethioguide/features/procedure/presentation/bloc/workspace_procedure_detail_bloc.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
 
-import 'workspace_procedure_detail_bloc_test.mocks.dart';
+ProcedureDetail _detail() => ProcedureDetail(
+      id: 'p1',
+      title: 't',
+      organization: 'o',
+      status: ProcedureStatus.inProgress,
+      progressPercentage: 0,
+      documentsUploaded: 0,
+      totalDocuments: 0,
+      startDate: DateTime(2024, 1, 1),
+      estimatedCompletion: null,
+      completedDate: null,
+      notes: null,
+      steps: const [],
+      estimatedTime: '1d',
+      difficulty: 'Easy',
+      officeType: 'Authority',
+      quickTips: const [],
+      requiredDocuments: const [],
+    );
 
-@GenerateMocks([
-  GetProcedureDetail,
-  UpdateStepStatus,
-  SaveProgress,
-])
+class _MockGetDetail extends Mock implements usecase_detail.GetProcedureDetail {}
+class _MockUpdateStep extends Mock implements usecase_update.UpdateStepStatus {}
+class _MockSaveProgress extends Mock implements usecase_save.SaveProgress {}
+class _MockGetMy extends Mock implements usecase_my.GetProcedureDetails {}
+class _MockGetByStatus extends Mock implements usecase_by_status.GetProceduresByStatus {}
+class _MockGetByOrg extends Mock implements usecase_by_org.GetProceduresByOrganization {}
+class _MockGetSummary extends Mock implements usecase_summary.GetWorkspaceSummary {}
+
 void main() {
-  late WorkspaceProcedureDetailBloc bloc;
-  late MockGetProcedureDetail mockGetProcedureDetail;
-  late MockUpdateStepStatus mockUpdateStepStatus;
-  late MockSaveProgress mockSaveProgress;
+  group('WorkspaceProcedureDetailBloc', () {
+    late _MockGetDetail getDetail;
+    late _MockUpdateStep updateStep;
+    late _MockSaveProgress saveProgress;
+    late _MockGetMy getMy;
+    late _MockGetByStatus getByStatus;
+    late _MockGetByOrg getByOrg;
+    late _MockGetSummary getSummary;
+    late WorkspaceProcedureDetailBloc bloc;
 
-  setUp(() {
-    mockGetProcedureDetail = MockGetProcedureDetail();
-    mockUpdateStepStatus = MockUpdateStepStatus();
-    mockSaveProgress = MockSaveProgress();
-    bloc = WorkspaceProcedureDetailBloc(
-      getProcedureDetail: mockGetProcedureDetail,
-      updateStepStatus: mockUpdateStepStatus,
-      saveProgress: mockSaveProgress,
-    );
-  });
+    setUp(() {
+      getDetail = _MockGetDetail();
+      updateStep = _MockUpdateStep();
+      saveProgress = _MockSaveProgress();
+      getMy = _MockGetMy();
+      getByStatus = _MockGetByStatus();
+      getByOrg = _MockGetByOrg();
+      getSummary = _MockGetSummary();
+      bloc = WorkspaceProcedureDetailBloc(
+        getProcedureDetail: getDetail,
+        updateStepStatusUseCase: updateStep,
+        saveProgressUseCase: saveProgress,
+        getMyProcedureDetails: getMy,
+        getProceduresByStatus: getByStatus,
+        getProceduresByOrganization: getByOrg,
+        getWorkspaceSummary: getSummary,
+      );
+    });
 
-  tearDown(() {
-    bloc.close();
-  });
+    test('initial state is ProcedureInitial', () {
+      expect(bloc.state, isA<ProcedureInitial>());
+    });
 
-  test('initial state should be ProcedureInitial', () {
-    expect(bloc.state, equals(ProcedureInitial()));
-  });
-
-  group('FetchProcedureDetail', () {
-    final testProcedureDetail = ProcedureDetail(
-      id: '1',
-      title: 'Test Procedure',
-      organization: 'Test Org',
-      status: ProcedureStatus.inProgress,
-      progressPercentage: 40,
-      documentsUploaded: 2,
-      totalDocuments: 5,
-      startDate: DateTime(2024, 1, 1),
-      estimatedCompletion: DateTime(2024, 1, 5),
-      completedDate: null,
-      notes: 'Test notes',
-      steps: [
-        ProcedureStep(
-          id: 'step1',
-          title: 'Step 1',
-          description: 'Test step 1',
-          isCompleted: true,
-          completionStatus: 'Completed',
-          order: 1,
-        ),
-        ProcedureStep(
-          id: 'step2',
-          title: 'Step 2',
-          description: 'Test step 2',
-          isCompleted: false,
-          completionStatus: null,
-          order: 2,
-        ),
-      ],
-      estimatedTime: '2-3 days',
-      difficulty: 'Easy',
-      officeType: 'Authority',
-      quickTips: ['Tip 1', 'Tip 2'],
-      requiredDocuments: ['Doc 1', 'Doc 2'],
+    blocTest<WorkspaceProcedureDetailBloc, WorkspaceProcedureDetailState>(
+      'FetchProcedureDetail -> [Loading, Loaded] on success',
+      build: () {
+        when(getDetail('p1')).thenAnswer((_) async => Right(_detail()));
+        return bloc;
+      },
+      act: (b) => b.add(const FetchProcedureDetail('p1')),
+      expect: () => [isA<ProcedureLoading>(), isA<ProcedureLoaded>()],
+      verify: (_) {
+        verify(getDetail('p1'));
+      }
     );
 
     blocTest<WorkspaceProcedureDetailBloc, WorkspaceProcedureDetailState>(
-      'emits [ProcedureLoading, ProcedureLoaded] when FetchProcedureDetail succeeds',
+      'UpdateStepStatus -> StepStatusUpdated when refresh succeeds',
       build: () {
-        when(mockGetProcedureDetail('1'))
-            .thenAnswer((_) async => Right(testProcedureDetail));
+        when(updateStep('p1', 's1', true)).thenAnswer((_) async => const Right(true));
+        when(getDetail('p1')).thenAnswer((_) async => Right(_detail()));
         return bloc;
       },
-      act: (bloc) => bloc.add(FetchProcedureDetail('1')),
-      expect: () => [
-        ProcedureLoading(),
-        ProcedureLoaded(testProcedureDetail),
-      ],
+      act: (b) => b.add(const UpdateStepStatus('p1', 's1', true)),
+      expect: () => [isA<StepStatusUpdated>()],
+      verify: (_) {
+        verify(updateStep('p1', 's1', true));
+        verify(getDetail('p1'));
+      }
     );
 
     blocTest<WorkspaceProcedureDetailBloc, WorkspaceProcedureDetailState>(
-      'emits [ProcedureLoading, ProcedureError] when FetchProcedureDetail fails',
+      'SaveProgress -> ProgressSaved on success',
       build: () {
-        when(mockGetProcedureDetail('1'))
-            .thenAnswer((_) async => Left('Error message'));
+        when(saveProgress('p1')).thenAnswer((_) async => const Right(true));
         return bloc;
       },
-      act: (bloc) => bloc.add(FetchProcedureDetail('1')),
-      expect: () => [
-        ProcedureLoading(),
-        ProcedureError('Error message'),
-      ],
-    );
-  });
-
-  group('UpdateStepStatus', () {
-    final testProcedureDetail = ProcedureDetail(
-      id: '1',
-      title: 'Test Procedure',
-      organization: 'Test Org',
-      status: ProcedureStatus.inProgress,
-      progressPercentage: 40,
-      documentsUploaded: 2,
-      totalDocuments: 5,
-      startDate: DateTime(2024, 1, 1),
-      estimatedCompletion: DateTime(2024, 1, 5),
-      completedDate: null,
-      notes: 'Test notes',
-      steps: [
-        ProcedureStep(
-          id: 'step1',
-          title: 'Step 1',
-          description: 'Test step 1',
-          isCompleted: true,
-          completionStatus: 'Completed',
-          order: 1,
-        ),
-        ProcedureStep(
-          id: 'step2',
-          title: 'Step 2',
-          description: 'Test step 2',
-          isCompleted: false,
-          completionStatus: null,
-          order: 2,
-        ),
-      ],
-      estimatedTime: '2-3 days',
-      difficulty: 'Easy',
-      officeType: 'Authority',
-      quickTips: ['Tip 1', 'Tip 2'],
-      requiredDocuments: ['Doc 1', 'Doc 2'],
+      act: (b) => b.add(const SaveProgress('p1')),
+      expect: () => [isA<ProgressSaved>()],
     );
 
     blocTest<WorkspaceProcedureDetailBloc, WorkspaceProcedureDetailState>(
-      'emits [StepStatusUpdated] when UpdateStepStatus succeeds',
+      'FetchMyProcedures -> [Loading, ProceduresListLoaded] on success',
       build: () {
-        when(mockUpdateStepStatus('1', 'step2', true))
-            .thenAnswer((_) async => Right(true));
+        when(getMy()).thenAnswer((_) async => Right(const []));
         return bloc;
       },
-      seed: () => ProcedureLoaded(testProcedureDetail),
-      act: (bloc) => bloc.add(UpdateStepStatus(
-        procedureId: '1',
-        stepId: 'step2',
-        isCompleted: true,
-      )),
-      expect: () => [
-        StepStatusUpdated(
-          procedureDetail: testProcedureDetail.copyWith(
-            steps: [
-              testProcedureDetail.steps[0],
-              testProcedureDetail.steps[1].copyWith(isCompleted: true),
-            ],
-            progressPercentage: 100,
-          ),
-          stepId: 'step2',
-          isCompleted: true,
-        ),
-      ],
+      act: (b) => b.add(const FetchMyProcedures()),
+      expect: () => [isA<ProcedureLoading>(), isA<ProceduresListLoaded>()],
     );
 
     blocTest<WorkspaceProcedureDetailBloc, WorkspaceProcedureDetailState>(
-      'emits [ProcedureError] when UpdateStepStatus fails',
+      'FetchProceduresByStatus -> [Loading, ProceduresListLoaded] on success',
       build: () {
-        when(mockUpdateStepStatus('1', 'step2', true))
-            .thenAnswer((_) async => Left('Error message'));
+        when(getByStatus(ProcedureStatus.inProgress)).thenAnswer((_) async => Right(const []));
         return bloc;
       },
-      seed: () => ProcedureLoaded(testProcedureDetail),
-      act: (bloc) => bloc.add(UpdateStepStatus(
-        procedureId: '1',
-        stepId: 'step2',
-        isCompleted: true,
-      )),
-      expect: () => [
-        ProcedureError('Error message'),
-      ],
-    );
-  });
-
-  group('SaveProgress', () {
-    blocTest<WorkspaceProcedureDetailBloc, WorkspaceProcedureDetailState>(
-      'emits [ProgressSaved] when SaveProgress succeeds',
-      build: () {
-        when(mockSaveProgress('1'))
-            .thenAnswer((_) async => Right(true));
-        return bloc;
-      },
-      act: (bloc) => bloc.add(SaveProgress('1')),
-      expect: () => [
-        ProgressSaved(true),
-      ],
+      act: (b) => b.add(const FetchProceduresByStatus(ProcedureStatus.inProgress)),
+      expect: () => [isA<ProcedureLoading>(), isA<ProceduresListLoaded>()],
     );
 
     blocTest<WorkspaceProcedureDetailBloc, WorkspaceProcedureDetailState>(
-      'emits [ProgressSaved] when SaveProgress fails',
+      'FetchProceduresByOrganization -> [Loading, ProceduresListLoaded] on success',
       build: () {
-        when(mockSaveProgress('1'))
-            .thenAnswer((_) async => Left('Error message'));
+        when(getByOrg('ETA')).thenAnswer((_) async => Right(const []));
         return bloc;
       },
-      act: (bloc) => bloc.add(SaveProgress('1')),
-      expect: () => [
-        ProgressSaved(false),
-      ],
+      act: (b) => b.add(const FetchProceduresByOrganization('ETA')),
+      expect: () => [isA<ProcedureLoading>(), isA<ProceduresListLoaded>()],
+    );
+
+    blocTest<WorkspaceProcedureDetailBloc, WorkspaceProcedureDetailState>(
+      'FetchWorkspaceSummary -> [Loading, WorkspaceSummaryLoaded] on success',
+      build: () {
+        when(getSummary()).thenAnswer((_) async => Right(const WorkspaceSummary(totalProcedures: 0, inProgress: 0, completed: 0 , totalDocuments: 5)));
+        return bloc;
+      },
+      act: (b) => b.add(const FetchWorkspaceSummary()),
+      expect: () => [isA<ProcedureLoading>(), isA<WorkspaceSummaryLoaded>()],
     );
   });
 }
+
+

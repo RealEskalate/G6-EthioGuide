@@ -1,3 +1,4 @@
+import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
 import 'package:flutter/material.dart';
 import 'package:ethioguide/features/procedure/domain/entities/workspace_procedure.dart';
 import 'package:ethioguide/features/procedure/data/sample_data/workspace_sample_data.dart';

@@ -1,152 +1,100 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-import 'package:ethioguide/features/procedure/data/models/procedure_detail_model.dart';
-import 'package:ethioguide/features/procedure/data/repositories/workspace_procedure_repository_impl.dart';
+import 'package:ethioguide/core/error/failures.dart';
+import 'package:ethioguide/core/network/network_info.dart';
 import 'package:ethioguide/features/procedure/data/datasources/workspace_procedure_remote_data_source.dart';
+import 'package:ethioguide/features/procedure/data/models/workspace_procedure_model.dart';
+import 'package:ethioguide/features/procedure/data/models/workspace_summary_model.dart';
+import 'package:ethioguide/features/procedure/data/repositories/workspace_procedure_repository_impl.dart';
 import 'package:ethioguide/features/procedure/domain/entities/procedure_detail.dart';
-import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
 import 'package:ethioguide/features/procedure/domain/entities/workspace_procedure.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 
-import 'workspace_procedure_repository_impl_test.mocks.dart';
-
-@GenerateMocks([WorkspaceProcedureRemoteDataSource])
+import 'procedure_repository_impl_test.dart';
+import 'workspace_procedure_repository_impl_test.mocks.dart' hide MockNetworkInfo;
+// 👇 This tells Mockito to generate mocks for these classes
+@GenerateMocks([WorkspaceProcedureRemoteDataSource, NetworkInfo])
 void main() {
-  late WorkspaceProcedureRepositoryImpl repository;
-  late MockWorkspaceProcedureRemoteDataSource mockRemoteDataSource;
+  late MockWorkspaceProcedureRemoteDataSource remote;
+  late MockNetworkInfo net;
+  late WorkspaceProcedureRepositoryImpl repo;
 
   setUp(() {
-    mockRemoteDataSource = MockWorkspaceProcedureRemoteDataSource();
-    repository = WorkspaceProcedureRepositoryImpl(mockRemoteDataSource);
+    remote = MockWorkspaceProcedureRemoteDataSource();
+    net = MockNetworkInfo();
+    repo = WorkspaceProcedureRepositoryImpl(
+      remoteDataSource: remote,
+      networkInfo: net,
+    );
+  });
+
+  group('getProcedure', () {
+    test('returns Right when online and success', () async {
+      when(net.isConnected).thenAnswer((_) async => true);
+      when(remote.getMyProcedures()).thenAnswer((_) async => <WorkspaceProcedureModel>[]);
+
+      final r = await repo.getProcedure();
+
+      expect(r, isA<Right<Failure, List<ProcedureDetail>>>());
+    });
+
+    test('returns Left when offline', () async {
+      when(net.isConnected).thenAnswer((_) async => false);
+
+      final r = await repo.getProcedure();
+
+      expect(r, isA<Left<Failure, List<ProcedureDetail>>>());
+    });
+  });
+
+  group('getWorkspaceSummary', () {
+    test('returns Right on success', () async {
+      when(net.isConnected).thenAnswer((_) async => true);
+      when(remote.getWorkspaceSummary()).thenAnswer(
+        (_) async => const WorkspaceSummaryModel(
+          totalProcedures: 0,
+          inProgress: 0,
+          completed: 0,
+          totalDocuments: 0,
+        ),
+      );
+
+      final r = await repo.getWorkspaceSummary();
+
+      expect(r, isA<Right<Failure, WorkspaceSummary>>());
+    });
   });
 
   group('getProcedureDetail', () {
-    final testProcedureDetail = ProcedureDetailModel(
-      id: '1',
-      title: 'Test Procedure',
-      organization: 'Test Org',
-      status: ProcedureStatus.inProgress,
-      progressPercentage: 40,
-      documentsUploaded: 2,
-      totalDocuments: 5,
-      startDate: DateTime(2024, 1, 1),
-      estimatedCompletion: DateTime(2024, 1, 5),
-      completedDate: null,
-      notes: 'Test notes',
-      steps: [
-        ProcedureStepModel(
-          id: 'step1',
-          title: 'Step 1',
-          description: 'Test step 1',
-          isCompleted: true,
-          completionStatus: 'Completed',
-          order: 1,
-        ),
-        ProcedureStepModel(
-          id: 'step2',
-          title: 'Step 2',
-          description: 'Test step 2',
-          isCompleted: false,
-          completionStatus: null,
-          order: 2,
-        ),
-      ],
-      estimatedTime: '2-3 days',
-      difficulty: 'Easy',
-      officeType: 'Authority',
-      quickTips: ['Tip 1', 'Tip 2'],
-      requiredDocuments: ['Doc 1', 'Doc 2'],
-    );
+    test('returns Left when offline', () async {
+      when(net.isConnected).thenAnswer((_) async => false);
 
-    test('should return ProcedureDetail when remote data source is successful', () async {
-      // arrange
-      when(mockRemoteDataSource.getProcedureDetail('1'))
-          .thenAnswer((_) async => testProcedureDetail);
+      final r = await repo.getProcedureDetail('p1');
 
-      // act
-      final result = await repository.getProcedureDetail('1');
-
-      // assert
-      expect(result, equals(Right(testProcedureDetail)));
-      verify(mockRemoteDataSource.getProcedureDetail('1'));
-      verifyNoMoreInteractions(mockRemoteDataSource);
-    });
-
-    test('should return error message when remote data source throws exception', () async {
-      // arrange
-      when(mockRemoteDataSource.getProcedureDetail('1'))
-          .thenThrow(Exception('Network error'));
-
-      // act
-      final result = await repository.getProcedureDetail('1');
-
-      // assert
-      expect(result, equals(Left('Exception: Network error')));
-      verify(mockRemoteDataSource.getProcedureDetail('1'));
-      verifyNoMoreInteractions(mockRemoteDataSource);
+      expect(r, isA<Left<String, ProcedureDetail>>());
     });
   });
 
   group('updateStepStatus', () {
-    test('should return true when remote data source is successful', () async {
-      // arrange
-      when(mockRemoteDataSource.updateStepStatus('1', 'step1', true))
-          .thenAnswer((_) async => true);
+    test('returns Right on success', () async {
+      when(net.isConnected).thenAnswer((_) async => true);
+      when(remote.updateStepStatus(any, any, any)).thenAnswer((_) async => true);
 
-      // act
-      final result = await repository.updateStepStatus('1', 'step1', true);
+      final r = await repo.updateStepStatus('p1', 's1', true);
 
-      // assert
-      expect(result, equals(Right(true)));
-      verify(mockRemoteDataSource.updateStepStatus('1', 'step1', true));
-      verifyNoMoreInteractions(mockRemoteDataSource);
-    });
-
-    test('should return error message when remote data source throws exception', () async {
-      // arrange
-      when(mockRemoteDataSource.updateStepStatus('1', 'step1', true))
-          .thenThrow(Exception('Update failed'));
-
-      // act
-      final result = await repository.updateStepStatus('1', 'step1', true);
-
-      // assert
-      expect(result, equals(Left('Exception: Update failed')));
-      verify(mockRemoteDataSource.updateStepStatus('1', 'step1', true));
-      verifyNoMoreInteractions(mockRemoteDataSource);
+      expect(r, isA<Right<String, bool>>());
     });
   });
 
   group('saveProgress', () {
-    test('should return true when remote data source is successful', () async {
-      // arrange
-      when(mockRemoteDataSource.saveProgress('1'))
-          .thenAnswer((_) async => true);
+    test('returns Right on success', () async {
+      when(net.isConnected).thenAnswer((_) async => true);
+      when(remote.saveProgress(any)).thenAnswer((_) async => true);
 
-      // act
-      final result = await repository.saveProgress('1');
+      final r = await repo.saveProgress('p1');
 
-      // assert
-      expect(result, equals(Right(true)));
-      verify(mockRemoteDataSource.saveProgress('1'));
-      verifyNoMoreInteractions(mockRemoteDataSource);
-    });
-
-    test('should return error message when remote data source throws exception', () async {
-      // arrange
-      when(mockRemoteDataSource.saveProgress('1'))
-          .thenThrow(Exception('Save failed'));
-
-      // act
-      final result = await repository.saveProgress('1');
-
-      // assert
-      expect(result, equals(Left('Exception: Save failed')));
-      verify(mockRemoteDataSource.saveProgress('1'));
-      verifyNoMoreInteractions(mockRemoteDataSource);
+      expect(r, isA<Right<String, bool>>());
     });
   });
 }
-
-

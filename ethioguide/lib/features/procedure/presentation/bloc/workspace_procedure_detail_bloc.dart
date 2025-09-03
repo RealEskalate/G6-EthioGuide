@@ -1,188 +1,113 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/procedure_detail.dart';
-import '../../domain/usecases/get_procedure_detail.dart';
-import '../../domain/usecases/update_step_status.dart';
-import '../../domain/usecases/save_progress.dart';
+import 'package:ethioguide/features/procedure/domain/entities/procedure_detail.dart';
+import 'package:ethioguide/features/procedure/domain/entities/workspace_procedure.dart';
+import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
 
-// Events
-abstract class WorkspaceProcedureDetailEvent extends Equatable {
-  const WorkspaceProcedureDetailEvent();
+// Import use cases (alias only for those that clash with event names)
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_detail.dart' as usecase_detail;
+import 'package:ethioguide/features/procedure/domain/usecases/update_step_status.dart' as usecase_update;
+import 'package:ethioguide/features/procedure/domain/usecases/save_progress.dart' as usecase_save;
+import 'package:ethioguide/features/procedure/domain/usecases/get_my_procedure.dart' as usecase_my;
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_bystattus.dart' as usecase_by_status;
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_by_organization.dart' as usecase_by_org;
+import 'package:ethioguide/features/procedure/domain/usecases/get_workspace_summary.dart' as usecase_summary;
 
-  @override
-  List<Object?> get props => [];
-}
+part 'workspace_procedure_detail_event.dart';
+part 'workspace_procedure_detail_state.dart';
 
-class FetchProcedureDetail extends WorkspaceProcedureDetailEvent {
-  final String procedureId;
-
-  const FetchProcedureDetail(this.procedureId);
-
-  @override
-  List<Object?> get props => [procedureId];
-}
-
-class UpdateStepStatus extends WorkspaceProcedureDetailEvent {
-  final String procedureId;
-  final String stepId;
-  final bool isCompleted;
-
-  const UpdateStepStatus({
-    required this.procedureId,
-    required this.stepId,
-    required this.isCompleted,
-  });
-
-  @override
-  List<Object?> get props => [procedureId, stepId, isCompleted];
-}
-
-class SaveProgress extends WorkspaceProcedureDetailEvent {
-  final String procedureId;
-
-  const SaveProgress(this.procedureId);
-
-  @override
-  List<Object?> get props => [procedureId];
-}
-
-// States
-abstract class WorkspaceProcedureDetailState extends Equatable {
-  const WorkspaceProcedureDetailState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class ProcedureInitial extends WorkspaceProcedureDetailState {}
-
-class ProcedureLoading extends WorkspaceProcedureDetailState {}
-
-class ProcedureLoaded extends WorkspaceProcedureDetailState {
-  final ProcedureDetail procedureDetail;
-
-  const ProcedureLoaded(this.procedureDetail);
-
-  @override
-  List<Object?> get props => [procedureDetail];
-}
-
-class ProcedureError extends WorkspaceProcedureDetailState {
-  final String message;
-
-  const ProcedureError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class StepStatusUpdated extends WorkspaceProcedureDetailState {
-  final ProcedureDetail procedureDetail;
-  final String stepId;
-  final bool isCompleted;
-
-  const StepStatusUpdated({
-    required this.procedureDetail,
-    required this.stepId,
-    required this.isCompleted,
-  });
-
-  @override
-  List<Object?> get props => [procedureDetail, stepId, isCompleted];
-}
-
-class ProgressSaved extends WorkspaceProcedureDetailState {
-  final bool success;
-
-  const ProgressSaved(this.success);
-
-  @override
-  List<Object?> get props => [success];
-}
-
-// Bloc
-class WorkspaceProcedureDetailBloc
-    extends Bloc<WorkspaceProcedureDetailEvent, WorkspaceProcedureDetailState> {
-  final GetProcedureDetail getProcedureDetail;
-  final UpdateStepStatus updateStepStatus;
-  final SaveProgress saveProgress;
+class WorkspaceProcedureDetailBloc extends Bloc<WorkspaceProcedureDetailEvent, WorkspaceProcedureDetailState> {
+  final usecase_detail.GetProcedureDetail getProcedureDetail;
+  final usecase_update.UpdateStepStatus updateStepStatusUseCase;
+  final usecase_save.SaveProgress saveProgressUseCase;
+  final usecase_my.GetProcedureDetails getMyProcedureDetails;
+  final usecase_by_status.GetProceduresByStatus getProceduresByStatus;
+  final usecase_by_org.GetProceduresByOrganization getProceduresByOrganization;
+  final usecase_summary.GetWorkspaceSummary getWorkspaceSummary;
 
   WorkspaceProcedureDetailBloc({
     required this.getProcedureDetail,
-    required this.updateStepStatus,
-    required this.saveProgress,
+    required this.updateStepStatusUseCase,
+    required this.saveProgressUseCase,
+    required this.getMyProcedureDetails,
+    required this.getProceduresByStatus,
+    required this.getProceduresByOrganization,
+    required this.getWorkspaceSummary,
   }) : super(ProcedureInitial()) {
-    on<FetchProcedureDetail>(_onFetchProcedureDetail);
-    on<UpdateStepStatus>(_onUpdateStepStatus);
-    on<SaveProgress>(_onSaveProgress);
-  }
+    on<FetchProcedureDetail>((event, emit) async {
+      emit(ProcedureLoading());
+      final result = await getProcedureDetail(event.id);
+      result.fold(
+        (error) => emit(ProcedureError(error)),
+        (detail) => emit(ProcedureLoaded(detail)),
+      );
+    });
 
-  Future<void> _onFetchProcedureDetail(
-    FetchProcedureDetail event,
-    Emitter<WorkspaceProcedureDetailState> emit,
-  ) async {
-    emit(ProcedureLoading());
+    on<UpdateStepStatus>((event, emit) async {
+      // Keep last loaded detail, show loading only for update if needed
+      final current = state;
+      final result = await updateStepStatusUseCase(event.procedureId, event.stepId, event.isCompleted);
+      result.fold(
+        (error) => emit(ProcedureError(error)),
+        (success) async {
+          if (success) {
+            // Refresh detail to reflect latest progress
+            final refreshed = await getProcedureDetail(event.procedureId);
+            refreshed.fold(
+              (error) => emit(ProcedureError(error)),
+              (detail) => emit(StepStatusUpdated(detail)),
+            );
+          } else {
+            emit(current);
+          }
+        },
+      );
+    });
 
-    final result = await getProcedureDetail(event.procedureId);
+    on<SaveProgress>((event, emit) async {
+      final result = await saveProgressUseCase(event.procedureId);
+      result.fold(
+        (error) => emit(ProcedureError(error)),
+        (success) => emit(ProgressSaved(success)),
+      );
+    });
 
-    result.fold(
-      (failure) => emit(ProcedureError(failure)),
-      (procedureDetail) => emit(ProcedureLoaded(procedureDetail)),
-    );
-  }
+    on<FetchMyProcedures>((event, emit) async {
+      emit(ProcedureLoading());
+      final result = await getMyProcedureDetails();
+      result.fold(
+        (failure) => emit(ProcedureError(failure.message)),
+        (procedures) => emit(ProceduresListLoaded(procedures)),
+      );
+    });
 
-  Future<void> _onUpdateStepStatus(
-    UpdateStepStatus event,
-    Emitter<WorkspaceProcedureDetailState> emit,
-  ) async {
-    final result = await updateStepStatus(
-      event.procedureId,
-      event.stepId,
-      event.isCompleted,
-    );
+    on<FetchProceduresByStatus>((event, emit) async {
+      emit(ProcedureLoading());
+      final result = await getProceduresByStatus(event.status);
+      result.fold(
+        (failure) => emit(ProcedureError(failure.message)),
+        (procedures) => emit(ProceduresListLoaded(procedures)),
+      );
+    });
 
-    result.fold(
-      (failure) => emit(ProcedureError(failure)),
-      (success) {
-        if (success && state is ProcedureLoaded) {
-          final currentState = state as ProcedureLoaded;
-          final updatedSteps = currentState.procedureDetail.steps.map((step) {
-            if (step.id == event.stepId) {
-              return step.copyWith(isCompleted: event.isCompleted);
-            }
-            return step;
-          }).toList();
+    on<FetchProceduresByOrganization>((event, emit) async {
+      emit(ProcedureLoading());
+      final result = await getProceduresByOrganization(event.organization);
+      result.fold(
+        (failure) => emit(ProcedureError(failure.message)),
+        (procedures) => emit(ProceduresListLoaded(procedures)),
+      );
+    });
 
-          final updatedProcedure = currentState.procedureDetail.copyWith(
-            steps: updatedSteps,
-            progressPercentage: _calculateProgress(updatedSteps),
-          );
-
-          emit(StepStatusUpdated(
-            procedureDetail: updatedProcedure,
-            stepId: event.stepId,
-            isCompleted: event.isCompleted,
-          ));
-        }
-      },
-    );
-  }
-
-  Future<void> _onSaveProgress(
-    SaveProgress event,
-    Emitter<WorkspaceProcedureDetailState> emit,
-  ) async {
-    final result = await saveProgress(event.procedureId);
-
-    result.fold(
-      (failure) => emit(ProcedureError(failure)),
-      (success) => emit(ProgressSaved(success)),
-    );
-  }
-
-  int _calculateProgress(List<ProcedureStep> steps) {
-    if (steps.isEmpty) return 0;
-    final completedSteps = steps.where((step) => step.isCompleted).length;
-    return ((completedSteps / steps.length) * 100).round();
+    on<FetchWorkspaceSummary>((event, emit) async {
+      emit(ProcedureLoading());
+      final result = await getWorkspaceSummary();
+      result.fold(
+        (failure) => emit(ProcedureError(failure.message)),
+        (summary) => emit(WorkspaceSummaryLoaded(summary)),
+      );
+    });
   }
 }
+
+
