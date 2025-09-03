@@ -14,6 +14,11 @@ type RegisterRequest struct {
 	PreferredLang string `json:"preferredLang"`
 }
 
+type SocialLoginRequest struct {
+	Provider domain.AuthProvider `json:"provider" binding:"required"`
+	Code     string              `json:"code" binding:"required"`
+}
+
 type UserResponse struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
@@ -50,9 +55,81 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	User         domain.Account `json:"user"`
-	AccessToken  string         `json:"access_token"`
-	RefreshToken string         `json:"refresh_token,omitempty"`
+	User         UserResponse `json:"user"`
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"refresh_token,omitempty"`
+}
+
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required"`
+}
+
+type ProcedureCreateRequest struct {
+	Name           string `json:"name"`
+	GroupID        string `json:"groupId"`
+	OrganizationID string `json:"organizationId,omitempty"`
+
+	// content
+	Prerequisites []string `json:"prerequisites"`
+	Steps         []string `json:"steps"`
+	Result        []string `json:"result"`
+
+	// Fees
+	Label    string  `json:"label"`
+	Currency string  `json:"currency"`
+	Amount   float64 `json:"amount"`
+
+	// ProcessingTime
+	MinDays int `json:"minDays"`
+	MaxDays int `json:"maxDays"`
+}
+
+func toDomainProcedure(p *ProcedureCreateRequest) *domain.Procedure {
+	content := domain.Content{
+		Prerequisites: p.Prerequisites,
+		Steps:         p.Steps,
+		Result:        p.Result,
+	}
+	fees := domain.Fees{
+		Label:    p.Label,
+		Currency: p.Currency,
+		Amount:   p.Amount,
+	}
+	processingTime := domain.ProcessingTime{
+		MinDays: p.MinDays,
+		MaxDays: p.MaxDays,
+	}
+
+	return &domain.Procedure{
+		GroupID:        p.GroupID,
+		OrganizationID: p.OrganizationID,
+		Name:           p.Name,
+		Content:        content,
+		Fees:           fees,
+		ProcessingTime: processingTime,
+	}
+}
+
+type CreateCategoryRequest struct {
+	ID             string `json:"id"`
+	OrganizationID string `json:"organization_id" binding:"required"`
+	ParentID       string `json:"parent_id"`
+	Title          string `json:"title" binding:"required"`
+}
+
+type CategoryResponse struct {
+	ID             string `json:"id"`
+	OrganizationID string `json:"organization_id"`
+	ParentID       string `json:"parent_id,omitempty"`
+	Title          string `json:"title"`
+}
+
+type PaginatedCategoryResponse struct {
+	Data  []*CategoryResponse `json:"data"`
+	Total int64               `json:"total"`
+	Page  int64               `json:"page"`
+	Limit int64               `json:"limit"`
 }
 
 // --- Feedback DTOs --- 

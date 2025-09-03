@@ -3,6 +3,7 @@ package repository
 import (
 	"EthioGuide/domain"
 	"context"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,7 +14,7 @@ import (
 type ProcedureContentModel struct {
 	Prerequisites []string `bson:"prerequisites,omitempty"`
 	Steps         []string `bson:"steps,omitempty"`
-	Result        string   `bson:"result,omitempty"`
+	Result        []string `bson:"result,omitempty"`
 }
 
 // ProcedureFee is a nested struct for the Procedure.fees field.
@@ -42,51 +43,6 @@ type ProcedureModel struct {
 	NoticeIDs []primitive.ObjectID `bson:"notice_ids,omitempty"`
 }
 
-// package repository
-
-// import (
-// 	"EthioGuide/domain"
-// 	"context"
-// 	"time"
-
-// 	"go.mongodb.org/mongo-driver/bson"
-// 	"go.mongodb.org/mongo-driver/bson/primitive"
-// 	"go.mongodb.org/mongo-driver/mongo"
-// )
-
-// type ProcedureContentModel struct {
-// 	Prerequisites []string `bson:"prerequisites,omitempty"`
-// 	Steps         map[int]string `bson:"steps"`
-// 	Result        string   `bson:"result,omitempty"`
-// }
-
-// // ProcedureFee is a nested struct for the Procedure.fees field.
-// type ProcedureFeeModel struct {
-// 	Label    string  `bson:"label,omitempty"`
-// 	Currency string  `bson:"currency,omitempty"`
-// 	Amount   float64 `bson:"amount,omitempty"`
-// }
-
-// // ProcessingTime is a nested struct for the Procedure.processing_time field.
-// type ProcessingTimeModel struct {
-// 	MinDays int `bson:"min_days,omitempty"`
-// 	MaxDays int `bson:"max_days,omitempty"`
-// }
-
-// type ProcedureModel struct {
-// 	ID             primitive.ObjectID    `bson:"_id,omitempty"`
-// 	GroupID        *primitive.ObjectID   `bson:"group_id,omitempty"` 
-// 	OrganizationID primitive.ObjectID    `bson:"organization_id"`
-// 	Name           string                `bson:"name"`
-// 	Content        ProcedureContentModel `bson:"content"`
-// 	Fees           ProcedureFeeModel     `bson:"fees,omitempty"`
-// 	ProcessingTime ProcessingTimeModel   `bson:"processing_time,omitempty"`
-// 	CreatedAt      time.Time             `bson:"created_at"`
-// 	// For M-M relationship with Notice
-// 	NoticeIDs []primitive.ObjectID 		 `bson:"notice_ids,omitempty"`
-// }
-
-
 func (pm *ProcedureModel) ToDomain() *domain.Procedure {
 	var groupID *string
 	if pm.GroupID != nil {
@@ -103,7 +59,7 @@ func (pm *ProcedureModel) ToDomain() *domain.Procedure {
 		GroupID:        groupID,
 		OrganizationID: pm.OrganizationID.Hex(),
 		Name:           pm.Name,
-		Content:        domain.ProcedureContent{
+		Content: domain.ProcedureContent{
 			Prerequisites: pm.Content.Prerequisites,
 			Steps:         pm.Content.Steps,
 			Result:        pm.Content.Result,
@@ -147,7 +103,6 @@ func ToDTO(proc *domain.Procedure) *ProcedureModel {
 	}
 }
 
-
 type ProcedureRepository struct {
 	db *mongo.Collection
 }
@@ -156,6 +111,21 @@ func NewProcedureRepository(db *mongo.Database) *ProcedureRepository {
 	return &ProcedureRepository{
 		db: db.Collection("procedures"),
 	}
+}
+
+func (r *procedureRepository) Create(ctx context.Context, procedure *domain.Procedure) error {
+	model := ToDTO(procedure)
+
+	model.CreatedAt = time.Now()
+	model.ID = primitive.NewObjectID()
+
+	_, err := r.collection.InsertOne(ctx, model)
+	if err != nil {
+		return fmt.Errorf("failed to insert account: %w", err)
+	}
+
+	procedure.ID = model.ID.Hex()
+	return nil
 }
 
 func (pr *ProcedureRepository) GetByID(ctx context.Context, id string) (*domain.Procedure, error) {
