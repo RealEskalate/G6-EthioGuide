@@ -71,9 +71,9 @@ type ProcedureCreateRequest struct {
 	OrganizationID string `json:"organizationId,omitempty"`
 
 	// content
-	Prerequisites []string `json:"prerequisites"`
-	Steps         []string `json:"steps"`
-	Result        string   `json:"result"`
+	Prerequisites []string       `json:"prerequisites"`
+	Steps         map[int]string `json:"steps"`
+	Result        string         `json:"result"`
 
 	// Fees
 	Label    string  `json:"label"`
@@ -212,15 +212,15 @@ func toFeedbackListResponse(feedbacks []*domain.Feedback, total, page, limit int
 }
 
 type CreatePostDTO struct {
-	Title 	 string   `json:"title" binding:"required"`
-	Content     string   `json:"content" binding:"required"`
+	Title      string   `json:"title" binding:"required"`
+	Content    string   `json:"content" binding:"required"`
 	Procedures []string `json:"procedures,omitempty"`
-	Tags		[]string `json:"tags,omitempty"`
+	Tags       []string `json:"tags,omitempty"`
 }
 
-type UpdatePostDTO struct{
-	Title 	 	string 		`json:"title"`
-	Content     string   `json:"content"`
+type UpdatePostDTO struct {
+	Title      string   `json:"title"`
+	Content    string   `json:"content"`
 	Procedures []string `json:"procedures,omitempty"`
-	Tags		[]string `json:"tags,omitempty"`
+	Tags       []string `json:"tags,omitempty"`
 }

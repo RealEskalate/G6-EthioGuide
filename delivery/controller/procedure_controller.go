@@ -37,7 +37,7 @@ func (ctrl *ProcedureController) CreateProcedure(c *gin.Context) {
 	}
 
 	userID, exists := c.Get("userID")
-	if !exists{
+	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
 		return
 	}
@@ -48,8 +48,75 @@ func (ctrl *ProcedureController) CreateProcedure(c *gin.Context) {
 	err := ctrl.procedureUsecase.CreateProcedure(c.Request.Context(), domainProc)
 	if err != nil {
 		HandleError(c, err)
-		return 
+		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Procedure created successfully", "user": domainProc})
-} 
+}
+
+// @Summary      Get Procedure by ID
+// @Description  Retrieves a single procedure by its unique ID.
+// @Tags         Procedures
+// @Produce      json
+// @Param        id   path      string  true  "Procedure ID"
+// @Success      200  {object}  domain.Procedure
+// @Failure      404  {object}  gin.H{"error": string} "Procedure not found"
+// @Router       /procedures/{id} [get]
+func (pc *ProcedureController) GetProcedureByID(ctx *gin.Context) {
+	id := ctx.Param("id")
+	procedure, err := pc.procedureUsecase.GetProcedureByID(ctx.Request.Context(), id)
+	if err != nil {
+		HandleError(ctx, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, procedure)
+}
+
+// @Summary      Update Procedure
+// @Description  Updates an existing procedure. Requires admin or organization ownership.
+// @Tags         Procedures
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      string  true  "Procedure ID"
+// @Param        request body domain.Procedure true "Procedure Update Data"
+// @Success      200  {string}  success
+// @Failure      400  {object}  gin.H{"error": string} "Invalid request body"
+// @Failure      401  {object}  gin.H{"error": string} "Unauthorized"
+// @Failure      403  {object}  gin.H{"error": string} "Permission Denied"
+// @Failure      404  {object}  gin.H{"error": string} "Procedure not found"
+// @Router       /procedures/{id} [put]
+func (pc *ProcedureController) UpdateProcedure(ctx *gin.Context) {
+	id := ctx.Param("id")
+	var procedure domain.Procedure
+	if err := ctx.ShouldBindJSON(&procedure); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err := pc.procedureUsecase.UpdateProcedure(ctx.Request.Context(), id, &procedure)
+	if err != nil {
+		HandleError(ctx, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, "Updated Procedure Successfully.")
+}
+
+// @Summary      Delete Procedure
+// @Description  Deletes an existing procedure. Requires admin or organization ownership.
+// @Tags         Procedures
+// @Security     BearerAuth
+// @Param        id   path      string  true  "Procedure ID"
+// @Success      204  "No Content"
+// @Failure      401  {object}  gin.H{"error": string} "Unauthorized"
+// @Failure      403  {object}  gin.H{"error": string} "Permission Denied"
+// @Failure      404  {object}  gin.H{"error": string} "Procedure not found"
+// @Router       /procedures/{id} [delete]
+func (pc *ProcedureController) DeleteProcedure(ctx *gin.Context) {
+	id := ctx.Param("id")
+	err := pc.procedureUsecase.DeleteProcedure(ctx.Request.Context(), id)
+	if err != nil {
+		HandleError(ctx, err)
+		return
+	}
+	ctx.Status(http.StatusNoContent)
+}

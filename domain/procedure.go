@@ -6,7 +6,7 @@ import (
 
 type ProcedureContent struct {
 	Prerequisites []string
-	Steps         []string
+	Steps         map[int]string
 	Result        string
 }
 

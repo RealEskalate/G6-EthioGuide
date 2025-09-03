@@ -56,7 +56,7 @@ func (s *ProcedureRepositoryTestSuite) createTestProcedure() *domain.Procedure {
 		Name:           "Apply for Passport",
 		Content: domain.ProcedureContent{
 			Prerequisites: []string{"Birth Certificate", "ID Card"},
-			Steps:         []string{"Fill form", "Submit documents"},
+			Steps:         map[int]string{1: "Fill form", 2: "Submit documents"},
 			Result:        "Receive Passport",
 		},
 		Fees: domain.ProcedureFee{
@@ -80,7 +80,7 @@ func (s *ProcedureRepositoryTestSuite) TestCreate() {
 		OrganizationID: orgID.Hex(),
 		Name:           "Test Procedure Creation",
 		Content: domain.ProcedureContent{
-			Steps: []string{"Step 1"},
+			Steps: map[int]string{1: "Step 1"},
 		},
 	}
 
@@ -118,7 +118,7 @@ func (s *ProcedureRepositoryTestSuite) TestGetByID() {
 		foundProcedure, err := s.repo.GetByID(ctx, nonExistentID)
 		s.Error(err)
 		s.Nil(foundProcedure)
-		s.ErrorIs(err, mongo.ErrNoDocuments, "Should return the standard MongoDB not found error")
+		s.ErrorIs(err, domain.ErrNotFound)
 	})
 
 	s.Run("Failure - Invalid ID Format", func() {
@@ -138,7 +138,7 @@ func (s *ProcedureRepositoryTestSuite) TestUpdate() {
 		updatedProcedure := *originalProcedure
 		updatedProcedure.Name = "Updated Passport Application"
 		updatedProcedure.Fees.Amount = 750.50
-		updatedProcedure.Content.Steps = []string{"New Step 1", "New Step 2"}
+		updatedProcedure.Content.Steps = map[int]string{1: "New Step 1", 2: "New Step 2"}
 
 		err := s.repo.Update(ctx, originalProcedure.ID, &updatedProcedure)
 		s.NoError(err)
@@ -150,7 +150,7 @@ func (s *ProcedureRepositoryTestSuite) TestUpdate() {
 		s.NoError(err)
 		s.Equal("Updated Passport Application", modelInDB.Name)
 		s.Equal(750.50, modelInDB.Fees.Amount)
-		s.Equal([]string{"New Step 1", "New Step 2"}, modelInDB.Content.Steps)
+		s.Equal(map[int]string{1: "New Step 1", 2: "New Step 2"}, modelInDB.Content.Steps)
 	})
 
 	s.Run("Failure - Not Found", func() {
@@ -190,6 +190,6 @@ func (s *ProcedureRepositoryTestSuite) TestDelete() {
 	s.Run("Failure - Not Found", func() {
 		nonExistentID := primitive.NewObjectID().Hex()
 		err := s.repo.Delete(ctx, nonExistentID)
-		s.NoError(err) // DeleteOne doesn't return an error if no document matches
+		s.ErrorIs(err, domain.ErrNotFound)
 	})
 }

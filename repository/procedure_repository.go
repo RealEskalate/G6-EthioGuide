@@ -3,6 +3,7 @@ package repository
 import (
 	"EthioGuide/domain"
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -12,9 +13,9 @@ import (
 )
 
 type ProcedureContentModel struct {
-	Prerequisites []string `bson:"prerequisites,omitempty"`
-	Steps         []string `bson:"steps,omitempty"`
-	Result        string   `bson:"result,omitempty"`
+	Prerequisites []string       `bson:"prerequisites,omitempty"`
+	Steps         map[int]string `bson:"steps"`
+	Result        string         `bson:"result,omitempty"`
 }
 
 // ProcedureFee is a nested struct for the Procedure.fees field.
@@ -32,10 +33,10 @@ type ProcessingTimeModel struct {
 
 type ProcedureModel struct {
 	ID             primitive.ObjectID    `bson:"_id,omitempty"`
-	GroupID        *primitive.ObjectID   `bson:"group_id,omitempty"` // Pointer to allow for nil
+	GroupID        *primitive.ObjectID   `bson:"group_id,omitempty"`
 	OrganizationID primitive.ObjectID    `bson:"organization_id"`
 	Name           string                `bson:"name"`
-	Content        ProcedureContentModel `bson:"content,omitempty"`
+	Content        ProcedureContentModel `bson:"content"`
 	Fees           ProcedureFeeModel     `bson:"fees,omitempty"`
 	ProcessingTime ProcessingTimeModel   `bson:"processing_time,omitempty"`
 	CreatedAt      time.Time             `bson:"created_at"`
@@ -82,9 +83,25 @@ func ToDTO(proc *domain.Procedure) *ProcedureModel {
 	var id, orgid primitive.ObjectID
 	id, _ = primitive.ObjectIDFromHex(proc.ID)
 	orgid, _ = primitive.ObjectIDFromHex(proc.OrganizationID)
+	var groupID *primitive.ObjectID
+	if proc.GroupID != nil {
+		gID, err := primitive.ObjectIDFromHex(*proc.GroupID)
+		if err == nil {
+			groupID = &gID
+		}
+	}
+	noticeIDs := make([]primitive.ObjectID, 0, len(proc.NoticeIDs))
+	if proc.NoticeIDs != nil {
+		for _, idStr := range proc.NoticeIDs {
+			objID, err := primitive.ObjectIDFromHex(idStr)
+			if err == nil {
+				noticeIDs = append(noticeIDs, objID)
+			}
+		}
+	}
 	return &ProcedureModel{
 		ID:             id,
-		GroupID:        nil,
+		GroupID:        groupID,
 		OrganizationID: orgid,
 		Name:           proc.Name,
 		Content: ProcedureContentModel{
@@ -102,8 +119,53 @@ func ToDTO(proc *domain.Procedure) *ProcedureModel {
 			MaxDays: proc.ProcessingTime.MaxDays,
 		},
 		CreatedAt: proc.CreatedAt,
-		NoticeIDs: nil,
+		NoticeIDs: noticeIDs,
 	}
+}
+
+func ToUpdateBSON(proc *domain.Procedure) bson.M {
+	update := bson.M{
+		"name": proc.Name,
+		"content": ProcedureContentModel{
+			Prerequisites: proc.Content.Prerequisites,
+			Steps:         proc.Content.Steps,
+			Result:        proc.Content.Result,
+		},
+		"fees": ProcedureFeeModel{
+			Label:    proc.Fees.Label,
+			Currency: proc.Fees.Currency,
+			Amount:   proc.Fees.Amount,
+		},
+		"processing_time": ProcessingTimeModel{
+			MinDays: proc.ProcessingTime.MinDays,
+			MaxDays: proc.ProcessingTime.MaxDays,
+		},
+	}
+
+	// Handle optional GroupID
+	if proc.GroupID != nil {
+		groupID, err := primitive.ObjectIDFromHex(*proc.GroupID)
+		if err == nil {
+			update["group_id"] = groupID
+		}
+
+	} else {
+		update["group_id"] = nil
+	}
+
+	// Handle optional NoticeIDs
+	if proc.NoticeIDs != nil {
+		noticeIDs := make([]primitive.ObjectID, len(proc.NoticeIDs))
+		for _, idStr := range proc.NoticeIDs {
+			objID, err := primitive.ObjectIDFromHex(idStr)
+			if err == nil {
+				noticeIDs = append(noticeIDs, objID)
+			}
+		}
+		update["notice_ids"] = noticeIDs
+	}
+
+	return update
 }
 
 type ProcedureRepository struct {
@@ -132,35 +194,56 @@ func (r *ProcedureRepository) Create(ctx context.Context, procedure *domain.Proc
 }
 
 func (pr *ProcedureRepository) GetByID(ctx context.Context, id string) (*domain.Procedure, error) {
-	docId, err := primitive.ObjectIDFromHex(id)
+	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrNotFound
 	}
+
 	var procedure ProcedureModel
-	err = pr.col.FindOne(ctx, bson.M{"_id": docId}).Decode(&procedure)
+	err = pr.col.FindOne(ctx, bson.M{"_id": objID}).Decode(&procedure)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, domain.ErrNotFound
+		}
 		return nil, err
 	}
 	return procedure.ToDomain(), nil
 }
 
 func (pr *ProcedureRepository) Update(ctx context.Context, id string, procedure *domain.Procedure) error {
-	docId, err := primitive.ObjectIDFromHex(id)
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return domain.ErrNotFound
+	}
+
+	updateData := ToUpdateBSON(procedure)
+
+	result, err := pr.col.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": updateData})
 	if err != nil {
 		return err
 	}
-	updateResult, err := pr.col.UpdateOne(ctx, bson.M{"_id": docId}, bson.M{"$set": ToDTO(procedure)})
-	if updateResult.MatchedCount == int64(0) {
+
+	if result.MatchedCount == 0 {
 		return domain.ErrNotFound
 	}
-	return err
+
+	return nil
 }
 
 func (pr *ProcedureRepository) Delete(ctx context.Context, id string) error {
-	docId, err := primitive.ObjectIDFromHex(id)
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return domain.ErrNotFound
+	}
+
+	result, err := pr.col.DeleteOne(ctx, bson.M{"_id": objID})
 	if err != nil {
 		return err
 	}
-	_, err = pr.col.DeleteOne(ctx, bson.M{"_id": docId})
-	return err
+
+	if result.DeletedCount == 0 {
+		return domain.ErrNotFound
+	}
+
+	return nil
 }

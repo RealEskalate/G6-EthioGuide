@@ -32,6 +32,9 @@ type ICategoryUsecase interface {
 
 type IProcedureUsecase interface {
 	CreateProcedure(ctx context.Context, procedure *Procedure) error
+	UpdateProcedure(ctx context.Context, id string, procedure *Procedure) error
+	GetProcedureByID(ctx context.Context, id string) (*Procedure, error)
+	DeleteProcedure(ctx context.Context, id string) error
 }
 
 type IFeedbackUsecase interface {
