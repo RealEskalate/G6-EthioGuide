@@ -105,6 +105,16 @@ func (ctrl *UserController) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "user": toUserResponse(account)})
 }
 
+// @Summary      Login a new user
+// @Description  Login a user account with the provided details.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body LoginRequest true "User Registration Details"
+// @Success      201 {object} LoginResponse  "Login Successful"
+// @Failure      400 {object} string "invalid
+// @Failure      500 {object} string "invalid
+// @Router       /auth/login [post]
 func (ctrl *UserController) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -133,6 +143,17 @@ func (ctrl *UserController) Login(c *gin.Context) {
 	}
 }
 
+// @Summary      Get Profile
+// @Description  Get user's profile detail.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Success      200 {object} UserResponse "Profile Retrieved"
+// @Failure      400 {object} string "Invalid request"
+// @Failure      404 {object} string "Invalid request"
+// @Failure      500 {object} string "Server error"
+// @Router       /auth/me [get]
 func (ctrl *UserController) GetProfile(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {

@@ -1,5 +1,24 @@
 basePath: /api/v1
 definitions:
+  controller.LoginRequest:
+    properties:
+      identifier:
+        type: string
+      password:
+        type: string
+    required:
+    - identifier
+    - password
+    type: object
+  controller.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/controller.UserResponse'
+    type: object
   controller.RegisterRequest:
     properties:
       email:
@@ -63,6 +82,69 @@ info:
   title: EthioGuide API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login a user account with the provided details.
+      parameters:
+      - description: User Registration Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Login Successful
+          schema:
+            $ref: '#/definitions/controller.LoginResponse'
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Login a new user
+      tags:
+      - Authentication
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: Get user's profile detail.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile Retrieved
+          schema:
+            $ref: '#/definitions/controller.UserResponse'
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "404":
+          description: Invalid request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get Profile
+      tags:
+      - Authentication
   /auth/register:
     post:
       consumes:
