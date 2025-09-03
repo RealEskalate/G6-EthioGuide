@@ -259,6 +259,33 @@ func (ctrl *UserController) SocialLogin(c *gin.Context) {
 	}
 }
 
+func (ctrl *UserController) UpdateProfile(c *gin.Context) {
+	// 1. Get the logged-in user's ID from the context (set by middleware).
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+
+	// 2. Parse the fields from the body of the request
+	var updates map[string]interface{}
+	if err := c.ShouldBindJSON(&updates); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data."})
+		return
+	}
+
+	// 5. Call the use case with the parsed data.
+	updatedUser, err := ctrl.userUsecase.UpdateProfile(c.Request.Context(), userID.(string), updates)
+	if err != nil {
+		// Use the centralized error handler for cleaner code
+		HandleError(c, err)
+		return
+	}
+
+	// 6. On success, return the updated user object.
+	c.JSON(http.StatusOK, toUserResponse(updatedUser))
+}
+
 // --- HELPER FUNCTIONS ---
 
 // extractBearerToken is a helper to get the token from the Authorization header.

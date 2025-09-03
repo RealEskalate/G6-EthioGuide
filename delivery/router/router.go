@@ -102,6 +102,7 @@ func SetupRouter(
 			{
 				authGroup.GET("/me", userController.GetProfile)
 				authGroup.PATCH("/me/password", userController.UpdatePassword)
+				authGroup.PATCH("/me", userController.UpdateProfile)
 			}
 
 			procedures := v1.Group("/procedures")
@@ -126,7 +127,6 @@ func SetupRouter(
 			auth.POST("/verify", handleVerifyEmail)
 			auth.POST("/forgot", handleForgot)
 			auth.POST("/reset", handleReset)
-			auth.PATCH("/me", handleUpdateMe)
 		}
 
 		// 2) Users & Profiles
@@ -319,17 +319,6 @@ func handleForgot(c *gin.Context) {
 
 func handleReset(c *gin.Context) {
 	c.Status(http.StatusNoContent)
-}
-
-func handleUpdateMe(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":            "user_123",
-		"name":          "Updated User Name",
-		"email":         "current@example.com",
-		"preferredLang": "am",
-		"avatarUrl":     "https://example.com/new_avatar.png",
-		"roles":         []string{"user", "pro"},
-	})
 }
 
 // 2) Users & Profiles

@@ -221,3 +221,26 @@ func (r *AccountRepository) UpdatePassword(ctx context.Context, userID, newPassw
 	}
 	return nil
 }
+
+func (r *AccountRepository) UpdateProfile(ctx context.Context, account domain.Account) error {
+	accountID, err := primitive.ObjectIDFromHex(account.ID)
+	if err != nil {
+		return domain.ErrUserNotFound
+	}
+
+	updatedAccount, err := fromDomainAccount(&account)
+	if err != nil {
+		return err
+	}
+	update := bson.M{"$set": updatedAccount}
+
+	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": accountID}, update)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return domain.ErrUserNotFound
+	}
+
+	return nil
+}
