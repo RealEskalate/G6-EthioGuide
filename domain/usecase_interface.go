@@ -23,3 +23,10 @@ type IProcedureUseCase interface {
 	GetProcedureByID(ctx context.Context, id string) (*Procedure, error)
 	DeleteProcedure(ctx context.Context, id string) error
 }
+
+type INoticeUseCase interface {
+	CreateNotice(ctx context.Context, notice *Notice) error
+	GetNoticesByFilter(ctx context.Context, filter *NoticeFilter) ([]*Notice, int64, error)
+	UpdateNotice(ctx context.Context, id string, notice *Notice) error
+	DeleteNotice(ctx context.Context, id string) error
+}

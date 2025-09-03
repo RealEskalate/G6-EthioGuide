@@ -97,3 +97,47 @@ func FromDomainProcedureToDTO(p *domain.Procedure) *ProcedureDTO {
 		NoticeIDs:      p.NoticeIDs,
 	}
 }
+
+
+// notice related dto
+type NoticeDTO struct {
+	ID             string    `json:"id"`
+	OrganizationID string    `json:"organization_id"`
+	Title          string    `json:"title"`
+	Content        string    `json:"content"`
+	Tags 		   []string	`json:"tags"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+func (dto *NoticeDTO) ToDomainNotice() *domain.Notice {
+	return &domain.Notice{
+		ID:             dto.ID,
+		OrganizationID: dto.OrganizationID,
+		Title:          dto.Title,
+		Content:        dto.Content,
+		Tags:          dto.Tags,
+		CreatedAt:      dto.CreatedAt,
+		UpdatedAt:      dto.UpdatedAt,
+	}
+}
+
+func FromDomainNotice(n *domain.Notice) *NoticeDTO {
+	return &NoticeDTO{
+		ID:             n.ID,
+		OrganizationID: n.OrganizationID,
+		Title:          n.Title,
+		Content:        n.Content,
+		Tags:          n.Tags,
+		CreatedAt:      n.CreatedAt,
+		UpdatedAt:      n.UpdatedAt,
+	}
+}
+
+// Paginated response for notices
+type NoticeListResponse struct {
+	Data  []NoticeDTO `json:"data"`
+	Total int64       `json:"total"`
+	Page  int64       `json:"page"`
+	Limit int64       `json:"limit"`
+}
