@@ -3,16 +3,26 @@ package usecase
 import (
 	"EthioGuide/domain"
 	"context"
+	"time"
 )
 
-type ProcedureUsecase struct {
-	procedureRepo domain.IProcedureRepository
+type procedureUsecase struct {
+	procedureRepo  domain.IProcedureRepository
+	contextTimeout time.Duration
 }
 
-func NewProcedureUsecase(procedureRepo domain.IProcedureRepository) *ProcedureUsecase {
-	return &ProcedureUsecase{
-		procedureRepo: procedureRepo,
+func NewProcedureUsecase(pr domain.IProcedureRepository, timeout time.Duration) domain.IProcedureUsecase {
+	return &procedureUsecase{
+		procedureRepo:  pr,
+		contextTimeout: timeout,
 	}
+}
+
+func (pu *procedureUsecase) CreateProcedure(c context.Context, procedure *domain.Procedure) error {
+	ctx, cancel := context.WithTimeout(c, pu.contextTimeout)
+	defer cancel()
+
+	return pu.procedureRepo.Create(ctx, procedure)
 }
 
 func (pu *ProcedureUsecase) GetProcedureByID(ctx context.Context, id string) (*domain.Procedure, error) {
