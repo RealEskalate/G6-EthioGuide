@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { BiSolidEdit } from "react-icons/bi";
 import { FaEye } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
@@ -94,7 +94,6 @@ export default function NoticeManagement() {
                   ({
                     title,
                     detail,
-                    status,
                     publishDate,
                     expiryDate,
                     lastUpdatedAt,

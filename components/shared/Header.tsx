@@ -1,18 +1,24 @@
-"use client"
+"use client";
 
-
-import { useState } from "react"
-import { ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { NotificationDropdown } from "./NotificationDropdown"
-import Image from "next/image"
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { NotificationDropdown } from "./NotificationDropdown";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export function Header() {
-  const [language, setLanguage] = useState("EN")
- 
+  const [language, setLanguage] = useState("EN");
+  const pathname = usePathname();
+  const isAdmin = pathname.startsWith(`/admin`);
   return (
-  <header className="bg-white px-6 py-4 sticky top-0 z-50">
+    <header className="bg-white px-6 py-4 sticky top-0 z-50">
       <div className="flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">
@@ -24,7 +30,9 @@ export function Header() {
             className="h-10 w-10"
             priority
           />
-          <span className="text-gray-800 font-semibold text-xl">EthioGuide</span>
+          <span className="text-gray-800 font-semibold text-xl">
+            EthioGuide
+          </span>
         </div>
 
         {/* Right Section */}
@@ -32,14 +40,28 @@ export function Header() {
           {/* Language Toggle */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              >
                 {language}
                 <ChevronDown className="w-4 h-4 ml-1" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem className="hover:bg-gray-100 hover:text-gray-900" onClick={() => setLanguage("EN")}>English</DropdownMenuItem>
-              <DropdownMenuItem className="hover:bg-gray-100 hover:text-gray-900" onClick={() => setLanguage("አማ")}>አማርኛ (Amharic)</DropdownMenuItem>
+              <DropdownMenuItem
+                className="hover:bg-gray-100 hover:text-gray-900"
+                onClick={() => setLanguage("EN")}
+              >
+                English
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="hover:bg-gray-100 hover:text-gray-900"
+                onClick={() => setLanguage("አማ")}
+              >
+                አማርኛ (Amharic)
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -51,7 +73,13 @@ export function Header() {
             variant="ghost"
             size="sm"
             className="p-0 rounded-full hover:bg-gray-100"
-            onClick={() => window.location.href = '/admin/profile'}
+            onClick={() => {
+              if (isAdmin) {
+                window.location.href = "/admin/profile";
+              } else {
+                window.location.href = "/user/profile";
+              }
+            }}
             aria-label="Go to profile"
           >
             <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200">
@@ -67,5 +95,5 @@ export function Header() {
         </div>
       </div>
     </header>
-  )
+  );
 }

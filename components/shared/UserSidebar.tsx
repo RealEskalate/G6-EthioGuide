@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { CustomIcon } from "./CustomIcon"
 import { cn } from "@/lib/utils"
@@ -27,9 +26,7 @@ interface UserSidebarProps {
 
 export function UserSidebar({
   menuItems,
-  settingsLabel = "Settings",
   logoutLabel = "Logout",
-  onSettingsClick,
   onLogoutClick,
   className,
 }: UserSidebarProps) {

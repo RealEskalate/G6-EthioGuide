@@ -1,8 +1,6 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { LuGlobe, LuClock2 } from "react-icons/lu";
 import { FaShieldAlt } from "react-icons/fa";
@@ -21,10 +19,6 @@ const orgDetail = {
   address: "1234 Government Plaza, Capital City, CC 12345",
 };
 
-const quickStats = {
-  activeProcedures: 24,
-  publishedNotices: 156,
-};
 
 const orgMission =
   "The National Immigration Office serves as the primary government agency responsible for managing all aspects of immigration, citizenship, and border control within our nation. Established in 1995, we have been committed to maintaining the highest standards of service while ensuring national security and facilitating legitimate travel and immigration.";
@@ -50,56 +44,7 @@ const orgValues = [
   },
 ];
 
-const notices = [
-  {
-    id: 1,
-    type: "URGENT",
-    date: "January 15, 2024",
-    title: "New Visa Application Requirements Effective February 1st",
-    description:
-      "Important updates to documentation requirements for all visa categories. Please review the new guidelines before submitting applications...",
-  },
-  {
-    id: 2,
-    type: "INFO",
-    date: "January 12, 2024",
-    title: "Extended Office Hours During Peak Season",
-    description:
-      "To better serve our applicants during the busy travel season, we are extending our office hours and adding weekend appointments...",
-  },
-  {
-    id: 3,
-    type: "UPDATE",
-    date: "January 10, 2024",
-    title: "Online Portal Maintenance Scheduled",
-    description:
-      "Our online application portal will undergo scheduled maintenance on January 20th from 2:00 AM to 6:00 AM. Services will be temporarily unavailable...",
-  },
-];
 
-const procedures = [
-  {
-    id: 1,
-    title: "Tourist Visa Application",
-    category: "Tourism",
-    time: "5-10 days",
-    description: "Standard tourist visa for visitors",
-  },
-  {
-    id: 2,
-    title: "Work Permit Application",
-    category: "Employment",
-    time: "15-30 days",
-    description: "Employment authorization for foreign workers",
-  },
-  {
-    id: 3,
-    title: "Student Visa Application",
-    category: "Education",
-    time: "10-20 days",
-    description: "Education visa for international students",
-  },
-];
 
 export default function ImmigrationOfficePage() {
   return (

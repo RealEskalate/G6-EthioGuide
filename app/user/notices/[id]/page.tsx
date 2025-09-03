@@ -1,7 +1,7 @@
 "use client";
 
+import React from "react";
 import { useRouter } from "next/navigation";
-import { use } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, FileText, User } from "lucide-react";
 

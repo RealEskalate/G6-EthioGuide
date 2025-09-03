@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, Calendar, CheckCircle, Clock, FileText } from "lucide-react"
+import {  Calendar, CheckCircle, Clock, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CardContent, Card } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"

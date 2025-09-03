@@ -17,13 +17,12 @@ import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { loginSchema, LoginFormData } from "@/lib/validation/login";
 import { useState } from "react";
 import Image from "next/image";
 
 export default function LoginPage() {
-  const { t, i18n } = useTranslation("auth");
+  const { t } = useTranslation("auth");
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormData>({
@@ -47,8 +46,8 @@ export default function LoginPage() {
       } else if (result?.url) {
         window.location.href = result.url;
       }
-    } catch (error) {
-      form.setError("root", { message: t("login.error") });
+    }catch {
+      form.setError("root", { message: t("new_password.error") });
     }
   };
 

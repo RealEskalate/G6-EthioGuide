@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
-import Link from "next/link"
 
 interface ApplicationState {
   step1: {
@@ -194,7 +193,7 @@ export default function CityGovPortal() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f9fafb]">
+    <div className="min-h-screen bg-gray-50">
      
       <style jsx>{`
         .step-transition {
@@ -286,20 +285,7 @@ export default function CityGovPortal() {
 
       
 
-      {/* Breadcrumb */}
-      <div className="bg-white border-b border-[#e5e7eb] px-6 py-3">
-        <div className="max-w-7xl mx-auto">
-          <nav className="text-sm text-[#a7b3b9]">
-            <Link href="/" className="text-primary hover:text-blue-700 focus:text-blue-700 transition-colors font-medium outline-none focus:underline">CityGov Portal</Link>
-            <span className="mx-2 text-gray-400">›</span>
-            <Link href="/user/procedures-list" className="text-primary hover:text-blue-700 focus:text-blue-700 transition-colors font-medium outline-none focus:underline">Procedures</Link>
-            <span className="mx-2 text-gray-400">›</span>
-            <Link href="/user/procedures-detail" className="text-primary hover:text-blue-700 focus:text-blue-700 transition-colors font-medium outline-none focus:underline">Business License Application</Link>
-            <span className="mx-2 text-gray-400">›</span>
-            <span className="text-gray-700 font-semibold" aria-current="page">Checklist</span>
-          </nav>
-        </div>
-      </div>
+   
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -685,14 +671,14 @@ export default function CityGovPortal() {
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  className="border-[#e5e7eb] text-[#2e4d57] hover:!bg-[#3A6A8D] bg-transparent button-transition"
+                  className="border-[#e5e7eb] text-[#2e4d57] hover:!bg-[#eff0f1] bg-transparent button-transition"
                   onClick={saveProgress}
                 >
                   <FileText className="w-4 h-4 mr-2" />
                   Save Progress
                 </Button>
                 <Button
-                  className={`bg-[#3A6A8D] hover:bg-[#3A6A8F] text-white button-transition ${!nextStep ? "opacity-60 cursor-not-allowed" : ""}`}
+                  className={`bg-[#3A6A8D] hover:bg-[#2f5c81] text-white button-transition ${!nextStep ? "opacity-60 cursor-not-allowed" : ""}`}
                   onClick={handleContinue}
                   disabled={!nextStep}
                 >

@@ -12,19 +12,18 @@ import {
   Share,
 } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 
-import Link from "next/link"
-
 export default function ProcedureDetail() {
-  const [activeTab, setActiveTab] = useState("feedback")
+  const [activeTab, setActiveTab] = useState<"feedback" | "notices" | "discussions">("feedback")
 
   return (
-    <div className="min-h-screen bg-[#E5E7EB]">
+    <div className="min-h-screen bg-gray-50">
       <div className="flex">
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 pl-20">
           <div className="max-w-4xl space-y-6">
             <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
               {/* Header Section */}
@@ -35,7 +34,7 @@ export default function ProcedureDetail() {
                 <p className="text-[#6b7280] text-sm animate-in fade-in duration-700">
                   Complete guide to renew your driver&#39;s license in Ethiopia
                 </p>
-              </div>
+
 
               <div className="grid grid-cols-2 gap-6 mb-6">
                 <div className="bg-white rounded-lg p-6 text-center border border-[#e5e7eb] hover:border-[#4A90E2] transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 group">
@@ -63,7 +62,7 @@ export default function ProcedureDetail() {
                 <h2 className="text-lg font-medium text-[#111827] mb-4">Required Documents</h2>
                 <div className="grid grid-cols-4 gap-4">
                   <div
-                    className="bg-[#f3f4f6] rounded-lg p-3 text-center border border-[#e5e7eb] hover:bg-[#e5e7eb] hover:border-[#4A90E2] transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md animate-in fade-in duration-500"
+                    className="bg-[#f3f4f6] rounded-lg p-3 text-center border border-[#e5e7eb] hover:bg-[#e5e7eb] hover:border-[#4A90E2] transition-all transform hover:-translate-y-1 hover:shadow-md animate-in fade-in duration-500"
                     style={{ animationDelay: "100ms" }}
                   >
                     <span className="text-sm text-[#6b7280]">2 Passport Photos</span>
@@ -112,9 +111,16 @@ export default function ProcedureDetail() {
                       <Download className="w-3 h-3 mr-1 transition-transform duration-300 group-hover:rotate-12" />
                       Download PDF Form
                     </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="text-[#3A6A8D] border-[#3A6A8D] text-xs bg-transparent transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                    >
+                      <Link href="/user/notices/1">View Full Notice</Link>
+                    </Button>
                   </div>
                 </div>
-
                 <div className="flex gap-4 group animate-in fade-in duration-500" style={{ animationDelay: "200ms" }}>
                   <div className="w-8 h-8 bg-[#3A6A8D] text-white rounded-full flex items-center justify-center font-medium text-sm flex-shrink-0 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
                     2
@@ -176,10 +182,12 @@ export default function ProcedureDetail() {
               </div>
 
               <div className="mt-6">
-                <Button className="bg-[#3A6A8D] hover:bg-[#2e4d57] text-white px-6 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
-                  <span className="mr-2 transition-transform duration-300 hover:rotate-12">📋</span>
-                  Save Checklist
-                </Button>
+                <Link href="/user/workspace">
+                  <Button className="bg-[#3A6A8D] hover:bg-[#2e4d57] text-white px-6 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
+                    <span className="mr-2 transition-transform duration-300 hover:rotate-12">📋</span>
+                    Save Checklist
+                  </Button>
+                </Link>
               </div>
             </div>
 
@@ -300,11 +308,12 @@ export default function ProcedureDetail() {
                       </div>
                       <div className="flex items-center gap-3">
                         <Button
+                          asChild
                           variant="outline"
                           size="sm"
                           className="text-[#3A6A8D] border-[#3A6A8D] text-xs bg-transparent transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
                         >
-                          View Full Notice
+                          <Link href="/user/notices/1">View Full Notice</Link>
                         </Button>
                         <Button
                           variant="outline"
@@ -323,10 +332,13 @@ export default function ProcedureDetail() {
                           PDF
                         </Button>
                       </div>
+                      <Button
+                        asChild
+                        className="w-full bg-[#3A6A8D] hover:bg-[#2e4d57] text-white text-sm py-2 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
+                      >
+                        <Link href="/user/notices">View Notices</Link>
+                      </Button>
                     </div>
-                    <Button className="w-full bg-[#3A6A8D] hover:bg-[#2e4d57] text-white text-sm py-2 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
-                      View Notices
-                    </Button>
                   </div>
                 )}
 
@@ -374,25 +386,23 @@ export default function ProcedureDetail() {
                         </div>
                       </div>
                     </div>
-                    <Button className="w-full bg-[#3A6A8D] hover:bg-[#2e4d57] text-white text-sm py-2 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
-                      View Discussions
+                    <Button asChild className="w-full bg-[#3A6A8D] hover:bg-[#2e4d57] text-white text-sm py-2 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
+                      <Link href="/user/discussions">View Discussions</Link>
                     </Button>
                   </div>
                 )}
               </div>
 
               {activeTab === "feedback" && (
-                <Link href="/user/feedback">
-                  <Button className="w-full bg-[#3A6A8D] hover:bg-[#2e4d57] text-white mt-6 text-sm py-2 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
-                    Add Feedback
-                  </Button>
-                </Link>
+                <Button asChild className="w-full bg-[#3A6A8D] hover:bg-[#2e4d57] text-white mt-6 text-sm py-2 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
+                  <a href="/user/feedback">Add Feedback</a>
+                </Button>
               )}
             </div>
           </div>
+        </div>
         </main>
-
-        <aside className="w-80 p-6 space-y-6">
+        <aside className="w-96 p-6 space-y-6  mr-48">
           <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
             <h3 className="font-medium text-[#111827] mb-3">AI Assistant</h3>
             <p className="text-sm text-[#6b7280] mb-4">Need help with any step? Ask me anything!</p>
@@ -413,20 +423,8 @@ export default function ProcedureDetail() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-            <h3 className="font-medium text-[#111827] mb-3">Resources & Forms</h3>
-            <div className="flex items-center gap-3 p-3 bg-[#f8fafc] rounded-lg border border-[#e2e8f0] hover:bg-[#f1f5f9] hover:border-[#4A90E2] transition-all duration-300 cursor-pointer transform hover:-translate-y-1 hover:shadow-md group">
-              <div className="w-6 h-6 bg-[#4A90E2] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <FileText className="w-3 h-3 text-white" />
-              </div>
-              <span className="text-sm text-[#6b7280] group-hover:text-[#4A90E2] transition-colors duration-300">
-                Official Guidelines
-              </span>
-            </div>
-          </div>
         </aside>
       </div>
-        
     </div>
   )
 }

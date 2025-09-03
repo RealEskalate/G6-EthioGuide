@@ -5,10 +5,8 @@ import { UserSidebar } from "./UserSidebar"
 const adminMenuItems = [
   { iconSrc: "/icons/dashboard.svg", iconAlt: "Dashboard", label: "dashboard", active: true },
   { iconSrc: "/icons/official-notices.svg", iconAlt: "Notices", label: "notices", active: false },
-  { iconSrc: "/icons/ai-chat.svg", iconAlt: "AI Chat", label: "AI Chat", active: false },
-  { iconSrc: "/icons/discussions.svg", iconAlt: "View Feedback", label: "viewFeedback", active: false },
-  { iconSrc: "/icons/user-managemnet.svg", iconAlt: "User Management", label: "userManagement", active: false },
-  { iconSrc: "/icons/manage-procedure.svg", iconAlt: "Manage Procedure", label: "procedures", active: false },
+  { iconSrc: "/icons/discussions.svg", iconAlt: "View Feedbacks", label: "feedback", active: false },
+  { iconSrc: "/icons/manage-procedure.svg", iconAlt: "Manage Procedures", label: "procedures", active: false },
 ]
 
 export default function OrganizationSidebar() {
