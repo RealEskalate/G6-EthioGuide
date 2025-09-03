@@ -4,6 +4,7 @@ import (
 	"EthioGuide/domain"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -155,10 +156,10 @@ func ToUpdateBSON(proc *domain.Procedure) bson.M {
 	// Handle optional NoticeIDs
 	if proc.NoticeIDs != nil {
 		noticeIDs := make([]primitive.ObjectID, len(proc.NoticeIDs))
-		for i, idStr := range proc.NoticeIDs {
+		for _, idStr := range proc.NoticeIDs {
 			objID, err := primitive.ObjectIDFromHex(idStr)
 			if err == nil {
-				noticeIDs[i] = objID
+				noticeIDs = append(noticeIDs, objID)
 			}
 		}
 		update["notice_ids"] = noticeIDs
@@ -168,13 +169,28 @@ func ToUpdateBSON(proc *domain.Procedure) bson.M {
 }
 
 type ProcedureRepository struct {
-	db *mongo.Collection
+	col *mongo.Collection
 }
 
-func NewProcedureRepository(db *mongo.Collection) *ProcedureRepository {
+func NewProcedureRepository(db *mongo.Database) *ProcedureRepository {
 	return &ProcedureRepository{
-		db: db,
+		col: db.Collection("procedures"),
 	}
+}
+
+func (r *ProcedureRepository) Create(ctx context.Context, procedure *domain.Procedure) error {
+	model := ToDTO(procedure)
+
+	model.CreatedAt = time.Now()
+	model.ID = primitive.NewObjectID()
+
+	_, err := r.col.InsertOne(ctx, model)
+	if err != nil {
+		return fmt.Errorf("failed to insert account: %w", err)
+	}
+
+	procedure.ID = model.ID.Hex()
+	return nil
 }
 
 func (pr *ProcedureRepository) GetByID(ctx context.Context, id string) (*domain.Procedure, error) {
@@ -184,7 +200,7 @@ func (pr *ProcedureRepository) GetByID(ctx context.Context, id string) (*domain.
 	}
 
 	var procedure ProcedureModel
-	err = pr.db.FindOne(ctx, bson.M{"_id": objID}).Decode(&procedure)
+	err = pr.col.FindOne(ctx, bson.M{"_id": objID}).Decode(&procedure)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, domain.ErrNotFound
@@ -202,7 +218,7 @@ func (pr *ProcedureRepository) Update(ctx context.Context, id string, procedure 
 
 	updateData := ToUpdateBSON(procedure)
 
-	result, err := pr.db.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": updateData})
+	result, err := pr.col.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": updateData})
 	if err != nil {
 		return err
 	}
@@ -220,7 +236,7 @@ func (pr *ProcedureRepository) Delete(ctx context.Context, id string) error {
 		return domain.ErrNotFound
 	}
 
-	result, err := pr.db.DeleteOne(ctx, bson.M{"_id": objID})
+	result, err := pr.col.DeleteOne(ctx, bson.M{"_id": objID})
 	if err != nil {
 		return err
 	}

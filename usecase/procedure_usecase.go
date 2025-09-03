@@ -6,19 +6,19 @@ import (
 	"time"
 )
 
-type procedureUsecase struct {
+type ProcedureUsecase struct {
 	procedureRepo  domain.IProcedureRepository
 	contextTimeout time.Duration
 }
 
 func NewProcedureUsecase(pr domain.IProcedureRepository, timeout time.Duration) domain.IProcedureUsecase {
-	return &procedureUsecase{
+	return &ProcedureUsecase{
 		procedureRepo:  pr,
 		contextTimeout: timeout,
 	}
 }
 
-func (pu *procedureUsecase) CreateProcedure(c context.Context, procedure *domain.Procedure) error {
+func (pu *ProcedureUsecase) CreateProcedure(c context.Context, procedure *domain.Procedure) error {
 	ctx, cancel := context.WithTimeout(c, pu.contextTimeout)
 	defer cancel()
 

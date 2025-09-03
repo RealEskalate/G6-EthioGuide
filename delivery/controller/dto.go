@@ -71,9 +71,9 @@ type ProcedureCreateRequest struct {
 	OrganizationID string `json:"organizationId,omitempty"`
 
 	// content
-	Prerequisites []string `json:"prerequisites"`
-	Steps         []string `json:"steps"`
-	Result        string   `json:"result"`
+	Prerequisites []string       `json:"prerequisites"`
+	Steps         map[int]string `json:"steps"`
+	Result        string         `json:"result"`
 
 	// Fees
 	Label    string  `json:"label"`
