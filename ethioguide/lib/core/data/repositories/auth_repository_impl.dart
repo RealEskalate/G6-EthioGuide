@@ -2,10 +2,10 @@ import 'package:ethioguide/core/config/cache_key_names.dart';
 import 'package:ethioguide/core/domain/repositories/auth_repository.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class AuthRepositoryImpl implements AuthRepository {
+class CoreAuthRepositoryImpl implements CoreAuthRepository {
   final FlutterSecureStorage secureStorage;
 
-  AuthRepositoryImpl({required this.secureStorage});
+  CoreAuthRepositoryImpl({required this.secureStorage});
 
   @override
   Future<void> clearTokens() async {

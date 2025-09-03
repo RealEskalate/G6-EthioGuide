@@ -1,5 +1,7 @@
 import 'package:ethioguide/features/authentication/presentation/screens/auth_screen.dart';
-
+import 'package:ethioguide/core/config/route_names.dart';
+import 'package:ethioguide/features/AI%20chat/Presentation/screens/ai_chat_screen.dart';
+import 'package:ethioguide/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ethioguide/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:ethioguide/features/splashscreen/presentation/screens/splash_screen.dart';
@@ -11,10 +13,12 @@ final GoRouter router = GoRouter(
   // The initial route that the app will open on.
   initialLocation: '/',
 
+
   // The list of all available routes in the app.
   routes: [
     GoRoute(
       path: '/',
+
       name: RouteNames.splash, 
       builder: (context, state) => const SplashScreen(),
     ),
@@ -30,10 +34,17 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const AuthScreen(),
     ),
     GoRoute(
-      path: '/placeholder', 
+      path: '/placeholder',
       name: 'placeholder',
       builder: (context, state) => const PlaceholderScreen(),
     ),
     
+    // This is the route for AI chat page
+    GoRoute(
+      path: '/aiChat',
+      name: RouteNames.aiChat,
+      builder: (context, state) => const ChatPage(),
+    ),
+  
   ],
 );

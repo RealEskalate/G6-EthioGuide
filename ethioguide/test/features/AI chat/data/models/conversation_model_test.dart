@@ -35,6 +35,7 @@ void main() {
 
   group('ConversationModel', () {
     final conversationJson = {
+      'id': 'id',
       'request': 'How to get a passport',
       'response': 'Steps to get a Passport...',
       'source': 'official',
@@ -55,6 +56,7 @@ void main() {
 
     test('toJson should return valid json', () {
       final conversation = ConversationModel(
+        id: 'id',
         request: 'How to get a passport',
         response: 'Steps to get a Passport...',
         source: 'official',
