@@ -43,6 +43,7 @@ func main() {
 	// Repositories are the first layer to be initialized as they only depend on the database.
 	userRepo := repository.NewAccountRepository(db)
 	procedureRepo := repository.NewProcedureRepository(db)
+	preferencesRepo := repository.NewPreferencesRepository(db)
 	catagoryRepo := repository.NewCategoryRepository(db, "catagories")
 	// FIX 1: Initialize the TokenRepository, as it's a required dependency for UserUsecase.
 	tokenRepo := repository.NewTokenRepository(db)
@@ -69,6 +70,7 @@ func main() {
 	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, cfg.UsecaseTimeout)
 	catagoryUsecase := usecase.NewCategoryUsecase(catagoryRepo, cfg.UsecaseTimeout)
 	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
+	preferencesUsecase := usecase.NewPreferencesUsecase(preferencesRepo)
 
 	// --- Controllers ---
 	// Controllers handle the HTTP layer, delegating logic to use cases.
@@ -76,6 +78,7 @@ func main() {
 	procedureController := controller.NewProcedureController(procedureUsecase)
 	catagoryController := controller.NewCategoryController(catagoryUsecase)
 	geminiController := controller.NewGeminiController(geminiUsecase)
+	preferencesController := controller.NewPreferencesController(preferencesUsecase)
 
 	// --- Middleware ---
 	// Middleware is created to be injected into the router.
@@ -91,6 +94,7 @@ func main() {
 		procedureController,
 		catagoryController,
 		geminiController,
+		preferencesController,
 		authMiddleware,
 		proOnlyMiddleware,
 		requireAdminRole,

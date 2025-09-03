@@ -126,3 +126,8 @@ type PaginatedCategoryResponse struct {
 	Page  int64               `json:"page"`
 	Limit int64               `json:"limit"`
 }
+type PreferencesDTO struct {
+    PreferredLang     string `json:"preferredLang"`
+    PushNotification  bool   `json:"pushNotification"`
+    EmailNotification bool   `json:"emailNotification"`
+}

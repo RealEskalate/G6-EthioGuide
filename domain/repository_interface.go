@@ -28,3 +28,8 @@ type ICategoryRepository interface {
 type IProcedureRepository interface {
 	Create(ctx context.Context, procedure *Procedure) error
 }
+type IPreferencesRepository interface {
+    Create(ctx context.Context, preferences *Preferences) error
+    GetByUserID(ctx context.Context, userID string) (*Preferences, error)
+    UpdateByUserID(ctx context.Context, userID string, preferences *Preferences) error
+}

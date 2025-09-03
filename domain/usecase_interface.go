@@ -29,3 +29,8 @@ type ICategoryUsecase interface {
 type IProcedureUsecase interface {
 	CreateProcedure(ctx context.Context, procedure *Procedure) error
 }
+type IPreferencesUsecase interface{
+	CreateUserPreferences(ctx context.Context, userID string) error
+	GetUserPreferences(ctx context.Context, userId string)(*Preferences, error)
+	UpdateUserPreferences(ctx context.Context, prefernces *Preferences) error
+}
