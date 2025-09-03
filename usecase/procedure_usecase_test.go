@@ -11,12 +11,28 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-// --- Mock for IProcedureRepository ---
-type MockProcedureRepository struct {
+type MockProcedureRepo struct {
 	mock.Mock
 }
 
-func (m *MockProcedureRepository) Create(ctx context.Context, procedure *domain.Procedure) error {
+func (m *MockProcedureRepo) GetByID(ctx context.Context, id string) (*domain.Procedure, error) {
+	args := m.Called(ctx, id)
+	var proc *domain.Procedure
+	if args.Get(0) != nil {
+		proc = args.Get(0).(*domain.Procedure)
+	}
+	return proc, args.Error(1)
+}
+func (m *MockProcedureRepo) Update(ctx context.Context, id string, procedure *domain.Procedure) error {
+	args := m.Called(ctx, id, procedure)
+	return args.Error(0)
+}
+func (m *MockProcedureRepo) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockProcedureRepo) Create(ctx context.Context, procedure *domain.Procedure) error {
 	args := m.Called(ctx, procedure)
 	return args.Error(0)
 }
@@ -24,13 +40,13 @@ func (m *MockProcedureRepository) Create(ctx context.Context, procedure *domain.
 // --- Test Suite ---
 type ProcedureUsecaseTestSuite struct {
 	suite.Suite
-	mockRepo      *MockProcedureRepository
-	usecase       domain.IProcedureUsecase
+	mockRepo       *MockProcedureRepo
+	usecase        domain.IProcedureUsecase
 	contextTimeout time.Duration
 }
 
 func (s *ProcedureUsecaseTestSuite) SetupTest() {
-	s.mockRepo = new(MockProcedureRepository)
+	s.mockRepo = new(MockProcedureRepo)
 	s.contextTimeout = 2 * time.Second
 	s.usecase = usecase.NewProcedureUsecase(s.mockRepo, s.contextTimeout)
 }
@@ -43,14 +59,13 @@ func TestProcedureUsecaseTestSuite(t *testing.T) {
 func (s *ProcedureUsecaseTestSuite) TestCreateProcedure() {
 	validProc := &domain.Procedure{
 		Name:           "Test Procedure",
-		GroupID:        "group123",
 		OrganizationID: "org456",
-		Content: domain.Content{
+		Content: domain.ProcedureContent{
 			Prerequisites: []string{"A", "B"},
 			Steps:         []string{"Step1", "Step2"},
-			Result:        []string{"Result1"},
+			Result:        "Result1",
 		},
-		Fees: domain.Fees{
+		Fees: domain.ProcedureFee{
 			Label:    "FeeLabel",
 			Currency: "ETB",
 			Amount:   100.0,

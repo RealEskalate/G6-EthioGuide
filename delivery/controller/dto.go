@@ -73,7 +73,7 @@ type ProcedureCreateRequest struct {
 	// content
 	Prerequisites []string `json:"prerequisites"`
 	Steps         []string `json:"steps"`
-	Result        []string `json:"result"`
+	Result        string   `json:"result"`
 
 	// Fees
 	Label    string  `json:"label"`
@@ -86,12 +86,12 @@ type ProcedureCreateRequest struct {
 }
 
 func toDomainProcedure(p *ProcedureCreateRequest) *domain.Procedure {
-	content := domain.Content{
+	content := domain.ProcedureContent{
 		Prerequisites: p.Prerequisites,
 		Steps:         p.Steps,
 		Result:        p.Result,
 	}
-	fees := domain.Fees{
+	fees := domain.ProcedureFee{
 		Label:    p.Label,
 		Currency: p.Currency,
 		Amount:   p.Amount,
@@ -102,7 +102,7 @@ func toDomainProcedure(p *ProcedureCreateRequest) *domain.Procedure {
 	}
 
 	return &domain.Procedure{
-		GroupID:        p.GroupID,
+		GroupID:        &p.GroupID,
 		OrganizationID: p.OrganizationID,
 		Name:           p.Name,
 		Content:        content,
@@ -132,14 +132,14 @@ type PaginatedCategoryResponse struct {
 	Limit int64               `json:"limit"`
 }
 
-// --- Feedback DTOs --- 
+// --- Feedback DTOs ---
 
 // --- Request DTOs ---
 
 type FeedbackCreateRequest struct {
-	Content     string   `json:"content" binding:"required"`
-	Type        string   `json:"type" binding:"required,oneof=inaccuracy outdated thanks missing"`
-	Tags        []string `json:"tags,omitempty"`
+	Content string   `json:"content" binding:"required"`
+	Type    string   `json:"type" binding:"required,oneof=inaccuracy outdated thanks missing"`
+	Tags    []string `json:"tags,omitempty"`
 }
 
 type FeedbackUpdateRequest struct {
@@ -176,7 +176,7 @@ type FeedbackListResponse struct {
 }
 
 type FeedbackStatePatchRequest struct {
-	Status string `json:"status" binding:"required,oneof=new in_progress resolved declined"`
+	Status        string `json:"status" binding:"required,oneof=new in_progress resolved declined"`
 	AdminResponse string `json:"admin_response,omitempty"`
 }
 
@@ -196,7 +196,7 @@ func fromDomainFeedback(f *domain.Feedback) *FeedbackResponse {
 		CreatedAT:     f.CreatedAT,
 		UpdatedAT:     f.UpdatedAT,
 	}
-}			
+}
 
 func toFeedbackListResponse(feedbacks []*domain.Feedback, total, page, limit int64) FeedbackListResponse {
 	respFeedbacks := make([]*FeedbackResponse, len(feedbacks))
@@ -210,4 +210,3 @@ func toFeedbackListResponse(feedbacks []*domain.Feedback, total, page, limit int
 		Limit:     limit,
 	}
 }
-

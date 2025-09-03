@@ -65,10 +65,8 @@ func main() {
 	userRepo := repository.NewAccountRepository(db)
 	procedureRepo := repository.NewProcedureRepository(db)
 	catagoryRepo := repository.NewCategoryRepository(db, "catagories")
-	// FIX 1: Initialize the TokenRepository, as it's a required dependency for UserUsecase.
 	tokenRepo := repository.NewTokenRepository(db)
 	feedbackRepo := repository.NewFeedbackRepository(db)
-	procedureRepo := repository.NewProcedureRepository(db)
 
 	// --- Infrastructure Services ---
 	// These are concrete implementations of external services.

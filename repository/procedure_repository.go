@@ -14,7 +14,7 @@ import (
 type ProcedureContentModel struct {
 	Prerequisites []string `bson:"prerequisites,omitempty"`
 	Steps         []string `bson:"steps,omitempty"`
-	Result        []string `bson:"result,omitempty"`
+	Result        string   `bson:"result,omitempty"`
 }
 
 // ProcedureFee is a nested struct for the Procedure.fees field.
@@ -79,10 +79,13 @@ func (pm *ProcedureModel) ToDomain() *domain.Procedure {
 }
 
 func ToDTO(proc *domain.Procedure) *ProcedureModel {
+	var id, orgid primitive.ObjectID
+	id, _ = primitive.ObjectIDFromHex(proc.ID)
+	orgid, _ = primitive.ObjectIDFromHex(proc.OrganizationID)
 	return &ProcedureModel{
-		ID:             primitive.NewObjectID(),
+		ID:             id,
 		GroupID:        nil,
-		OrganizationID: primitive.NewObjectID(),
+		OrganizationID: orgid,
 		Name:           proc.Name,
 		Content: ProcedureContentModel{
 			Prerequisites: proc.Content.Prerequisites,
@@ -104,22 +107,22 @@ func ToDTO(proc *domain.Procedure) *ProcedureModel {
 }
 
 type ProcedureRepository struct {
-	db *mongo.Collection
+	col *mongo.Collection
 }
 
 func NewProcedureRepository(db *mongo.Database) *ProcedureRepository {
 	return &ProcedureRepository{
-		db: db.Collection("procedures"),
+		col: db.Collection("procedures"),
 	}
 }
 
-func (r *procedureRepository) Create(ctx context.Context, procedure *domain.Procedure) error {
+func (r *ProcedureRepository) Create(ctx context.Context, procedure *domain.Procedure) error {
 	model := ToDTO(procedure)
 
 	model.CreatedAt = time.Now()
 	model.ID = primitive.NewObjectID()
 
-	_, err := r.collection.InsertOne(ctx, model)
+	_, err := r.col.InsertOne(ctx, model)
 	if err != nil {
 		return fmt.Errorf("failed to insert account: %w", err)
 	}
@@ -129,8 +132,12 @@ func (r *procedureRepository) Create(ctx context.Context, procedure *domain.Proc
 }
 
 func (pr *ProcedureRepository) GetByID(ctx context.Context, id string) (*domain.Procedure, error) {
+	docId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
 	var procedure ProcedureModel
-	err := pr.db.FindOne(ctx, bson.M{"_id": id}).Decode(&procedure)
+	err = pr.col.FindOne(ctx, bson.M{"_id": docId}).Decode(&procedure)
 	if err != nil {
 		return nil, err
 	}
@@ -138,11 +145,22 @@ func (pr *ProcedureRepository) GetByID(ctx context.Context, id string) (*domain.
 }
 
 func (pr *ProcedureRepository) Update(ctx context.Context, id string, procedure *domain.Procedure) error {
-	_, err := pr.db.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": ToDTO(procedure)})
+	docId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	updateResult, err := pr.col.UpdateOne(ctx, bson.M{"_id": docId}, bson.M{"$set": ToDTO(procedure)})
+	if updateResult.MatchedCount == int64(0) {
+		return domain.ErrNotFound
+	}
 	return err
 }
 
 func (pr *ProcedureRepository) Delete(ctx context.Context, id string) error {
-	_, err := pr.db.DeleteOne(ctx, bson.M{"_id": id})
+	docId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = pr.col.DeleteOne(ctx, bson.M{"_id": docId})
 	return err
 }
