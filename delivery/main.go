@@ -67,6 +67,7 @@ func main() {
 	catagoryRepo := repository.NewCategoryRepository(db, "catagories")
 	tokenRepo := repository.NewTokenRepository(db)
 	feedbackRepo := repository.NewFeedbackRepository(db)
+	postRepo := repository.NewPostRepository(db)
 
 	// --- Infrastructure Services ---
 	// These are concrete implementations of external services.
@@ -95,6 +96,7 @@ func main() {
 	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
 	feedbackUsecase := usecase.NewFeedbackUsecase(feedbackRepo, procedureRepo, cfg.UsecaseTimeout)
 
+	postUsecase := usecase.NewPostUseCase(postRepo, cfg.UsecaseTimeout)
 	// --- Controllers ---
 	// Controllers handle the HTTP layer, delegating logic to use cases.
 	userController := controller.NewUserController(userUsecase, cfg.JWTRefreshTTL)
@@ -103,6 +105,7 @@ func main() {
 	geminiController := controller.NewGeminiController(geminiUsecase)
 	feedbackController := controller.NewFeedbackController(feedbackUsecase)
 
+	postController := controller.NewPostController(postUsecase)
 	// --- Middleware ---
 	// Middleware is created to be injected into the router.
 	authMiddleware := infrastructure.AuthMiddleware(jwtService)
@@ -118,6 +121,7 @@ func main() {
 		catagoryController,
 		geminiController,
 		feedbackController,
+		postController,
 		authMiddleware,
 		proOnlyMiddleware,
 		requireAdminRole,

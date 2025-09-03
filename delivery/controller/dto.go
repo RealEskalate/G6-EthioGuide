@@ -210,3 +210,17 @@ func toFeedbackListResponse(feedbacks []*domain.Feedback, total, page, limit int
 		Limit:     limit,
 	}
 }
+
+type CreatePostDTO struct {
+	Title 	 string   `json:"title" binding:"required"`
+	Content     string   `json:"content" binding:"required"`
+	Procedures []string `json:"procedures,omitempty"`
+	Tags		[]string `json:"tags,omitempty"`
+}
+
+type UpdatePostDTO struct{
+	Title 	 	string 		`json:"title"`
+	Content     string   `json:"content"`
+	Procedures []string `json:"procedures,omitempty"`
+	Tags		[]string `json:"tags,omitempty"`
+}

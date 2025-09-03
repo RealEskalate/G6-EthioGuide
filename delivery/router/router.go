@@ -21,6 +21,7 @@ func SetupRouter(
 	catagorieController *controller.CategoryController,
 	geminiController *controller.GeminiController,
 	feedbackController *controller.FeedbackController,
+	postController *controller.PostController,
 	authMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
 	requireAdminRole gin.HandlerFunc,
@@ -116,6 +117,15 @@ func SetupRouter(
 			feedback := v1.Group("/feedback")
 			{
 				feedback.PATCH("/:id", authMiddleware, requireAdminOrOrgRole, feedbackController.UpdateFeedbackStatus)
+			}
+
+			discussions := v1.Group("/discussions")
+			{
+				discussions.POST("", authMiddleware, postController.CreatePost)
+				discussions.GET("", postController.GetPosts)
+				discussions.GET("/:id", postController.GetPostByID)
+				discussions.PATCH("/:id", authMiddleware, postController.UpdatePost)
+				discussions.DELETE("/:id", authMiddleware, requireAdminOrOrgRole, postController.DeletePost)
 			}
 
 			categories := v1.Group("/categories")
@@ -217,11 +227,6 @@ func SetupRouter(
 		// 10) Discussions (Community)
 		discussions := v1.Group("/discussions")
 		{
-			discussions.POST("", handleCreateDiscussion)
-			discussions.GET("", handleGetDiscussions)
-			discussions.GET("/:id", handleGetDiscussion)
-			discussions.PATCH("/:id", handleUpdateDiscussion)
-			discussions.DELETE("/:id", handleDeleteDiscussion)
 			discussions.POST("/:id/upvote", handleUpvoteDiscussion)
 			discussions.POST("/:id/downvote", handleDownvoteDiscussion)
 			discussions.POST("/:id/report", handleReportDiscussion)
@@ -714,47 +719,6 @@ func handleMarkNotificationRead(c *gin.Context) {
 }
 
 // 10) Discussions (Community)
-func handleCreateDiscussion(c *gin.Context) {
-	c.JSON(http.StatusCreated, gin.H{"id": "post_new", "title": "New Discussion Post"})
-}
-
-func handleGetDiscussions(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"data": []gin.H{
-			{
-				"id":    "post_1",
-				"title": "Where to pay the fee?",
-				"votes": 12,
-			},
-		},
-		"page":    1,
-		"limit":   20,
-		"total":   1,
-		"hasNext": false,
-	})
-}
-
-func handleGetDiscussion(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":            "post_1",
-		"procedureId":   "prc_123",
-		"title":         "Where to pay the fee?",
-		"body":          "Is the bank counter still used?",
-		"votes":         12,
-		"status":        "visible",
-		"officialReply": gin.H{"orgId": "org_456", "text": "Use online portal.", "createdAt": "2025-08-18T10:00:00Z"},
-		"createdAt":     "2025-08-17T09:00:00Z",
-	})
-}
-
-func handleUpdateDiscussion(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"id": c.Param("id"), "body": "Updated body content."})
-}
-
-func handleDeleteDiscussion(c *gin.Context) {
-	c.Status(http.StatusNoContent)
-}
-
 func handleUpvoteDiscussion(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": c.Param("id"), "votes": 13})
 }
@@ -767,6 +731,7 @@ func handleReportDiscussion(c *gin.Context) {
 	c.Status(http.StatusAccepted)
 }
 
+// Feedback
 func handleUpvoteFeedback(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": c.Param("id"), "votes": 6})
 }

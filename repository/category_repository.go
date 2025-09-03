@@ -84,7 +84,7 @@ func (r *categoryRepository) Create(ctx context.Context, category *domain.Catego
 
 func (r *categoryRepository) GetCategories(ctx context.Context, opts *domain.CategorySearchAndFilter) ([]*domain.Category, int64, error) {
 	// 1. Make the filter
-	filter := buildFilter(opts)
+	filter := buildCatagoryFilter(opts)
 
 	// 2. Get the  total count
 	total, err := r.collection.CountDocuments(ctx, filter)
@@ -125,7 +125,7 @@ func (r *categoryRepository) GetCategories(ctx context.Context, opts *domain.Cat
 }
 
 // --- helper ---
-func buildFilter(options *domain.CategorySearchAndFilter) bson.M {
+func buildCatagoryFilter(options *domain.CategorySearchAndFilter) bson.M {
 	var conditions []bson.M
 
 	if options.Title != "" {

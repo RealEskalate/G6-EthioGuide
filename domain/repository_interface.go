@@ -38,3 +38,11 @@ type IFeedbackRepository interface {
 	GetAllFeedbacksForProcedure(ctx context.Context, procedureID string, filter *FeedbackFilter) ([]*Feedback, int64, error)
 	UpdateFeedbackStatus(ctx context.Context, feedbackID string, newFeedback *Feedback) error
 }
+
+type IPostRepository interface {
+	CreatePost(ctx context.Context, Post *Post) (*Post, error)
+	GetPosts(ctx context.Context, opts PostFilters) ([]*Post, int64, error)
+	GetPostByID(ctx context.Context, id string) (*Post, error)
+	UpdatePost(ctx context.Context, Post *Post) (*Post, error)
+	DeletePost(ctx context.Context, id, userID, role string) error
+}
