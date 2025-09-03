@@ -54,3 +54,53 @@ type LoginResponse struct {
 	AccessToken  string         `json:"access_token"`
 	RefreshToken string         `json:"refresh_token,omitempty"`
 }
+
+type CreateChecklistRequest struct {
+	ProcedureID string `json:"procedure_id"`
+}
+
+type UpdateChecklistRequest struct {
+	ChecklistID string `json:"checklist_id"`
+}
+
+type GetChecklistByID struct {
+	UserProcedureID string `json:"user_procedure_id"`
+}
+
+type UserProcedureResponse struct {
+	ID          string    `json:"id"`
+	UserID      string    `json:"user_id"`
+	ProcedureID string    `json:"procedure_id"`
+	Percent     int       `json:"percent"`
+	Status      string    `json:"status"` // e.g., "Not Started", "In Progress", "Completed"
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+func ToControllerUserProcedure(user *domain.UserProcedure) *UserProcedureResponse {
+	return &UserProcedureResponse{
+		ID:          user.ID,
+		UserID:      user.UserID,
+		ProcedureID: user.ProcedureID,
+		Percent:     user.Percent,
+		Status:      user.Status,
+		UpdatedAt:   user.UpdatedAt,
+	}
+}
+
+type ChecklistResponse struct {
+	ID              string `json:"id"`
+	UserProcedureID string `json:"user_procedure_id"`
+	Type            string `json:"type"`       // "Requirement" or "Step"
+	Content         string `json:"content"`    // The actual checklist item
+	IsChecked       bool   `json:"is_checked"` // Whether the item is completed
+}
+
+func ToControllerChecklist(check *domain.Checklist) *ChecklistResponse {
+	return &ChecklistResponse{
+		ID:              check.ID,
+		UserProcedureID: check.UserProcedureID,
+		Type:            check.Type,
+		Content:         check.Content,
+		IsChecked:       check.IsChecked,
+	}
+}

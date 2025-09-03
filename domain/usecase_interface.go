@@ -1,6 +1,8 @@
 package domain
 
-import "context"
+import (
+	"context"
+)
 
 type IUserUsecase interface {
 	Register(ctx context.Context, user *Account) error
@@ -16,4 +18,11 @@ type IUserUsecase interface {
 
 type IGeminiUseCase interface {
 	TranslateContent(ctx context.Context, content, targetLang string) (string, error)
+}
+
+type IChecklistUsecase interface {
+	CreateChecklist(ctx context.Context, userid, procedureID string) (*UserProcedure, error)
+	GetProcedures(ctx context.Context, userid string) ([]*UserProcedure, error)
+	GetChecklistByUserProcedureID(ctx context.Context, userprocedureID string) ([]*Checklist, error)
+	UpdateChecklist(ctx context.Context, checklistID string) (*Checklist, error)
 }

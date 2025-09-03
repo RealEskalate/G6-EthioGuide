@@ -10,14 +10,16 @@ import (
 )
 
 type UserController struct {
-	userUsecase     domain.IUserUsecase
-	refreshTokenTTL int
+	userUsecase      domain.IUserUsecase
+	checklistUsecase domain.IChecklistUsecase
+	refreshTokenTTL  int
 }
 
-func NewUserController(uc domain.IUserUsecase, refreshTokenTTL time.Duration) *UserController {
+func NewUserController(uc domain.IUserUsecase, cl domain.IChecklistUsecase, refreshTokenTTL time.Duration) *UserController {
 	return &UserController{
-		userUsecase:     uc,
-		refreshTokenTTL: int(refreshTokenTTL.Seconds()),
+		userUsecase:      uc,
+		checklistUsecase: cl,
+		refreshTokenTTL:  int(refreshTokenTTL.Seconds()),
 	}
 }
 
@@ -119,6 +121,86 @@ func (ctrl *UserController) Login(c *gin.Context) {
 			AccessToken: accessToken,
 		})
 	}
+}
+
+func (ctrl *UserController) HandleCreateChecklist(c *gin.Context) {
+	var req CreateChecklistRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	user_id, err := c.Get("user_id")
+	if !err {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "you are logged out, try to log in again"})
+		return
+	}
+
+	userProcedure, errCreate := ctrl.checklistUsecase.CreateChecklist(c.Request.Context(), user_id.(string), req.ProcedureID)
+	if errCreate != nil {
+		HandleError(c, errCreate)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": ToControllerUserProcedure(userProcedure)})
+}
+
+func (ctrl *UserController) HandleGetProcedures(c *gin.Context) {
+	user_id, err := c.Get("user_id")
+	if !err {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "you are logged out, try to log in again"})
+		return
+	}
+
+	userProcedures, errGet := ctrl.checklistUsecase.GetProcedures(c.Request.Context(), user_id.(string))
+	if errGet != nil {
+		HandleError(c, errGet)
+		return
+	}
+
+	ProcdeureResponses := make([]*UserProcedureResponse, len(userProcedures))
+	for i, prod := range userProcedures {
+		ProcdeureResponses[i] = ToControllerUserProcedure(prod)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": ProcdeureResponses})
+}
+
+func (ctrl *UserController) HandleGetChecklistById(c *gin.Context) {
+	var req GetChecklistByID
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	checklists, err := ctrl.checklistUsecase.GetChecklistByUserProcedureID(c.Request.Context(), req.UserProcedureID)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	checklistResponses := make([]*ChecklistResponse, len(checklists))
+	for i, check := range checklists {
+		checklistResponses[i] = ToControllerChecklist(check)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": checklistResponses})
+}
+
+func (ctrl *UserController) HandleUpdateChecklist(c *gin.Context) {
+	var req UpdateChecklistRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	checklist, err := ctrl.checklistUsecase.UpdateChecklist(c.Request.Context(), req.ChecklistID)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": ToControllerChecklist(checklist)})
 }
 
 // --- HELPER FUNCTIONS ---

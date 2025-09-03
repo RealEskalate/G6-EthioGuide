@@ -44,6 +44,7 @@ func main() {
 	userRepo := repository.NewAccountRepository(db)
 	// FIX 1: Initialize the TokenRepository, as it's a required dependency for UserUsecase.
 	tokenRepo := repository.NewTokenRepository(db)
+	checklistRepo := repository.NewChecklistRepository(db)
 
 	// --- Infrastructure Services ---
 	// These are concrete implementations of external services.
@@ -65,10 +66,10 @@ func main() {
 		cfg.UsecaseTimeout,
 	)
 	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
-
+	checklistUsecase := usecase.NewChecklistUsecase(checklistRepo)
 	// --- Controllers ---
 	// Controllers handle the HTTP layer, delegating logic to use cases.
-	userController := controller.NewUserController(userUsecase, cfg.JWTRefreshTTL)
+	userController := controller.NewUserController(userUsecase, checklistUsecase, cfg.JWTRefreshTTL)
 	geminiController := controller.NewGeminiController(geminiUsecase)
 
 	// --- Middleware ---
