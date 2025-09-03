@@ -1,7 +1,7 @@
 import OrganizationSidebar from "@/components/shared/OrganizationSidebar";
 import { Header } from "@/components/shared/Header";
 import { Footer } from "@/components/shared/Footer";
-import { Children, ReactNode } from "react";
+import { ReactNode } from "react";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (

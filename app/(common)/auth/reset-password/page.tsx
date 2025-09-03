@@ -15,7 +15,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import {
   resetPasswordSchema,
   ResetPasswordFormData,
@@ -46,8 +45,8 @@ export default function ResetPasswordPage() {
       } else {
         form.setError("root", { message: t("reset_password.error") });
       }
-    } catch (error) {
-      form.setError("root", { message: t("reset_password.error") });
+    } catch {
+      form.setError("root", { message: t("new_password.error") });
     }
   };
 

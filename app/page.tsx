@@ -17,14 +17,15 @@ import {
   Check,
   Bot,
   User,
-  ChevronDown,
   Facebook,
   Twitter,
   Linkedin,
+  ChevronDown,
   Menu,
   X,
 } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
+import Image from "next/image"
 
 export default function HomePage() {
   const [isVisible, setIsVisible] = useState(false)
@@ -72,11 +73,14 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 group cursor-pointer">
             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-[#3a6a8d] to-[#2e4d57] rounded-lg flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 shadow-lg group-hover:shadow-xl">
-              <img
+              <Image
                 src="/images/ethioguide-symbol.png"
                 alt="EthioGuide Logo"
+                width={24}
+                height={24}
                 className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:scale-110"
                 style={{ objectFit: "contain" }}
+                priority
               />
             </div>
             <span className="font-semibold text-[#111827] text-sm sm:text-base transition-all duration-300 group-hover:text-[#3a6a8d] group-hover:scale-105">
@@ -198,7 +202,7 @@ export default function HomePage() {
                 className="inline-block transition-all duration-700 hover:scale-105"
                 style={{ transitionDelay: "100ms" }}
               >
-                Ethiopia's
+                Ethiopia&#39;s
               </span>{" "}
               <span
                 className="text-[#3a6a8d] inline-block transition-all duration-700 hover:scale-105 bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] bg-clip-text text-transparent"
@@ -302,7 +306,7 @@ export default function HomePage() {
 
                   <div className="bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] text-white rounded-lg p-3 sm:p-4 transition-all duration-500 hover:scale-[1.02] hover:shadow-lg">
                     <p className="text-xs sm:text-sm mb-2">
-                      I'll help you with passport renewal. Here's what you need:
+                      I&#39;ll help you with passport renewal. Here&#39;s what you need:
                     </p>
                     <ul className="text-xs space-y-1">
                       {["Current passport", "2 passport photos", "Birth certificate", "550 ETB fee"].map(
@@ -460,7 +464,7 @@ export default function HomePage() {
                         color: feature.color,
                         borderColor: feature.color,
                         "--hover-bg": feature.color,
-                      } as any
+                      } as React.CSSProperties
                     }
                     asChild
                   >
@@ -731,11 +735,14 @@ export default function HomePage() {
             <div className="sm:col-span-2 lg:col-span-1">
               <div className="flex items-center gap-2 mb-4 group cursor-pointer">
                 <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-[#3a6a8d] to-[#2e4d57] rounded-lg flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
-                  <img
+                  <Image
                 src="/images/ethioguide-symbol.png"
                 alt="EthioGuide Logo"
+                width={24}
+                height={24}
                 className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:scale-110"
                 style={{ objectFit: "contain" }}
+                priority
               />
                 </div>
                 <span className="font-semibold text-white text-sm sm:text-base transition-colors duration-300 group-hover:text-[#3a6a8d]">
@@ -771,7 +778,7 @@ export default function HomePage() {
                 title: "Legal",
                 links: ["Privacy Policy", "Terms of Service", "Cookie Policy"],
               },
-            ].map((column, columnIndex) => (
+            ].map((column) => (
               <div key={column.title}>
                 <h3 className="font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">{column.title}</h3>
                 <ul className="space-y-2 sm:space-y-3">

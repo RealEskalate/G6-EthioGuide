@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, LogOut, Trash2 } from "lucide-react";
+import { LogOut, Trash2 } from "lucide-react";
 import { FaCrown } from "react-icons/fa";
 import rickProfile from "@/public/images/rickProfile.webp";
 import PasswordInputBox from "@/components/admin/PasswordInputBox";
 import { FaCamera } from "react-icons/fa6";
+import Image from "next/image";
 
 export default function AccountSettingsPage() {
   const [fullName, setFullName] = useState("Sarah Johnson");
@@ -31,10 +32,13 @@ export default function AccountSettingsPage() {
           {/* Profile Section */}
           <Card className="border-neutral-100">
             <CardContent className="relative flex items-center gap-4 p-6">
-              <img
-                src={rickProfile.src}
+              <Image
+                src={rickProfile}
                 alt="Profile"
+                width={80}
+                height={80}
                 className="w-20 h-20 rounded-full object-cover"
+                priority
               />
               {/* change profile picture btn  */}
               <Button className="size-7 absolute bottom-5 left-20 bg-primary rounded-full"><FaCamera className="text-white size-3"/></Button>

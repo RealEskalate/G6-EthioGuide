@@ -62,7 +62,7 @@ export default function ProcedureDetail() {
                 <h2 className="text-lg font-medium text-[#111827] mb-4">Required Documents</h2>
                 <div className="grid grid-cols-4 gap-4">
                   <div
-                    className="bg-[#f3f4f6] rounded-lg p-3 text-center border border-[#e5e7eb] hover:bg-[#e5e7eb] hover:border-[#4A90E2] transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md animate-in fade-in duration-500"
+                    className="bg-[#f3f4f6] rounded-lg p-3 text-center border border-[#e5e7eb] hover:bg-[#e5e7eb] hover:border-[#4A90E2] transition-all transform hover:-translate-y-1 hover:shadow-md animate-in fade-in duration-500"
                     style={{ animationDelay: "100ms" }}
                   >
                     <span className="text-sm text-[#6b7280]">2 Passport Photos</span>
@@ -117,7 +117,7 @@ export default function ProcedureDetail() {
                       size="sm"
                       className="text-[#3A6A8D] border-[#3A6A8D] text-xs bg-transparent transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
                     >
-                      <a href="/user/notices/1">View Full Notice</a>
+                      <Link href="/user/notices/1">View Full Notice</Link>
                     </Button>
                   </div>
                 </div>
@@ -313,7 +313,7 @@ export default function ProcedureDetail() {
                           size="sm"
                           className="text-[#3A6A8D] border-[#3A6A8D] text-xs bg-transparent transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
                         >
-                          <a href="/user/notices/1">View Full Notice</a>
+                          <Link href="/user/notices/1">View Full Notice</Link>
                         </Button>
                         <Button
                           variant="outline"
@@ -336,7 +336,7 @@ export default function ProcedureDetail() {
                         asChild
                         className="w-full bg-[#3A6A8D] hover:bg-[#2e4d57] text-white text-sm py-2 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
                       >
-                        <a href="/user/notices">View Notices</a>
+                        <Link href="/user/notices">View Notices</Link>
                       </Button>
                     </div>
                   </div>

@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { ChevronDown, User } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
