@@ -6,7 +6,8 @@ export default async function EditProcedure({
 }: {
   params: { id: string };
 }) {
-  const { id } = params;
+  const{ id } = await params
+  // const { id } = params;
 
   // Fetch the procedure (dummy for now, replace with your API call)
   // const res = await fetch(`http://localhost:3000/api/procedures/${id}`);

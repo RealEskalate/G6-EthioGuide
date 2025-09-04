@@ -26,8 +26,8 @@ export default function AdminProcedures() {
     ],
     fees: [{ label: "Application Fee", amount: 500, currency: "Birr" }],
     processingTime: { minDays: 5, maxDays: 10 },
-    updatedAt: "2024-12-15T12:00:00Z",
-    createdAt: "2024-10-01T09:00:00Z",
+    updatedAt: "2024-12-15",
+    createdAt: "2024-10-01",
   },
   {
     id: "2",
@@ -41,8 +41,8 @@ export default function AdminProcedures() {
     ],
     fees: [{ label: "Renewal Fee", amount: 300, currency: "Birr" }],
     processingTime: { minDays: 2, maxDays: 5 },
-    updatedAt: "2024-12-12T12:00:00Z",
-    createdAt: "2024-09-20T09:00:00Z",
+    updatedAt: "2024-12-12",
+    createdAt: "2024-09-20",
   },
   {
     id: "3",
@@ -56,8 +56,8 @@ export default function AdminProcedures() {
     ],
     fees: [{ label: "Application Fee", amount: 1000, currency: "Birr" }],
     processingTime: { minDays: 7, maxDays: 14 },
-    updatedAt: "2024-12-10T12:00:00Z",
-    createdAt: "2024-08-15T09:00:00Z",
+    updatedAt: "2024-12-10",
+    createdAt: "2024-08-15",
   },
   {
     id: "4",
@@ -71,8 +71,8 @@ export default function AdminProcedures() {
     ],
     fees: [{ label: "Appeal Fee", amount: 200, currency: "Birr" }],
     processingTime: { minDays: 3, maxDays: 7 },
-    updatedAt: "2024-11-28T12:00:00Z",
-    createdAt: "2024-09-01T09:00:00Z",
+    updatedAt: "2024-11-28",
+    createdAt: "2024-09-01",
   },
   {
     id: "5",
@@ -86,8 +86,8 @@ export default function AdminProcedures() {
     ],
     fees: [{ label: "Permit Fee", amount: 800, currency: "Birr" }],
     processingTime: { minDays: 5, maxDays: 7 },
-    updatedAt: "2024-12-08T12:00:00Z",
-    createdAt: "2024-07-25T09:00:00Z",
+    updatedAt: "2024-12-08",
+    createdAt: "2024-07-25",
   },
 ];
 
