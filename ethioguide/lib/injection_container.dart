@@ -100,6 +100,9 @@ Future<void> init() async {
       BaseOptions(
         baseUrl: EndPoints.baseUrl,
         headers: {'X-Client-Type': 'mobile'},
+
+      connectTimeout: const Duration(seconds: 111), // Waits 60s to connect
+      receiveTimeout: const Duration(seconds: 111), 
       ),
     );
     dio.interceptors.add(AuthInterceptor(sl<CoreAuthRepository>(), dio));

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:ethioguide/core/error/exception.dart';
 import '../models/tokens_model.dart';
 import '../models/user_model.dart';
+import 'package:ethioguide/core/config/end_points.dart';
 
 abstract class AuthRemoteDataSource {
   Future<(UserModel, TokensModel)> login(String identifier, String password);
@@ -28,29 +29,69 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl({required this.dio});
 
   @override
-  Future<(UserModel, TokensModel)> login(String identifier, String password) async {
-    // --- MOCKED RESPONSE FOR DEVELOPMENT ---
-    await Future.delayed(const Duration(seconds: 1)); 
+  Future<(UserModel, TokensModel)> login(
+    String identifier,
+    String password,
+  ) async {
+    try {
+      // Make the real network request to the login endpoint.
+      final response = await dio.post(
+        EndPoints.loginEndPoint, // Using the constant from your EndPoints class
+        data: {'identifier': identifier, 'password': password},
+      );
 
-    if (identifier == "test@test.com" && password == "password") {
-      final mockJsonResponse = {
-        "token": "mock_access_token_12345",
-        "refreshToken": "mock_refresh_token_67890",
-        "user": {
-          "id": "123",
-          "email": "test@test.com",
-          "name": "Lidiya Test",
-          "username": "lidiyatest"
-        }
-      };
-      final user = UserModel.fromJson(mockJsonResponse['user'] as Map<String, dynamic>);
-      final tokens = TokensModel.fromJson(mockJsonResponse);
-      return (user, tokens);
-    } else {
-      // CORRECTED: Provide a message and status code when throwing the exception.
-      throw ServerException(message: 'Invalid credentials', statusCode: 401);
+      // Check for a successful response code (e.g., 200 OK).
+      if (response.statusCode == 200 && response.data != null) {
+        // Parse the JSON response into our data models.
+        final user = UserModel.fromJson(response.data['user']);
+        final tokens = TokensModel.fromJson(response.data);
+        return (user, tokens);
+      } else {
+        // This is a fallback for unexpected successful status codes (e.g., 204 No Content).
+        throw ServerException(
+          message:
+              'Login failed with an unexpected status code: ${response.statusCode}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+       print("----------- DIO REGISTER ERROR -----------");
+  print("STATUS CODE: ${e.response?.statusCode}");
+  print("RESPONSE DATA: ${e.response?.data}");
+  print("--------------------------------------");
+      // This `catch` block is crucial. Dio automatically throws a DioException
+      // for any non-2xx status code (like 401, 404, 500).
+      // THE FIX
+final errorMessage = e.response?.data?['message'] ?? e.response?.data?['error'] ?? 'An unknown server error occurred';
+      throw ServerException(
+        message: errorMessage,
+        statusCode: e.response?.statusCode,
+      );
     }
   }
+
+  // --- MOCKED RESPONSE FOR DEVELOPMENT ---
+  //   await Future.delayed(const Duration(seconds: 1));
+
+  //   if (identifier == "test@test.com" && password == "password") {
+  //     final mockJsonResponse = {
+  //       "token": "mock_access_token_12345",
+  //       "refreshToken": "mock_refresh_token_67890",
+  //       "user": {
+  //         "id": "123",
+  //         "email": "test@test.com",
+  //         "name": "Lidiya Test",
+  //         "username": "lidiyatest"
+  //       }
+  //     };
+  //     final user = UserModel.fromJson(mockJsonResponse['user'] as Map<String, dynamic>);
+  //     final tokens = TokensModel.fromJson(mockJsonResponse);
+  //     return (user, tokens);
+  //   } else {
+  //     // CORRECTED: Provide a message and status code when throwing the exception.
+  //     throw ServerException(message: 'Invalid credentials', statusCode: 401);
+  //   }
+  // }
 
   @override
   Future<void> register({
@@ -60,18 +101,55 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String name,
     String? phone,
   }) async {
-    // --- MOCKED RESPONSE FOR DEVELOPMENT ---
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // You could add logic here to simulate errors, for example:
-    if (email == "exists@test.com") {
-      // CORRECTED: Provide a message for this specific error case.
-      throw ServerException(message: 'Email already exists', statusCode: 409);
-    }
+    try {
+      // Make the real network request to the register endpoint.
+      final response = await dio.post(
+        EndPoints.registerEndPoint, // Use the constant
+        data: {
+          'username': username,
+          'email': email,
+          'password': password,
+          'name': name,
+          'phone': phone, // Will be null if not provided
+        },
+      );
 
-    // Simulate a successful registration.
-    return;
+      // According to your API docs, a successful registration is 201 Created.
+      if (response.statusCode != 201) {
+        throw ServerException(
+          message:
+              'Registration failed with an unexpected status code: ${response.statusCode}',
+          statusCode: response.statusCode,
+        );
+      }
+      // If the status code is 201, the method completes successfully.
+    } on DioException catch (e) {
+      print("----------- DIO ERROR -----------");
+      print("ERROR TYPE: ${e.type}");
+      print("ERROR MESSAGE: ${e.message}");
+      print("SERVER RESPONSE: ${e.response}");
+      print("---------------------------------");
+      final errorMessage =
+          e.response?.data?['message'] ?? 'An unknown server error occurred';
+      throw ServerException(
+        message: errorMessage,
+        statusCode: e.response?.statusCode,
+      );
+    }
   }
+
+  // --- MOCKED RESPONSE FOR DEVELOPMENT ---
+  //   await Future.delayed(const Duration(seconds: 1));
+
+  //   // You could add logic here to simulate errors, for example:
+  //   if (email == "exists@test.com") {
+  //     // CORRECTED: Provide a message for this specific error case.
+  //     throw ServerException(message: 'Email already exists', statusCode: 409);
+  //   }
+
+  //   // Simulate a successful registration.
+  //   return;
+  // }
 
   @override
   Future<void> forgotPassword(String email) async {
@@ -109,13 +187,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     // --- MOCKED RESPONSE ---
     await Future.delayed(const Duration(seconds: 1));
     if (token == 'invalid_token') {
-      throw ServerException(message: 'Invalid or expired token', statusCode: 400);
+      throw ServerException(
+        message: 'Invalid or expired token',
+        statusCode: 400,
+      );
     }
     // Simulate success
     return;
   }
 
-   // ... inside class AuthRemoteDataSourceImpl ...
+  // ... inside class AuthRemoteDataSourceImpl ...
 
   @override
   Future<(UserModel, TokensModel)> signInWithGoogle(String authCode) async {
@@ -137,16 +218,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     // --- MOCKED RESPONSE FOR DEVELOPMENT ---
     await Future.delayed(const Duration(seconds: 1));
     final mockJsonResponse = {
-        "token": "backend_access_token_google",
-        "refreshToken": "backend_refresh_token_google",
-        "user": {
-          "id": "google_user_123",
-          "email": "google@test.com",
-          "name": "Google User",
-          "username": "googleuser"
-        }
-      };
-    final user = UserModel.fromJson(mockJsonResponse['user'] as Map<String, dynamic>);
+      "token": "backend_access_token_google",
+      "refreshToken": "backend_refresh_token_google",
+      "user": {
+        "id": "google_user_123",
+        "email": "google@test.com",
+        "name": "Google User",
+        "username": "googleuser",
+      },
+    };
+    final user = UserModel.fromJson(
+      mockJsonResponse['user'] as Map<String, dynamic>,
+    );
     final tokens = TokensModel.fromJson(mockJsonResponse);
     return (user, tokens);
   }

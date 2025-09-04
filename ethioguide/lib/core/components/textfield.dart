@@ -12,6 +12,7 @@ class customTextField extends StatelessWidget {
   final double? height; 
   final double borderRadius;
   final Widget? suffixIcon; 
+  final String? errorText;
 
   const customTextField({super.key,
     required this.hintText,
@@ -22,7 +23,8 @@ class customTextField extends StatelessWidget {
     this.width,
     this.height,
     this.borderRadius = 12.0,
-    this.suffixIcon,});
+    this.suffixIcon,
+     this.errorText,});
 
   @override
   Widget build(BuildContext context) {

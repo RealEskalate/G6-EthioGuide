@@ -98,7 +98,7 @@ class SignUpView extends StatelessWidget {
                           onTap: () {
                             context.read<AuthBloc>().add(SignUpSubmitted(
                                 name: nameController.text,
-                                username: "some_username", // Add a username field if needed
+                                username: usernameController.text, // Add a username field if needed
                                 email: emailController.text,
                                 password: passwordController.text,
                               ));
