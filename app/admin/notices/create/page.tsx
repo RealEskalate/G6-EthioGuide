@@ -83,7 +83,7 @@ export default function CreateOfficialNotice() {
                 </div>
 
                 {/* Attachments */}
-                <div className="space-y-3">
+                {/* <div className="space-y-3">
                   <label className="text-sm font-semibold text-slate-700 tracking-wide">Attachments</label>
                   <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-xl p-10 transition-colors group cursor-pointer">
                     <div className="text-center">
@@ -99,7 +99,7 @@ export default function CreateOfficialNotice() {
                       <p className="text-sm text-slate-500 mt-2">PDF, DOC, PNG, JPG up to 10MB</p>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
 
@@ -183,10 +183,10 @@ export default function CreateOfficialNotice() {
                 <Upload className="h-4 w-4 mr-2" />
                 Publish Notice
               </Button>
-              <Button className="bg-secondary hover:bg-[#5E9C8F] text-white shadow-lg  h-12 px-6 font-semibold tracking-wide">
+              {/* <Button className="bg-secondary hover:bg-[#5E9C8F] text-white shadow-lg  h-12 px-6 font-semibold tracking-wide">
                 <Copy className="h-4 w-4 mr-2" />
                 Save Draft
-              </Button>
+              </Button> */}
               <Button
                 variant="outline"
                 className="text-slate-600 border-slate-300 hover:bg-slate-50 h-12 px-6 font-medium bg-transparent"
