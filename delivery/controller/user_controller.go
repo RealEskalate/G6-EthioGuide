@@ -259,31 +259,49 @@ func (ctrl *UserController) SocialLogin(c *gin.Context) {
 	}
 }
 
+// @Summary      Update Profile
+// @Description  Update user's profile.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        request body UserUpdateRequest true "Updated Account Details"
+// @Success      200 {object} domain.Account "Account Updated"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/me/ [patch]
 func (ctrl *UserController) UpdateProfile(c *gin.Context) {
-	// 1. Get the logged-in user's ID from the context (set by middleware).
-	userID, exists := c.Get("userID")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-		return
-	}
+    userID, exists := c.Get("userID")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+        return
+    }
 
-	// 2. Parse the fields from the body of the request
-	var updates map[string]interface{}
-	if err := c.ShouldBindJSON(&updates); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data."})
-		return
-	}
+    var req UserUpdateRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+        return
+    }
 
-	// 5. Call the use case with the parsed data.
-	updatedUser, err := ctrl.userUsecase.UpdateProfile(c.Request.Context(), userID.(string), updates)
-	if err != nil {
-		// Use the centralized error handler for cleaner code
-		HandleError(c, err)
-		return
-	}
+    // 1. Fetch current account from usecase
+    account, err := ctrl.userUsecase.GetProfile(c.Request.Context(), userID.(string))
+    if err != nil {
+        HandleError(c, err)
+        return
+    }
 
-	// 6. On success, return the updated user object.
-	c.JSON(http.StatusOK, toUserResponse(updatedUser))
+    // 2. Convert DTO → domain.Account with updates applied
+    updatedAccount := ToDomainAccountUpdate(&req, account)
+
+    // 3. Call usecase with pure domain model
+    savedAccount, err := ctrl.userUsecase.UpdateProfile(c.Request.Context(), updatedAccount)
+    if err != nil {
+        HandleError(c, err)
+        return
+    }
+
+    c.JSON(http.StatusOK, toUserResponse(savedAccount))
 }
 
 // --- HELPER FUNCTIONS ---

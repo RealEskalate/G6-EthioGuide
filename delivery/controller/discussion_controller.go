@@ -20,6 +20,18 @@ func NewPostController(uc domain.IPostUseCase) *PostController {
 	}
 }
 
+// @Summary      Create Post
+// @Description  Create a new post.
+// @Tags         Post
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        request body CreatePostDTO true "Post Detail"
+// @Success      200 {object} domain.Post "Post Created"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /discussions [post]
 func (dc *PostController) CreatePost(c *gin.Context) {
 	var dto CreatePostDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
@@ -46,6 +58,22 @@ func (dc *PostController) CreatePost(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"post": res})
 }
 
+// @Summary      Fetch Posts
+// @Description  Fetch list of posts
+// @Tags         Post
+// @Accept       json
+// @Produce      json
+// @Param        title query string false "procedure ids"
+// @Param        procedure_ids query array false "procedure ids"
+// @Param        tags query array false "tags"
+// @Param        page query string false "page"
+// @Param        limit query string false "limit"
+// @Param        sort_by query string false "sort_by"
+// @Param        sort_order query string false "sort_order"
+// @Success      200 {object} PaginatedPostsResponse "Posts"
+// @Failure      400 {string}  "Bad Request"
+// @Failure      500 {string}  "Internal"
+// @Router       /discussions [get]
 func (dc *PostController) GetPosts(c *gin.Context) {
     title := c.Query("title")
 	
@@ -74,14 +102,25 @@ func (dc *PostController) GetPosts(c *gin.Context) {
     }
 
     c.JSON(http.StatusOK, gin.H{
-        "posts":      posts,
-        "totalCount": total,
-        "page":       page,
-        "limit":      limit,
+        "Posts": PaginatedPostsResponse{
+			Posts: posts,
+			Total: total,
+			Page: page,
+			Limit: limit,
+		},
     })
 }
 
-
+// @Summary      Fetch Post
+// @Description  Fetch a post
+// @Tags         Post
+// @Accept       json
+// @Produce      json
+// @Param        id path string true "Post ID"
+// @Success      200 {object} domain.Post "Post"
+// @Failure      400 {string}  "Bad Request"
+// @Failure      500 {string}  "Internal"
+// @Router       /discussions/{id} [get]
 func (dc *PostController) GetPostByID(c *gin.Context){
 	id := c.Param("id")
 	if id == ""{
@@ -96,6 +135,20 @@ func (dc *PostController) GetPostByID(c *gin.Context){
 	c.JSON(http.StatusOK, gin.H{"post": res})
 }
 
+// @Summary      Update Post
+// @Description  Update a post
+// @Tags         Post
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        id path string true "Post ID"
+// @Param        request body UpdatePostDTO  true "Post update details"
+// @Success      200 {object} domain.Post "Post"
+// @Failure      400 {string}  "Bad Request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      403 {string}  "Forbidden"
+// @Failure      500 {string}  "Internal"
+// @Router       /discussions/{id} [patch]
 func (dc *PostController) UpdatePost(c *gin.Context){
 	id := c.Param("id")
 	userID, exists := c.Get("userID")
@@ -130,6 +183,19 @@ func (dc *PostController) UpdatePost(c *gin.Context){
 
 }
 
+// @Summary      Delete Post
+// @Description  Delete a post
+// @Tags         Post
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        id path string true "Post ID"
+// @Success      204 "No Content"
+// @Failure      400 {string}  "Bad Request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      403 {string}  "Forbidden"
+// @Failure      500 {string}  "Internal"
+// @Router       /discussions/{id} [delete]
 func (dc *PostController) DeletePost(c *gin.Context){
 	id := c.Param("id")
 	userID, exists := c.Get("userID")
