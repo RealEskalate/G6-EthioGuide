@@ -244,3 +244,39 @@ func (r *AccountRepository) UpdateProfile(ctx context.Context, account domain.Ac
 
 	return nil
 }
+
+func (r *AccountRepository) ExistsByEmail(ctx context.Context, email, excludeID string) (bool, error) {
+    if excludeID == "" {
+        // If no excludeID provided, just check existence without exclusion
+        filter := bson.M{"email": email}
+        count, err := r.collection.CountDocuments(ctx, filter)
+        return count > 0, err
+    }
+
+    objID, err := primitive.ObjectIDFromHex(excludeID)
+    if err != nil {
+        return false, err // Or handle the error as needed (e.g., invalid ID)
+    }
+
+    filter := bson.M{"email": email, "_id": bson.M{"$ne": objID}}
+    count, err := r.collection.CountDocuments(ctx, filter)
+    return count > 0, err
+}
+
+func (r *AccountRepository) ExistsByUsername(ctx context.Context, username, excludeID string) (bool, error) {
+    if excludeID == "" {
+        // If no excludeID provided, just check existence without exclusion
+        filter := bson.M{"userDetail.username": username}
+        count, err := r.collection.CountDocuments(ctx, filter)
+        return count > 0, err
+    }
+
+    objID, err := primitive.ObjectIDFromHex(excludeID)
+    if err != nil {
+        return false, err // Or handle the error as needed (e.g., invalid ID)
+    }
+
+    filter := bson.M{"userDetail.username": username, "_id": bson.M{"$ne": objID}}
+    count, err := r.collection.CountDocuments(ctx, filter)
+    return count > 0, err
+}

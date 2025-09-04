@@ -18,6 +18,19 @@ func NewFeedbackController(fu domain.IFeedbackUsecase) *FeedbackController {
 	}
 }
 
+// @Summary      Submit Feedback
+// @Description  Submit a feedback for a procedure
+// @Tags         Feedback
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        id path string true "Procedure ID"
+// @Param        request body FeedbackCreateRequest true "Feedback Detail"
+// @Success      201 {object} domain.Feedback "Feedback Submitted Successfully"
+// @Failure      400 {string}  "Bad Request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Internal"
+// @Router       /procedures/{id}/feedback [post]
 func (ctrl *FeedbackController) SubmitFeedback(c *gin.Context) {
 	userID := c.GetString("userID")
 	if userID == "" {
@@ -55,6 +68,19 @@ func (ctrl *FeedbackController) SubmitFeedback(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Feedback submitted successfully", "feedback": fromDomainFeedback(feedback)})
 }
 
+// @Summary      Fetch Feedbacks
+// @Description  Fetch list of feedbacks for a procedure
+// @Tags         Feedback
+// @Accept       json
+// @Produce      json
+// @Param        page query string false "page"
+// @Param        limit query string false "limit"
+// @Param        status query string false "status"
+// @Param        id path string true "Procedure ID"
+// @Success      200 {object} FeedbackListResponse "Feedbacks"
+// @Failure      400 {string}  "Bad Request"
+// @Failure      500 {string}  "Internal"
+// @Router       /procedures/{id}/feedback [get]
 func (ctrl *FeedbackController) GetAllFeedbacksForProcedure(c *gin.Context) {
 	filter := domain.FeedbackFilter{}
 	page, err := strconv.ParseInt(c.DefaultQuery("page", "1"), 10, 64)
@@ -70,7 +96,7 @@ func (ctrl *FeedbackController) GetAllFeedbacksForProcedure(c *gin.Context) {
 	filter.Page = page
 	filter.Limit = limit
 
-	if status := c.Query("title"); status != "" {
+	if status := c.Query("status"); status != "" {
 		filter.Status = &status
 	}
 
@@ -85,6 +111,20 @@ func (ctrl *FeedbackController) GetAllFeedbacksForProcedure(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"feedbacks": toFeedbackListResponse(feedbacks, total, page, limit)})
 }
 
+// @Summary      Update Feedback
+// @Description  Update the status of a feedback 
+// @Tags         Feedback
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        id path string true "Feedback ID"
+// @Param        request body FeedbackStatePatchRequest true "Update Status of Feedback"
+// @Success      201 {string}  "Feedback Updated Successfully"
+// @Failure      400 {string}  "Bad Request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      404 {string}  "Not Found"
+// @Failure      500 {string}  "Internal"
+// @Router       /feedback/{id} [patch]
 func (ctrl *FeedbackController) UpdateFeedbackStatus(c *gin.Context) {
 	var req FeedbackStatePatchRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

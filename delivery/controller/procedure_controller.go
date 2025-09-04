@@ -19,7 +19,7 @@ func NewProcedureController(pu domain.IProcedureUsecase) *ProcedureController {
 
 // @Summary      Create Procedure
 // @Description  Create new procedure.
-// @Tags         Procedure
+// @Tags         Procedures
 // @Accept       json
 // @Produce      json
 // @Param        Authorization header string true "Bearer token"
@@ -77,15 +77,15 @@ func (pc *ProcedureController) GetProcedureByID(ctx *gin.Context) {
 // @Tags         Procedures
 // @Accept       json
 // @Produce      json
-// @Security     BearerAuth
-// @Param        id   path      string  true  "Procedure ID"
+// @Param        Authorization header string true "Bearer token"
+// @Param        id path string true "Procedure ID"
 // @Param        request body domain.Procedure true "Procedure Update Data"
 // @Success      200  {string}  success
-// @Failure      400  {string} Invalid request body
-// @Failure      401  {string} Unauthorized
-// @Failure      403  {string} Permission Denied
-// @Failure      404  {string} Procedure not found
-// @Router       /procedures/{id} [put]
+// @Failure      400  {string}  Invalid request body
+// @Failure      401  {string}  Unauthorized
+// @Failure      403  {string}  Permission Denied
+// @Failure      404  {string}  Procedure not found
+// @Router       /procedures/{id} [patch]
 func (pc *ProcedureController) UpdateProcedure(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var procedure domain.Procedure
@@ -104,8 +104,8 @@ func (pc *ProcedureController) UpdateProcedure(ctx *gin.Context) {
 // @Summary      Delete Procedure
 // @Description  Deletes an existing procedure. Requires admin or organization ownership.
 // @Tags         Procedures
-// @Security     BearerAuth
-// @Param        id   path      string  true  "Procedure ID"
+// @Param        Authorization header string true "Bearer token"
+// @Param        id path string true "Procedure ID"
 // @Success      204  "No Content"
 // @Failure      401  {string} Unauthorized
 // @Failure      403  {string} Permission Denied

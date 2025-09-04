@@ -65,6 +65,96 @@ type ChangePasswordRequest struct {
 	NewPassword string `json:"new_password" binding:"required"`
 }
 
+// ------------------------------------
+type UserUpdateRequest struct {
+    Name          *string               `json:"name,omitempty"`
+    Email         *string               `json:"email,omitempty"`
+    ProfilePicURL *string               `json:"profilePicURL,omitempty"`
+
+    // Mutually exclusive blocks
+    UserDetail         *UserDetailUpdate         `json:"userDetail,omitempty"`
+    OrganizationDetail *OrganizationDetailUpdate `json:"organizationDetail,omitempty"`
+}
+
+type UserDetailUpdate struct {
+    Username *string `json:"username,omitempty"`
+}
+
+type OrganizationDetailUpdate struct {
+    Description  *string             `json:"description,omitempty"`
+    Location     *string             `json:"location,omitempty"`
+    Type         *string             `json:"type,omitempty"` // "gov" | "private"
+    ContactInfo  *ContactInfoUpdate  `json:"contactInfo,omitempty"`
+    PhoneNumbers *[]string           `json:"phoneNumbers,omitempty"`
+}
+
+type ContactInfoUpdate struct {
+    Socials *map[string]string `json:"socials,omitempty"`
+    Website *string            `json:"website,omitempty"`
+}
+
+func ToDomainAccountUpdate(req *UserUpdateRequest, existing *domain.Account) *domain.Account {
+    account := *existing // copy existing account
+
+    if req.Name != nil {
+        account.Name = *req.Name
+    }
+    if req.ProfilePicURL != nil {
+        account.ProfilePicURL = *req.ProfilePicURL
+    }
+    if req.Email != nil {
+        account.Email = *req.Email
+    }
+
+    // User detail
+    if req.UserDetail != nil {
+        if account.OrganizationDetail != nil {
+            // mutual exclusion will be validated in usecase
+        }
+        if account.UserDetail == nil {
+            account.UserDetail = &domain.UserDetail{}
+        }
+        if req.UserDetail.Username != nil {
+            account.UserDetail.Username = *req.UserDetail.Username
+        }
+    }
+
+    // Organization detail
+    if req.OrganizationDetail != nil {
+        if account.UserDetail != nil {
+            // mutual exclusion will be validated in usecase
+        }
+        if account.OrganizationDetail == nil {
+            account.OrganizationDetail = &domain.OrganizationDetail{}
+        }
+
+        od := req.OrganizationDetail
+        if od.Description != nil {
+            account.OrganizationDetail.Description = *od.Description
+        }
+        if od.Location != nil {
+            account.OrganizationDetail.Location = *od.Location
+        }
+        if od.Type != nil {
+            account.OrganizationDetail.Type = domain.OrganizationType(*od.Type)
+        }
+        if od.ContactInfo != nil {
+            if od.ContactInfo.Website != nil {
+                account.OrganizationDetail.ContactInfo.Website = *od.ContactInfo.Website
+            }
+            if od.ContactInfo.Socials != nil {
+                account.OrganizationDetail.ContactInfo.Socials = *od.ContactInfo.Socials
+            }
+        }
+        if od.PhoneNumbers != nil {
+            account.OrganizationDetail.PhoneNumbers = *od.PhoneNumbers
+        }
+    }
+
+    return &account
+}
+// ------------------------------------
+
 type ProcedureCreateRequest struct {
 	Name           string `json:"name"`
 	GroupID        string `json:"groupId"`
@@ -113,7 +203,8 @@ func toDomainProcedure(p *ProcedureCreateRequest) *domain.Procedure {
 
 type CreateCategoryRequest struct {
 	ID             string `json:"id"`
-	OrganizationID string `json:"organization_id" binding:"required"`
+	// OrganizationID string `json:"organization_id" binding:"required"`
+	OrganizationID string `json:"organization_id"`
 	ParentID       string `json:"parent_id"`
 	Title          string `json:"title" binding:"required"`
 }
@@ -216,6 +307,13 @@ type CreatePostDTO struct {
 	Content    string   `json:"content" binding:"required"`
 	Procedures []string `json:"procedures,omitempty"`
 	Tags       []string `json:"tags,omitempty"`
+}
+
+type PaginatedPostsResponse struct {
+	Posts []*domain.Post `json:"posts"` 
+	Total int64 `json:"total"`
+	Page  int64 `json:"page"`
+	Limit int64 `json:"limit"`
 }
 
 type UpdatePostDTO struct {

@@ -12,6 +12,10 @@ type IAccountRepository interface {
 	// GetByPhoneNumber(ctx context.Context, phone string) (*Account, error)
 	UpdatePassword(ctx context.Context, accountID, newPassword string) error
 	UpdateProfile(ctx context.Context, account Account) error
+
+	// -----
+	ExistsByEmail(ctx context.Context, email, excludeID string) (bool, error)
+	ExistsByUsername(ctx context.Context, username, excludeID string) (bool, error)
 }
 
 type ITokenRepository interface {
