@@ -17,6 +17,7 @@ export function Header() {
   const [language, setLanguage] = useState("EN");
   const pathname = usePathname();
   const isAdmin = pathname.startsWith(`/admin`);
+  const isOrg = pathname.startsWith(`/organization`);
   return (
     <header className="bg-white px-6 py-4 sticky top-0 z-50">
       <div className="flex items-center justify-between">
@@ -76,7 +77,10 @@ export function Header() {
             onClick={() => {
               if (isAdmin) {
                 window.location.href = "/admin/profile";
-              } else {
+              }
+              else if (isOrg) {
+                window.location.href = "/organization/profile";
+              }else {
                 window.location.href = "/user/profile";
               }
             }}
