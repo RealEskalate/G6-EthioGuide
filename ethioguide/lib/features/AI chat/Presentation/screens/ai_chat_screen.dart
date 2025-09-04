@@ -1,9 +1,8 @@
 import 'package:ethioguide/features/AI%20chat/Domain/entities/conversation.dart';
 import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
-import 'package:ethioguide/features/AI%20chat/data/models/conversation_model.dart';
+import 'package:ethioguide/features/AI%20chat/Presentation/widgets/ai_page_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -121,7 +120,9 @@ class _ChatPageState extends State<ChatPage> {
             onPressed: () {
               final content = translateController.text.trim();
               if (content.isNotEmpty) {
-                context.read<AiBloc>().add(TranslateContentEvent(content: content, lang: selectedLang));
+                context.read<AiBloc>().add(
+                  TranslateContentEvent(content: content, lang: selectedLang),
+                );
                 Navigator.pop(context);
               }
             },
@@ -169,23 +170,7 @@ class _ChatPageState extends State<ChatPage> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('AI Legal Assistant'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.history),
-              onPressed: () {
-                context.read<AiBloc>().add(GetHistoryEvent());
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.more_vert),
-              onPressed: () {
-                // TODO: Add more options (e.g., clear history)
-              },
-            ),
-          ],
-        ),
+        appBar: appBar(context: context),
         body: Column(
           children: [
             Expanded(
@@ -208,28 +193,79 @@ class _ChatPageState extends State<ChatPage> {
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: _queryController,
-                      focusNode: _queryFocusNode,
-                      decoration: InputDecoration(
-                        hintText: 'Type your question here...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(
-                            color: _queryFocusNode.hasFocus ? Colors.blue : Colors.grey,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.2),
+                            spreadRadius: 1,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _queryController,
+                        focusNode: _queryFocusNode,
+                        decoration: InputDecoration(
+                          hintText: 'Type your question here...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide(
+                              color: _queryFocusNode.hasFocus
+                                  ? Colors.blue
+                                  : Colors.grey,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: const BorderSide(
+                              color: Colors.blue,
+                              width: 2,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
                           ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: const BorderSide(color: Colors.blue, width: 2),
-                        ),
+                        onSubmitted: (_) => _sendQuery(),
                       ),
-                      onSubmitted: (_) => _sendQuery(),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.send, color: Colors.teal),
-                    onPressed: _sendQuery,
+                  const SizedBox(width: 8),
+                  BlocBuilder<AiBloc, AiState>(
+                    builder: (context, state) {
+                      final isLoading = state is AiLoading;
+                      return GestureDetector(
+                        onTap: isLoading ? _cancelQuery : _sendQuery,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.teal,
+                          ),
+                          padding: const EdgeInsets.all(10),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.send,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -284,7 +320,9 @@ class _ChatPageState extends State<ChatPage> {
             alignment: Alignment.centerLeft,
             child: Container(
               margin: const EdgeInsets.symmetric(vertical: 8),
-              padding: isError ? const EdgeInsets.all(6) : const EdgeInsets.all(12),
+              padding: isError
+                  ? const EdgeInsets.all(6)
+                  : const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isError ? Colors.red[100] : Colors.grey[200],
                 borderRadius: BorderRadius.circular(12),
@@ -309,9 +347,12 @@ class _ChatPageState extends State<ChatPage> {
                     content: conv.response,
                     isError: isError,
                   ),
+                  if (!isError && !isLoading && conv.id != 'initial')
+                    _buildChecklistButton(),
                   if (conv.procedures.isNotEmpty && !isError && !isLoading)
-                    ...conv.procedures.map((procedure) => _buildInfoCard(procedure: procedure!)),
-                  if (!isError && !isLoading) _buildChecklistButton(),
+                    ...conv.procedures.map(
+                      (procedure) => _buildInfoCard(procedure: procedure!),
+                    ),
                 ],
               ),
             ),
@@ -329,7 +370,9 @@ class _ChatPageState extends State<ChatPage> {
     return Card(
       color: Colors.teal[50],
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: isError ? const EdgeInsets.symmetric(vertical: 3) : const EdgeInsets.symmetric(vertical: 8),
+      margin: isError
+          ? const EdgeInsets.symmetric(vertical: 3)
+          : const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -374,7 +417,10 @@ class _ChatPageState extends State<ChatPage> {
                 children: [
                   Text(
                     procedure.name,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -382,7 +428,11 @@ class _ChatPageState extends State<ChatPage> {
                       ElevatedButton(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Viewing procedure: ${procedure.name}')),
+                            SnackBar(
+                              content: Text(
+                                'Viewing procedure: ${procedure.name}',
+                              ),
+                            ),
                           );
                           // TODO: Navigate to procedure details page
                         },
@@ -396,7 +446,11 @@ class _ChatPageState extends State<ChatPage> {
                       ElevatedButton(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Starting procedure: ${procedure.name}')),
+                            SnackBar(
+                              content: Text(
+                                'Starting procedure: ${procedure.name}',
+                              ),
+                            ),
                           );
                           // TODO: Navigate to procedure start page
                         },
@@ -457,6 +511,10 @@ class _ChatPageState extends State<ChatPage> {
       _queryController.clear();
       _queryFocusNode.unfocus();
     }
+  }
+
+  void _cancelQuery() {
+    context.read<AiBloc>().add(CancleQueryEvent());
   }
 
   @override

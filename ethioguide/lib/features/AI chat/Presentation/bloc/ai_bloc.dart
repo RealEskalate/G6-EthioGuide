@@ -22,6 +22,7 @@ class AiBloc extends Bloc<AiEvent, AiState> {
     on<SendQueryEvent>(_onSendQuery);
     on<GetHistoryEvent>(_onGetHistory);
     on<TranslateContentEvent>(_onTranslateContent);
+    on<CancleQueryEvent>(_onCancleQuery);
   }
 
   Future<void> _onSendQuery(SendQueryEvent event, Emitter<AiState> emit) async {
@@ -33,6 +34,10 @@ class AiBloc extends Bloc<AiEvent, AiState> {
         (conversation) => AiQuerySuccess(conversation: conversation),
       )),
     );
+  }
+
+  Future<void> _onCancleQuery(CancleQueryEvent event, Emitter<AiState> emit) async {
+    emit(AiInitial());
   }
 
   Future<void> _onGetHistory(
