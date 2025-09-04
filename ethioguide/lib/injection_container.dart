@@ -10,6 +10,7 @@ import 'package:ethioguide/features/authentication/domain/usecases/register_user
 import 'package:ethioguide/features/authentication/domain/usecases/reset_password.dart';
 import 'package:ethioguide/features/authentication/domain/usecases/sign_in_with_google.dart';
 import 'package:ethioguide/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:ethioguide/features/home_screen/presentaion/bloc/home_bloc.dart';
 // REMOVED: No longer need to import google_sign_in here.
 
 import 'core/network/interceptors/auth_interceptor.dart';
@@ -30,6 +31,11 @@ import 'package:ethioguide/features/AI%20chat/data/repository/ai_repository_impl
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
+
+import 'package:ethioguide/features/home_screen/data/repositories/home_repository_impl.dart';
+import 'package:ethioguide/features/home_screen/domain/repositories/home_repository.dart';
+import 'package:ethioguide/features/home_screen/domain/usecases/get_home_data.dart';
+
 
 
 final sl = GetIt.instance;
@@ -57,6 +63,8 @@ Future<void> init() async {
       translateContentUseCase: sl(),
     ),
   );
+  
+  sl.registerFactory(() => HomeBloc(getHomeData: sl()));
 
   // Usecase
   sl.registerLazySingleton<SendQuery>(() => SendQuery(repository: sl()));
@@ -64,6 +72,8 @@ Future<void> init() async {
   sl.registerLazySingleton<TranslateContent>(
     () => TranslateContent(repository: sl()),
   );
+  
+  sl.registerLazySingleton(() => GetHomeData(sl()));
 
   // Repositories
   sl.registerLazySingleton<AiRepository>(
@@ -73,6 +83,8 @@ Future<void> init() async {
       networkInfo: sl(),
     ),
   );
+  
+  sl.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
 
   // Datasources
   sl.registerLazySingleton<AiRemoteDatasource>(

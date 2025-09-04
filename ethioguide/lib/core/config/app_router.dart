@@ -7,6 +7,8 @@ import 'package:ethioguide/features/onboarding/presentation/screens/onboarding_s
 import 'package:ethioguide/features/splashscreen/presentation/screens/splash_screen.dart';
 import 'package:ethioguide/features/splashscreen/presentation/screens/placeholder_screen.dart'; 
 import 'package:ethioguide/core/config/route_names.dart';
+import 'package:ethioguide/features/home_screen/presentaion/screen/home_screen.dart';
+
 
 // This is the central router configuration for the entire application.
 final GoRouter router = GoRouter(
@@ -44,6 +46,11 @@ final GoRouter router = GoRouter(
       path: '/aiChat',
       name: RouteNames.aiChat,
       builder: (context, state) => const ChatPage(),
+    ),
+     GoRoute(
+      path: '/home',
+      name: RouteNames.home,
+      builder: (context, state) => const HomeScreen(),
     ),
   
   ],
