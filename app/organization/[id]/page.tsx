@@ -1,7 +1,8 @@
+'use client'
 import EditProcedurePage from "../(orgRelatedPages)/editProcedure/page";
 
 // Next.js server component
-export default async function EditProcedure(){
+export default function EditProcedure(){
 //   params,
 // }: {
 //   params: { id: string };
@@ -9,9 +10,11 @@ export default async function EditProcedure(){
   // const{ id } = await params
   // const { id } = params;
 
-  // Fetch the procedure (dummy for now, replace with your API call)
-  // const res = await fetch(`http://localhost:3000/api/procedures/${id}`);
-  // const procedure = await res.json();
+  // useEffect(() => {
+  //   fetch(`/api/procedures/${id}`)
+  //     .then((res) => res.json())
+  //     .then(setProcedure);
+  // }, [id]);
   const procedure = {
     id: "1",
     orgId: "org-001",

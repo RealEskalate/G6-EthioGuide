@@ -24,14 +24,14 @@ export default function EditProcedurePage({
 }: {
   procedure: Procedure;
 }) {
-  const [title, setTitle] = useState<string>(procedure.title ?? "");
+  const [title, setTitle] = useState<string>(procedure?.title ?? "");
   const [requirements, setRequirements] = useState<Requirement[]>(
-    procedure.requirements ?? []
+    procedure?.requirements ?? []
   );
-  const [steps, setSteps] = useState<Step[]>(procedure.steps ?? []);
-  const [fees, setFees] = useState<Fee[]>(procedure.fees ?? []);
+  const [steps, setSteps] = useState<Step[]>(procedure?.steps ?? []);
+  const [fees, setFees] = useState<Fee[]>(procedure?.fees ?? []);
   const [processingTime, setProcessingTime] = useState<ProcessingTime>(
-    procedure.processingTime ?? {}
+    procedure?.processingTime ?? {}
   );
 
   // -------- Requirements --------
