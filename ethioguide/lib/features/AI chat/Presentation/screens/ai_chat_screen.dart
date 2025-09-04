@@ -1,7 +1,9 @@
 import 'package:ethioguide/features/AI%20chat/Domain/entities/conversation.dart';
 import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
+import 'package:ethioguide/features/AI%20chat/data/models/conversation_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -19,7 +21,6 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-
     // Add initial AI greeting
     _history.add(
       const Conversation(
@@ -28,10 +29,9 @@ class _ChatPageState extends State<ChatPage> {
         response:
             '''Hello! I'm your AI Assistant. I can help you navigate Ethiopian legal procedures, business registration, and more. What would you like to know?''',
         source: 'ai-generated',
-        procedures: [Procedure(id: 'id', name: 'Passport registration')],
+        procedures: [],
       ),
     );
-
     // Fetch history on init
     context.read<AiBloc>().add(GetHistoryEvent());
     // Update border color on focus
@@ -78,65 +78,63 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
-  // void _showTranslateDialog() {
-  //   final TextEditingController translateController = TextEditingController();
-  //   String selectedLang = 'am'; // Default to Amharic
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: const Text('Translate Text'),
-  //       content: Column(
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           TextField(
-  //             controller: translateController,
-  //             decoration: const InputDecoration(
-  //               hintText: 'Enter text to translate...',
-  //               border: OutlineInputBorder(),
-  //             ),
-  //           ),
-  //           const SizedBox(height: 16),
-  //           DropdownButton<String>(
-  //             value: selectedLang,
-  //             isExpanded: true,
-  //             items: const [
-  //               DropdownMenuItem(value: 'am', child: Text('Amharic')),
-  //               DropdownMenuItem(value: 'ti', child: Text('Tigrinya')),
-  //               DropdownMenuItem(value: 'en', child: Text('English')),
-  //             ],
-  //             onChanged: (value) {
-  //               setState(() {
-  //                 selectedLang = value!;
-  //               });
-  //             },
-  //           ),
-  //         ],
-  //       ),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.pop(context),
-  //           child: const Text('Cancel'),
-  //         ),
-  //         ElevatedButton(
-  //           onPressed: () {
-  //             final content = translateController.text.trim();
-  //             if (content.isNotEmpty) {
-  //               context.read<AiBloc>().add(
-  //                 TranslateContentEvent(content: content, lang: selectedLang),
-  //               );
-  //               Navigator.pop(context);
-  //             }
-  //           },
-  //           style: ElevatedButton.styleFrom(
-  //             backgroundColor: Colors.teal,
-  //             foregroundColor: Colors.white,
-  //           ),
-  //           child: const Text('Translate'),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
+  void _showTranslateDialog() {
+    final TextEditingController translateController = TextEditingController();
+    String selectedLang = 'am'; // Default to Amharic
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Translate Text'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: translateController,
+              decoration: const InputDecoration(
+                hintText: 'Enter text to translate...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            DropdownButton<String>(
+              value: selectedLang,
+              isExpanded: true,
+              items: const [
+                DropdownMenuItem(value: 'am', child: Text('Amharic')),
+                DropdownMenuItem(value: 'ti', child: Text('Tigrinya')),
+                DropdownMenuItem(value: 'en', child: Text('English')),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  selectedLang = value!;
+                });
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final content = translateController.text.trim();
+              if (content.isNotEmpty) {
+                context.read<AiBloc>().add(TranslateContentEvent(content: content, lang: selectedLang));
+                Navigator.pop(context);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Translate'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -145,8 +143,8 @@ class _ChatPageState extends State<ChatPage> {
         if (state is AiHistorySuccess) {
           setState(() {
             _history = [
-              ...state.history,
               _history.first,
+              ...state.history,
             ]; // Keep initial greeting
           });
           _scrollToBottom();
@@ -218,17 +216,12 @@ class _ChatPageState extends State<ChatPage> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide(
-                            color: _queryFocusNode.hasFocus
-                                ? Colors.blue
-                                : Colors.grey,
+                            color: _queryFocusNode.hasFocus ? Colors.blue : Colors.grey,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
-                          borderSide: const BorderSide(
-                            color: Colors.blue,
-                            width: 2,
-                          ),
+                          borderSide: const BorderSide(color: Colors.blue, width: 2),
                         ),
                       ),
                       onSubmitted: (_) => _sendQuery(),
@@ -247,43 +240,26 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  //* custom widgtes
   Widget _buildMessage(Conversation conv) {
-    final isUser = conv.request.isNotEmpty && conv.source != 'error';
+    final hasRequest = conv.request.isNotEmpty;
+    final hasResponse = conv.response.isNotEmpty || conv.source == 'loading';
     final isError = conv.source == 'error';
     final isLoading = conv.source == 'loading';
 
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: isError ? const EdgeInsets.all(6) : const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isUser
-              ? Colors.teal
-              : isError
-              ? Colors.red[100]
-              : Colors.grey[200],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: isUser
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [
-            if (!isUser && !isError && !isLoading)
-              Row(
-                children: const [
-                  Icon(Icons.verified, color: Colors.green, size: 16),
-                  SizedBox(width: 4),
-                  Text(
-                    'Verified',
-                    style: TextStyle(fontSize: 12, color: Colors.green),
-                  ),
-                ],
+    return Column(
+      children: [
+        // User query (right-aligned)
+        if (hasRequest)
+          Align(
+            alignment: Alignment.centerRight,
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.teal,
+                borderRadius: BorderRadius.circular(12),
               ),
-            if (isUser)
-              Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
@@ -300,21 +276,47 @@ class _ChatPageState extends State<ChatPage> {
                   ],
                 ],
               ),
-            if (!isLoading && !isUser)
-              _buildStepCard(
-                icon: isError ? Icons.error : Icons.assistant,
-                title: isError ? 'Error' : 'AI Response',
-                content: conv.response,
-                isError: isError
+            ),
+          ),
+        // AI response, error, or initial greeting (left-aligned)
+        if (hasResponse)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              padding: isError ? const EdgeInsets.all(6) : const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isError ? Colors.red[100] : Colors.grey[200],
+                borderRadius: BorderRadius.circular(12),
               ),
-            if (!isUser && !isError && !isLoading) _buildChecklistButton(),
-            if (conv.procedures.isNotEmpty && !isUser && !isError && !isLoading)
-              ...conv.procedures.map(
-                (procedure) => _buildInfoCard(procedure: procedure!),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!isError && !isLoading)
+                    Row(
+                      children: const [
+                        Icon(Icons.verified, color: Colors.green, size: 16),
+                        SizedBox(width: 4),
+                        Text(
+                          'Verified',
+                          style: TextStyle(fontSize: 12, color: Colors.green),
+                        ),
+                      ],
+                    ),
+                  _buildStepCard(
+                    icon: isError ? Icons.error : Icons.assistant,
+                    title: isError ? 'Error' : 'AI Response',
+                    content: conv.response,
+                    isError: isError,
+                  ),
+                  if (conv.procedures.isNotEmpty && !isError && !isLoading)
+                    ...conv.procedures.map((procedure) => _buildInfoCard(procedure: procedure!)),
+                  if (!isError && !isLoading) _buildChecklistButton(),
+                ],
               ),
-          ],
-        ),
-      ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -327,8 +329,7 @@ class _ChatPageState extends State<ChatPage> {
     return Card(
       color: Colors.teal[50],
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      // smaller vertical margin for an error response
-      margin: isError ? const EdgeInsets.symmetric(vertical: 3): const EdgeInsets.symmetric(vertical: 8),
+      margin: isError ? const EdgeInsets.symmetric(vertical: 3) : const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -373,10 +374,7 @@ class _ChatPageState extends State<ChatPage> {
                 children: [
                   Text(
                     procedure.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -384,11 +382,7 @@ class _ChatPageState extends State<ChatPage> {
                       ElevatedButton(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Viewing procedure: ${procedure.name}',
-                              ),
-                            ),
+                            SnackBar(content: Text('Viewing procedure: ${procedure.name}')),
                           );
                           // TODO: Navigate to procedure details page
                         },
@@ -402,23 +396,15 @@ class _ChatPageState extends State<ChatPage> {
                       ElevatedButton(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Starting procedure: ${procedure.name}',
-                              ),
-                              
-                            ),
+                            SnackBar(content: Text('Starting procedure: ${procedure.name}')),
                           );
                           // TODO: Navigate to procedure start page
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.teal[300],
-                          foregroundColor: Colors.white
+                          foregroundColor: Colors.white,
                         ),
-                        child: const Text(
-                          'Start Procedure',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                        child: const Text('Start Procedure'),
                       ),
                     ],
                   ),
@@ -427,6 +413,38 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildChecklistButton() {
+    return Card(
+      color: Colors.teal[100],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: ExpansionTile(
+        leading: const Icon(Icons.checklist, color: Colors.teal),
+        title: const Text(
+          'Save Checklist',
+          style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+        ),
+        children: [
+          ListTile(
+            leading: const Icon(Icons.play_arrow),
+            title: const Text('Start Procedure'),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Starting procedure...')),
+              );
+              // TODO: Navigate to procedure start page
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.translate),
+            title: const Text('Translate'),
+            onTap: _showTranslateDialog,
+          ),
+        ],
       ),
     );
   }
@@ -447,42 +465,5 @@ class _ChatPageState extends State<ChatPage> {
     _scrollController.dispose();
     _queryFocusNode.dispose();
     super.dispose();
-  }
-
-  Widget _buildChecklistButton() {
-    return Card(
-      color: Colors.teal[100],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: EdgeInsets.symmetric(vertical: 8),
-      child: ExpansionTile(
-        leading: Icon(Icons.checklist, color: Colors.teal),
-        title: Text(
-          'Save Checklist',
-          style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
-        ),
-        children: [
-          ListTile(
-            leading: Icon(Icons.play_arrow),
-            title: Text('Start Procedure'),
-            onTap: () {
-              //TODO: Handle action: e.g., navigate to procedure page
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Starting procedure...')));
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.translate),
-            title: Text('Translate'),
-            onTap: () {
-              //TODO: Handle translation (e.g., to Amharic)
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Translating...')));
-            },
-          ),
-        ],
-      ),
-    );
   }
 }
