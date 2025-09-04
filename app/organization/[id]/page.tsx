@@ -1,12 +1,12 @@
 import EditProcedurePage from "../(orgRelatedPages)/editProcedure/page";
 
 // Next.js server component
-export default async function EditProcedure({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const{ id } = await params
+export default async function EditProcedure(){
+//   params,
+// }: {
+//   params: { id: string };
+// }) {
+  // const{ id } = await params
   // const { id } = params;
 
   // Fetch the procedure (dummy for now, replace with your API call)
