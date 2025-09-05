@@ -38,14 +38,61 @@ export default function RegisterPage() {
     },
   });
 
+  // const handleGoogleLogin = () => {
+  //   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
+  //   // THIS IS THE CRUCIAL PART: Redirect to your custom API route
+  //   const redirectUri = `${window.location.origin}/api/auth/google-social-callback`;
+  //   const scope =
+  //     "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid";
+
+  //   const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${encodeURIComponent(
+  //     clientId
+  //   )}&redirect_uri=${encodeURIComponent(
+  //     redirectUri
+  //   )}&response_type=code&scope=${encodeURIComponent(
+  //     scope
+  //   )}&access_type=offline&prompt=consent`; // Include access_type and prompt if needed
+
+  //   window.location.href = googleAuthUrl;
+  // };
+
   const onSubmit = async (data: RegisterFormData) => {
     console.log("Form submitted:", data);
-    // Example: await fetch('/api/register', { method: 'POST', body: JSON.stringify(data) });
-  };
+    try {
+      // Step 1: Register with backend
+      const registerResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.fullName,
+            username: data.username,
+            email: data.email,
+            password: data.password,
+          }),
+        }
+      );
 
-  // Debug translation loading
-  // console.log('Current language:', i18n.language);
-  // console.log('Auth translations:', i18n.getResourceBundle(i18n.language, 'auth'));
+      const registerResult = await registerResponse.json();
+      console.log("Register response:", {
+        status: registerResponse.status,
+        result: registerResult,
+      });
+
+      if (!registerResponse.ok) {
+        throw new Error(registerResult.message || t("register.error"));
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
+      form.setError("root", {
+        message:
+          typeof err === "object" && err !== null && "message" in err
+            ? (err as { message?: string }).message || t("register.error")
+            : t("register.error"),
+      });
+    }
+  };
 
   return (
     <div className="bg-neutral-light text-foreground flex flex-col items-center p-4 font-sans min-h-full">
@@ -257,6 +304,7 @@ export default function RegisterPage() {
               <Button
                 variant="outline"
                 className="w-full border-neutral text-primary-dark hover:bg-secondary/20 rounded-md"
+                // onClick={handleGoogleLogin}
                 onClick={() => signIn("google", { callbackUrl: "/" })}
               >
                 <FaGoogle className="h-4 w-4 mr-2" />
