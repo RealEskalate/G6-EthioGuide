@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ProcedureContentModel struct {
@@ -246,4 +247,114 @@ func (pr *ProcedureRepository) Delete(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+// SearchAndFilter searches procedures based on the options and returns paginated results.
+func (r *ProcedureRepository) SearchAndFilter(ctx context.Context, opts domain.ProcedureSearchFilterOptions) ([]*domain.Procedure, int64, error) {
+	filter := bson.M{}
+
+	// --- Search by Name (case-insensitive regex) ---
+	if opts.Name != nil && *opts.Name != "" {
+		filter["name"] = bson.M{"$regex": *opts.Name, "$options": "i"}
+	}
+
+	// --- OrganizationID ---
+	if opts.OrganizationID != nil {
+		if *opts.OrganizationID == "" {
+			filter["organization_id"] = bson.M{"$exists": false}
+		} else {
+			oid, err := primitive.ObjectIDFromHex(*opts.OrganizationID)
+			if err == nil {
+				filter["organization_id"] = oid
+			}
+		}
+	}
+
+	// --- GroupID ---
+	if opts.GroupID != nil {
+		if *opts.GroupID == "" {
+			filter["group_id"] = bson.M{"$exists": false}
+		} else {
+			gid, err := primitive.ObjectIDFromHex(*opts.GroupID)
+			if err == nil {
+				filter["group_id"] = gid
+			}
+		}
+	}
+
+	// --- Fee range ---
+	if opts.MinFee != nil || opts.MaxFee != nil {
+		feeFilter := bson.M{}
+		if opts.MinFee != nil {
+			feeFilter["$gte"] = *opts.MinFee
+		}
+		if opts.MaxFee != nil {
+			feeFilter["$lte"] = *opts.MaxFee
+		}
+		filter["fees.amount"] = feeFilter
+	}
+
+	// --- Processing time ---
+	if opts.MinProcessingDays != nil || opts.MaxProcessingDays != nil {
+		timeFilter := bson.M{}
+		if opts.MinProcessingDays != nil {
+			timeFilter["$gte"] = *opts.MinProcessingDays
+		}
+		if opts.MaxProcessingDays != nil {
+			timeFilter["$lte"] = *opts.MaxProcessingDays
+		}
+		filter["processing_time.min_days"] = timeFilter
+	}
+
+	// --- Date range ---
+	if opts.StartDate != nil || opts.EndDate != nil {
+		dateFilter := bson.M{}
+		if opts.StartDate != nil {
+			dateFilter["$gte"] = *opts.StartDate
+		}
+		if opts.EndDate != nil {
+			dateFilter["$lte"] = *opts.EndDate
+		}
+		filter["created_at"] = dateFilter
+	}
+
+	// --- Count total first ---
+	total, err := r.col.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// --- Sorting ---
+	findOpts := options.Find()
+	if opts.SortBy != "" {
+		order := -1 // DESC by default
+		if opts.SortOrder == domain.SortAsc {
+			order = 1
+		}
+		findOpts.SetSort(bson.D{{Key: opts.SortBy, Value: order}})
+	}
+
+	// --- Pagination ---
+	skip := (opts.Page - 1) * opts.Limit
+	findOpts.SetSkip(skip)
+	findOpts.SetLimit(opts.Limit)
+
+	// --- Query ---
+	cursor, err := r.col.Find(ctx, filter, findOpts)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var models []*ProcedureModel
+	if err := cursor.All(ctx, &models); err != nil {
+		return nil, 0, err
+	}
+
+	// --- Convert to domain ---
+	results := make([]*domain.Procedure, len(models))
+	for i, m := range models {
+		results[i] = m.ToDomain()
+	}
+
+	return results, total, nil
 }
