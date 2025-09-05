@@ -1,20 +1,41 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
-import { Search, Plus, MessageSquare, Pin } from "lucide-react"
+import { Search, Plus, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
+import { useGetDiscussionsQuery } from "@/app/store/slices/discussionsSlice"
 
 export default function CommunityPage() {
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all")
   const router = useRouter()
-  const [expanded, setExpanded] = useState<{ [key: number]: boolean }>({});
+  const { data, isLoading, isError } = useGetDiscussionsQuery({ page: 0, limit: 10 })
+
+  useEffect(() => {
+    if (data) {
+      console.log("Discussions list:", data)
+    }
+  }, [data])
+
+  const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({})
+
+  const tagPillClasses = (i: number) => {
+    const styles = [
+      "bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800",
+      "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800",
+      "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100 hover:text-teal-800",
+      "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:text-indigo-800",
+      "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800",
+      "bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100 hover:text-cyan-800",
+    ]
+    return `cursor-pointer rounded-full ${styles[i % styles.length]}`
+  }
 
   const discussions = [
     {
@@ -63,56 +84,83 @@ export default function CommunityPage() {
     },
   ]
 
-  const popularTags = [
-    { name: "#AI", count: 45 },
-    { name: "#StudyTips", count: 32 },
-    { name: "#Events", count: 28 },
-    { name: "#Notes", count: 24 },
-    { name: "#Research", count: 19 },
+  const apiDiscussions =
+    Array.isArray(data?.posts)
+      ? data!.posts.map((p) => ({
+          id: p.ID,
+          author: p.UserID || "User",
+          avatar: "/images/profile-photo.jpg",
+          timestamp: new Date(p.CreatedAt || p.UpdatedAt || Date.now()).toLocaleString(),
+          title: p.Title ?? "Untitled",
+          content: p.Content ?? "",
+          tags: Array.isArray(p.Tags) ? p.Tags.map((t) => String(t)) : [],
+        }))
+      : []
+
+  const discussionsData = apiDiscussions.length ? apiDiscussions : discussions
+
+  const quickTags = [
+    "#AI",
+    "#StudyTips",
+    "#Guidelines",
+    "#Pinned",
+    "#Notes",
+    "#Apps",
+    "#Business",
+    "#Technology",
+    "#Collaboration",
+    "#Learning",
+    "#University",
+    "#Productivity",
+    "#Motivation",
+    "#Career",
+    "#Networking",
+    "#Events",
+    "#Resources",
+    "#Advice",
+    "#Support",
+    "#Community",
   ]
 
-  const topContributors = [
-    { name: "Emma Wilson", posts: "42 contributions", avatar: "/images/profile-photo.jpg" },
-    { name: "David Kim", posts: "38 contributions", avatar: "/images/profile-photo.jpg"},
-    { name: "Lisa Chang", posts: "35 contributions", avatar: "/images/profile-photo.jpg" },
-  ]
-
-  const pinnedDiscussions = [{ title: "Community Guidelines", author: "Sarah Johnson" }]
-
-  const quickTags = ["#AI", "#passport", "#tax", "#business"]
-
-  // Filter discussions by search query (title or content) and category
-  const filteredDiscussions = discussions.filter(
-    (discussion) => {
-      const matchesSearch =
-        discussion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        discussion.content.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "all" ||
-        (selectedCategory === "ai" && discussion.tags.some(tag => tag.toLowerCase().includes("ai"))) ||
-        (selectedCategory === "study" && discussion.tags.some(tag => tag.toLowerCase().includes("study"))) ||
-        (selectedCategory === "business" && discussion.tags.some(tag => tag.toLowerCase().includes("business")));
-      return matchesSearch && matchesCategory;
+  const popularTags = (() => {
+    const counts = new Map<string, number>()
+    discussionsData.forEach((d) =>
+      (d.tags || []).forEach((t: string) => {
+        const clean = String(t).replace(/^#/, "").trim()
+        if (clean) counts.set(clean, (counts.get(clean) || 0) + 1)
+      })
+    )
+    let list = Array.from(counts.entries()).map(([name, count]) => ({ name, count }))
+    if (!list.length) {
+      list = quickTags.map((t) => ({ name: t.replace(/^#/, ""), count: 1 }))
     }
-  );
+    return list.sort((a, b) => b.count - a.count).slice(0, 20)
+  })()
 
-  const handleToggleExpand = (id: number) => {
-    setExpanded((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
+  const searchTags = (() => {
+    if (!Array.isArray(data?.posts)) return []
+    const set = new Set<string>()
+    data!.posts.forEach((p) => {
+      const tags = Array.isArray(p.Tags) ? p.Tags : []
+      tags.forEach((t) => {
+        const clean = String(t).replace(/^#/, "").trim()
+        if (clean) set.add(clean)
+      })
+    })
+    return Array.from(set)
+  })()
 
-  const guidelinesList = [
-    "Be respectful and courteous to others.",
-    "No spam, self-promotion, or irrelevant links.",
-    "Keep discussions constructive and on-topic.",
-    "Use clear language and avoid offensive terms.",
-    "Report inappropriate content to moderators.",
-    "Help others and share your knowledge.",
-    "Follow all applicable laws and platform rules.",
-    "Thank you for making this a great place to learn and collaborate!"
-  ];
+  const filteredDiscussions = discussionsData.filter((discussion) => {
+    const matchesSearch =
+      discussion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      discussion.content.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory =
+      selectedCategory === "all" ||
+      (selectedCategory === "ai" && discussion.tags.some((tag: string) => tag.toLowerCase().includes("ai"))) ||
+      (selectedCategory === "study" && discussion.tags.some((tag: string) => tag.toLowerCase().includes("study"))) ||
+      (selectedCategory === "business" && discussion.tags.some((tag: string) => tag.toLowerCase().includes("business")))
+    return matchesSearch && matchesCategory
+  })
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-4">
@@ -126,13 +174,22 @@ export default function CommunityPage() {
             </div>
             <p className="text-gray-600 text-sm sm:text-base">Join the conversation. Share, ask, and collaborate.</p>
           </div>
-          <Button
-            className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white w-full sm:w-auto"
-            onClick={() => router.push("/user/create-post")}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Discussion
-          </Button>
+          <div className="flex w-full sm:w-auto gap-2">
+            <Button
+              variant="outline"
+              className="border-[#3A6A8D] text-[#3A6A8D] w-full sm:w-auto"
+              onClick={() => router.push("/user/my-discussions")}
+            >
+              My Discussions
+            </Button>
+            <Button
+              className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white w-full sm:w-auto"
+              onClick={() => router.push("/user/create-post")}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Discussion
+            </Button>
+          </div>
         </div>
         {/* Search and Filters */}
         <Card className="p-4 mb-6">
@@ -181,105 +238,91 @@ export default function CommunityPage() {
               </Select>
             </div>
           </div>
-          {/* Quick Tags */}
-          <div className="flex flex-wrap gap-3 mb-3">
-            {quickTags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="outline"
-                className="cursor-pointer hover:bg-blue-100 hover:text-blue-700 transition-colors "
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
+          {/* Quick Tags (API-only). Hidden if API returned no tags. */}
+          {searchTags.length > 0 && (
+            <div className="flex flex-wrap gap-3 mb-3">
+              {searchTags.map((tag, i) => (
+                <Badge key={tag} variant="outline" className={tagPillClasses(i)}>
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
         </Card>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-9 space-y-6">
             <div className="space-y-6 mt-2">
-              {filteredDiscussions.map((discussion, index) => (
-                <Card
-                  key={discussion.id}
-                  className={`p-4 sm:p-6 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer animate-in fade-in slide-in-from-bottom-4`}
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <CardContent className="p-0">
-                    <div className="flex gap-4 flex-col sm:flex-row">
-                      <Image
-                        src={discussion.avatar || "/placeholder.svg"}
-                        alt={discussion.author}
-                        width={48}
-                        height={48}
-                        className="w-12 h-12 rounded-full object-cover mx-auto sm:mx-0"
-                      />
-                      <div className="flex-1">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2">
-                          <span className="text-lg font-semibold text-gray-900">{discussion.author}</span>
-                          {discussion.isModerator && (
-                            <Badge variant="secondary" className="text-xs">
-                              Moderator
-                            </Badge>
-                          )}
-                          {discussion.isPinned && <Pin className="h-4 w-4 text-[#3A6A8D]" />}
-                          <span className="text-gray-500 text-sm">{discussion.timestamp}</span>
-                        </div>
-                        <h3 className="text-base font-semibold text-gray-900 mb-2 ">
-                          {discussion.title}
-                        </h3>
-                        <div>
-                          <p
-                            className={`text-gray-700 mb-4 ${
-                              expanded[discussion.id] ? "" : "line-clamp-2"
-                            }`}
-                          >
-                            {discussion.title.includes("Community Guidelines") && expanded[discussion.id] ? (
-                              <ul className="list-disc pl-6 space-y-2">
-                                {guidelinesList.map((item, idx) => (
-                                  <li key={idx}>{item}</li>
-                                ))}
-                              </ul>
-                            ) : (
-                              discussion.content
-                            )}
+              {filteredDiscussions.map((discussion, index) => {
+                const rowKey = `${discussion.title}-${index}`
+                const isExpanded = !!expandedMap[rowKey]
+                return (
+                  <Card
+                    key={discussion.title}
+                    className="p-4 sm:p-6 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer animate-in fade-in slide-in-from-bottom-4"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <CardContent className="p-0">
+                      <div className="flex gap-4 flex-col sm:flex-row">
+                        <Image
+                          src={discussion.avatar || "/placeholder.svg"}
+                          alt={discussion.title}
+                          width={48}
+                          height={48}
+                          className="w-12 h-12 rounded-full object-cover mx-auto sm:mx-0"
+                        />
+                        <div className="flex-1">
+                          <h3 className="text-base font-semibold text-gray-900 mb-2">
+                            {discussion.title}
+                          </h3>
+                          <p className={`text-gray-700 mb-4 ${isExpanded ? "" : "line-clamp-2"}`}>
+                            {discussion.content}
                           </p>
-                          <div className="flex flex-wrap gap-2 pb-6">
-                            {discussion.tags.map((tag) => (
-                              <Badge key={tag} variant="outline" className="text-xs cursor-pointer hover:bg-blue-100 hover:text-blue-700">
-                                {tag}
-                              </Badge>
-                            ))}
+                          <div className="flex flex-wrap gap-2">
+                            {discussion.tags.map((tag: string, i: number) => {
+                              const clean = tag.replace(/^#/, "")
+                              return (
+                                <Badge
+                                  key={`${discussion.title}-${clean}-${i}`}
+                                  variant="outline"
+                                  className={`text-xs ${tagPillClasses(i)}`}
+                                >
+                                  {clean}
+                                </Badge>
+                              )
+                            })}
                           </div>
-                          <div className="flex justify-end">
+                          <div className="flex justify-end pt-2">
                             <Button
                               variant="ghost"
                               size="sm"
                               className="text-[#3A6A8D] hover:bg-blue-100 hover:text-blue-700"
-                              onClick={() => handleToggleExpand(discussion.id)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setExpandedMap((prev) => ({ ...prev, [rowKey]: !prev[rowKey] }))
+                              }}
                             >
-                              {expanded[discussion.id] ? "View Less" : "View More"}
+                              {isExpanded ? "View Less" : "View More"}
                             </Button>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
           </div>
+
           {/* Sidebar */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Popular Tags */}
+            {/* Popular Tags (from API/dummy) */}
             <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-105">
               <h3 className="font-semibold text-gray-900 mb-4">Popular Tags</h3>
               <div className="space-y-2">
-                {popularTags.map((tag) => (
+                {popularTags.map((tag, i) => (
                   <div key={tag.name} className="flex items-center justify-between">
-                    <Badge
-                      variant="outline"
-                      className="cursor-pointer  hover:bg-blue-100 hover:text-blue-700"
-                    >
+                    <Badge variant="outline" className={tagPillClasses(i)}>
                       {tag.name}
                     </Badge>
                     <span className="text-sm text-gray-500">{tag.count}</span>
@@ -287,46 +330,16 @@ export default function CommunityPage() {
                 ))}
               </div>
             </Card>
-
-            {/* Top Contributors */}
-            <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-105">
-              <h3 className="font-semibold text-gray-900 mb-4">Top Contributors</h3>
-              <div className="space-y-3">
-                {topContributors.map((contributor) => (
-                  <div key={contributor.name} className="flex items-center gap-3">
-                    <Image
-                      src={contributor.avatar || "/placeholder.svg"}
-                      alt={contributor.name}
-                      width={32}
-                      height={32}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                    <div>
-                      <p className="font-medium text-gray-900 text-sm">{contributor.name}</p>
-                      <p className="text-xs text-gray-500">{contributor.posts}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Pinned Discussions */}
-            <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-105">
-              <h3 className="font-semibold text-gray-900 mb-4">Pinned Discussions</h3>
-              <div className="space-y-2">
-                {pinnedDiscussions.map((discussion, index) => (
-                  <div key={index} className="p-3 bg-blue-50 rounded-lg border-l-4 border-[#3A6A8D]">
-                    <p className="font-medium text-gray-900 text-sm">{discussion.title}</p>
-                    <p className="text-xs text-gray-500">by {discussion.author}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
           </div>
         </div>
+        {isLoading && <div>Loading...</div>}
+        {isError && <div>Failed to load discussions.</div>}
+        {!isLoading && !isError && data && (
+          <div className="text-sm text-gray-700">
+            Total: {data.total} • Page: {data.page} • Limit: {data.limit}
+          </div>
+        )}
       </div>
     </div>
   )
 }
-
-

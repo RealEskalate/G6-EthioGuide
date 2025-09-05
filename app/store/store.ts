@@ -2,21 +2,22 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { apiSlice } from "./slices/workspaceSlice";
 import { historyApi } from "./slices/historySlice";
-// import authReducer from './slices/authSlice';
-// import userReducer from './slices/userSlice';
+import { discussionsListApi } from "./slices/discussionsGetSlice"; // added
 
 export const store = configureStore({
   reducer: {
     [apiSlice.reducerPath]: apiSlice.reducer,
     [historyApi.reducerPath]: historyApi.reducer,
-    // auth: authReducer,
-    // user: userReducer,
+    [discussionsListApi.reducerPath]: discussionsListApi.reducer, // added
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(apiSlice.middleware, historyApi.middleware),
+    getDefaultMiddleware().concat(
+      apiSlice.middleware,
+      historyApi.middleware,
+      discussionsListApi.middleware // added
+    ),
   devTools: true,
 });
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
-// No changes needed

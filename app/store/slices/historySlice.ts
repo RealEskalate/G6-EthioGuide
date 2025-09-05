@@ -1,10 +1,25 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { ChatHistoryItem } from "@/app/types/chat";
 
+function readEnvToken(): string | null {
+  return (
+    process.env.NEXT_PUBLIC_ACCESS_TOKEN || process.env.ACCESS_TOKEN || null
+  );
+}
+function readAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("accessToken") || null;
+}
+
 export const historyApi = createApi({
   reducerPath: "historyApi",
   baseQuery: fetchBaseQuery({
     baseUrl: "https://ethio-guide-backend.onrender.com/api/v1",
+    prepareHeaders: (headers) => {
+      const token = readAuthToken() || readEnvToken();
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+      return headers;
+    },
   }),
   endpoints: (builder) => ({
     getChatHistory: builder.query<ChatHistoryItem[], void>({
