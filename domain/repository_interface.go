@@ -42,6 +42,7 @@ type IFeedbackRepository interface {
 	GetFeedbackByID(ctx context.Context, id string) (*Feedback, error)
 	GetAllFeedbacksForProcedure(ctx context.Context, procedureID string, filter *FeedbackFilter) ([]*Feedback, int64, error)
 	UpdateFeedbackStatus(ctx context.Context, feedbackID string, newFeedback *Feedback) error
+	GetAllFeedbacks(ctx context.Context, filter *FeedbackFilter)([]*Feedback, int64, error)
 }
 
 type IPostRepository interface {

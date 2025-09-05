@@ -41,6 +41,15 @@ func (m *MockFeedbackRepo) UpdateFeedbackStatus(ctx context.Context, feedbackID 
 	args := m.Called(ctx, feedbackID, newFeedback)
 	return args.Error(0)
 }
+func (m *MockFeedbackRepo) GetAllFeedbacks(ctx context.Context, filter *domain.FeedbackFilter) ([]*domain.Feedback, int64, error) {
+	args := m.Called(ctx, filter)
+	var feedbacks []*domain.Feedback
+	if args.Get(0) != nil {
+		feedbacks = args.Get(0).([]*domain.Feedback)
+	}
+	return feedbacks, args.Get(1).(int64), args.Error(2)
+
+}
 
 // --- Test Suite ---
 type FeedbackUsecaseTestSuite struct {
@@ -206,3 +215,39 @@ func (s *FeedbackUsecaseTestSuite) TestUpdateFeedbackStatus() {
 		s.Contains(err.Error(), "db error")
 	})
 }
+
+func (s *FeedbackUsecaseTestSuite) TestGetAllFeedbacks() {
+	filter := &domain.FeedbackFilter{Page: 1, Limit: 10}
+	feedbacks := []*domain.Feedback{{ID: "fb1"}}
+
+	s.Run("Success", func() {
+		s.SetupTest()
+		s.mockFeedbackRepo.
+			On("GetAllFeedbacks", mock.Anything, filter).
+			Return(feedbacks, int64(1), nil).
+			Once()
+
+		res, total, err := s.usecase.GetAllFeedbacks(context.Background(), filter)
+
+		s.NoError(err)
+		s.Equal(int64(1), total)
+		s.Equal(feedbacks, res)
+		s.mockFeedbackRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - Repo Error", func() {
+		s.SetupTest()
+		s.mockFeedbackRepo.
+			On("GetAllFeedbacks", mock.Anything, filter).
+			Return(nil, int64(0), errors.New("db error")).
+			Once()
+
+		res, total, err := s.usecase.GetAllFeedbacks(context.Background(), filter)
+
+		s.Error(err)
+		s.Nil(res)
+		s.Equal(int64(0), total)
+		s.mockFeedbackRepo.AssertExpectations(s.T())
+	})
+}
+
