@@ -1,8 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
-import { useSearchParams } from 'next/navigation'
-import { useSubmitProcedureFeedbackMutation } from '@/app/store/slices/feedbackApi'
+import React, { useState } from "react"
 import { ArrowLeft, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,22 +11,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 
 export default function FeedbackPage() {
-  const search = useSearchParams()
-  const procedureId = search.get('procedure') || search.get('id') || ''
   const [feedbackType, setFeedbackType] = useState("report-issue")
   const [subject, setSubject] = useState("")
   const [detailedFeedback, setDetailedFeedback] = useState("")
-  const [submitFeedback, { isLoading: submitting, isSuccess, isError, error }] = useSubmitProcedureFeedbackMutation()
-
-  const backendType = useMemo(() => {
-    switch (feedbackType) {
-      case 'report-issue': return 'inaccuracy'
-      case 'suggest-improvement': return 'improvement'
-      case 'feature-request': return 'feature_request'
-      case 'general-feedback': return 'general'
-      default: return 'inaccuracy'
-    }
-  }, [feedbackType])
 
   const feedbackHistory = [
     {
@@ -49,20 +34,9 @@ export default function FeedbackPage() {
     },
   ]
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!procedureId) {
-      alert('Missing procedure id in query (?procedure= or ?id=)')
-      return
-    }
-    const tags = subject ? subject.split(/[,#]/).map(t => t.trim()).filter(Boolean).slice(0,5) : []
-    try {
-      await submitFeedback({ procedureId, content: detailedFeedback || subject, type: backendType, tags }).unwrap()
-      setDetailedFeedback('')
-      // keep subject to allow follow-up feedback
-    } catch (err) {
-      // already surfaced via isError
-    }
+    console.log({ feedbackType, subject, detailedFeedback })
   }
 
   return (
@@ -91,25 +65,16 @@ export default function FeedbackPage() {
           {/* Submit Feedback Section */}
           <Card className="shadow-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold text-gray-900">Submit Feedback {procedureId && <span className="text-xs text-gray-500">(Procedure: {procedureId})</span>}</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-900">Submit Feedback</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-6">
-                {isSuccess && (
-                  <div className="text-sm text-green-600 border border-green-200 bg-green-50 px-3 py-2 rounded">Feedback submitted successfully.</div>
-                )}
-                {isError && (
-                  <div className="text-sm text-red-600 border border-red-200 bg-red-50 px-3 py-2 rounded">Failed to submit feedback.</div>
-                )}
-                {!procedureId && (
-                  <div className="text-xs text-amber-600 border border-amber-200 bg-amber-50 px-3 py-2 rounded">Provide procedure id via query (?procedure=prc_xxx) to associate your feedback.</div>
-                )}
                 {/* Type of Feedback */}
                 <div className="space-y-2">
                   <Label htmlFor="feedback-type" className="text-sm font-medium text-gray-700">
                     Type of Feedback
                   </Label>
-                  <Select value={feedbackType} onValueChange={setFeedbackType} disabled={submitting}>
+                  <Select value={feedbackType} onValueChange={setFeedbackType}>
                     <SelectTrigger className="bg-white border-gray-300 animate-in fade-in duration-500">
                       <SelectValue placeholder="Report Issue" />
                     </SelectTrigger>
@@ -133,7 +98,6 @@ export default function FeedbackPage() {
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     className="bg-gray-50 border-gray-300"
-                    disabled={submitting}
                   />
                 </div>
 
@@ -148,13 +112,12 @@ export default function FeedbackPage() {
                     value={detailedFeedback}
                     onChange={(e) => setDetailedFeedback(e.target.value)}
                     className="min-h-[120px] bg-gray-50 border-gray-300 resize-none"
-                    disabled={submitting}
                   />
                 </div>
 
-                <Button type="submit" disabled={submitting || !procedureId || !subject} className="w-full bg-slate-600 hover:bg-slate-700 text-white py-3 rounded-md disabled:opacity-60 disabled:cursor-not-allowed">
+                <Button type="submit" className="w-full bg-slate-600 hover:bg-slate-700 text-white py-3 rounded-md">
                   <Send className="h-4 w-4 mr-2" />
-                  {submitting ? 'Submitting...' : 'Send Feedback'}
+                  Send Feedback
                 </Button>
               </form>
             </CardContent>
