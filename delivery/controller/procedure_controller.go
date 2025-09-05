@@ -163,22 +163,17 @@ func (pc *ProcedureController) DeleteProcedure(ctx *gin.Context) {
 // @Produce      json
 // @Param        page              query     int     false  "Page number (default 1)"
 // @Param        limit             query     int     false  "Results per page (default 10)"
-// @Param        logic             query     string  false  "Global logic: AND or OR (default AND)"
 // @Param        name              query     string  false  "Search by procedure name"
 // @Param        organizationID    query     string  false  "Filter by organization ID"
 // @Param        groupID           query     string  false  "Filter by group ID"
-// @Param        minFee            query     number  false  "Minimum fee"
-// @Param        maxFee            query     number  false  "Maximum fee"
 // @Param        minProcessingDays query     int     false  "Minimum processing days"
 // @Param        maxProcessingDays query     int     false  "Maximum processing days"
-// @Param        startDate         query     string  false  "Start date (RFC3339 format)"
-// @Param        endDate           query     string  false  "End date (RFC3339 format)"
 // @Param        sortBy            query     string  false  "Sort by field (e.g. createdAt, fee, processingTime)"
 // @Param        sortOrder         query     string  false  "Sort order: ASC or DESC (default DESC)"
 // @Success      200  {object}  PaginatedProcedureResponse
 // @Failure      400  {object}  map[string]string "Invalid parameter"
 // @Failure      500  {object}  map[string]string "Server error"
-// @Router       /procedures/search [get]
+// @Router       /procedures [get]
 func (pc *ProcedureController) SearchAndFilter(c *gin.Context) {
 	options := domain.ProcedureSearchFilterOptions{
 		GlobalLogic: domain.GlobalLogicAND, // default
