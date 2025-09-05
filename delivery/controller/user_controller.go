@@ -304,6 +304,17 @@ func (ctrl *UserController) UpdateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, toUserResponse(savedAccount))
 }
 
+// @Summary      Logout
+// @Description  Logout a user.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Success      200 {string}  "Log out successful"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/logout/ [post]
 func (ctrl *UserController) Logout(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -318,6 +329,16 @@ func (ctrl *UserController) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
+// @Summary      Forgot Password
+// @Description  Forgot password.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body ForgotDTO true "User Email"
+// @Success      200 {string}  "Reset token sent"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/forgot [post]
 func (ctrl *UserController) HandleForgot(c *gin.Context) {
 	var req ForgotDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -334,6 +355,16 @@ func (ctrl *UserController) HandleForgot(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Reset token sent"})
 }
 
+// @Summary      Reset Password
+// @Description  Reset password.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body ResetDTO true "Reset Token and New Password"
+// @Success      200 {string}  "Reset token sent"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/reset [post]
 func (ctrl *UserController) HandleReset(c *gin.Context) {
 	var req ResetDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -350,6 +381,16 @@ func (ctrl *UserController) HandleReset(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Password Updated Successfully"})
 }
 
+// @Summary      Verify Account
+// @Description  Verify User Account.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body ActivateDTO true "Reset Token and New Password"
+// @Success      200 {string}  "Reset token sent"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/verify [post]
 func (ctrl *UserController) HandleVerify(c *gin.Context) {
 	var req ActivateDTO
 	if err := c.ShouldBindJSON(&req); err != nil {

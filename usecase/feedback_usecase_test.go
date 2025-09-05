@@ -250,4 +250,3 @@ func (s *FeedbackUsecaseTestSuite) TestGetAllFeedbacks() {
 		s.mockFeedbackRepo.AssertExpectations(s.T())
 	})
 }
-

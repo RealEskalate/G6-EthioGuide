@@ -35,10 +35,11 @@ type ICategoryUsecase interface {
 }
 
 type IProcedureUsecase interface {
-	CreateProcedure(ctx context.Context, procedure *Procedure) error
-	UpdateProcedure(ctx context.Context, id string, procedure *Procedure) error
+	CreateProcedure(ctx context.Context, procedure *Procedure, userId string, userRole Role) error
+	UpdateProcedure(ctx context.Context, id string, procedure *Procedure, userId string, userRole Role) error
 	GetProcedureByID(ctx context.Context, id string) (*Procedure, error)
-	DeleteProcedure(ctx context.Context, id string) error
+	DeleteProcedure(ctx context.Context, id string, userId string, userRole Role) error
+	SearchAndFilter(ctx context.Context, opttions ProcedureSearchFilterOptions) ([]*Procedure, int64, error)
 }
 
 type IFeedbackUsecase interface {

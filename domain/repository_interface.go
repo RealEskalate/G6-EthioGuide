@@ -35,6 +35,7 @@ type IProcedureRepository interface {
 	GetByID(ctx context.Context, id string) (*Procedure, error)
 	Update(ctx context.Context, id string, procedure *Procedure) error
 	Delete(ctx context.Context, id string) error
+	SearchAndFilter(ctx context.Context, opttions ProcedureSearchFilterOptions)([]*Procedure, int64, error)
 }
 
 type IFeedbackRepository interface {

@@ -31,7 +31,7 @@ var (
 	ErrInvalidID              = errors.New("invalid ID was used")
 	ErrInvalidResetToken      = errors.New("invalid or expired password reset token")
 	ErrCannotDemoteSelf       = errors.New("admin cannot demote themselves")
-	ErrAccountNotActive       = errors.New("this account has not been activated")
+	ErrAccountNotActive       = errors.New("this account has not been verified")
 	ErrInvalidActivationToken = errors.New("invalid or expired activation token")
 
 	// Request errors
