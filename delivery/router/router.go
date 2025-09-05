@@ -155,8 +155,6 @@ func SetupRouter(
 		users := v1.Group("/users")
 		{
 			users.GET("/:id", handleGetUser)
-			users.GET("/me/preferences", handleGetUserPreferences)
-			users.PATCH("/me/preferences", handleUpdateUserPreferences)
 			users.GET("/me/summary", handleGetUserSummary)
 		}
 
@@ -317,26 +315,6 @@ func handleGetUser(c *gin.Context) {
 		"name":   "Public User Name",
 		"orgId":  "org_789",
 		"badges": []string{"Top Contributor", "Verified"},
-	})
-}
-
-func handleGetUserPreferences(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"notifications": gin.H{
-			"email": true,
-			"push":  false,
-		},
-		"preferredLang": "en",
-	})
-}
-
-func handleUpdateUserPreferences(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"notifications": gin.H{
-			"email": false,
-			"push":  true,
-		},
-		"preferredLang": "am",
 	})
 }
 
