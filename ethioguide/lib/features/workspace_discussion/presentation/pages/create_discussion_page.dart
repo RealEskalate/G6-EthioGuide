@@ -348,19 +348,19 @@ BlocListener(
 
 
       // Local UI-only submit preview
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Posted (local UI only): ${_titleController.text.trim()}',
-          ),
-        ),
-      );
-      Navigator.pop(context, {
-        'title': _titleController.text.trim(),
-        'content': _contentController.text.trim(),
-        'category': _selectedCategory,
-        'tags': tags,
-      });
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(
+      //       'Posted (local UI only): ${_titleController.text.trim()}',
+      //     ),
+      //   ),
+      // );
+      // Navigator.pop(context, {
+      //   'title': _titleController.text.trim(),
+      //   'content': _contentController.text.trim(),
+      //   'category': _selectedCategory,
+      //   'tags': tags,
+      // });
     }
   }
 }
