@@ -584,7 +584,7 @@ const docTemplate = `{
                 "summary": "Fetch Posts",
                 "parameters": [
                     {
-                        "type": "array",
+                        "type": "string",
                         "description": "procedure ids",
                         "name": "title",
                         "in": "query"
@@ -596,7 +596,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "array",
                         "description": "tags",
                         "name": "tags",
                         "in": "query"
@@ -827,6 +827,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "Post ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Post update details",
                         "name": "request",
                         "in": "body",
@@ -834,13 +841,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/controller.UpdatePostDTO"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Post ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {

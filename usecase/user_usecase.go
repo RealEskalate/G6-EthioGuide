@@ -281,7 +281,7 @@ func (uc *UserUsecase) loginWithGoogle(ctx context.Context, code string) (*domai
 
 	user, err := uc.userRepo.GetByEmail(ctx, userInfo.Email)
 	if err != nil {
-		if errors.Is(err, domain.ErrUserNotFound) {
+		if errors.Is(err, domain.ErrUserNotFound) || errors.Is(err, domain.ErrNotFound) {
 			// Create a new user if they don't exist
 			newUser := &domain.Account{
 				Email:         userInfo.Email,

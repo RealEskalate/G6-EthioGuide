@@ -578,7 +578,7 @@
                 "summary": "Fetch Posts",
                 "parameters": [
                     {
-                        "type": "array",
+                        "type": "string",
                         "description": "procedure ids",
                         "name": "title",
                         "in": "query"
@@ -590,7 +590,7 @@
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "array",
                         "description": "tags",
                         "name": "tags",
                         "in": "query"
@@ -821,6 +821,13 @@
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "Post ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Post update details",
                         "name": "request",
                         "in": "body",
@@ -828,13 +835,6 @@
                         "schema": {
                             "$ref": "#/definitions/controller.UpdatePostDTO"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Post ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
