@@ -53,3 +53,8 @@ type IPostRepository interface {
 	UpdatePost(ctx context.Context, Post *Post) (*Post, error)
 	DeletePost(ctx context.Context, id, userID, role string) error
 }
+type IPreferencesRepository interface {
+    Create(ctx context.Context, preferences *Preferences) error
+    GetByUserID(ctx context.Context, userID string) (*Preferences, error)
+    UpdateByUserID(ctx context.Context, userID string, preferences *Preferences) error
+}

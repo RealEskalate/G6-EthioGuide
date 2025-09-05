@@ -22,6 +22,7 @@ func SetupRouter(
 	geminiController *controller.GeminiController,
 	feedbackController *controller.FeedbackController,
 	postController *controller.PostController,
+	PreferencesController *controller.PreferencesController,
 	authMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
 	requireAdminRole gin.HandlerFunc,
@@ -109,6 +110,8 @@ func SetupRouter(
 				authGroup.GET("/me", userController.GetProfile)
 				authGroup.PATCH("/me/password", userController.UpdatePassword)
 				authGroup.PATCH("/me", userController.UpdateProfile)
+				authGroup.GET("/me/preferences", PreferencesController.GetUserPreferences)
+				authGroup.PATCH("/me/preferences", PreferencesController.UpdateUserPreferences)
 			}
 
 			procedures := v1.Group("/procedures")
@@ -152,8 +155,6 @@ func SetupRouter(
 		users := v1.Group("/users")
 		{
 			users.GET("/:id", handleGetUser)
-			users.GET("/me/preferences", handleGetUserPreferences)
-			users.PATCH("/me/preferences", handleUpdateUserPreferences)
 			users.GET("/me/summary", handleGetUserSummary)
 		}
 
@@ -314,26 +315,6 @@ func handleGetUser(c *gin.Context) {
 		"name":   "Public User Name",
 		"orgId":  "org_789",
 		"badges": []string{"Top Contributor", "Verified"},
-	})
-}
-
-func handleGetUserPreferences(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"notifications": gin.H{
-			"email": true,
-			"push":  false,
-		},
-		"preferredLang": "en",
-	})
-}
-
-func handleUpdateUserPreferences(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"notifications": gin.H{
-			"email": false,
-			"push":  true,
-		},
-		"preferredLang": "am",
 	})
 }
 

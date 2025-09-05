@@ -56,3 +56,8 @@ type IPostUseCase interface {
 	UpdatePost(ctx context.Context, Post *Post) (*Post, error)
 	DeletePost(ctx context.Context, id, userID, role string) error
 }
+type IPreferencesUsecase interface{
+	CreateUserPreferences(ctx context.Context, userID string) error
+	GetUserPreferences(ctx context.Context, userId string)(*Preferences, error)
+	UpdateUserPreferences(ctx context.Context, prefernces *Preferences) error
+}

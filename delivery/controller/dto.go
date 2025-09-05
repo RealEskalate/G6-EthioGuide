@@ -420,3 +420,9 @@ func toPaginatedProcedureResponse(procedures []*domain.Procedure, total, page, l
 		},
 	}
 }
+
+type PreferencesDTO struct {
+	PreferredLang     string `json:"preferredLang"`
+	PushNotification  bool   `json:"pushNotification"`
+	EmailNotification bool   `json:"emailNotification"`
+}

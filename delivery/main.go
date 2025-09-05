@@ -64,6 +64,7 @@ func main() {
 	// Repositories are the first layer to be initialized as they only depend on the database.
 	userRepo := repository.NewAccountRepository(db)
 	procedureRepo := repository.NewProcedureRepository(db)
+	preferencesRepo := repository.NewPreferencesRepository(db)
 	catagoryRepo := repository.NewCategoryRepository(db, "catagories")
 	tokenRepo := repository.NewTokenRepository(db)
 	feedbackRepo := repository.NewFeedbackRepository(db)
@@ -99,6 +100,7 @@ func main() {
 	catagoryUsecase := usecase.NewCategoryUsecase(catagoryRepo, cfg.UsecaseTimeout)
 	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
 	feedbackUsecase := usecase.NewFeedbackUsecase(feedbackRepo, procedureRepo, cfg.UsecaseTimeout)
+	preferencesUsecase := usecase.NewPreferencesUsecase(preferencesRepo)
 
 	postUsecase := usecase.NewPostUseCase(postRepo, cfg.UsecaseTimeout)
 	// --- Controllers ---
@@ -108,6 +110,7 @@ func main() {
 	catagoryController := controller.NewCategoryController(catagoryUsecase)
 	geminiController := controller.NewGeminiController(geminiUsecase)
 	feedbackController := controller.NewFeedbackController(feedbackUsecase)
+	preferencesController := controller.NewPreferencesController(preferencesUsecase)
 
 	postController := controller.NewPostController(postUsecase)
 	// --- Middleware ---
@@ -126,6 +129,7 @@ func main() {
 		geminiController,
 		feedbackController,
 		postController,
+		preferencesController,
 		authMiddleware,
 		proOnlyMiddleware,
 		requireAdminRole,
