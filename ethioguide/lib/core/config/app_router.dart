@@ -2,8 +2,10 @@ import 'package:ethioguide/features/authentication/presentation/screens/auth_scr
 import 'package:ethioguide/core/config/route_names.dart';
 import 'package:ethioguide/features/AI%20chat/Presentation/screens/ai_chat_screen.dart';
 import 'package:ethioguide/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:ethioguide/features/profile/presentation/screen/profile_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ethioguide/features/onboarding/presentation/screens/onboarding_screen.dart';
+
 import 'package:ethioguide/features/splashscreen/presentation/screens/splash_screen.dart';
 import 'package:ethioguide/features/splashscreen/presentation/screens/placeholder_screen.dart'; 
 import 'package:ethioguide/core/config/route_names.dart';
@@ -51,6 +53,11 @@ final GoRouter router = GoRouter(
       path: '/home',
       name: RouteNames.home,
       builder: (context, state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/profile',
+      name: 'profile', // You can add this to your RouteNames constants
+      builder: (context, state) => const ProfileScreen(),
     ),
   
   ],

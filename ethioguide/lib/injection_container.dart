@@ -11,6 +11,12 @@ import 'package:ethioguide/features/authentication/domain/usecases/reset_passwor
 import 'package:ethioguide/features/authentication/domain/usecases/sign_in_with_google.dart';
 import 'package:ethioguide/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:ethioguide/features/home_screen/presentaion/bloc/home_bloc.dart';
+import 'package:ethioguide/features/profile/data/datasources/profile_remote_data_source.dart';
+import 'package:ethioguide/features/profile/data/repositories/profile_repository_impl.dart';
+import 'package:ethioguide/features/profile/domain/repositories/profile_repository.dart';
+import 'package:ethioguide/features/profile/domain/usecases/get_user_profile.dart';
+import 'package:ethioguide/features/profile/domain/usecases/logout_user.dart';
+import 'package:ethioguide/features/profile/presentation/bloc/profile_bloc.dart';
 // REMOVED: No longer need to import google_sign_in here.
 
 import 'core/network/interceptors/auth_interceptor.dart';
@@ -66,6 +72,13 @@ Future<void> init() async {
   
   sl.registerFactory(() => HomeBloc(getHomeData: sl()));
 
+   sl.registerFactory(
+    () => ProfileBloc(
+      getUserProfile: sl(),
+      logoutUser: sl(),
+    ),
+  );
+
   // Usecase
   sl.registerLazySingleton<SendQuery>(() => SendQuery(repository: sl()));
   sl.registerLazySingleton<GetHistory>(() => GetHistory(repository: sl()));
@@ -74,6 +87,8 @@ Future<void> init() async {
   );
   
   sl.registerLazySingleton(() => GetHomeData(sl()));
+   sl.registerLazySingleton(() => GetUserProfile(sl()));
+  sl.registerLazySingleton(() => LogoutUser(sl()));
 
   // Repositories
   sl.registerLazySingleton<AiRepository>(
@@ -85,6 +100,14 @@ Future<void> init() async {
   );
   
   sl.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
+  sl.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(
+      remoteDataSource: sl(),
+      coreAuthRepository: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
 
   // Datasources
   sl.registerLazySingleton<AiRemoteDatasource>(
@@ -92,6 +115,9 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<AiLocalDatasource>(
     () => AiLocalDataSourceImpl(secureStorage: sl()),
+  );
+  sl.registerLazySingleton<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSourceImpl(dio: sl()),
   );
 
   //! Core

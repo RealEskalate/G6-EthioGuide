@@ -1,31 +1,30 @@
 import 'package:ethioguide/features/authentication/domain/entities/user.dart';
 
-
-// UserModel extends User to inherit its properties but adds data-specific functionality.
 class UserModel extends User {
   const UserModel({
     required super.id,
     required super.email,
     required super.name,
     super.username,
+    super.profilePicture,
+    super.role,
+    super.isVerified,
+    super.createdAt,
   });
 
-  // Factory constructor to create a UserModel from a JSON map.
+  // This factory can now safely parse JSON from both login and /auth/me.
+  // If a field is missing from the JSON (e.g., profile_picture during login),
+  // it will safely be assigned null.
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'],
       email: json['email'],
       name: json['name'],
       username: json['username'],
+      profilePicture: json['profile_picture'],
+      role: json['role'],
+      isVerified: json['is_verified'],
+      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'email': email,
-      'name': name,
-      'username': username,
-    };
   }
 }
