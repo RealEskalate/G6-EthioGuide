@@ -8,21 +8,15 @@ import (
 	"net/mail"
 	"strings"
 	"time"
-
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	oauth2_v2 "google.golang.org/api/oauth2/v2"
-	"google.golang.org/api/option"
 )
 
 type UserUsecase struct {
-	userRepo          domain.IAccountRepository
-	tokenRepo         domain.ITokenRepository
-	passwordService   domain.IPasswordService
-	jwtService        domain.IJWTService
-	GoogleOAuthConfig *oauth2.Config
-	GoogleAPIEndpoint string
-	contextTimeout    time.Duration
+	userRepo        domain.IAccountRepository
+	tokenRepo       domain.ITokenRepository
+	passwordService domain.IPasswordService
+	jwtService      domain.IJWTService
+	googleService   domain.IGoogleOAuthService
+	contextTimeout  time.Duration
 }
 
 func NewUserUsecase(
@@ -30,29 +24,16 @@ func NewUserUsecase(
 	tr domain.ITokenRepository,
 	ps domain.IPasswordService,
 	js domain.IJWTService,
-	googleClientID string,
-	googleClientSecret string,
-	googleRedirectURL string,
+	gs domain.IGoogleOAuthService,
 	timeout time.Duration,
 ) domain.IUserUsecase {
-	googleOAuthConfig := &oauth2.Config{
-		ClientID:     googleClientID,
-		ClientSecret: googleClientSecret,
-		RedirectURL:  googleRedirectURL,
-		Scopes: []string{
-			"https://www.googleapis.com/auth/userinfo.email",
-			"https://www.googleapis.com/auth/userinfo.profile",
-		},
-		Endpoint: google.Endpoint,
-	}
 	return &UserUsecase{
-		userRepo:          ur,
-		tokenRepo:         tr,
-		passwordService:   ps,
-		jwtService:        js,
-		GoogleOAuthConfig: googleOAuthConfig,
-		GoogleAPIEndpoint: "",
-		contextTimeout:    timeout,
+		userRepo:        ur,
+		tokenRepo:       tr,
+		passwordService: ps,
+		jwtService:      js,
+		googleService:   gs,
+		contextTimeout:  timeout,
 	}
 }
 
@@ -282,27 +263,16 @@ func (uc *UserUsecase) LoginWithSocial(ctx context.Context, provider domain.Auth
 }
 
 func (uc *UserUsecase) loginWithGoogle(ctx context.Context, code string) (*domain.Account, string, string, error) {
-	googleToken, err := uc.GoogleOAuthConfig.Exchange(ctx, code)
+	// Step 1: Exchange the code for a token using the service
+	googleToken, err := uc.googleService.ExchangeCodeForToken(ctx, code)
 	if err != nil {
-		return nil, "", "", fmt.Errorf("google oauth exchange failed: %w", err)
+		return nil, "", "", err
 	}
 
-	opts := []option.ClientOption{
-		option.WithTokenSource(uc.GoogleOAuthConfig.TokenSource(ctx, googleToken)),
-	}
-	// If the test has set a custom endpoint, use it.
-	if uc.GoogleAPIEndpoint != "" {
-		opts = append(opts, option.WithEndpoint(uc.GoogleAPIEndpoint))
-	}
-
-	oauth2Service, err := oauth2_v2.NewService(ctx, opts...)
+	// Step 2: Get user information using the token via the service
+	userInfo, err := uc.googleService.GetUserInfo(ctx, googleToken)
 	if err != nil {
-		return nil, "", "", fmt.Errorf("failed to create oauth2 service: %w", err)
-	}
-
-	userInfo, err := oauth2Service.Userinfo.Get().Do()
-	if err != nil {
-		return nil, "", "", fmt.Errorf("failed to get user info from google: %w", err)
+		return nil, "", "", err
 	}
 
 	if userInfo.Email == "" {
@@ -312,18 +282,19 @@ func (uc *UserUsecase) loginWithGoogle(ctx context.Context, code string) (*domai
 	user, err := uc.userRepo.GetByEmail(ctx, userInfo.Email)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
+			// Create a new user if they don't exist
 			newUser := &domain.Account{
 				Email:         userInfo.Email,
 				Role:          domain.RoleUser,
 				AuthProvider:  domain.AuthProviderGoogle,
-				ProviderID:    userInfo.Id,
+				ProviderID:    userInfo.ID,
 				CreatedAt:     time.Now().UTC(),
 				Name:          userInfo.Name,
-				ProfilePicURL: userInfo.Picture,
+				ProfilePicURL: userInfo.ProfilePictureURL,
 				UserDetail: &domain.UserDetail{
-					Username:         userInfo.Email,
+					Username:         userInfo.Email, // Default username to email
 					SubscriptionPlan: domain.SubscriptionNone,
-					IsVerified:       true,
+					IsVerified:       true, // Google accounts are considered verified
 					IsBanned:         false,
 				},
 			}

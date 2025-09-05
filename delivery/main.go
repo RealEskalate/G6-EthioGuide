@@ -72,6 +72,10 @@ func main() {
 	// --- Infrastructure Services ---
 	// These are concrete implementations of external services.
 	passwordService := infrastructure.NewPasswordService()
+	googleService, err := infrastructure.NewGoogleOAuthService(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURI)
+	if err != nil {
+		log.Printf("WARN: Failed to initialize Google Oaut service: %v. Google Sign in will be unavailable.", err)
+	}
 	jwtService := infrastructure.NewJWTService(cfg.JWTSecret, cfg.JWTIssuer, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 	aiService, err := infrastructure.NewGeminiAIService(cfg.GeminiAPIKey, cfg.GeminiModel)
 	if err != nil {
@@ -86,9 +90,7 @@ func main() {
 		tokenRepo, // Added the missing token repository
 		passwordService,
 		jwtService,
-		cfg.GoogleClientID,
-		cfg.GoogleClientSecret,
-		cfg.GoogleRedirectURI,
+		googleService,
 		cfg.UsecaseTimeout,
 	)
 	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, cfg.UsecaseTimeout)
