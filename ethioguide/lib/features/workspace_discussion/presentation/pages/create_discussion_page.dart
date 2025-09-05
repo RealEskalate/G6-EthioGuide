@@ -1,5 +1,6 @@
 import 'package:ethioguide/core/config/app_color.dart';
 import 'package:ethioguide/features/workspace_discussion/presentation/bloc/workspace_discussion_bloc.dart';
+import 'package:ethioguide/features/workspace_discussion/presentation/bloc/worspace_discustion_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -316,16 +317,34 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
           .where((tag) => tag.isNotEmpty)
           .toList();
 
-     final value = context.read()<WorkspaceDiscussionBloc>().add(
-        CreateDiscussionEvent(
-          title: _titleController.text.trim(),
-          content: _contentController.text.trim(),
-          tags: tags,
-  // category: _selectedCategory!,
-        ),
-      );
+    context.read<WorkspaceDiscussionBloc>().add(
+  CreateDiscussionEvent(
+    title: _titleController.text.trim(),
+    content: _contentController.text.trim(),
+    tags: tags,
+  ),
+);
 
-      print(value);
+
+
+BlocListener(
+  listener:
+      (context, state) {
+    if (state is ActionSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Discussion created successfully!')),
+      );
+      
+    } else if (state is ActionFailure)
+      {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error:')),
+      );
+    }
+  },
+  child: const CircularProgressIndicator(),
+);
+   
 
 
       // Local UI-only submit preview
