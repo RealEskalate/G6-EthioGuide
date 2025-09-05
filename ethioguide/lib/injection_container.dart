@@ -21,6 +21,7 @@ import 'package:ethioguide/features/workspace_discussion/domain/usecases/get_dis
 import 'package:ethioguide/features/workspace_discussion/domain/usecases/like_comment.dart';
 import 'package:ethioguide/features/workspace_discussion/domain/usecases/like_discussion.dart';
 import 'package:ethioguide/features/workspace_discussion/domain/usecases/report_comment.dart';
+import 'package:ethioguide/features/workspace_discussion/domain/usecases/report_discussion.dart';
 import 'package:ethioguide/features/workspace_discussion/presentation/bloc/workspace_discussion_bloc.dart';
 // REMOVED: No longer need to import google_sign_in here.
 
@@ -112,8 +113,8 @@ Future<void> init() async {
   sl.registerLazySingleton<CreateDiscussion>(() => CreateDiscussion(sl()));
   sl.registerLazySingleton<GetCommunityStats>(() => GetCommunityStats(sl()));
   sl.registerLazySingleton<LikeDiscussion>(() => LikeDiscussion(sl()));
-  sl.registerLazySingleton<GetCommunityStats>(() => GetCommunityStats(sl()));
   sl.registerLazySingleton<ReportComment>(() => ReportComment(sl()));
+    sl.registerLazySingleton<ReportDiscussion>(() => ReportDiscussion(sl()));
 
   sl.registerLazySingleton<GetDiscussions>(() => GetDiscussions(sl()));
   sl.registerLazySingleton<LikeComment>(() => LikeComment(sl()));
