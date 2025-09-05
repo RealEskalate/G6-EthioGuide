@@ -1,6 +1,7 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
 import { UserSidebar } from "./UserSidebar";
+import { signOut } from "next-auth/react";
 
 const adminMenuItems = [
   {
@@ -33,8 +34,8 @@ export function AdminSidebar() {
     // Admin settings logic
   };
 
-  const handleLogoutClick = () => {
-    // Admin logout logic
+  const handleLogoutClick = async () => {
+    await signOut({ callbackUrl: "/" }); // Call signOut and redirect to login page
   };
 
   const menuItemsWithHandlers = adminMenuItems.map((item) => {
