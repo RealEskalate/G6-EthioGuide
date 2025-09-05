@@ -331,7 +331,7 @@ func (ctrl *UserController) HandleForgot(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, gin.H{"message": "Reset token sent"})
 }
 
 func (ctrl *UserController) HandleReset(c *gin.Context) {

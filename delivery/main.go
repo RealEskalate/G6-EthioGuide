@@ -77,7 +77,7 @@ func main() {
 	if err != nil {
 		log.Printf("WARN: Failed to initialize Google Oaut service: %v. Google Sign in will be unavailable.", err)
 	}
-	jwtService := infrastructure.NewJWTService(cfg.JWTSecret, cfg.JWTIssuer, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	jwtService := infrastructure.NewJWTService(cfg.JWTSecret, cfg.JWTIssuer, cfg.JWTAccessTTL, cfg.JWTRefreshTTL, cfg.JWTUtilityTTL)
 	aiService, err := infrastructure.NewGeminiAIService(cfg.GeminiAPIKey, cfg.GeminiModel)
 	if err != nil {
 		log.Printf("WARN: Failed to initialize AI service: %v. AI features will be unavailable.", err)

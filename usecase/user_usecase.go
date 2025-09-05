@@ -83,41 +83,14 @@ func (uc *UserUsecase) Register(c context.Context, user *domain.Account) error {
 		return fmt.Errorf("failed to create user in repository: %w", err)
 	}
 
-	activationToken, activateclaim, errToken := uc.jwtService.GenerateUtilityToken(user.ID)
-	if errToken != nil {
-		return errToken
-	}
-
-	activateToken := domain.Token{
-		Id:        activateclaim.ID,
-		Token:     activationToken,
-		TokenType: domain.VerificationToken,
-		ExpiresAt: activateclaim.ExpiresAt.Time,
-	}
-
-	if _, err := uc.tokenRepo.CreateToken(ctx, &activateToken); err != nil {
+	if err = uc.sendVerificationEmail(ctx, user); err != nil {
 		return err
 	}
-
-	go func() {
-		err := uc.emailService.SendVerificationEmail(user.Email, user.UserDetail.Username, activationToken)
-		if err != nil {
-			fmt.Printf("Failed to send activation email: %v\n", err)
-		}
-	}()
 
 	return nil
 }
 
-func (uc *UserUsecase) SendVerificationEmail(ctx context.Context, userId string) error {
-	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
-	defer cancel()
-
-	user, err := uc.userRepo.GetById(ctx, userId)
-	if err != nil {
-		return err
-	}
-
+func (uc *UserUsecase) sendVerificationEmail(ctx context.Context, user *domain.Account) error {
 	if user.UserDetail.IsVerified {
 		return domain.ErrUserAlreadyVerified
 	}
@@ -202,6 +175,9 @@ func (uc *UserUsecase) Login(c context.Context, identifier, password string) (*d
 	}
 
 	if !account.UserDetail.IsVerified {
+		if err = uc.sendVerificationEmail(ctx, account); err != nil {
+			return nil, "", "", err
+		}
 		return nil, "", "", domain.ErrAccountNotActive
 	}
 
