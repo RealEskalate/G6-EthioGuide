@@ -7,96 +7,67 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import { useListCategoriesQuery } from '@/app/store/slices/categoriesApi'
+import { useListProceduresQuery } from '@/app/store/slices/proceduresApi'
+
+function badgeColorFromIndex(i: number) {
+  const palette = [
+    'bg-blue-100 text-blue-700',
+    'bg-green-100 text-green-700',
+    'bg-purple-100 text-purple-700',
+    'bg-orange-100 text-orange-700',
+    'bg-red-100 text-red-700',
+    'bg-teal-100 text-teal-700'
+  ];
+  return palette[i % palette.length];
+}
 
 export default function ProceduresPage() {
 
-  const procedures = [
-    {
-      id: 1,
-      name: "Tourist Visa Application",
-      description: "Apply for short-term tourist visa for leisure travel",
-      category: "Visa Applications",
-      categoryColor: "bg-blue-100 text-blue-700",
-      processingTime: "5-7 business days",
-      lastUpdated: "Dec 15, 2024",
-      icon: "/icons/business.svg",
-      iconBg: "bg-blue-50",
-      bookmarked: false,
-    },
-    {
-      id: 2,
-      name: "Work Permit Application",
-      description: "Apply for employment authorization and work permit",
-      category: "Work Permits",
-      categoryColor: "bg-gray-100 text-gray-700",
-      processingTime: "10-15 business days",
-      lastUpdated: "Dec 10, 2024",
-      icon: "/icons/workspace.svg",
-      iconBg: "bg-gray-50",
-      bookmarked: true,
-    },
-    {
-      id: 3,
-      name: "Citizenship Application",
-      description: "Apply for naturalization and citizenship status",
-      category: "Citizenship",
-      categoryColor: "bg-orange-100 text-orange-700",
-      processingTime: "6-8 months",
-      lastUpdated: "Dec 8, 2024",
-      icon: "/icons/citizenship.svg",
-      iconBg: "bg-yellow-50",
-      bookmarked: false,
-    },
-    {
-      id: 4,
-      name: "Family Reunification Visa",
-      description: "Bring family members to join you in the country",
-      category: "Family Reunification",
-      categoryColor: "bg-red-100 text-red-700",
-      processingTime: "3-4 months",
-      lastUpdated: "Dec 5, 2024",
-      icon: "/icons/family-love.svg",
-      iconBg: "bg-green-50",
-      bookmarked: false,
-    },
-    {
-      id: 5,
-      name: "Student Visa Application",
-      description: "Apply for student visa for educational purposes",
-      category: "Student Permits",
-      categoryColor: "bg-blue-100 text-blue-700",
-      processingTime: "4-6 weeks",
-      lastUpdated: "Dec 1, 2024",
-      icon: "/icons/student-graduate.svg",
-      iconBg: "bg-blue-50",
-      bookmarked: false,
-    },
-    {
-      id: 6,
-      name: "Residence Permit Renewal",
-      description: "Renew your existing residence permit",
-      category: "Renewals",
-      categoryColor: "bg-purple-100 text-purple-700",
-      processingTime: "2-3 weeks",
-      lastUpdated: "Nov 28, 2024",
-      icon: "/icons/passport.svg",
-      iconBg: "bg-gray-50",
-      bookmarked: true,
-    },
-  ]
+  // Pagination state (simple)
+  const [page, setPage] = useState(1)
+  const limit = 10
+  const { data: procData, isLoading: loadingProcedures, isError: procsError } = useListProceduresQuery({ page, limit, q: undefined })
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+  const { data: catData, isLoading: loadingCats, isError: catsError } = useListCategoriesQuery();
 
-  const filteredProcedures = procedures.filter((procedure) => {
-    const matchesSearch = procedure.name.toLowerCase().includes(search.toLowerCase()) || procedure.description.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = category === "all" ||
-      (category === "visa" && procedure.category === "Visa Applications") ||
-      (category === "work" && procedure.category === "Work Permits") ||
-      (category === "citizenship" && procedure.category === "Citizenship");
-    return matchesSearch && matchesCategory;
-  });
+  const categories = useMemo(() => {
+    const list = catData?.list || []
+    return list.map((c, idx) => ({ id: c.id, title: c.title, badge: badgeColorFromIndex(idx) }))
+  }, [catData])
+
+  const backendProcedures = useMemo(() => (procData?.list || []).map((p, idx) => {
+    // Derive fields to fit existing UI expectations
+    const title = (p as any).title || (p as any).name || 'Untitled Procedure'
+    const description = (p as any).summary || (p as any).content?.result || ''
+    const updated = p.updatedAt ? new Date(p.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
+    // Use first tag as category if available
+    const tag = (p.tags && p.tags.length > 0) ? p.tags[0] : 'General'
+    return {
+      id: p.id,
+      name: title,
+      description,
+      category: tag,
+      categoryColor: badgeColorFromIndex(idx),
+      processingTime: p.processingTime ? `${p.processingTime.minDays ?? '?'}-${p.processingTime.maxDays ?? '?' } days` : '—',
+      lastUpdated: updated,
+  icon: '/icons/manage-procedure.svg',
+      iconBg: 'bg-blue-50',
+      bookmarked: false
+    }
+  }), [procData])
+
+  const filteredProcedures = backendProcedures.filter((procedure) => {
+    const matchesSearch = procedure.name.toLowerCase().includes(search.toLowerCase()) || procedure.description.toLowerCase().includes(search.toLowerCase())
+    let matchesCategory = true
+    if (category !== 'all') {
+      matchesCategory = procedure.category === category
+    }
+    return matchesSearch && matchesCategory
+  })
 
   const updates = [
     {
@@ -150,15 +121,18 @@ export default function ProceduresPage() {
                     onChange={e => setSearch(e.target.value)}
                   />
                 </div>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="w-48 bg-white border-[#d1d5db] hover:!bg-gray-100 font-medium">
-                    <SelectValue placeholder="All Categories" />
+                <Select value={category} onValueChange={setCategory} disabled={loadingCats || catsError}>
+                  <SelectTrigger className="w-60 bg-white border-[#d1d5db] hover:!bg-gray-100 font-medium">
+                    <SelectValue placeholder={loadingCats ? 'Loading...' : 'All Categories'} />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
+                  <SelectContent className="bg-white max-h-72 overflow-y-auto">
                     <SelectItem value="all" className="hover:!bg-gray-100 font-medium border-0">All Categories</SelectItem>
-                    <SelectItem value="visa" className="hover:!bg-gray-100 font-medium border-0">Visa Applications</SelectItem>
-                    <SelectItem value="work" className="hover:!bg-gray-100 font-medium border-0">Work Permits</SelectItem>
-                    <SelectItem value="citizenship" className="hover:!bg-gray-100 font-medium border-0">Citizenship</SelectItem>
+                    {categories.map(c => (
+                      <SelectItem key={c.id} value={c.title} className="hover:!bg-gray-100 font-medium border-0">{c.title}</SelectItem>
+                    ))}
+                    {(!loadingCats && categories.length === 0) && (
+                      <div className="px-3 py-2 text-xs text-gray-500">No categories</div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -178,10 +152,19 @@ export default function ProceduresPage() {
                     </tr>
                   </thead>
                   <tbody>
+                    {loadingProcedures && (
+                      <tr><td colSpan={5} className="py-8 text-center text-sm text-gray-500">Loading procedures...</td></tr>
+                    )}
+                    {(!loadingProcedures && procsError) && (
+                      <tr><td colSpan={5} className="py-8 text-center text-sm text-red-600">Failed to load procedures.</td></tr>
+                    )}
+                    {(!loadingProcedures && !procsError && filteredProcedures.length === 0) && (
+                      <tr><td colSpan={5} className="py-8 text-center text-sm text-gray-500">No procedures found.</td></tr>
+                    )}
                     {filteredProcedures.map((procedure, index) => (
                       <tr
                         key={procedure.id}
-                        className={(index !== procedures.length - 1 ? "border-b border-[#f3f4f6] " : "") + " hover:bg-gray-100 transition-colors"}
+                        className={(index !== filteredProcedures.length - 1 ? "border-b border-[#f3f4f6] " : "") + " hover:bg-gray-100 transition-colors"}
                       >
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
@@ -190,20 +173,21 @@ export default function ProceduresPage() {
                             >
                               <Image
                                 src={procedure.icon || "/placeholder.svg"}
-                                alt={procedure.name}
+                                alt={procedure.name || 'Procedure'}
                                 width={20}
                                 height={20}
                                 className="w-5 h-5"
                               />
                             </div>
                             <div>
+                              <div className="font-medium text-sm text-[#111827]">{procedure.name}</div>
                         {/* Footer is now part of the shared layout */}
                               <div className="text-sm text-[#4b5563]">{procedure.description}</div>
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-6">
-                          <Badge className={`${procedure.categoryColor} border-0`}>{procedure.category}</Badge>
+                          <Badge className={`${procedure.categoryColor || 'bg-gray-100 text-gray-700'} border-0`}>{procedure.category}</Badge>
                         </td>
                         <td className="py-4 px-6 text-[#4b5563]">{procedure.processingTime}</td>
                         <td className="py-4 px-6 text-[#4b5563]">{procedure.lastUpdated}</td>
@@ -265,21 +249,11 @@ export default function ProceduresPage() {
 
             {/* Pagination */}
             <div className="flex items-center justify-center gap-2">
-              <Button variant="ghost" size="sm">
-                <ChevronLeft className="w-4 h-4 text-[#4b5563] hover:!bg-gray-200" />
+              <Button variant="ghost" size="sm" disabled={page===1 || loadingProcedures} onClick={()=> setPage(p=> Math.max(1, p-1))}>
+                <ChevronLeft className="w-4 h-4 text-[#4b5563]" />
               </Button>
-              <Button className="bg-[#3a6a8d] text-white w-8 h-8 p-0">1</Button>
-              <Button variant="ghost" className="w-8 h-8 p-0 hover:bg-gray-200">
-                2
-              </Button>
-              <Button variant="ghost" className="w-8 h-8 p-0 hover:bg-gray-200">
-                3
-              </Button>
-              <span className="text-[#4b5563] mx-2">...</span>
-              <Button variant="ghost" className="w-8 h-8 p-0 hover:bg-gray-200">
-                12
-              </Button>
-              <Button variant="ghost" size="sm" className="hover:bg-gray-200">
+              <Button className="bg-[#3A6A8D] text-white w-8 h-8 p-0" disabled>{page}</Button>
+              <Button variant="ghost" size="sm" disabled={!procData?.hasNext || loadingProcedures} onClick={()=> setPage(p=> p+1)}>
                 <ChevronRight className="w-4 h-4 text-[#4b5563]" />
               </Button>
             </div>

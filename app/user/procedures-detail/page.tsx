@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useSearchParams } from 'next/navigation'
+import { useGetProcedureQuery } from '@/app/store/slices/proceduresApi'
 import {
   Clock,
   DollarSign,
@@ -19,6 +21,10 @@ import { Badge } from "@/components/ui/badge"
 
 export default function ProcedureDetail() {
   const [activeTab, setActiveTab] = useState<"feedback" | "notices" | "discussions">("feedback")
+  const search = useSearchParams()
+  const id = search.get('id') || ''
+  const { data: procedure, isLoading, isError } = useGetProcedureQuery(id, { skip: !id })
+  const notFound = !isLoading && !isError && (!procedure || !procedure.id)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -29,11 +35,15 @@ export default function ProcedureDetail() {
               {/* Header Section */}
               <div className="mb-6">
                 <h1 className="text-2xl font-bold text-[#111827] mb-1 animate-in fade-in duration-500">
-                  Driver&#39;s License Renewal
+                  {isLoading ? 'Loading...' : notFound ? 'Procedure Not Found' : (procedure?.title || procedure?.name || 'Procedure')}
                 </h1>
-                <p className="text-[#6b7280] text-sm animate-in fade-in duration-700">
-                  Complete guide to renew your driver&#39;s license in Ethiopia
-                </p>
+                {isError && <p className="text-red-600 text-sm">Failed to load procedure.</p>}
+                {!isError && !notFound && (
+                  <p className="text-[#6b7280] text-sm animate-in fade-in duration-700">
+                    {procedure?.summary || ((procedure as any)?.content?.result) || 'Procedure details'}
+                  </p>
+                )}
+                {notFound && <p className="text-[#6b7280] text-sm">No data returned for this procedure.</p>}
 
 
               <div className="grid grid-cols-2 gap-6 mb-6">
@@ -44,8 +54,9 @@ export default function ProcedureDetail() {
                   <h3 className="font-medium text-[#111827] text-sm mb-1 group-hover:text-[#4A90E2] transition-colors duration-300">
                     Processing Time
                   </h3>
-                  <p className="text-[#6b7280] text-sm">2-3 Business</p>
-                  <p className="text-[#6b7280] text-sm">Days</p>
+                    <p className="text-[#6b7280] text-sm">
+                      {procedure?.processingTime?.minDays ?? '—'} - {procedure?.processingTime?.maxDays ?? '—'} Days
+                    </p>
                 </div>
                 <div className="bg-white rounded-lg p-6 text-center border border-[#e5e7eb] hover:border-[#16a34a] transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 group">
                   <div className="w-10 h-10 bg-[#dcfce7] rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
@@ -54,37 +65,35 @@ export default function ProcedureDetail() {
                   <h3 className="font-medium text-[#111827] text-sm mb-1 group-hover:text-[#16a34a] transition-colors duration-300">
                     Total Fees
                   </h3>
-                  <p className="text-[#6b7280] text-sm">350 ETB</p>
+                  <p className="text-[#6b7280] text-sm">
+                    {Array.isArray(procedure?.fees) && (procedure!.fees as any[]).length > 0
+                      ? (() => {
+                          const feesArr = procedure!.fees as any[]
+                          const total = feesArr.reduce((sum, f) => sum + (Number(f.amount) || 0), 0)
+                          const currency = feesArr[0]?.currency || ''
+                          return `${total} ${currency}`.trim()
+                        })()
+                      : '—'}
+                  </p>
                 </div>
               </div>
 
               <div>
                 <h2 className="text-lg font-medium text-[#111827] mb-4">Required Documents</h2>
-                <div className="grid grid-cols-4 gap-4">
-                  <div
-                    className="bg-[#f3f4f6] rounded-lg p-3 text-center border border-[#e5e7eb] hover:bg-[#e5e7eb] hover:border-[#4A90E2] transition-all transform hover:-translate-y-1 hover:shadow-md animate-in fade-in duration-500"
-                    style={{ animationDelay: "100ms" }}
-                  >
-                    <span className="text-sm text-[#6b7280]">2 Passport Photos</span>
-                  </div>
-                  <div
-                    className="bg-[#f3f4f6] rounded-lg p-3 text-center border border-[#e5e7eb] hover:bg-[#e5e7eb] hover:border-[#4A90E2] transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md animate-in fade-in"
-                    style={{ animationDelay: "200ms" }}
-                  >
-                    <span className="text-sm text-[#6b7280]">Original ID Card</span>
-                  </div>
-                  <div
-                    className="bg-[#f3f4f6] rounded-lg p-3 text-center border border-[#e5e7eb] hover:bg-[#e5e7eb] hover:border-[#4A90E2] transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md animate-in fade-in"
-                    style={{ animationDelay: "300ms" }}
-                  >
-                    <span className="text-sm text-[#6b7280]">Current License</span>
-                  </div>
-                  <div
-                    className="bg-[#f3f4f6] rounded-lg p-3 text-center border border-[#e5e7eb] hover:bg-[#e5e7eb] hover:border-[#4A90E2] transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md animate-in fade-in"
-                    style={{ animationDelay: "400ms" }}
-                  >
-                    <span className="text-sm text-[#6b7280]">Application Form</span>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {Array.isArray(procedure?.documentsRequired) && procedure!.documentsRequired.length > 0 ? (
+                    procedure!.documentsRequired.map((d, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-[#f3f4f6] rounded-lg p-3 text-center border border-[#e5e7eb] hover:bg-[#e5e7eb] hover:border-[#4A90E2] transition-all transform hover:-translate-y-1 hover:shadow-md animate-in fade-in"
+                        style={{ animationDelay: `${(idx + 1) * 100}ms` }}
+                      >
+                        <span className="text-sm text-[#6b7280]">{(d as any).name || 'Document'}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full text-sm text-[#6b7280] italic">No documents listed.</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -92,93 +101,23 @@ export default function ProcedureDetail() {
             <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
               <h2 className="text-lg font-medium text-[#111827] mb-4">Step-by-Step Instructions</h2>
               <div className="space-y-4">
-                <div className="flex gap-4 group animate-in fade-in duration-500" style={{ animationDelay: "100ms" }}>
-                  <div className="w-8 h-8 bg-[#3A6A8D] text-white rounded-full flex items-center justify-center font-medium text-sm flex-shrink-0 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
-                    1
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-[#111827] mb-1 group-hover:text-[#3A6A8D] transition-colors duration-300">
-                      Fill Application Form
-                    </h3>
-                    <p className="text-[#6b7280] text-sm mb-2">
-                      Download and complete the official renewal form with accurate information.
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-[#3A6A8D] border-[#3A6A8D] bg-white hover:bg-[#3A6A8D] hover:text-white text-xs transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-                    >
-                      <Download className="w-3 h-3 mr-1 transition-transform duration-300 group-hover:rotate-12" />
-                      Download PDF Form
-                    </Button>
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="text-[#3A6A8D] border-[#3A6A8D] text-xs bg-transparent transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-                    >
-                      <Link href="/user/notices/1">View Full Notice</Link>
-                    </Button>
-                  </div>
-                </div>
-                <div className="flex gap-4 group animate-in fade-in duration-500" style={{ animationDelay: "200ms" }}>
-                  <div className="w-8 h-8 bg-[#3A6A8D] text-white rounded-full flex items-center justify-center font-medium text-sm flex-shrink-0 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
-                    2
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-[#111827] mb-1 group-hover:text-[#3A6A8D] transition-colors duration-300">
-                      Prepare Required Documents
-                    </h3>
-                    <p className="text-[#6b7280] text-sm mb-2">
-                      Gather all necessary documents and make copies as needed.
-                    </p>
-                    <div className="bg-[#f0f9ff] p-2 rounded text-xs text-[#0369a1]">
-                      💡 AI Tip: Bring originals and copies to avoid delays
+                {Array.isArray(procedure?.steps) && procedure!.steps.length > 0 ? (
+                  procedure!.steps.sort((a: any, b: any) => (a.order || 0) - (b.order || 0)).map((s: any, idx: number) => (
+                    <div key={idx} className="flex gap-4 group animate-in fade-in duration-500" style={{ animationDelay: `${(idx + 1) * 100}ms` }}>
+                      <div className="w-8 h-8 bg-[#3A6A8D] text-white rounded-full flex items-center justify-center font-medium text-sm flex-shrink-0 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
+                        {s.order || idx + 1}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-medium text-[#111827] mb-1 group-hover:text-[#3A6A8D] transition-colors duration-300">
+                          {s.text?.slice(0, 80) || 'Step'}
+                        </h3>
+                        <p className="text-[#6b7280] text-sm mb-2">{s.text}</p>
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 group animate-in fade-in duration-500" style={{ animationDelay: "300ms" }}>
-                  <div className="w-8 h-8 bg-[#3A6A8D] text-white rounded-full flex items-center justify-center font-medium text-sm flex-shrink-0 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
-                    3
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-[#111827] mb-1 group-hover:text-[#3A6A8D] transition-colors duration-300">
-                      Visit License Office
-                    </h3>
-                    <p className="text-[#6b7280] text-sm">
-                      Submit your application and documents at the designated office.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 group animate-in fade-in duration-500" style={{ animationDelay: "400ms" }}>
-                  <div className="w-8 h-8 bg-[#3A6A8D] text-white rounded-full flex items-center justify-center font-medium text-sm flex-shrink-0 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
-                    4
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-[#111827] mb-1 group-hover:text-[#3A6A8D] transition-colors duration-300">
-                      Pay Renewal Fees
-                    </h3>
-                    <p className="text-[#6b7280] text-sm">
-                      Complete payment at the cashier or through online payment if available.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 group animate-in fade-in duration-500" style={{ animationDelay: "500ms" }}>
-                  <div className="w-8 h-8 bg-[#3A6A8D] text-white rounded-full flex items-center justify-center font-medium text-sm flex-shrink-0 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300">
-                    5
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-[#111827] mb-1 group-hover:text-[#3A6A8D] transition-colors duration-300">
-                      Collect New License
-                    </h3>
-                    <p className="text-[#6b7280] text-sm">
-                      Return after processing period to collect your renewed license.
-                    </p>
-                  </div>
-                </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-[#6b7280] italic">No steps defined for this procedure.</div>
+                )}
               </div>
 
               <div className="mt-6">
