@@ -52,7 +52,7 @@ func (s *SmtpEmailService) SendPasswordResetEmail(toEmail, username, resetToken 
 	%s?token=%s
 
 	If you did not request this, please ignore this email.
-	`, username, resetToken, s.verificationUrl, resetToken)
+	`, username, resetToken, s.resetPasswordUrl, resetToken)
 
 	return s.send(toEmail, subject, body)
 }
@@ -70,7 +70,7 @@ func (s *SmtpEmailService) SendVerificationEmail(toEmail, username, activationTo
 	Or click this link:
 	%s?token=%s
 	If you did not create an account, ignore this email.
-	`, username, activationToken, s.resetPasswordUrl, activationToken)
+	`, username, activationToken, s.verificationUrl, activationToken)
 
 	return s.send(toEmail, subject, body)
 }
