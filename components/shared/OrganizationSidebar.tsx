@@ -1,6 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation"
 import { UserSidebar } from "./UserSidebar"
+import { signOut } from "next-auth/react";
 
 const adminMenuItems = [
   { iconSrc: "/icons/dashboard.svg", iconAlt: "Dashboard", label: "dashboard", active: true },
@@ -15,9 +16,9 @@ export default function OrganizationSidebar() {
     // org settings logic
   }
 
-  const handleLogoutClick = () => {
-    // org logout logic
-  }
+  const handleLogoutClick = async () => {
+      await signOut({ callbackUrl: "/" }); // Call signOut and redirect to login page
+    };
 
   const handleMenuItemClick = (label: string) => {
     router.push(`/organization/${label}`)
