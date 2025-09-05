@@ -2,10 +2,15 @@ import 'package:dio/dio.dart';
 import 'package:ethioguide/core/error/exception.dart';
 import 'package:ethioguide/features/procedure/data/datasources/procedure_remote_data_source.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-class MockDio extends Mock implements Dio {}
+import 'procedure_remote_data_source_test.mocks.dart';
 
+
+
+
+@GenerateMocks([Dio])
 void main() {
   late MockDio dio;
   late ProcedureRemoteDataSourceImpl ds;

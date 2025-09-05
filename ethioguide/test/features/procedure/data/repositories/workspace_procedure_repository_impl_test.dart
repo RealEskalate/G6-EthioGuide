@@ -12,9 +12,9 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 import 'procedure_repository_impl_test.dart';
-import 'workspace_procedure_repository_impl_test.mocks.dart' hide MockNetworkInfo;
+import 'workspace_procedure_repository_impl_test.mocks.dart';
 // 👇 This tells Mockito to generate mocks for these classes
-@GenerateMocks([WorkspaceProcedureRemoteDataSource, NetworkInfo])
+@GenerateMocks([NetworkInfo, WorkspaceProcedureRemoteDataSource])
 void main() {
   late MockWorkspaceProcedureRemoteDataSource remote;
   late MockNetworkInfo net;

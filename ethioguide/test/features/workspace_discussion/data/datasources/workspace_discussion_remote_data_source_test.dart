@@ -1,10 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:ethioguide/features/workspace_discussion/data/datasources/workspace_discussion_remote_data_source.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-class MockDio extends Mock implements Dio {}
+import 'workspace_discussion_remote_data_source_test.mocks.dart';
 
+
+
+@GenerateMocks([Dio])
 void main() {
   late MockDio dio;
   late WorkspaceDiscussionRemoteDataSourceImpl ds;

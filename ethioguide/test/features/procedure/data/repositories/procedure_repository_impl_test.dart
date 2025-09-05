@@ -8,19 +8,25 @@ import 'package:ethioguide/features/procedure/data/models/procedure_model.dart';
 import 'package:ethioguide/features/procedure/data/repositories/procedure_repository_impl.dart';
 import 'package:ethioguide/features/procedure/domain/entities/procedure.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-class MockNetworkInfo extends Mock implements NetworkInfo {}
-class MockRemote extends Mock implements ProcedureRemoteDataSource {}
+import '../../domain/usecases/get_my_procedure_test.mocks.dart';
+import 'procedure_repository_impl_test.mocks.dart';
+import 'workspace_procedure_repository_impl_test.mocks.dart' hide MockNetworkInfo;
 
+
+
+
+@GenerateMocks([NetworkInfo, ProcedureRemoteDataSource])
 void main() {
   group('ProcedureRepositoryImpl.getProcedures', () {
-    late MockRemote remote;
+    late MockProcedureRemoteDataSource remote;
     late MockNetworkInfo network;
     late ProcedureRepositoryImpl repository;
 
     setUp(() {
-      remote = MockRemote();
+      remote = MockProcedureRemoteDataSource();
       network = MockNetworkInfo();
       repository = ProcedureRepositoryImpl(remoteDataSource: remote, networkInfo: network);
       when(network.isConnected).thenAnswer((_) async => true);
