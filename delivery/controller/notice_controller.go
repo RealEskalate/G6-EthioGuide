@@ -19,8 +19,7 @@ func NewNoticeController(noticeUsecase domain.INoticeUseCase) *NoticeController 
 	}
 }
 
-
-func (nc *NoticeController) CreateNotice(ctx *gin.Context){
+func (nc *NoticeController) CreateNotice(ctx *gin.Context) {
 	var noticeDTO NoticeDTO
 	if err := ctx.ShouldBindJSON(&noticeDTO); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -35,7 +34,6 @@ func (nc *NoticeController) CreateNotice(ctx *gin.Context){
 
 	ctx.JSON(http.StatusCreated, "Notice Created successfully.")
 }
-
 
 func (nc *NoticeController) GetNoticesByFilter(ctx *gin.Context) {
 	filter := &domain.NoticeFilter{}
@@ -73,25 +71,25 @@ func (nc *NoticeController) GetNoticesByFilter(ctx *gin.Context) {
 
 	// Sorting (only created_At supported)
 	filter.SortBy = ctx.Query("sortBy")
-	filter.SortOrder = domain.SortOrder(strings.ToUpper(ctx.DefaultQuery("sortOrder", string(domain.SortOrderDESC))))
+	filter.SortOrder = domain.SortOrder(strings.ToUpper(ctx.DefaultQuery("sortOrder", string(domain.SortDesc))))
 
-       notices, total, err := nc.noticeUsecase.GetNoticesByFilter(ctx, filter)
-       if err != nil {
-	       ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	       return
-       }
+	notices, total, err := nc.noticeUsecase.GetNoticesByFilter(ctx, filter)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-       out := make([]NoticeDTO, len(notices))
-       for i, n := range notices {
-	       out[i] = *FromDomainNotice(n)
-       }
-       resp := NoticeListResponse{
-	       Data:  out,
-	       Total: total,
-	       Page:  filter.Page,
-	       Limit: filter.Limit,
-       }
-       ctx.JSON(http.StatusOK, resp)
+	out := make([]NoticeDTO, len(notices))
+	for i, n := range notices {
+		out[i] = *FromDomainNotice(n)
+	}
+	resp := NoticeListResponse{
+		Data:  out,
+		Total: total,
+		Page:  filter.Page,
+		Limit: filter.Limit,
+	}
+	ctx.JSON(http.StatusOK, resp)
 }
 
 func (nc *NoticeController) UpdateNotice(ctx *gin.Context, id string) {
