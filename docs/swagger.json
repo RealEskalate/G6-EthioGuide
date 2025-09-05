@@ -15,7 +15,7 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "ethio-guide-backend.onrender.com",
     "basePath": "/api/v1",
     "paths": {
         "/ai/translate": {
