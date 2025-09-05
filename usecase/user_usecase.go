@@ -520,3 +520,75 @@ func (uc *UserUsecase) ResetPassword(ctx context.Context, resetToken, newPasswor
 
 	return nil
 }
+
+func (uc *UserUsecase) RegisterOrg(ctx context.Context, Name, Email, OrgType string) error {
+	if Name == "" || Email == "" || OrgType == "" {
+		return fmt.Errorf("empty field")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+
+	if _, err := mail.ParseAddress(Email); err != nil {
+		return domain.ErrInvalidEmailFormat
+	}
+
+	_, err := uc.userRepo.GetByEmail(ctx, Email)
+	if err == nil {
+		return domain.ErrEmailExists
+	}
+	if !errors.Is(err, domain.ErrNotFound) {
+		return fmt.Errorf("error checking email existence: %w", err)
+	}
+
+	orgAccount := domain.Account{
+		Name:  Name,
+		Email: Email,
+		OrganizationDetail: &domain.OrganizationDetail{
+			Type: domain.OrganizationType(OrgType),
+		},
+	}
+
+	if err := uc.userRepo.Create(ctx, &orgAccount); err != nil {
+		return fmt.Errorf("failed to create user in repository: %w", err)
+	}
+
+	return nil
+}
+
+func (uc *UserUsecase) GetOrgs(ctx context.Context, filter domain.GetOrgsFilter) ([]*domain.Account, int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+
+	if filter.Page <= 0 {
+		filter.Page = 1
+	}
+
+	if filter.PageSize <= 0 {
+		filter.PageSize = 1
+	}
+
+	return uc.userRepo.GetOrgs(ctx, filter)
+}
+
+func (uc *UserUsecase) GetOrgById(ctx context.Context, orgId string) (*domain.Account, error) {
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+
+	if orgId == "" {
+		return nil, domain.ErrInvalidID
+	}
+
+	return uc.userRepo.GetById(ctx, orgId)
+}
+
+func (uc *UserUsecase) UpdateOrgFields(ctx context.Context, orgId string, update map[string]interface{}) error {
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+
+	if orgId == "" {
+		return domain.ErrInvalidID
+	}
+
+	return uc.userRepo.UpdateUserFields(ctx, orgId, update)
+}

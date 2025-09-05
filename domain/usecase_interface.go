@@ -23,6 +23,12 @@ type IUserUsecase interface {
 
 	// ----
 	UpdateProfile(ctx context.Context, account *Account) (*Account, error)
+
+	// Organization
+	RegisterOrg(ctx context.Context, Name, Email, OrgType string) error
+	GetOrgs(ctx context.Context, filter GetOrgsFilter) ([]*Account, int64, error)
+	GetOrgById(ctx context.Context, orgId string) (*Account, error)
+	UpdateOrgFields(ctx context.Context, orgId string, update map[string]interface{}) error
 }
 
 type IGeminiUseCase interface {
@@ -56,9 +62,9 @@ type IPostUseCase interface {
 	UpdatePost(ctx context.Context, Post *Post) (*Post, error)
 	DeletePost(ctx context.Context, id, userID, role string) error
 }
-type IPreferencesUsecase interface{
+type IPreferencesUsecase interface {
 	CreateUserPreferences(ctx context.Context, userID string) error
-	GetUserPreferences(ctx context.Context, userId string)(*Preferences, error)
+	GetUserPreferences(ctx context.Context, userId string) (*Preferences, error)
 	UpdateUserPreferences(ctx context.Context, prefernces *Preferences) error
 }
 

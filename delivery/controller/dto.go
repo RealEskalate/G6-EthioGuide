@@ -45,6 +45,15 @@ func toUserResponse(a *domain.Account) UserResponse {
 	}
 }
 
+type UpdateOrgRequest struct {
+	Name          *string            `json:"name"`
+	ProfilePicURL *string            `json:"profile_pic_url"`
+	Description   *string            `json:"description"`
+	Location      *string            `json:"location"`
+	ContactInfo   *ContactInfoUpdate `json:"contact_info"`
+	PhoneNumbers  []string           `json:"phone_numbers"`
+}
+
 type TranslateDTO struct {
 	Content string `json:"content" binding:"required"`
 }
@@ -468,4 +477,73 @@ type NoticeListResponse struct {
 	Total int64       `json:"total"`
 	Page  int64       `json:"page"`
 	Limit int64       `json:"limit"`
+}
+
+type OrgCreateRequest struct {
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	OrgType string `json:"type"`
+}
+
+type ContactInfoDTO struct {
+	Socials map[string]string `json:"socials,omitempty"`
+	Website string            `json:"website,omitempty"`
+}
+
+type OrganizationDetailDTO struct {
+	Description  string         `json:"description,omitempty"`
+	Location     string         `json:"location,omitempty"`
+	Type         string         `json:"type,omitempty"` // assuming OrganizationType is a custom enum
+	ContactInfo  ContactInfoDTO `json:"contact_info,omitempty"`
+	PhoneNumbers []string       `json:"phone_numbers,omitempty"`
+}
+
+type OrganizationResponseDTO struct {
+	ID                 string                `json:"id"`
+	Name               string                `json:"name,omitempty"`
+	Email              string                `json:"email"`
+	ProfilePicURL      string                `json:"profile_pic_url,omitempty"`
+	Role               string                `json:"role"` // assuming domain.Role is a string or enum
+	CreatedAt          time.Time             `json:"created_at"`
+	OrganizationDetail OrganizationDetailDTO `json:"organization_detail,omitempty"`
+}
+
+func ToOrganizationDTO(account *domain.Account) OrganizationResponseDTO {
+	return OrganizationResponseDTO{
+		ID:            account.ID,
+		Name:          account.Name,
+		Email:         account.Email,
+		ProfilePicURL: account.ProfilePicURL,
+		Role:          string(account.Role),
+		CreatedAt:     account.CreatedAt,
+		OrganizationDetail: OrganizationDetailDTO{
+			Description: account.OrganizationDetail.Description,
+			Location:    account.OrganizationDetail.Location,
+			Type:        string(account.OrganizationDetail.Type),
+			ContactInfo: ContactInfoDTO{
+				Socials: account.OrganizationDetail.ContactInfo.Socials,
+				Website: account.OrganizationDetail.ContactInfo.Website,
+			},
+			PhoneNumbers: account.OrganizationDetail.PhoneNumbers,
+		},
+	}
+}
+
+type PaginatedOrgsResponse struct {
+	Total    int64 `json:"total"`
+	Page     int64 `json:"page"`
+	PageSize int64 `json:"page_size"`
+}
+
+func ToOrganizationDetailDTO(account *domain.Account) OrganizationDetailDTO {
+	return OrganizationDetailDTO{
+		Description: account.OrganizationDetail.Description,
+		Location:    account.OrganizationDetail.Location,
+		Type:        string(account.OrganizationDetail.Type),
+		ContactInfo: ContactInfoDTO{
+			Socials: account.OrganizationDetail.ContactInfo.Socials,
+			Website: account.OrganizationDetail.ContactInfo.Website,
+		},
+		PhoneNumbers: account.OrganizationDetail.PhoneNumbers,
+	}
 }

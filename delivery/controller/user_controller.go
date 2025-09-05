@@ -2,8 +2,10 @@ package controller
 
 import (
 	"EthioGuide/domain"
+	"errors"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -404,6 +406,116 @@ func (ctrl *UserController) HandleVerify(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User Activated Successfully"})
+}
+
+func (ctrl *UserController) HandleCreateOrg(c *gin.Context) {
+	var req OrgCreateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	err := ctrl.userUsecase.RegisterOrg(c.Request.Context(), req.Name, req.Email, req.OrgType)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Organization created Successsfully"})
+}
+
+func (ctrl *UserController) HandleGetOrgs(c *gin.Context) {
+	var filter domain.GetOrgsFilter
+	filter.Type = c.Query("type")
+	filter.Query = c.Query("q")
+
+	page, _ := strconv.ParseInt(c.DefaultQuery("page", "1"), 10, 64)
+	pageSize, _ := strconv.ParseInt(c.DefaultQuery("pageSize", "1"), 10, 64)
+
+	filter.Page = page
+	filter.PageSize = pageSize
+
+	accounts, total, err := ctrl.userUsecase.GetOrgs(c.Request.Context(), filter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "could not get organizations"})
+		return
+	}
+
+	orgsResponse := make([]OrganizationResponseDTO, len(accounts))
+	for i, acc := range accounts {
+		orgsResponse[i] = ToOrganizationDTO(acc)
+	}
+
+	pagination := &PaginatedOrgsResponse{
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": orgsResponse, "pagination": pagination})
+}
+
+func (ctrl *UserController) HandleGetOrgById(c *gin.Context) {
+	orgId := c.Param("id")
+	account, err := ctrl.userUsecase.GetOrgById(c.Request.Context(), orgId)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": ToOrganizationDetailDTO(account)})
+}
+
+func (ctrl *UserController) HandleUpdateOrgs(c *gin.Context) {
+	orgId := c.Param("id")
+	var req UpdateOrgRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	update := make(map[string]interface{})
+
+	if req.Name != nil {
+		update["name"] = *req.Name
+	}
+	if req.ProfilePicURL != nil {
+		update["profile_pic_url"] = *req.ProfilePicURL
+	}
+	if req.Description != nil {
+		update["organization_detail.description"] = *req.Description
+	}
+	if req.Location != nil {
+		update["organization_detail.location"] = *req.Location
+	}
+	if req.PhoneNumbers != nil {
+		update["organization_detail.phone_numbers"] = req.PhoneNumbers
+	}
+	if req.ContactInfo != nil {
+		if req.ContactInfo.Website != nil {
+			update["organization_detail.contact_info.website"] = *req.ContactInfo.Website
+		}
+		if req.ContactInfo.Socials != nil {
+			update["organization_detail.contact_info.socials"] = req.ContactInfo.Socials
+		}
+	}
+
+	if len(update) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no fields to update"})
+		return
+	}
+
+	err := ctrl.userUsecase.UpdateOrgFields(c.Request.Context(), orgId, update)
+	if err != nil {
+		if errors.Is(err, domain.ErrUserNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "organization not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update organization"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "organization updated successfully"})
 }
 
 // --- HELPER FUNCTIONS ---

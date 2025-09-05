@@ -83,3 +83,10 @@ type ContactInfo struct {
 	Socials map[string]string
 	Website string
 }
+
+type GetOrgsFilter struct {
+	Type     string
+	Query    string
+	Page     int64
+	PageSize int64
+}

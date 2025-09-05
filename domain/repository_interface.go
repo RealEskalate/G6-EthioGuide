@@ -9,6 +9,7 @@ type IAccountRepository interface {
 	GetById(ctx context.Context, id string) (*Account, error)
 	GetByEmail(ctx context.Context, email string) (*Account, error)
 	GetByUsername(ctx context.Context, username string) (*Account, error)
+	GetOrgs(ctx context.Context, filter GetOrgsFilter) ([]*Account, int64, error)
 	// GetByPhoneNumber(ctx context.Context, phone string) (*Account, error)
 	UpdatePassword(ctx context.Context, accountID, newPassword string) error
 	UpdateProfile(ctx context.Context, account Account) error
@@ -35,7 +36,7 @@ type IProcedureRepository interface {
 	GetByID(ctx context.Context, id string) (*Procedure, error)
 	Update(ctx context.Context, id string, procedure *Procedure) error
 	Delete(ctx context.Context, id string) error
-	SearchAndFilter(ctx context.Context, opttions ProcedureSearchFilterOptions)([]*Procedure, int64, error)
+	SearchAndFilter(ctx context.Context, opttions ProcedureSearchFilterOptions) ([]*Procedure, int64, error)
 }
 
 type IFeedbackRepository interface {
@@ -43,7 +44,7 @@ type IFeedbackRepository interface {
 	GetFeedbackByID(ctx context.Context, id string) (*Feedback, error)
 	GetAllFeedbacksForProcedure(ctx context.Context, procedureID string, filter *FeedbackFilter) ([]*Feedback, int64, error)
 	UpdateFeedbackStatus(ctx context.Context, feedbackID string, newFeedback *Feedback) error
-	GetAllFeedbacks(ctx context.Context, filter *FeedbackFilter)([]*Feedback, int64, error)
+	GetAllFeedbacks(ctx context.Context, filter *FeedbackFilter) ([]*Feedback, int64, error)
 }
 
 type IPostRepository interface {
@@ -54,9 +55,9 @@ type IPostRepository interface {
 	DeletePost(ctx context.Context, id, userID, role string) error
 }
 type IPreferencesRepository interface {
-    Create(ctx context.Context, preferences *Preferences) error
-    GetByUserID(ctx context.Context, userID string) (*Preferences, error)
-    UpdateByUserID(ctx context.Context, userID string, preferences *Preferences) error
+	Create(ctx context.Context, preferences *Preferences) error
+	GetByUserID(ctx context.Context, userID string) (*Preferences, error)
+	UpdateByUserID(ctx context.Context, userID string, preferences *Preferences) error
 }
 
 type INoticeRepository interface {
