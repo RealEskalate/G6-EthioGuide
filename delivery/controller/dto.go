@@ -322,3 +322,16 @@ type UpdatePostDTO struct {
 	Procedures []string `json:"procedures,omitempty"`
 	Tags       []string `json:"tags,omitempty"`
 }
+
+type ForgotDTO struct {
+	Email string `json:"email"`
+}
+
+type ResetDTO struct {
+	ResetToken  string `json:"resetToken"`
+	NewPassword string `json:"new_password"`
+}
+
+type ActivateDTO struct {
+	ActivateToken string `json:"activatationToken"`
+}

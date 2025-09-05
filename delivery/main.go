@@ -71,12 +71,13 @@ func main() {
 
 	// --- Infrastructure Services ---
 	// These are concrete implementations of external services.
+	emailservice := infrastructure.NewSMTPEmailService(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPass, cfg.SMTPFrom, cfg.VerificationFrontendUrl, cfg.ResetPasswordFrontendUrl)
 	passwordService := infrastructure.NewPasswordService()
 	googleService, err := infrastructure.NewGoogleOAuthService(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURI)
 	if err != nil {
 		log.Printf("WARN: Failed to initialize Google Oaut service: %v. Google Sign in will be unavailable.", err)
 	}
-	jwtService := infrastructure.NewJWTService(cfg.JWTSecret, cfg.JWTIssuer, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	jwtService := infrastructure.NewJWTService(cfg.JWTSecret, cfg.JWTIssuer, cfg.JWTAccessTTL, cfg.JWTRefreshTTL, cfg.JWTUtilityTTL)
 	aiService, err := infrastructure.NewGeminiAIService(cfg.GeminiAPIKey, cfg.GeminiModel)
 	if err != nil {
 		log.Printf("WARN: Failed to initialize AI service: %v. AI features will be unavailable.", err)
@@ -91,6 +92,7 @@ func main() {
 		passwordService,
 		jwtService,
 		googleService,
+		emailservice,
 		cfg.UsecaseTimeout,
 	)
 	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, cfg.UsecaseTimeout)

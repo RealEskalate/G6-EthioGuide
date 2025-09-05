@@ -16,6 +16,7 @@ type UserUsecase struct {
 	passwordService domain.IPasswordService
 	jwtService      domain.IJWTService
 	googleService   domain.IGoogleOAuthService
+	emailService    domain.IEmailService
 	contextTimeout  time.Duration
 }
 
@@ -25,6 +26,7 @@ func NewUserUsecase(
 	ps domain.IPasswordService,
 	js domain.IJWTService,
 	gs domain.IGoogleOAuthService,
+	es domain.IEmailService,
 	timeout time.Duration,
 ) domain.IUserUsecase {
 	return &UserUsecase{
@@ -33,6 +35,7 @@ func NewUserUsecase(
 		passwordService: ps,
 		jwtService:      js,
 		googleService:   gs,
+		emailService:    es,
 		contextTimeout:  timeout,
 	}
 }
@@ -80,6 +83,71 @@ func (uc *UserUsecase) Register(c context.Context, user *domain.Account) error {
 		return fmt.Errorf("failed to create user in repository: %w", err)
 	}
 
+	if err = uc.sendVerificationEmail(ctx, user); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (uc *UserUsecase) sendVerificationEmail(ctx context.Context, user *domain.Account) error {
+	if user.UserDetail.IsVerified {
+		return domain.ErrUserAlreadyVerified
+	}
+
+	activationToken, activateclaim, errToken := uc.jwtService.GenerateUtilityToken(user.ID)
+	if errToken != nil {
+		return errToken
+	}
+
+	activateToken := domain.Token{
+		Id:        activateclaim.ID,
+		Token:     activationToken,
+		TokenType: domain.VerificationToken,
+		ExpiresAt: activateclaim.ExpiresAt.Time,
+	}
+
+	if _, err := uc.tokenRepo.CreateToken(ctx, &activateToken); err != nil {
+		return err
+	}
+
+	go func() {
+		err := uc.emailService.SendVerificationEmail(user.Email, user.UserDetail.Username, activationToken)
+		if err != nil {
+			fmt.Printf("Failed to send activation email: %v\n", err)
+		}
+	}()
+
+	return nil
+}
+
+func (uc *UserUsecase) VerifyAccount(ctx context.Context, activationTokenValue string) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	claims, err := uc.jwtService.ValidateToken(activationTokenValue)
+	if err != nil {
+		return domain.ErrInvalidActivationToken
+	}
+
+	if _, err := uc.tokenRepo.GetToken(ctx, string(domain.VerificationToken), activationTokenValue); err != nil {
+		return domain.ErrInvalidActivationToken
+	}
+
+	_, errUser := uc.userRepo.GetById(ctx, claims.UserID)
+	if errUser != nil {
+		return domain.ErrUserNotFound
+	}
+
+	update := map[string]interface{}{
+		"user_detail.is_verified": true,
+	}
+
+	errUpdate := uc.userRepo.UpdateUserFields(ctx, claims.UserID, update)
+	if errUpdate != nil {
+		return errUpdate
+	}
+
 	return nil
 }
 
@@ -107,6 +175,9 @@ func (uc *UserUsecase) Login(c context.Context, identifier, password string) (*d
 	}
 
 	if !account.UserDetail.IsVerified {
+		if err = uc.sendVerificationEmail(ctx, account); err != nil {
+			return nil, "", "", err
+		}
 		return nil, "", "", domain.ErrAccountNotActive
 	}
 
@@ -377,5 +448,77 @@ func (uc *UserUsecase) Logout(ctx context.Context, userID string) error {
 	if err != nil {
 		return fmt.Errorf("failed to logout user: %w", err)
 	}
+	return nil
+}
+
+func (uc *UserUsecase) ForgetPassword(ctx context.Context, email string) error {
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+
+	user, err := uc.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		return domain.ErrUserNotFound
+	}
+
+	passwordString, passwordclaim, err := uc.jwtService.GenerateUtilityToken(user.ID)
+	if err != nil {
+		return err
+	}
+
+	passwordToken := domain.Token{
+		Id:        passwordclaim.ID,
+		Token:     passwordString,
+		TokenType: domain.ResetPasswordToken,
+		ExpiresAt: passwordclaim.ExpiresAt.Time,
+	}
+
+	if _, err := uc.tokenRepo.CreateToken(ctx, &passwordToken); err != nil {
+		return err
+	}
+
+	go func() {
+		err := uc.emailService.SendPasswordResetEmail(user.Email, user.UserDetail.Username, passwordString)
+		if err != nil {
+			fmt.Printf("Failed to send password reset email: %v\n", err)
+		}
+	}()
+
+	return nil
+}
+
+func (uc *UserUsecase) ResetPassword(ctx context.Context, resetToken, newPassword string) error {
+	if resetToken == "" || newPassword == "" {
+		return fmt.Errorf("empty field")
+	}
+
+	if len(newPassword) < 8 {
+		return domain.ErrPasswordTooShort
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+
+	claims, err := uc.jwtService.ValidateToken(resetToken)
+	if err != nil {
+		return fmt.Errorf("invalid refresh token: %w", err)
+	}
+
+	if _, err := uc.tokenRepo.GetToken(ctx, string(domain.ResetPasswordToken), resetToken); err != nil {
+		return domain.ErrInvalidResetToken
+	}
+
+	hashedNewPassword, _ := uc.passwordService.HashPassword(newPassword)
+	update := map[string]interface{}{
+		"password_hash": hashedNewPassword,
+	}
+
+	if err := uc.userRepo.UpdateUserFields(ctx, claims.UserID, update); err != nil {
+		return err
+	}
+
+	if err := uc.tokenRepo.DeleteToken(ctx, string(domain.ResetPasswordToken), resetToken); err != nil {
+		return err
+	}
+
 	return nil
 }
