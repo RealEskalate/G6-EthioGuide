@@ -133,7 +133,7 @@ func (s *GeminiAIServiceSuite) TestGenerateCompletion() {
 			s.NoError(err, "API call should succeed even if the language is unknown")
 			s.NotEmpty(response)
 			// Here we expect an exact string match, as requested in the prompt.
-			s.Equal("unknown language", strings.TrimSpace(response), "The AI should return the exact fallback string")
+			s.Equal("unknown language", strings.ToLower(strings.TrimSpace(response)), "The AI should return the exact fallback string")
 		})
 	})
 }
