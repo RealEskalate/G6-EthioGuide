@@ -39,13 +39,13 @@ class CreateDiscussionEvent extends WorkspaceDiscussionEvent {
   final String title;
   final String content;
   final List<String> tags;
-  final String category;
+  
 
   const CreateDiscussionEvent({
     required this.title,
     required this.content,
     required this.tags,
-    required this.category,
+    
   });
 }
 
@@ -137,7 +137,6 @@ class WorkspaceDiscussionBloc
         title: event.title,
         content: event.content,
         tags: event.tags,
-        category: event.category,
       );
       result.fold(
         (failure) => emit(ActionFailure(failure)),

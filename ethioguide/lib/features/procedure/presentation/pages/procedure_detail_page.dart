@@ -1,3 +1,4 @@
+import 'package:ethioguide/core/components/button.dart';
 import 'package:ethioguide/core/config/app_color.dart';
 import 'package:ethioguide/features/procedure/presentation/pages/Discussin_tab.dart';
 import 'package:ethioguide/features/procedure/presentation/pages/Feedback_tab.dart';
@@ -92,11 +93,17 @@ class _DummyDetailBody extends StatelessWidget {
           StepList(steps: procedure.steps),
           const SizedBox(height: 20),
           if (procedure.resources.isNotEmpty) DocmnetForm(),
-          /*  ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.download),
-              label: const Text('Download Application Form'),
-            ), */
+           const SizedBox(height: 20),
+           Center(
+             child: CustomButton(
+              text: 'Download Application Form',
+              icon: Icons.download,
+              onTap: () {
+                // Handle download action
+              },
+             ),
+           ),
+          
           const SizedBox(height: 20),
 
                 DefaultTabController(
@@ -128,10 +135,9 @@ class _DummyDetailBody extends StatelessWidget {
           ],
         ),
       ),
-          
+         
 
-          const SizedBox(height: 20),
-          ElevatedButton(onPressed: () {}, child: const Text('Give Feedback')),
+         
         ],
       ),
     );

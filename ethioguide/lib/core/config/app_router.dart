@@ -11,7 +11,7 @@ import 'package:ethioguide/features/onboarding/presentation/screens/onboarding_s
 import 'package:go_router/go_router.dart';
 import 'package:ethioguide/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:ethioguide/features/splashscreen/presentation/screens/splash_screen.dart';
-import 'package:ethioguide/features/splashscreen/presentation/screens/placeholder_screen.dart'; 
+import 'package:ethioguide/features/splashscreen/presentation/screens/placeholder_screen.dart';
 import 'package:ethioguide/core/config/route_names.dart';
 
 import '../../features/procedure/presentation/pages/procedure_detail_page.dart';
@@ -19,11 +19,7 @@ import '../../features/procedure/presentation/pages/procedure_page.dart';
 
 // This is the central router configuration for the entire application.
 final GoRouter router = GoRouter(
-
-
-
-  initialLocation: '/',
-
+  initialLocation: '/discussion',
 
   // The list of all available routes in the app.
   routes: [
@@ -70,10 +66,6 @@ final GoRouter router = GoRouter(
       builder: (context, state) =>
           const WorkspaceDiscussionPage(), // The function that builds the widget for this screen.
     ),
-    // This is the route for our temporary placeholder screen.
-      name: RouteNames.splash, 
-      builder: (context, state) => const SplashScreen(),
-    ),
     GoRoute(
       path: '/onboarding',
       name: RouteNames.onboarding, // Assuming you have this
@@ -82,7 +74,7 @@ final GoRouter router = GoRouter(
     // A single, clean route for the entire authentication flow (Login, Sign Up, Forgot Password).
     GoRoute(
       path: '/auth',
-      name: RouteNames.auth, 
+      name: RouteNames.auth,
       builder: (context, state) => const AuthScreen(),
     ),
 
@@ -92,14 +84,11 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const PlaceholderScreen(),
     ),
 
-
-    
     // This is the route for AI chat page
     GoRoute(
       path: '/aiChat',
       name: RouteNames.aiChat,
       builder: (context, state) => const ChatPage(),
     ),
- 
   ],
 );

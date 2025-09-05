@@ -1,5 +1,7 @@
 import 'package:ethioguide/core/config/app_color.dart';
+import 'package:ethioguide/features/workspace_discussion/presentation/bloc/workspace_discussion_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Page for creating a new discussion
 class CreateDiscussionPage extends StatefulWidget {
@@ -52,14 +54,19 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  
-                  children: [
-                    const Text('Create New Discussion', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
 
-                ],),
+                  children: [
+                    const Text(
+                      'Create New Discussion',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
 
                 SizedBox(height: 15),
                 // Instructions
@@ -206,7 +213,6 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
                   decoration: InputDecoration(
                     hintText: 'e.g., passport, documents, renewal',
                     border: OutlineInputBorder(
-      
                       borderRadius: BorderRadius.circular(8),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
@@ -309,6 +315,19 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
           .map((tag) => tag.trim())
           .where((tag) => tag.isNotEmpty)
           .toList();
+
+     final value = context.read()<WorkspaceDiscussionBloc>().add(
+        CreateDiscussionEvent(
+          title: _titleController.text.trim(),
+          content: _contentController.text.trim(),
+          tags: tags,
+  // category: _selectedCategory!,
+        ),
+      );
+
+      print(value);
+
+
       // Local UI-only submit preview
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
