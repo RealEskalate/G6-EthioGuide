@@ -62,6 +62,9 @@ func SetupRouter(
 			authGroup.POST("/login", userController.Login)
 			authGroup.POST("/refresh", userController.HandleRefreshToken)
 			authGroup.POST("/social", userController.SocialLogin)
+			authGroup.POST("/verify", userController.HandleVerify)
+			authGroup.POST("/forgot", userController.HandleForgot)
+			authGroup.POST("/reset", userController.HandleReset)
 		}
 
 		// --- Private Routes (Require Authentication) ---
@@ -102,6 +105,7 @@ func SetupRouter(
 			authGroup := apiGroup.Group("/auth")
 			authGroup.Use(authMiddleware)
 			{
+				authGroup.POST("/logout", userController.Logout)
 				authGroup.GET("/me", userController.GetProfile)
 				authGroup.PATCH("/me/password", userController.UpdatePassword)
 				authGroup.PATCH("/me", userController.UpdateProfile)
@@ -143,14 +147,6 @@ func SetupRouter(
 
 	// MOCK ROUTES
 	{
-		// 1) Auth & Accounts
-		auth := v1.Group("/auth")
-		{
-			auth.POST("/verify", handleVerifyEmail)
-			auth.POST("/forgot", handleForgot)
-			auth.POST("/reset", handleReset)
-		}
-
 		// 2) Users & Profiles
 		users := v1.Group("/users")
 		{
@@ -308,26 +304,6 @@ func SetupRouter(
 	}
 
 	return router
-}
-
-func handleVerifyEmail(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"verified":     true,
-		"token":        "jwt.access.token.string",
-		"refreshToken": "jwt.refresh.token.string",
-		"user": gin.H{
-			"id":   "user_123",
-			"name": "Test User",
-		},
-	})
-}
-
-func handleForgot(c *gin.Context) {
-	c.Status(http.StatusNoContent)
-}
-
-func handleReset(c *gin.Context) {
-	c.Status(http.StatusNoContent)
 }
 
 // 2) Users & Profiles

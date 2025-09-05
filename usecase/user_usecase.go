@@ -8,21 +8,16 @@ import (
 	"net/mail"
 	"strings"
 	"time"
-
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	oauth2_v2 "google.golang.org/api/oauth2/v2"
-	"google.golang.org/api/option"
 )
 
 type UserUsecase struct {
-	userRepo          domain.IAccountRepository
-	tokenRepo         domain.ITokenRepository
-	passwordService   domain.IPasswordService
-	jwtService        domain.IJWTService
-	GoogleOAuthConfig *oauth2.Config
-	GoogleAPIEndpoint string
-	contextTimeout    time.Duration
+	userRepo        domain.IAccountRepository
+	tokenRepo       domain.ITokenRepository
+	passwordService domain.IPasswordService
+	jwtService      domain.IJWTService
+	googleService   domain.IGoogleOAuthService
+	emailService    domain.IEmailService
+	contextTimeout  time.Duration
 }
 
 func NewUserUsecase(
@@ -30,29 +25,18 @@ func NewUserUsecase(
 	tr domain.ITokenRepository,
 	ps domain.IPasswordService,
 	js domain.IJWTService,
-	googleClientID string,
-	googleClientSecret string,
-	googleRedirectURL string,
+	gs domain.IGoogleOAuthService,
+	es domain.IEmailService,
 	timeout time.Duration,
 ) domain.IUserUsecase {
-	googleOAuthConfig := &oauth2.Config{
-		ClientID:     googleClientID,
-		ClientSecret: googleClientSecret,
-		RedirectURL:  googleRedirectURL,
-		Scopes: []string{
-			"https://www.googleapis.com/auth/userinfo.email",
-			"https://www.googleapis.com/auth/userinfo.profile",
-		},
-		Endpoint: google.Endpoint,
-	}
 	return &UserUsecase{
-		userRepo:          ur,
-		tokenRepo:         tr,
-		passwordService:   ps,
-		jwtService:        js,
-		GoogleOAuthConfig: googleOAuthConfig,
-		GoogleAPIEndpoint: "",
-		contextTimeout:    timeout,
+		userRepo:        ur,
+		tokenRepo:       tr,
+		passwordService: ps,
+		jwtService:      js,
+		googleService:   gs,
+		emailService:    es,
+		contextTimeout:  timeout,
 	}
 }
 
@@ -99,6 +83,71 @@ func (uc *UserUsecase) Register(c context.Context, user *domain.Account) error {
 		return fmt.Errorf("failed to create user in repository: %w", err)
 	}
 
+	if err = uc.sendVerificationEmail(ctx, user); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (uc *UserUsecase) sendVerificationEmail(ctx context.Context, user *domain.Account) error {
+	if user.UserDetail.IsVerified {
+		return domain.ErrUserAlreadyVerified
+	}
+
+	activationToken, activateclaim, errToken := uc.jwtService.GenerateUtilityToken(user.ID)
+	if errToken != nil {
+		return errToken
+	}
+
+	activateToken := domain.Token{
+		Id:        activateclaim.ID,
+		Token:     activationToken,
+		TokenType: domain.VerificationToken,
+		ExpiresAt: activateclaim.ExpiresAt.Time,
+	}
+
+	if _, err := uc.tokenRepo.CreateToken(ctx, &activateToken); err != nil {
+		return err
+	}
+
+	go func() {
+		err := uc.emailService.SendVerificationEmail(user.Email, user.UserDetail.Username, activationToken)
+		if err != nil {
+			fmt.Printf("Failed to send activation email: %v\n", err)
+		}
+	}()
+
+	return nil
+}
+
+func (uc *UserUsecase) VerifyAccount(ctx context.Context, activationTokenValue string) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	claims, err := uc.jwtService.ValidateToken(activationTokenValue)
+	if err != nil {
+		return domain.ErrInvalidActivationToken
+	}
+
+	if _, err := uc.tokenRepo.GetToken(ctx, string(domain.VerificationToken), activationTokenValue); err != nil {
+		return domain.ErrInvalidActivationToken
+	}
+
+	_, errUser := uc.userRepo.GetById(ctx, claims.UserID)
+	if errUser != nil {
+		return domain.ErrUserNotFound
+	}
+
+	update := map[string]interface{}{
+		"user_detail.is_verified": true,
+	}
+
+	errUpdate := uc.userRepo.UpdateUserFields(ctx, claims.UserID, update)
+	if errUpdate != nil {
+		return errUpdate
+	}
+
 	return nil
 }
 
@@ -126,6 +175,9 @@ func (uc *UserUsecase) Login(c context.Context, identifier, password string) (*d
 	}
 
 	if !account.UserDetail.IsVerified {
+		if err = uc.sendVerificationEmail(ctx, account); err != nil {
+			return nil, "", "", err
+		}
 		return nil, "", "", domain.ErrAccountNotActive
 	}
 
@@ -282,27 +334,16 @@ func (uc *UserUsecase) LoginWithSocial(ctx context.Context, provider domain.Auth
 }
 
 func (uc *UserUsecase) loginWithGoogle(ctx context.Context, code string) (*domain.Account, string, string, error) {
-	googleToken, err := uc.GoogleOAuthConfig.Exchange(ctx, code)
+	// Step 1: Exchange the code for a token using the service
+	googleToken, err := uc.googleService.ExchangeCodeForToken(ctx, code)
 	if err != nil {
-		return nil, "", "", fmt.Errorf("google oauth exchange failed: %w", err)
+		return nil, "", "", err
 	}
 
-	opts := []option.ClientOption{
-		option.WithTokenSource(uc.GoogleOAuthConfig.TokenSource(ctx, googleToken)),
-	}
-	// If the test has set a custom endpoint, use it.
-	if uc.GoogleAPIEndpoint != "" {
-		opts = append(opts, option.WithEndpoint(uc.GoogleAPIEndpoint))
-	}
-
-	oauth2Service, err := oauth2_v2.NewService(ctx, opts...)
+	// Step 2: Get user information using the token via the service
+	userInfo, err := uc.googleService.GetUserInfo(ctx, googleToken)
 	if err != nil {
-		return nil, "", "", fmt.Errorf("failed to create oauth2 service: %w", err)
-	}
-
-	userInfo, err := oauth2Service.Userinfo.Get().Do()
-	if err != nil {
-		return nil, "", "", fmt.Errorf("failed to get user info from google: %w", err)
+		return nil, "", "", err
 	}
 
 	if userInfo.Email == "" {
@@ -311,19 +352,20 @@ func (uc *UserUsecase) loginWithGoogle(ctx context.Context, code string) (*domai
 
 	user, err := uc.userRepo.GetByEmail(ctx, userInfo.Email)
 	if err != nil {
-		if errors.Is(err, domain.ErrUserNotFound) {
+		if errors.Is(err, domain.ErrUserNotFound) || errors.Is(err, domain.ErrNotFound) {
+			// Create a new user if they don't exist
 			newUser := &domain.Account{
 				Email:         userInfo.Email,
 				Role:          domain.RoleUser,
 				AuthProvider:  domain.AuthProviderGoogle,
-				ProviderID:    userInfo.Id,
+				ProviderID:    userInfo.ID,
 				CreatedAt:     time.Now().UTC(),
 				Name:          userInfo.Name,
-				ProfilePicURL: userInfo.Picture,
+				ProfilePicURL: userInfo.ProfilePictureURL,
 				UserDetail: &domain.UserDetail{
-					Username:         userInfo.Email,
+					Username:         userInfo.Email, // Default username to email
 					SubscriptionPlan: domain.SubscriptionNone,
-					IsVerified:       true,
+					IsVerified:       true, // Google accounts are considered verified
 					IsBanned:         false,
 				},
 			}
@@ -336,10 +378,8 @@ func (uc *UserUsecase) loginWithGoogle(ctx context.Context, code string) (*domai
 		} else {
 			return nil, "", "", fmt.Errorf("database error while fetching user: %w", err)
 		}
-	} else {
-		if user.AuthProvider != domain.AuthProviderGoogle && user.AuthProvider != domain.AuthProviderLocal {
-			return nil, "", "", domain.ErrConflict
-		}
+	} else if user.AuthProvider != domain.AuthProviderGoogle && user.AuthProvider != domain.AuthProviderLocal {
+		return nil, "", "", domain.ErrConflict
 	}
 
 	accessToken, _, err := uc.jwtService.GenerateAccessToken(user.ID, user.Role)
@@ -367,73 +407,116 @@ func (uc *UserUsecase) loginWithGoogle(ctx context.Context, code string) (*domai
 }
 
 func (uc *UserUsecase) UpdateProfile(ctx context.Context, account *domain.Account) (*domain.Account, error) {
-    ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
 
-    // --- validation rules ---
-    if account.UserDetail != nil && account.OrganizationDetail != nil {
-        return nil, domain.ErrConflict
-    }
+	// --- validation rules ---
+	if account.UserDetail != nil && account.OrganizationDetail != nil {
+		return nil, domain.ErrConflict
+	}
 
-    exists, err := uc.userRepo.ExistsByEmail(ctx, account.Email, account.ID)
+	exists, err := uc.userRepo.ExistsByEmail(ctx, account.Email, account.ID)
 	if err != nil {
-	    return nil, err
+		return nil, err
 	}
 	if exists {
-	    return nil, domain.ErrEmailExists
+		return nil, domain.ErrEmailExists
 	}
-    
+
 	exists, err = uc.userRepo.ExistsByUsername(ctx, account.UserDetail.Username, account.ID)
 	if err != nil {
-	    return nil, err
+		return nil, err
 	}
 	if exists {
-	    return nil, domain.ErrEmailExists
+		return nil, domain.ErrEmailExists
 	}
 
-    // --- persist ---
-    if err := uc.userRepo.UpdateProfile(ctx, *account); err != nil {
-        return nil, err
-    }
+	// --- persist ---
+	if err := uc.userRepo.UpdateProfile(ctx, *account); err != nil {
+		return nil, err
+	}
 
-    return account, nil
+	return account, nil
 }
 
-// func (uc *UserUsecase) UpdateProfile(ctx context.Context, userID string, updates map[string]interface{}) (*domain.Account, error) {
-// 	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
-// 	defer cancel()
+func (uc *UserUsecase) Logout(ctx context.Context, userID string) error {
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+	err := uc.tokenRepo.DeleteToken(ctx, string(domain.RefreshToken), userID)
+	if err != nil {
+		return fmt.Errorf("failed to logout user: %w", err)
+	}
+	return nil
+}
 
-// 	account, err := uc.userRepo.GetById(ctx, userID)
-// 	if err != nil || account == nil {
-// 		return nil, domain.ErrNotFound
-// 	}
+func (uc *UserUsecase) ForgetPassword(ctx context.Context, email string) error {
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
 
-// 	if newName, ok := updates["name"].(string); ok {
-// 		account.Name = newName
-// 	}
+	user, err := uc.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		return domain.ErrUserNotFound
+	}
 
-// 	if newProfilePicUrl, ok := updates["profile_picture"].(string); ok {
-// 		account.ProfilePicURL = newProfilePicUrl
-// 	}
+	passwordString, passwordclaim, err := uc.jwtService.GenerateUtilityToken(user.ID)
+	if err != nil {
+		return err
+	}
 
-// 	if account.OrganizationDetail != nil {
-// 		if newDescription, ok := updates["description"].(string); ok {
-// 			account.OrganizationDetail.Description = newDescription
-// 		}
-// 		if newLocation, ok := updates["location"].(string); ok {
-// 			account.OrganizationDetail.Location = newLocation
-// 		}
-// 		if newContactInfo, ok := updates["contact_info"].(domain.ContactInfo); ok {
-// 			account.OrganizationDetail.ContactInfo = domain.ContactInfo(newContactInfo)
-// 		}
-// 		if newPhoneNumbers, ok := updates["phone_numbers"].([]string); ok {
-// 			account.OrganizationDetail.PhoneNumbers = newPhoneNumbers
-// 		}
-// 	}
+	passwordToken := domain.Token{
+		Id:        passwordclaim.ID,
+		Token:     passwordString,
+		TokenType: domain.ResetPasswordToken,
+		ExpiresAt: passwordclaim.ExpiresAt.Time,
+	}
 
-// 	if err := uc.userRepo.UpdateProfile(ctx, *account); err != nil {
-// 		return nil, err
-// 	}
+	if _, err := uc.tokenRepo.CreateToken(ctx, &passwordToken); err != nil {
+		return err
+	}
 
-// 	return account, nil
-// }
+	go func() {
+		err := uc.emailService.SendPasswordResetEmail(user.Email, user.UserDetail.Username, passwordString)
+		if err != nil {
+			fmt.Printf("Failed to send password reset email: %v\n", err)
+		}
+	}()
+
+	return nil
+}
+
+func (uc *UserUsecase) ResetPassword(ctx context.Context, resetToken, newPassword string) error {
+	if resetToken == "" || newPassword == "" {
+		return fmt.Errorf("empty field")
+	}
+
+	if len(newPassword) < 8 {
+		return domain.ErrPasswordTooShort
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+
+	claims, err := uc.jwtService.ValidateToken(resetToken)
+	if err != nil {
+		return fmt.Errorf("invalid refresh token: %w", err)
+	}
+
+	if _, err := uc.tokenRepo.GetToken(ctx, string(domain.ResetPasswordToken), resetToken); err != nil {
+		return domain.ErrInvalidResetToken
+	}
+
+	hashedNewPassword, _ := uc.passwordService.HashPassword(newPassword)
+	update := map[string]interface{}{
+		"password_hash": hashedNewPassword,
+	}
+
+	if err := uc.userRepo.UpdateUserFields(ctx, claims.UserID, update); err != nil {
+		return err
+	}
+
+	if err := uc.tokenRepo.DeleteToken(ctx, string(domain.ResetPasswordToken), resetToken); err != nil {
+		return err
+	}
+
+	return nil
+}

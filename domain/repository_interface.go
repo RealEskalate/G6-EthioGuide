@@ -16,6 +16,7 @@ type IAccountRepository interface {
 	// -----
 	ExistsByEmail(ctx context.Context, email, excludeID string) (bool, error)
 	ExistsByUsername(ctx context.Context, username, excludeID string) (bool, error)
+	UpdateUserFields(ctx context.Context, userIDstr string, update map[string]interface{}) error
 }
 
 type ITokenRepository interface {

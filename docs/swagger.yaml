@@ -943,7 +943,7 @@ paths:
       - description: procedure ids
         in: query
         name: title
-        type: array
+        type: string
       - description: procedure ids
         in: query
         name: procedure_ids
@@ -951,7 +951,7 @@ paths:
       - description: tags
         in: query
         name: tags
-        type: string
+        type: array
       - description: page
         in: query
         name: page
@@ -1102,17 +1102,17 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
       - description: Post update details
         in: body
         name: request
         required: true
         schema:
           $ref: '#/definitions/controller.UpdatePostDTO'
-      - description: Post ID
-        in: path
-        name: id
-        required: true
-        type: string
       produces:
       - application/json
       responses:

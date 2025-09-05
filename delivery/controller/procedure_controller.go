@@ -179,7 +179,6 @@ func (pc *ProcedureController) DeleteProcedure(ctx *gin.Context) {
 // @Failure      400  {object}  map[string]string "Invalid parameter"
 // @Failure      500  {object}  map[string]string "Server error"
 // @Router       /procedures/search [get]
-
 func (pc *ProcedureController) SearchAndFilter(c *gin.Context) {
 	options := domain.ProcedureSearchFilterOptions{
 		GlobalLogic: domain.GlobalLogicAND, // default

@@ -25,29 +25,28 @@ var (
 	ErrPhoneNumberExists    = errors.New("phone number already exists")
 	ErrOAuthUser            = errors.New("this action is not applicable to an account created with an external provider")
 	ErrCannotChangeOwnRole  = errors.New("admins cannot change their own role")
+	ErrUserAlreadyVerified  = errors.New("the user is already verified")
 
 	// Token errors
 	ErrInvalidID              = errors.New("invalid ID was used")
 	ErrInvalidResetToken      = errors.New("invalid or expired password reset token")
 	ErrCannotDemoteSelf       = errors.New("admin cannot demote themselves")
-	ErrAccountNotActive       = errors.New("this account has not been activated")
+	ErrAccountNotActive       = errors.New("this account has not been verified")
 	ErrInvalidActivationToken = errors.New("invalid or expired activation token")
 
 	// Request errors
-	ErrInvalidBody = errors.New("invalid request body")
+	ErrInvalidBody         = errors.New("invalid request body")
 	ErrUnsupportedLanguage = errors.New("unsupported language used")
-	ErrInvalidQueryParam    = errors.New("invalid query parameter")
-	ErrInvalidIDFormat	 = errors.New("invalid ID format")
-	ErrEmptyParamField	 = errors.New("empty parameter field")
+	ErrInvalidQueryParam   = errors.New("invalid query parameter")
+	ErrInvalidIDFormat     = errors.New("invalid ID format")
+	ErrEmptyParamField     = errors.New("empty parameter field")
 
 	//Database errors
-	ErrUnableToEnterData = errors.New("unable to enter data into database")
-	ErrUnableToFetchData = errors.New("unable to fetch data from database")
+	ErrUnableToEnterData  = errors.New("unable to enter data into database")
+	ErrUnableToFetchData  = errors.New("unable to fetch data from database")
 	ErrUnableToUpdateData = errors.New("unable to update data in database")
 	ErrUnableToDeleteData = errors.New("unable to delete data from database")
 
-	ErrPostNotFound = errors.New("post not found")
+	ErrPostNotFound      = errors.New("post not found")
 	ErrProcedureNotFound = errors.New("procedure not found")
-
-
 )
