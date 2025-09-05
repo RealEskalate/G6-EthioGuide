@@ -80,6 +80,15 @@ func (m *MockJWTService) GetRefreshTokenExpiry() time.Duration {
 	return args.Get(0).(time.Duration)
 }
 
+func (m *MockJWTService) GenerateUtilityToken(userID string) (string, *domain.JWTClaims, error) {
+	args := m.Called(userID)
+	var claims *domain.JWTClaims
+	if args.Get(1) != nil {
+		claims = args.Get(1).(*domain.JWTClaims)
+	}
+	return args.String(0), claims, args.Error(2)
+}
+
 // --- Test Suite Definition ---
 
 type MiddlewareTestSuite struct {
@@ -196,14 +205,14 @@ func (s *MiddlewareTestSuite) TestAuthMiddleware_Success() {
 // --- ProOnlyMiddleware Tests ---
 
 // Helper function to create a context with predefined values
-func setContext(c *gin.Context, subscription, role string) {
+func setContext(c *gin.Context, subscription string, role domain.Role) {
 	c.Set("userSubscription", subscription)
 	c.Set("userRole", role)
 }
 
 func (s *MiddlewareTestSuite) TestProOnlyMiddleware_Success() {
 	s.router.GET("/pro", func(c *gin.Context) {
-		setContext(c, "pro", "user")
+		setContext(c, "pro", domain.RoleUser)
 	}, ProOnlyMiddleware(), func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})
@@ -216,7 +225,7 @@ func (s *MiddlewareTestSuite) TestProOnlyMiddleware_Success() {
 
 func (s *MiddlewareTestSuite) TestProOnlyMiddleware_InsufficientSubscription() {
 	s.router.GET("/pro", func(c *gin.Context) {
-		setContext(c, "free", "user")
+		setContext(c, "free", domain.RoleUser)
 	}, ProOnlyMiddleware(), func(c *gin.Context) {})
 
 	req, _ := http.NewRequest(http.MethodGet, "/pro", nil)
@@ -246,7 +255,7 @@ func (s *MiddlewareTestSuite) TestProOnlyMiddleware_MissingSubscription() {
 func (s *MiddlewareTestSuite) TestRequireRole_Success() {
 	// User is an Admin, route requires Admin or Organization
 	s.router.GET("/admin", func(c *gin.Context) {
-		setContext(c, "pro", "admin")
+		setContext(c, "pro", domain.RoleAdmin)
 	}, RequireRole(domain.RoleAdmin, domain.RoleOrg), func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})
@@ -260,7 +269,7 @@ func (s *MiddlewareTestSuite) TestRequireRole_Success() {
 func (s *MiddlewareTestSuite) TestRequireRole_InsufficientRole() {
 	// User is a User, route requires Admin
 	s.router.GET("/admin", func(c *gin.Context) {
-		setContext(c, "pro", "user")
+		setContext(c, "pro", domain.RoleUser)
 	}, RequireRole(domain.RoleAdmin), func(c *gin.Context) {})
 
 	req, _ := http.NewRequest(http.MethodGet, "/admin", nil)
