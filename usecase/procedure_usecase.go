@@ -94,3 +94,29 @@ func (pu *ProcedureUsecase) DeleteProcedure(ctx context.Context, id string) erro
 
 	return nil
 }
+func (pu *ProcedureUsecase) SearchAndFilter(ctx context.Context, options domain.ProcedureSearchFilterOptions) ([]*domain.Procedure, int64, error) {
+	// --- Context with timeout ---
+	ctx, cancel := context.WithTimeout(ctx, pu.contextTimeout)
+	defer cancel()
+
+	// --- Normalize Pagination ---
+	if options.Limit <= 0 {
+		options.Limit = 10
+	}
+	if options.Limit > 100 {
+		options.Limit = 100
+	}
+	if options.Page <= 0 {
+		options.Page = 1
+	}
+
+	// --- Normalize Sorting ---
+	if options.SortBy == "" {
+		options.SortBy = "created_at"
+	}
+	if options.SortOrder != domain.SortAsc && options.SortOrder != domain.SortDesc {
+		options.SortOrder = domain.SortDesc
+	}
+
+	return pu.procedureRepo.SearchAndFilter(ctx, options)
+}

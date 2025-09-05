@@ -32,3 +32,45 @@ type Procedure struct {
 	CreatedAt      time.Time
 	NoticeIDs      []string
 }
+
+
+// ====== Search & Filter Options ======
+type GlobalLogic string
+// type SortOrder string
+
+const (
+	GlobalLogicOR  GlobalLogic = "OR"
+	GlobalLogicAND GlobalLogic = "AND"
+)
+
+type ProcedureSearchFilterOptions struct {
+	// Search
+	Name     *string // search in name
+
+	// Filters
+	OrganizationID *string
+	GroupID        *string
+
+	// Fee range
+	MinFee *float64
+	MaxFee *float64
+
+	// Processing time range
+	MinProcessingDays *int
+	MaxProcessingDays *int
+
+	// Date range
+	StartDate *time.Time
+	EndDate   *time.Time
+
+	// Logic
+	GlobalLogic GlobalLogic
+
+	// Pagination
+	Page  int64
+	Limit int64
+
+	// Sorting
+	SortBy    string
+	SortOrder SortOrder
+}

@@ -13,8 +13,8 @@ type Post struct {
 	UpdatedAt  time.Time
 }
 
-type GlobalLogic string
-type ActionType string
+// type GlobalLogic string
+// type ActionType string
 
 type PostFilters struct {
 	Title *string

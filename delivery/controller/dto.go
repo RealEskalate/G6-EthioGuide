@@ -322,3 +322,87 @@ type UpdatePostDTO struct {
 	Procedures []string `json:"procedures,omitempty"`
 	Tags       []string `json:"tags,omitempty"`
 }
+
+////////////////////////////// procedure////
+type ProcedureContentResponse struct {
+	Prerequisites []string          `json:"prerequisites"`
+	Steps         map[int]string    `json:"steps"`
+	Result        string            `json:"result"`
+}
+
+type ProcedureFeeResponse struct {
+	Label    string  `json:"label"`
+	Currency string  `json:"currency"`
+	Amount   float64 `json:"amount"`
+}
+
+type ProcessingTimeResponse struct {
+	MinDays int `json:"minDays"`
+	MaxDays int `json:"maxDays"`
+}
+
+type ProcedureResponse struct {
+	ID             string                  `json:"id"`
+	GroupID        *string                 `json:"groupId,omitempty"`
+	OrganizationID string                  `json:"organizationId"`
+	Name           string                  `json:"name"`
+	Content        ProcedureContentResponse `json:"content"`
+	Fees           ProcedureFeeResponse     `json:"fees"`
+	ProcessingTime ProcessingTimeResponse   `json:"processingTime"`
+	CreatedAt      time.Time               `json:"createdAt"`
+	NoticeIDs      []string                `json:"noticeIds"`
+}
+
+type Pagination struct {
+	Total int64 `json:"total"`
+	Page  int64 `json:"page"`
+	Limit int64 `json:"limit"`
+}
+
+type PaginatedProcedureResponse struct {
+	Data       []ProcedureResponse `json:"data"`
+	Pagination Pagination          `json:"pagination"`
+}
+
+// ====== Mappers ======
+
+func toProcedureResponse(p *domain.Procedure) ProcedureResponse {
+	return ProcedureResponse{
+		ID:             p.ID,
+		GroupID:        p.GroupID,
+		OrganizationID: p.OrganizationID,
+		Name:           p.Name,
+		Content: ProcedureContentResponse{
+			Prerequisites: p.Content.Prerequisites,
+			Steps:         p.Content.Steps,
+			Result:        p.Content.Result,
+		},
+		Fees: ProcedureFeeResponse{
+			Label:    p.Fees.Label,
+			Currency: p.Fees.Currency,
+			Amount:   p.Fees.Amount,
+		},
+		ProcessingTime: ProcessingTimeResponse{
+			MinDays: p.ProcessingTime.MinDays,
+			MaxDays: p.ProcessingTime.MaxDays,
+		},
+		CreatedAt: p.CreatedAt,
+		NoticeIDs: p.NoticeIDs,
+	}
+}
+
+func toPaginatedProcedureResponse(procedures []*domain.Procedure, total, page, limit int64) PaginatedProcedureResponse {
+	responses := make([]ProcedureResponse, len(procedures))
+	for i, p := range procedures {
+		responses[i] = toProcedureResponse(p)
+	}
+
+	return PaginatedProcedureResponse{
+		Data: responses,
+		Pagination: Pagination{
+			Total: total,
+			Page:  page,
+			Limit: limit,
+		},
+	}
+}
