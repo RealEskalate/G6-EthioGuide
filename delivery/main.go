@@ -68,6 +68,7 @@ func main() {
 	catagoryRepo := repository.NewCategoryRepository(db, "catagories")
 	tokenRepo := repository.NewTokenRepository(db)
 	feedbackRepo := repository.NewFeedbackRepository(db)
+	noticeRepo := repository.NewNoticeRepository(db)
 	postRepo := repository.NewPostRepository(db)
 
 	// --- Infrastructure Services ---
@@ -100,6 +101,7 @@ func main() {
 	catagoryUsecase := usecase.NewCategoryUsecase(catagoryRepo, cfg.UsecaseTimeout)
 	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
 	feedbackUsecase := usecase.NewFeedbackUsecase(feedbackRepo, procedureRepo, cfg.UsecaseTimeout)
+	noticeUsecase := usecase.NewNoticeUsecase(noticeRepo)
 	preferencesUsecase := usecase.NewPreferencesUsecase(preferencesRepo)
 
 	postUsecase := usecase.NewPostUseCase(postRepo, cfg.UsecaseTimeout)
@@ -110,6 +112,7 @@ func main() {
 	catagoryController := controller.NewCategoryController(catagoryUsecase)
 	geminiController := controller.NewGeminiController(geminiUsecase)
 	feedbackController := controller.NewFeedbackController(feedbackUsecase)
+	noticeController := controller.NewNoticeController(noticeUsecase)
 	preferencesController := controller.NewPreferencesController(preferencesUsecase)
 
 	postController := controller.NewPostController(postUsecase)
@@ -129,6 +132,7 @@ func main() {
 		geminiController,
 		feedbackController,
 		postController,
+		noticeController,
 		preferencesController,
 		authMiddleware,
 		proOnlyMiddleware,

@@ -63,9 +63,9 @@ type NoticeRepository struct {
 	collection *mongo.Collection
 }
 
-func NewNoticeController(db *mongo.Collection) *NoticeRepository {
+func NewNoticeRepository(db *mongo.Database) *NoticeRepository {
 	return &NoticeRepository{
-		collection: db,
+		collection: db.Collection("notices"),
 	}
 }
 

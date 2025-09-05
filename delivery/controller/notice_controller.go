@@ -92,7 +92,8 @@ func (nc *NoticeController) GetNoticesByFilter(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, resp)
 }
 
-func (nc *NoticeController) UpdateNotice(ctx *gin.Context, id string) {
+func (nc *NoticeController) UpdateNotice(ctx *gin.Context) {
+	id := ctx.Param("id")
 	var noticeDTO NoticeDTO
 	if err := ctx.ShouldBindJSON(&noticeDTO); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -108,7 +109,8 @@ func (nc *NoticeController) UpdateNotice(ctx *gin.Context, id string) {
 	ctx.JSON(http.StatusOK, "Notice Updated successfully.")
 }
 
-func (nc *NoticeController) DeleteNotice(ctx *gin.Context, id string) {
+func (nc *NoticeController) DeleteNotice(ctx *gin.Context) {
+	id := ctx.Param("id")
 	if err := nc.noticeUsecase.DeleteNotice(ctx, id); err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return

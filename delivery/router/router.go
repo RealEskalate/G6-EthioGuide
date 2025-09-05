@@ -22,6 +22,7 @@ func SetupRouter(
 	geminiController *controller.GeminiController,
 	feedbackController *controller.FeedbackController,
 	postController *controller.PostController,
+	noticeController *controller.NoticeController,
 	PreferencesController *controller.PreferencesController,
 	authMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
@@ -140,6 +141,14 @@ func SetupRouter(
 				discussions.DELETE("/:id", authMiddleware, requireAdminOrOrgRole, postController.DeletePost)
 			}
 
+			notices := v1.Group("/notices")
+			{
+				notices.POST("", authMiddleware, requireAdminOrOrgRole, noticeController.CreateNotice)
+				notices.GET("", noticeController.GetNoticesByFilter)
+				notices.PATCH("/:id", authMiddleware, requireAdminOrOrgRole, noticeController.UpdateNotice)
+				notices.DELETE("/:id", authMiddleware, requireAdminOrOrgRole, noticeController.DeleteNotice)
+			}
+
 			categories := v1.Group("/categories")
 			{
 				categories.POST("", authMiddleware, requireAdminOrOrgRole, catagorieController.CreateCategory)
@@ -239,11 +248,7 @@ func SetupRouter(
 		// 12) Official Notices
 		notices := v1.Group("/notices")
 		{
-			notices.POST("", handleCreateNotice)
-			notices.GET("", handleGetNotices)
 			notices.GET("/:id", handleGetNotice)
-			notices.PATCH("/:id", handleUpdateNotice)
-			notices.DELETE("/:id", handleDeleteNotice)
 		}
 
 		// 13) AI Guidance (Gemini)
@@ -678,25 +683,6 @@ func handleUpvoteFeedback(c *gin.Context) {
 }
 
 // 12) Official Notices
-func handleCreateNotice(c *gin.Context) {
-	c.JSON(http.StatusCreated, gin.H{"id": "ntc_new", "title": "New Official Notice"})
-}
-
-func handleGetNotices(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"data": []gin.H{
-			{
-				"id":    "ntc_1",
-				"title": "Holiday Office Closure",
-			},
-		},
-		"page":    1,
-		"limit":   20,
-		"total":   1,
-		"hasNext": false,
-	})
-}
-
 func handleGetNotice(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"id":            "ntc_1",
@@ -707,14 +693,6 @@ func handleGetNotice(c *gin.Context) {
 		"effectiveFrom": "2025-09-10T00:00:00Z",
 		"createdAt":     "2025-08-15T10:00:00Z",
 	})
-}
-
-func handleUpdateNotice(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"id": c.Param("id"), "pinned": false})
-}
-
-func handleDeleteNotice(c *gin.Context) {
-	c.Status(http.StatusNoContent)
 }
 
 // 13) AI Guidance
