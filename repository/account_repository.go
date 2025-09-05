@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // --- Database Models ---
@@ -38,6 +39,7 @@ type AccountModel struct {
 	ID                 primitive.ObjectID       `bson:"_id,omitempty"`
 	Name               string                   `bson:"name,omitempty"`
 	Email              string                   `bson:"email"`
+	AuthProvider       domain.AuthProvider      `bson:"auth_provider"`
 	PasswordHash       string                   `bson:"password_hash"`
 	ProfilePicURL      string                   `bson:"profile_pic_url,omitempty"`
 	Role               domain.Role              `bson:"role"`
@@ -52,6 +54,7 @@ func fromDomainAccount(a *domain.Account) (*AccountModel, error) {
 	return &AccountModel{
 		Name:               a.Name,
 		Email:              a.Email,
+		AuthProvider:       a.AuthProvider,
 		PasswordHash:       a.PasswordHash,
 		Role:               a.Role,
 		ProfilePicURL:      a.ProfilePicURL,
@@ -90,6 +93,7 @@ func toDomainAccount(a *AccountModel) *domain.Account {
 	domainAccount := &domain.Account{
 		ID:            a.ID.Hex(),
 		Name:          a.Name,
+		AuthProvider:  a.AuthProvider,
 		Email:         a.Email,
 		PasswordHash:  a.PasswordHash,
 		ProfilePicURL: a.ProfilePicURL,
@@ -200,14 +204,95 @@ func (r *AccountRepository) GetByUsername(ctx context.Context, username string) 
 	return toDomainAccount(&model), nil
 }
 
+func (r *AccountRepository) UpdatePassword(ctx context.Context, userID, newPassword string) error {
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return domain.ErrNotFound
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"password_hash": newPassword,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": objectID}, update)
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+	if result.MatchedCount == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
+}
+
+func (r *AccountRepository) UpdateProfile(ctx context.Context, account domain.Account) error {
+	accountID, err := primitive.ObjectIDFromHex(account.ID)
+	if err != nil {
+		return domain.ErrUserNotFound
+	}
+
+	updatedAccount, err := fromDomainAccount(&account)
+	if err != nil {
+		return err
+	}
+	update := bson.M{"$set": updatedAccount}
+
+	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": accountID}, update)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return domain.ErrUserNotFound
+	}
+
+	return nil
+}
+
+func (r *AccountRepository) ExistsByEmail(ctx context.Context, email, excludeID string) (bool, error) {
+	if excludeID == "" {
+		// If no excludeID provided, just check existence without exclusion
+		filter := bson.M{"email": email}
+		count, err := r.collection.CountDocuments(ctx, filter)
+		return count > 0, err
+	}
+
+	objID, err := primitive.ObjectIDFromHex(excludeID)
+	if err != nil {
+		return false, err // Or handle the error as needed (e.g., invalid ID)
+	}
+
+	filter := bson.M{"email": email, "_id": bson.M{"$ne": objID}}
+	count, err := r.collection.CountDocuments(ctx, filter)
+	return count > 0, err
+}
+
+func (r *AccountRepository) ExistsByUsername(ctx context.Context, username, excludeID string) (bool, error) {
+	if excludeID == "" {
+		// If no excludeID provided, just check existence without exclusion
+		filter := bson.M{"user_detail.username": username}
+		count, err := r.collection.CountDocuments(ctx, filter)
+		return count > 0, err
+	}
+
+	objID, err := primitive.ObjectIDFromHex(excludeID)
+	if err != nil {
+		return false, err // Or handle the error as needed (e.g., invalid ID)
+	}
+
+	filter := bson.M{"user_detail.username": username, "_id": bson.M{"$ne": objID}}
+	count, err := r.collection.CountDocuments(ctx, filter)
+	return count > 0, err
+}
+
 func (r *AccountRepository) UpdateUserFields(ctx context.Context, userIDstr string, update map[string]interface{}) error {
 	if len(update) == 0 {
-		return errors.New("no fields to update")
+		return nil
 	}
 
 	userID, err := primitive.ObjectIDFromHex(userIDstr)
 	if err != nil {
-		return domain.ErrInvalidID
+		return domain.ErrUserNotFound
 	}
 
 	filter := bson.M{
@@ -226,4 +311,45 @@ func (r *AccountRepository) UpdateUserFields(ctx context.Context, userIDstr stri
 	}
 
 	return nil
+}
+
+func (r *AccountRepository) GetOrgs(ctx context.Context, filter domain.GetOrgsFilter) ([]*domain.Account, int64, error) {
+	query := bson.M{}
+	query["role"] = domain.RoleOrg
+	if filter.Type != "" {
+		query["organization_detail.type"] = filter.Type
+	}
+
+	if filter.Query != "" {
+		query["$or"] = []bson.M{
+			{"name": bson.M{"$regex": filter.Query, "$options": "i"}},
+			{"organization_detail.description": bson.M{"$regex": filter.Query, "$options": "i"}},
+		}
+	}
+
+	findoption := options.FindOptions{}
+	findoption.SetLimit(filter.PageSize)
+	findoption.SetSkip((filter.Page - 1) * filter.PageSize)
+
+	cursor, err := r.collection.Find(ctx, query, &findoption)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var res []*domain.Account
+	for cursor.Next(ctx) {
+		var model AccountModel
+		if err := cursor.Decode(&model); err != nil {
+			return nil, 0, err
+		}
+
+		res = append(res, toDomainAccount(&model))
+	}
+
+	total, err := r.collection.CountDocuments(ctx, query)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return res, total, nil
 }
