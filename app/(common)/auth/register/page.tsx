@@ -305,7 +305,9 @@ export default function RegisterPage() {
                 variant="outline"
                 className="w-full border-neutral text-primary-dark hover:bg-secondary/20 rounded-md"
                 // onClick={handleGoogleLogin}
-                onClick={() => signIn("google", { callbackUrl: "/api/auth/callback/google" })}
+                onClick={() =>
+                  signIn("google", { callbackUrl: "/api/auth/callback/google" })
+                }
               >
                 <FaGoogle className="h-4 w-4 mr-2" />
                 {t("register.sign_in_with_google")}
