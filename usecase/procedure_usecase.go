@@ -3,16 +3,27 @@ package usecase
 import (
 	"EthioGuide/domain"
 	"context"
+	"time"
 )
 
 type ProcedureUsecase struct {
-	procedureRepo domain.IProcedureRepository
+	procedureRepo  domain.IProcedureRepository
+	contextTimeout time.Duration
 }
 
-func NewProcedureUsecase(procedureRepo domain.IProcedureRepository) *ProcedureUsecase {
+func NewProcedureUsecase(pr domain.IProcedureRepository, timeout time.Duration) domain.IProcedureUsecase {
 	return &ProcedureUsecase{
-		procedureRepo: procedureRepo,
+		procedureRepo:  pr,
+		contextTimeout: timeout,
 	}
+}
+
+func (pu *ProcedureUsecase) CreateProcedure(c context.Context, procedure *domain.Procedure, userId string, userRole domain.Role) error {
+	ctx, cancel := context.WithTimeout(c, pu.contextTimeout)
+	defer cancel()
+
+	procedure.OrganizationID = userId
+	return pu.procedureRepo.Create(ctx, procedure)
 }
 
 func (pu *ProcedureUsecase) GetProcedureByID(ctx context.Context, id string) (*domain.Procedure, error) {
@@ -24,28 +35,21 @@ func (pu *ProcedureUsecase) GetProcedureByID(ctx context.Context, id string) (*d
 	return procedure, nil
 }
 
-func (pu *ProcedureUsecase) UpdateProcedure(ctx context.Context, id string, procedure *domain.Procedure) error {
+func (pu *ProcedureUsecase) UpdateProcedure(ctx context.Context, id string, procedure *domain.Procedure, userId string, userRole domain.Role) error {
 	// 1. Fetch the existing procedure.
 	procedureToUpdate, err := pu.procedureRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	// 2. Authorization Check:
-	// Get userRole and organizationID from context (set by Gin middleware)
-	userRole, _ := ctx.Value("userRole").(string)
-	userOrgID, _ := ctx.Value("userID").(string)
-
-	if procedureToUpdate.OrganizationID == "" || procedureToUpdate.OrganizationID == "nil" {
-		// Only admin can update if no organization owns the procedure
-		if userRole != "admin" {
+	switch userRole {
+	case domain.RoleAdmin:
+	case domain.RoleOrg:
+		if procedureToUpdate.OrganizationID != userId {
 			return domain.ErrPermissionDenied
 		}
-	} else {
-		// Only the owning organization can update
-		if procedureToUpdate.OrganizationID != userOrgID {
-			return domain.ErrPermissionDenied
-		}
+	default:
+		return domain.ErrPermissionDenied
 	}
 
 	// 3. Update the procedure.
@@ -57,27 +61,21 @@ func (pu *ProcedureUsecase) UpdateProcedure(ctx context.Context, id string, proc
 	return nil
 }
 
-func (pu *ProcedureUsecase) DeleteProcedure(ctx context.Context, id string) error {
+func (pu *ProcedureUsecase) DeleteProcedure(ctx context.Context, id string, userId string, userRole domain.Role) error {
 	// 1. Fetch the existing procedure.
 	procedureToDelete, err := pu.procedureRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	// 2. Authorization Check:
-	userRole, _ := ctx.Value("userRole").(string)
-	userOrgID, _ := ctx.Value("userID").(string)
-
-	if procedureToDelete.OrganizationID == "" || procedureToDelete.OrganizationID == "nil" {
-		// Only admin can delete if no organization owns the procedure
-		if userRole != "admin" {
+	switch userRole {
+	case domain.RoleAdmin:
+	case domain.RoleOrg:
+		if procedureToDelete.OrganizationID != userId {
 			return domain.ErrPermissionDenied
 		}
-	} else {
-		// Only the owning organization can delete
-		if procedureToDelete.OrganizationID != userOrgID {
-			return domain.ErrPermissionDenied
-		}
+	default:
+		return domain.ErrPermissionDenied
 	}
 
 	// 3. Delete the procedure.
@@ -87,4 +85,30 @@ func (pu *ProcedureUsecase) DeleteProcedure(ctx context.Context, id string) erro
 	}
 
 	return nil
+}
+func (pu *ProcedureUsecase) SearchAndFilter(ctx context.Context, options domain.ProcedureSearchFilterOptions) ([]*domain.Procedure, int64, error) {
+	// --- Context with timeout ---
+	ctx, cancel := context.WithTimeout(ctx, pu.contextTimeout)
+	defer cancel()
+
+	// --- Normalize Pagination ---
+	if options.Limit <= 0 {
+		options.Limit = 10
+	}
+	if options.Limit > 100 {
+		options.Limit = 100
+	}
+	if options.Page <= 0 {
+		options.Page = 1
+	}
+
+	// --- Normalize Sorting ---
+	if options.SortBy == "" {
+		options.SortBy = "created_at"
+	}
+	if options.SortOrder != domain.SortAsc && options.SortOrder != domain.SortDesc {
+		options.SortOrder = domain.SortDesc
+	}
+
+	return pu.procedureRepo.SearchAndFilter(ctx, options)
 }
