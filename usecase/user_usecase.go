@@ -307,10 +307,8 @@ func (uc *UserUsecase) loginWithGoogle(ctx context.Context, code string) (*domai
 		} else {
 			return nil, "", "", fmt.Errorf("database error while fetching user: %w", err)
 		}
-	} else {
-		if user.AuthProvider != domain.AuthProviderGoogle && user.AuthProvider != domain.AuthProviderLocal {
-			return nil, "", "", domain.ErrConflict
-		}
+	} else if user.AuthProvider != domain.AuthProviderGoogle && user.AuthProvider != domain.AuthProviderLocal {
+		return nil, "", "", domain.ErrConflict
 	}
 
 	accessToken, _, err := uc.jwtService.GenerateAccessToken(user.ID, user.Role)

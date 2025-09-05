@@ -38,6 +38,7 @@ type AccountModel struct {
 	ID                 primitive.ObjectID       `bson:"_id,omitempty"`
 	Name               string                   `bson:"name,omitempty"`
 	Email              string                   `bson:"email"`
+	AuthProvider       domain.AuthProvider      `bson:"auth_provider"`
 	PasswordHash       string                   `bson:"password_hash"`
 	ProfilePicURL      string                   `bson:"profile_pic_url,omitempty"`
 	Role               domain.Role              `bson:"role"`
@@ -52,6 +53,7 @@ func fromDomainAccount(a *domain.Account) (*AccountModel, error) {
 	return &AccountModel{
 		Name:               a.Name,
 		Email:              a.Email,
+		AuthProvider:       a.AuthProvider,
 		PasswordHash:       a.PasswordHash,
 		Role:               a.Role,
 		ProfilePicURL:      a.ProfilePicURL,
@@ -90,6 +92,7 @@ func toDomainAccount(a *AccountModel) *domain.Account {
 	domainAccount := &domain.Account{
 		ID:            a.ID.Hex(),
 		Name:          a.Name,
+		AuthProvider:  a.AuthProvider,
 		Email:         a.Email,
 		PasswordHash:  a.PasswordHash,
 		ProfilePicURL: a.ProfilePicURL,
