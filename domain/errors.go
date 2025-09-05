@@ -11,6 +11,7 @@ var (
 	ErrPasswordTooShort   = errors.New("password must be at least 8 characters")
 	ErrInvalidEmailFormat = errors.New("invalid email format")
 	ErrInvalidRole        = errors.New("invalid role provided")
+	ErrInvalidProvider    = errors.New("invalid provider")
 	ErrValidation         = errors.New("validation error")
 	ErrConflict           = errors.New("conflict occured")
 
@@ -24,6 +25,7 @@ var (
 	ErrPhoneNumberExists    = errors.New("phone number already exists")
 	ErrOAuthUser            = errors.New("this action is not applicable to an account created with an external provider")
 	ErrCannotChangeOwnRole  = errors.New("admins cannot change their own role")
+	ErrUserAlreadyVerified  = errors.New("the user is already verified")
 
 	// Token errors
 	ErrInvalidID              = errors.New("invalid ID was used")
@@ -32,5 +34,19 @@ var (
 	ErrAccountNotActive       = errors.New("this account has not been activated")
 	ErrInvalidActivationToken = errors.New("invalid or expired activation token")
 
+	// Request errors
+	ErrInvalidBody         = errors.New("invalid request body")
 	ErrUnsupportedLanguage = errors.New("unsupported language used")
+	ErrInvalidQueryParam   = errors.New("invalid query parameter")
+	ErrInvalidIDFormat     = errors.New("invalid ID format")
+	ErrEmptyParamField     = errors.New("empty parameter field")
+
+	//Database errors
+	ErrUnableToEnterData  = errors.New("unable to enter data into database")
+	ErrUnableToFetchData  = errors.New("unable to fetch data from database")
+	ErrUnableToUpdateData = errors.New("unable to update data in database")
+	ErrUnableToDeleteData = errors.New("unable to delete data from database")
+
+	ErrPostNotFound      = errors.New("post not found")
+	ErrProcedureNotFound = errors.New("procedure not found")
 )

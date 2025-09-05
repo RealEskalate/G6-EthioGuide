@@ -6,23 +6,50 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	_ "EthioGuide/docs"
+
+	"github.com/gin-contrib/cors"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // SetupRouter initializes the Gin router and registers all application routes.
 func SetupRouter(
 	userController *controller.UserController,
+	procedureController *controller.ProcedureController,
+	catagorieController *controller.CategoryController,
 	geminiController *controller.GeminiController,
+	feedbackController *controller.FeedbackController,
+	postController *controller.PostController,
 	authMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
 	requireAdminRole gin.HandlerFunc,
+	requireAdminOrOrgRole gin.HandlerFunc,
 ) *gin.Engine {
 
 	router := gin.Default()
+
+	config := cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:3000",
+			"https://ethio-guide.vercel.app",
+			"https://your-production-site.com",
+		},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Client-Type"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
+	router.Use(cors.New(config))
 
 	// Health check endpoint - always public
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "UP"})
 	})
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Group all routes under a versioned prefix
 	v1 := router.Group("/api/v1")
@@ -34,6 +61,8 @@ func SetupRouter(
 			authGroup.POST("/register", userController.Register)
 			authGroup.POST("/login", userController.Login)
 			authGroup.POST("/refresh", userController.HandleRefreshToken)
+			authGroup.POST("/social", userController.SocialLogin)
+			authGroup.POST("/logout", userController.Logout)
 		}
 
 		// --- Private Routes (Require Authentication) ---
@@ -68,6 +97,47 @@ func SetupRouter(
 				// You would need to create this controller method.
 				// adminGroup.GET("/users", userController.GetAllUsers)
 			}
+
+			// --- User Profile Routes ---
+			// Any logged in user can access these routes to manage their profile
+			authGroup := apiGroup.Group("/auth")
+			authGroup.Use(authMiddleware)
+			{
+				authGroup.GET("/me", userController.GetProfile)
+				authGroup.PATCH("/me/password", userController.UpdatePassword)
+				authGroup.PATCH("/me", userController.UpdateProfile)
+			}
+
+			procedures := v1.Group("/procedures")
+			{
+				procedures.POST("", authMiddleware, requireAdminOrOrgRole, procedureController.CreateProcedure)
+				procedures.GET("/:id", procedureController.GetProcedureByID)
+				procedures.PATCH("/:id", authMiddleware, requireAdminOrOrgRole, procedureController.UpdateProcedure)
+				procedures.DELETE("/:id", authMiddleware, requireAdminOrOrgRole, procedureController.DeleteProcedure)
+				procedures.POST("/:id/feedback", authMiddleware, feedbackController.SubmitFeedback)
+				procedures.GET("/:id/feedback", feedbackController.GetAllFeedbacksForProcedure)
+			}
+
+			feedback := v1.Group("/feedback")
+			{
+				feedback.PATCH("/:id", authMiddleware, requireAdminOrOrgRole, feedbackController.UpdateFeedbackStatus)
+			}
+
+			discussions := v1.Group("/discussions")
+			{
+				discussions.POST("", authMiddleware, postController.CreatePost)
+				discussions.GET("", postController.GetPosts)
+				discussions.GET("/:id", postController.GetPostByID)
+				discussions.PATCH("/:id", authMiddleware, postController.UpdatePost)
+				discussions.DELETE("/:id", authMiddleware, requireAdminOrOrgRole, postController.DeletePost)
+			}
+
+			categories := v1.Group("/categories")
+			{
+				categories.POST("", authMiddleware, requireAdminOrOrgRole, catagorieController.CreateCategory)
+				categories.GET("", catagorieController.GetCategory)
+			}
+
 		}
 	}
 
@@ -79,10 +149,6 @@ func SetupRouter(
 			auth.POST("/verify", handleVerifyEmail)
 			auth.POST("/forgot", handleForgot)
 			auth.POST("/reset", handleReset)
-			auth.POST("/social", handleSocialLogin)
-			auth.GET("/me", handleGetMe)
-			auth.PATCH("/me", handleUpdateMe)
-			auth.PATCH("/me/password", handleUpdatePassword)
 		}
 
 		// 2) Users & Profiles
@@ -109,26 +175,17 @@ func SetupRouter(
 		// 4) Categories & Taxonomy
 		categories := v1.Group("/categories")
 		{
-			categories.GET("", handleGetCategories)
-			categories.POST("", handleCreateCategory)
 			categories.PATCH("/:id", handleUpdateCategory)
 		}
 
 		// 5) Procedures (core)
 		procedures := v1.Group("/procedures")
 		{
-			procedures.POST("", handleCreateProcedure)
 			procedures.GET("", handleGetProcedures)
-			procedures.GET("/:id", handleGetProcedure)
-			procedures.PATCH("/:id", handleUpdateProcedure)
-			procedures.DELETE("/:id", handleDeleteProcedure)
 			procedures.PATCH("/:id/verify", handleVerifyProcedure)
 			procedures.GET("/:id/audit", handleGetProcedureAudit)
 			procedures.GET("/popular", handleGetPopularProcedures)
 			procedures.GET("/recent", handleGetRecentProcedures)
-			// Feedback is nested under procedures but handled separately in section 11
-			procedures.POST("/:id/feedback", handleCreateProcedureFeedback)
-			procedures.GET("/:id/feedback", handleGetProcedureFeedback)
 		}
 
 		// 6) Search & Discovery
@@ -171,11 +228,6 @@ func SetupRouter(
 		// 10) Discussions (Community)
 		discussions := v1.Group("/discussions")
 		{
-			discussions.POST("", handleCreateDiscussion)
-			discussions.GET("", handleGetDiscussions)
-			discussions.GET("/:id", handleGetDiscussion)
-			discussions.PATCH("/:id", handleUpdateDiscussion)
-			discussions.DELETE("/:id", handleDeleteDiscussion)
 			discussions.POST("/:id/upvote", handleUpvoteDiscussion)
 			discussions.POST("/:id/downvote", handleDownvoteDiscussion)
 			discussions.POST("/:id/report", handleReportDiscussion)
@@ -184,7 +236,6 @@ func SetupRouter(
 		// 11) Feedback (standalone updates)
 		feedback := v1.Group("/feedback")
 		{
-			feedback.PATCH("/:id", handleUpdateFeedback)
 			feedback.POST("/:id/upvote", handleUpvoteFeedback)
 		}
 
@@ -277,44 +328,6 @@ func handleForgot(c *gin.Context) {
 }
 
 func handleReset(c *gin.Context) {
-	c.Status(http.StatusNoContent)
-}
-
-func handleSocialLogin(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"token":        "jwt.social.access.token.string",
-		"refreshToken": "jwt.social.refresh.token.string",
-		"user": gin.H{
-			"id":   "user_456",
-			"name": "Social User",
-		},
-	})
-}
-
-func handleGetMe(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":            "user_123",
-		"name":          "Current User",
-		"email":         "current@example.com",
-		"phone":         "+251911123456",
-		"preferredLang": "en",
-		"avatarUrl":     "https://example.com/avatar.png",
-		"roles":         []string{"user", "pro"},
-	})
-}
-
-func handleUpdateMe(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":            "user_123",
-		"name":          "Updated User Name",
-		"email":         "current@example.com",
-		"preferredLang": "am",
-		"avatarUrl":     "https://example.com/new_avatar.png",
-		"roles":         []string{"user", "pro"},
-	})
-}
-
-func handleUpdatePassword(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
@@ -440,92 +453,49 @@ func handleGetOrgFeedback(c *gin.Context) {
 }
 
 // 4) Categories & Taxonomy
-func handleGetCategories(c *gin.Context) {
-	c.JSON(http.StatusOK, []gin.H{
-		{
-			"id":       "cat_1",
-			"name":     "Passport",
-			"children": []gin.H{},
-		},
-		{
-			"id":   "cat_2",
-			"name": "License",
-			"children": []gin.H{
-				{
-					"id":   "cat_3",
-					"name": "Driving License",
-				},
-			},
-		},
-	})
-}
-
-func handleCreateCategory(c *gin.Context) {
-	c.JSON(http.StatusCreated, gin.H{"id": "cat_new", "name": "New Category"})
-}
 
 func handleUpdateCategory(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": c.Param("id"), "name": "Updated Category Name"})
 }
 
 // 5) Procedures (core)
-func handleCreateProcedure(c *gin.Context) {
-	c.JSON(http.StatusCreated, gin.H{"id": "prc_new", "title": "Newly Created Procedure"})
-}
 
 func handleGetProcedures(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"data": []gin.H{
-			{
-				"id":    "prc_123",
-				"title": "Passport Renewal",
+		"data": []gin.H{{
+			"id":      "prc_123",
+			"orgId":   "org_456",
+			"title":   "Passport Renewal",
+			"slug":    "passport-renewal",
+			"summary": "Renew your Ethiopian passport in 5 steps.",
+			"requirements": []gin.H{
+				{"text": "2 passport photos"},
+				{"text": "Old passport"},
 			},
-		},
+			"steps": []gin.H{
+				{"order": 1, "text": "Book appointment"},
+				{"order": 2, "text": "Submit documents"},
+			},
+			"fees": []gin.H{
+				{"label": "Processing", "amount": 500, "currency": "ETB"},
+			},
+			"processingTime": gin.H{"minDays": 7, "maxDays": 14},
+			"offices": []gin.H{
+				{"city": "Addis Ababa", "address": "...", "hours": "Mon–Fri"},
+			},
+			"documentsRequired": []gin.H{
+				{"name": "Application Form", "templateUrl": nil},
+			},
+			"tags":             []string{"passport", "id"},
+			"languageVersions": gin.H{"enId": "prc_123", "amId": "prc_789"},
+			"verified":         true,
+			"updatedAt":        "2025-08-20T12:00:00Z",
+		}},
 		"page":    1,
 		"limit":   20,
 		"total":   1,
 		"hasNext": false,
 	})
-}
-
-func handleGetProcedure(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":      "prc_123",
-		"orgId":   "org_456",
-		"title":   "Passport Renewal",
-		"slug":    "passport-renewal",
-		"summary": "Renew your Ethiopian passport in 5 steps.",
-		"requirements": []gin.H{
-			{"text": "2 passport photos"},
-			{"text": "Old passport"},
-		},
-		"steps": []gin.H{
-			{"order": 1, "text": "Book appointment"},
-			{"order": 2, "text": "Submit documents"},
-		},
-		"fees": []gin.H{
-			{"label": "Processing", "amount": 500, "currency": "ETB"},
-		},
-		"processingTime": gin.H{"minDays": 7, "maxDays": 14},
-		"offices": []gin.H{
-			{"city": "Addis Ababa", "address": "...", "hours": "Mon–Fri"},
-		},
-		"documentsRequired": []gin.H{
-			{"name": "Application Form", "templateUrl": nil},
-		},
-		"tags":             []string{"passport", "id"},
-		"languageVersions": gin.H{"enId": "prc_123", "amId": "prc_789"},
-		"verified":         true,
-		"updatedAt":        "2025-08-20T12:00:00Z",
-	})
-}
-
-func handleUpdateProcedure(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"id": c.Param("id"), "title": "Updated Procedure Title"})
-}
-
-func handleDeleteProcedure(c *gin.Context) {
-	c.Status(http.StatusNoContent)
 }
 
 func handleVerifyProcedure(c *gin.Context) {
@@ -733,47 +703,6 @@ func handleMarkNotificationRead(c *gin.Context) {
 }
 
 // 10) Discussions (Community)
-func handleCreateDiscussion(c *gin.Context) {
-	c.JSON(http.StatusCreated, gin.H{"id": "post_new", "title": "New Discussion Post"})
-}
-
-func handleGetDiscussions(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"data": []gin.H{
-			{
-				"id":    "post_1",
-				"title": "Where to pay the fee?",
-				"votes": 12,
-			},
-		},
-		"page":    1,
-		"limit":   20,
-		"total":   1,
-		"hasNext": false,
-	})
-}
-
-func handleGetDiscussion(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":            "post_1",
-		"procedureId":   "prc_123",
-		"title":         "Where to pay the fee?",
-		"body":          "Is the bank counter still used?",
-		"votes":         12,
-		"status":        "visible",
-		"officialReply": gin.H{"orgId": "org_456", "text": "Use online portal.", "createdAt": "2025-08-18T10:00:00Z"},
-		"createdAt":     "2025-08-17T09:00:00Z",
-	})
-}
-
-func handleUpdateDiscussion(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"id": c.Param("id"), "body": "Updated body content."})
-}
-
-func handleDeleteDiscussion(c *gin.Context) {
-	c.Status(http.StatusNoContent)
-}
-
 func handleUpvoteDiscussion(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": c.Param("id"), "votes": 13})
 }
@@ -786,43 +715,7 @@ func handleReportDiscussion(c *gin.Context) {
 	c.Status(http.StatusAccepted)
 }
 
-// 11) Feedback
-func handleCreateProcedureFeedback(c *gin.Context) {
-	c.JSON(http.StatusCreated, gin.H{
-		"id":          "fb_new",
-		"procedureId": c.Param("id"),
-		"type":        "inaccuracy",
-		"status":      "new",
-	})
-}
-
-func handleGetProcedureFeedback(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"data": []gin.H{
-			{
-				"id":     "fb_1",
-				"userId": "user_abc",
-				"type":   "thanks",
-				"body":   "This was very accurate!",
-				"votes":  5,
-				"status": "resolved",
-			},
-		},
-		"page":    1,
-		"limit":   20,
-		"total":   1,
-		"hasNext": false,
-	})
-}
-
-func handleUpdateFeedback(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":       c.Param("id"),
-		"status":   "triaged",
-		"response": "Thank you for your feedback, we are looking into it.",
-	})
-}
-
+// Feedback
 func handleUpvoteFeedback(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": c.Param("id"), "votes": 6})
 }

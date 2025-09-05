@@ -200,14 +200,95 @@ func (r *AccountRepository) GetByUsername(ctx context.Context, username string) 
 	return toDomainAccount(&model), nil
 }
 
+func (r *AccountRepository) UpdatePassword(ctx context.Context, userID, newPassword string) error {
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return domain.ErrNotFound
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"password_hash": newPassword,
+		},
+	}
+
+	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": objectID}, update)
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+	if result.MatchedCount == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
+}
+
+func (r *AccountRepository) UpdateProfile(ctx context.Context, account domain.Account) error {
+	accountID, err := primitive.ObjectIDFromHex(account.ID)
+	if err != nil {
+		return domain.ErrUserNotFound
+	}
+
+	updatedAccount, err := fromDomainAccount(&account)
+	if err != nil {
+		return err
+	}
+	update := bson.M{"$set": updatedAccount}
+
+	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": accountID}, update)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return domain.ErrUserNotFound
+	}
+
+	return nil
+}
+
+func (r *AccountRepository) ExistsByEmail(ctx context.Context, email, excludeID string) (bool, error) {
+	if excludeID == "" {
+		// If no excludeID provided, just check existence without exclusion
+		filter := bson.M{"email": email}
+		count, err := r.collection.CountDocuments(ctx, filter)
+		return count > 0, err
+	}
+
+	objID, err := primitive.ObjectIDFromHex(excludeID)
+	if err != nil {
+		return false, err // Or handle the error as needed (e.g., invalid ID)
+	}
+
+	filter := bson.M{"email": email, "_id": bson.M{"$ne": objID}}
+	count, err := r.collection.CountDocuments(ctx, filter)
+	return count > 0, err
+}
+
+func (r *AccountRepository) ExistsByUsername(ctx context.Context, username, excludeID string) (bool, error) {
+	if excludeID == "" {
+		// If no excludeID provided, just check existence without exclusion
+		filter := bson.M{"user_detail.username": username}
+		count, err := r.collection.CountDocuments(ctx, filter)
+		return count > 0, err
+	}
+
+	objID, err := primitive.ObjectIDFromHex(excludeID)
+	if err != nil {
+		return false, err // Or handle the error as needed (e.g., invalid ID)
+	}
+
+	filter := bson.M{"user_detail.username": username, "_id": bson.M{"$ne": objID}}
+	count, err := r.collection.CountDocuments(ctx, filter)
+	return count > 0, err
+}
+
 func (r *AccountRepository) UpdateUserFields(ctx context.Context, userIDstr string, update map[string]interface{}) error {
 	if len(update) == 0 {
-		return errors.New("no fields to update")
+		return nil
 	}
 
 	userID, err := primitive.ObjectIDFromHex(userIDstr)
 	if err != nil {
-		return domain.ErrInvalidID
+		return domain.ErrUserNotFound
 	}
 
 	filter := bson.M{
