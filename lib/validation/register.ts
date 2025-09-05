@@ -11,16 +11,28 @@ export const registerSchema = z
     email: z.string().email('Invalid email address'),
     phoneNumber: z
       .string()
-      .min(1, 'Phone number is required')
-      .regex(/^\+251[79]\d{6}(?:\d{2})?$/, 'Phone number must be +251 followed by 7 or 9 digits starting with 7 or 9')
-      .refine((value) => value.length >= 10, {
-        message: 'Phone number must be at least 7 digits',
-        path: ['phoneNumber'],
-      })
-      .refine((value) => /^[79]/.test(value.slice(4)), {
-        message: 'Phone number must start with 7 or 9',
-        path: ['phoneNumber'],
-      }),
+      .optional()
+      .refine(
+        (value) => !value || /^\+251[79]\d{6}(?:\d{2})?$/.test(value),
+        {
+          message: 'Phone number must be +251 followed by 7 or 9 digits starting with 7 or 9',
+          path: ['phoneNumber'],
+        }
+      )
+      .refine(
+        (value) => !value || value.length >= 10,
+        {
+          message: 'Phone number must be at least 7 digits',
+          path: ['phoneNumber'],
+        }
+      )
+      .refine(
+        (value) => !value || /^[79]/.test(value.slice(4)),
+        {
+          message: 'Phone number must start with 7 or 9',
+          path: ['phoneNumber'],
+        }
+      ),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
   })
