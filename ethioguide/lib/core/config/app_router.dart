@@ -1,5 +1,7 @@
 import 'package:ethioguide/features/authentication/presentation/screens/auth_screen.dart';
 import 'package:ethioguide/core/config/route_names.dart';
+import 'package:ethioguide/features/procedure/presentation/pages/procedure_detail_page.dart';
+import 'package:ethioguide/features/procedure/presentation/pages/procedure_page.dart';
 
 import 'package:ethioguide/features/procedure/presentation/pages/workspace_page.dart';
 import 'package:ethioguide/features/procedure/presentation/pages/workspace_procedure_detail_page.dart';
