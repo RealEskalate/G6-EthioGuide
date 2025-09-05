@@ -56,6 +56,8 @@ func SetupRouter(
 	// Group all routes under a versioned prefix
 	v1 := router.Group("/api/v1")
 	{
+		v1.GET("/search", userController.HandleSearch)
+
 		// --- Public Routes ---
 		// These endpoints do not require any authentication.
 		authGroup := v1.Group("/auth")
@@ -197,9 +199,6 @@ func SetupRouter(
 			procedures.GET("/popular", handleGetPopularProcedures)
 			procedures.GET("/recent", handleGetRecentProcedures)
 		}
-
-		// 6) Search & Discovery
-		v1.GET("/search", handleSearch)
 
 		// 7) Checklists & Progress
 		checklists := v1.Group("/checklists")
@@ -444,16 +443,6 @@ func handleGetPopularProcedures(c *gin.Context) {
 func handleGetRecentProcedures(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data": []gin.H{{"id": "prc_789", "title": "New Business License", "updatedAt": time.Now().UTC().Format(time.RFC3339)}},
-	})
-}
-
-// 6) Search & Discovery
-func handleSearch(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"procedures": []gin.H{{"id": "prc_123", "title": "Passport Renewal"}},
-		"orgs":       []gin.H{{"id": "org_456", "name": "Ministry of Passport Services"}},
-		"posts":      []gin.H{},
-		"notices":    []gin.H{},
 	})
 }
 
