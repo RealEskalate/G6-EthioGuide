@@ -83,6 +83,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/forgot": {
+            "post": {
+                "description": "Forgot password.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Forgot Password",
+                "parameters": [
+                    {
+                        "description": "User Email",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.ForgotDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reset token sent",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Login a user account with the provided details.",
@@ -122,6 +168,56 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "invalid",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout/": {
+            "post": {
+                "description": "Logout a user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Log out successful",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "string"
                         }
@@ -399,6 +495,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/reset": {
+            "post": {
+                "description": "Reset password.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Reset Password",
+                "parameters": [
+                    {
+                        "description": "Reset Token and New Password",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.ResetDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reset token sent",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/social": {
             "post": {
                 "description": "Login with third party auth.",
@@ -428,6 +570,52 @@ const docTemplate = `{
                         "description": "Login successful",
                         "schema": {
                             "$ref": "#/definitions/controller.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/verify": {
+            "post": {
+                "description": "Verify User Account.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Verify Account",
+                "parameters": [
+                    {
+                        "description": "Reset Token and New Password",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.ActivateDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reset token sent",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -1382,6 +1570,14 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controller.ActivateDTO": {
+            "type": "object",
+            "properties": {
+                "activatationToken": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.CategoryResponse": {
             "type": "object",
             "properties": {
@@ -1587,6 +1783,14 @@ const docTemplate = `{
                         "resolved",
                         "declined"
                     ]
+                }
+            }
+        },
+        "controller.ForgotDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
                 }
             }
         },
@@ -1863,6 +2067,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.ResetDTO": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string"
+                },
+                "resetToken": {
                     "type": "string"
                 }
             }
