@@ -41,10 +41,16 @@ func fromDomainCategory(c *domain.Category) (*CategoryModel, error) {
 }
 
 func toDomainCategory(m *CategoryModel) *domain.Category {
+	var pid string
+	if m.ParentID == primitive.NilObjectID {
+		pid = ""
+	} else {
+		pid = m.ParentID.Hex()
+	}
 	return &domain.Category{
 		ID:             m.ID.Hex(),
 		OrganizationID: m.OrganizationID.Hex(),
-		ParentID:       m.ParentID.Hex(),
+		ParentID:       pid,
 		Title:          m.Title,
 	}
 }
@@ -78,7 +84,7 @@ func (r *categoryRepository) Create(ctx context.Context, category *domain.Catego
 
 func (r *categoryRepository) GetCategories(ctx context.Context, opts *domain.CategorySearchAndFilter) ([]*domain.Category, int64, error) {
 	// 1. Make the filter
-	filter := buildFilter(opts)
+	filter := buildCategoryFilter(opts)
 
 	// 2. Get the  total count
 	total, err := r.collection.CountDocuments(ctx, filter)
@@ -119,28 +125,39 @@ func (r *categoryRepository) GetCategories(ctx context.Context, opts *domain.Cat
 }
 
 // --- helper ---
-func buildFilter(options *domain.CategorySearchAndFilter) bson.M {
-	var conditions []bson.M
+func buildCategoryFilter(options *domain.CategorySearchAndFilter) bson.M {
+    var conditions []bson.M
 
-	if options.Title != "" {
-		conditions = append(conditions, bson.M{"title": bson.M{"$regex": options.Title, "$options": "i"}})
-	}
+    if options.Title != "" {
+        conditions = append(conditions, bson.M{"title": bson.M{"$regex": options.Title, "$options": "i"}})
+    }
 
-	if options.ParentID != "" {
-		if parentID, err := primitive.ObjectIDFromHex(options.ParentID); err == nil {
-			conditions = append(conditions, bson.M{"parent_id": parentID})
-		}
-	}
+    // Handle ParentID filtering
+    if options.ParentID == "" {
+        // Filter for documents with no parent_id (null or absent)
+        conditions = append(conditions, bson.M{
+            "$or": []bson.M{
+                {"parent_id": bson.M{"$exists": false}},
+                {"parent_id": nil},
+            },
+        })
+    } else {
+        // Try to parse ParentID as an ObjectID for specific parent filtering
+        if parentID, err := primitive.ObjectIDFromHex(options.ParentID); err == nil {
+            conditions = append(conditions, bson.M{"parent_id": parentID})
+        }
+        // If parsing fails, do nothing (invalid ParentID is ignored)
+    }
 
-	if options.OrganizationID != "" {
-		if orgID, err := primitive.ObjectIDFromHex(options.OrganizationID); err == nil {
-			conditions = append(conditions, bson.M{"organization_id": orgID})
-		}
-	}
+    if options.OrganizationID != "" {
+        if orgID, err := primitive.ObjectIDFromHex(options.OrganizationID); err == nil {
+            conditions = append(conditions, bson.M{"organization_id": orgID})
+        }
+    }
 
-	if len(conditions) == 0 {
-		return bson.M{}
-	}
+    if len(conditions) == 0 {
+        return bson.M{}
+    }
 
-	return bson.M{"$and": conditions}
+    return bson.M{"$and": conditions}
 }

@@ -16,7 +16,8 @@ func setupService() (domain.IJWTService, string, string) {
 	issuer := "test-issuer"
 	accessTTL := 15 * time.Minute
 	refreshTTL := 24 * time.Hour
-	jwtService := NewJWTService(secret, issuer, accessTTL, refreshTTL)
+	utilityTTL := 1 * time.Hour
+	jwtService := NewJWTService(secret, issuer, accessTTL, refreshTTL, utilityTTL)
 	return jwtService, secret, issuer
 }
 
@@ -62,7 +63,7 @@ func TestJWTService_GenerateRefreshToken(t *testing.T) {
 func TestJWTService_Validation(t *testing.T) {
 	jwtService, secret, _ := setupService()
 	otherService, _, _ := setupService() // Just to have another instance for testing
-	wrongSecretService := NewJWTService("a-different-secret", "test-issuer", 15*time.Minute, 24*time.Hour)
+	wrongSecretService := NewJWTService("a-different-secret", "test-issuer", 15*time.Minute, 24*time.Hour, 1*time.Hour)
 
 	userID := "user-789"
 	userRole := domain.RoleUser
@@ -85,7 +86,7 @@ func TestJWTService_Validation(t *testing.T) {
 
 	t.Run("Failure - Token is expired", func(t *testing.T) {
 		// Create a service that generates instantly expired tokens
-		expiredService := NewJWTService(secret, "test-issuer", -5*time.Minute, -1*time.Hour)
+		expiredService := NewJWTService(secret, "test-issuer", -5*time.Minute, -1*time.Hour, -1*time.Hour)
 		tokenString, _, _ := expiredService.GenerateAccessToken(userID, userRole)
 
 		_, err := jwtService.ValidateToken(tokenString)
@@ -101,7 +102,7 @@ func TestJWTService_ParseExpiredToken(t *testing.T) {
 	userRole := domain.RoleUser
 
 	// Create a service that generates instantly expired tokens
-	expiredService := NewJWTService(secret, "test-issuer", -5*time.Minute, 24*time.Hour)
+	expiredService := NewJWTService(secret, "test-issuer", -5*time.Minute, 24*time.Hour, 1*time.Hour)
 
 	t.Run("Success - Can parse an expired token", func(t *testing.T) {
 		// Arrange
@@ -120,7 +121,7 @@ func TestJWTService_ParseExpiredToken(t *testing.T) {
 
 	t.Run("Failure - Fails on invalid signature", func(t *testing.T) {
 		// Arrange
-		wrongSecretService := NewJWTService("wrong-secret", "test-issuer", -5*time.Minute, 24*time.Hour)
+		wrongSecretService := NewJWTService("wrong-secret", "test-issuer", -5*time.Minute, 24*time.Hour, 1*time.Hour)
 		tokenString, _, _ := wrongSecretService.GenerateAccessToken(userID, userRole)
 
 		// Act
@@ -130,4 +131,23 @@ func TestJWTService_ParseExpiredToken(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "signature is invalid")
 	})
+}
+
+func TestJWTService_GenerateUtilityToken(t *testing.T) {
+	jwtService, _, issuer := setupService()
+	userID := "user-utility"
+
+	// Act
+	tokenString, claims, err := jwtService.GenerateUtilityToken(userID)
+
+	// Assert
+	require.NoError(t, err)
+	require.NotEmpty(t, tokenString)
+	require.NotNil(t, claims)
+
+	assert.Equal(t, userID, claims.UserID)
+	assert.Equal(t, issuer, claims.Issuer)
+	assert.Empty(t, claims.Role, "Utility token should not contain a role claim")
+	assert.NotEmpty(t, claims.ID, "JTI (ID) should not be empty")
+	assert.WithinDuration(t, time.Now().Add(1*time.Hour), claims.ExpiresAt.Time, 1*time.Second)
 }

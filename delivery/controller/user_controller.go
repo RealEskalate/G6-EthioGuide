@@ -3,6 +3,7 @@ package controller
 import (
 	"EthioGuide/domain"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -25,6 +26,17 @@ func isMobileClient(c *gin.Context) bool {
 	return c.GetHeader("X-Client-Type") == "mobile"
 }
 
+// @Summary      Refresh Access Token
+// @Description  Refresh Access Token for web and mobile
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Success      200 {string}  "New Access Token"
+// @Failure      400 {string}  "invalid
+// @Failure      409 {string}  "invalid"
+// @Failure      500 {string}  "invalid"
+// @Router       /auth/refresh [post]
 func (ctrl *UserController) HandleRefreshToken(c *gin.Context) {
 	if isMobileClient(c) {
 		// --- Mobile Client Logic ---
@@ -63,7 +75,17 @@ func (ctrl *UserController) HandleRefreshToken(c *gin.Context) {
 	}
 }
 
-// Register is now much cleaner, delegating all error handling to the helper.
+// @Summary      Register a new user
+// @Description  Creates a new user account with the provided details.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body RegisterRequest true "User Registration Details"
+// @Success      201 {object} UserResponse "User created Successfully"
+// @Failure      400 {string}  "invalid
+// @Failure      409 {string}  "invalid"
+// @Failure      500 {string}  "invalid"
+// @Router       /auth/register [post]
 func (ctrl *UserController) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -72,6 +94,7 @@ func (ctrl *UserController) Register(c *gin.Context) {
 	}
 
 	userDetail := &domain.UserDetail{
+		Username:         req.Username,
 		SubscriptionPlan: domain.SubscriptionNone,
 		IsBanned:         false,
 		IsVerified:       false,
@@ -93,6 +116,16 @@ func (ctrl *UserController) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "user": toUserResponse(account)})
 }
 
+// @Summary      Login a new user
+// @Description  Login a user account with the provided details.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body LoginRequest true "User Registration Details"
+// @Success      201 {object} LoginResponse  "Login Successful"
+// @Failure      400 {string}  "invalid
+// @Failure      500 {string}  "invalid
+// @Router       /auth/login [post]
 func (ctrl *UserController) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -108,19 +141,30 @@ func (ctrl *UserController) Login(c *gin.Context) {
 
 	if isMobileClient(c) {
 		c.JSON(http.StatusOK, &LoginResponse{
-			User:         *account,
+			User:         toUserResponse(account),
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		})
 	} else {
 		setAuthCookie(c, refreshToken, ctrl.refreshTokenTTL)
 		c.JSON(http.StatusOK, &LoginResponse{
-			User:        *account,
+			User:        toUserResponse(account),
 			AccessToken: accessToken,
 		})
 	}
 }
 
+// @Summary      Get Profile
+// @Description  Get user's profile detail.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Success      200 {object} UserResponse "Profile Retrieved"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      404 {string}  "Invalid request"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/me [get]
 func (ctrl *UserController) GetProfile(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -131,11 +175,24 @@ func (ctrl *UserController) GetProfile(c *gin.Context) {
 	account, err := ctrl.userUsecase.GetProfile(c.Request.Context(), userID.(string))
 	if err != nil {
 		HandleError(c, err)
+		return
 	}
 
 	c.JSON(http.StatusOK, toUserResponse(account))
 }
 
+// @Summary      Update password
+// @Description  Update user's password.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        request body ChangePasswordRequest true "Password Change Detail"
+// @Success      200 {string}  "Password changed"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/me/password [patch]
 func (ctrl *UserController) UpdatePassword(c *gin.Context) {
 	accountID, exists := c.Get("userID")
 	if !exists {
@@ -146,6 +203,7 @@ func (ctrl *UserController) UpdatePassword(c *gin.Context) {
 	var req ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
 	}
 
 	err := ctrl.userUsecase.UpdatePassword(c.Request.Context(), accountID.(string), req.OldPassword, req.NewPassword)
@@ -155,6 +213,197 @@ func (ctrl *UserController) UpdatePassword(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
+}
+
+// @Summary      Social Login
+// @Description  Login with third party auth.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body SocialLoginRequest true "Social Login Detail."
+// @Success      200 {object} LoginResponse "Login successful"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/social [post]
+func (ctrl *UserController) SocialLogin(c *gin.Context) {
+	var req SocialLoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: " + err.Error()})
+		return
+	}
+
+	code, err := url.QueryUnescape(req.Code)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to URL-decode the pasted code: " + err.Error()})
+		return
+	}
+
+	account, accessToken, refreshToken, err := ctrl.userUsecase.LoginWithSocial(c.Request.Context(), req.Provider, code)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	if isMobileClient(c) {
+		c.JSON(http.StatusOK, &LoginResponse{
+			User:         toUserResponse(account),
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		})
+	} else {
+		setAuthCookie(c, refreshToken, ctrl.refreshTokenTTL)
+		c.JSON(http.StatusOK, &LoginResponse{
+			User:        toUserResponse(account),
+			AccessToken: accessToken,
+		})
+	}
+}
+
+// @Summary      Update Profile
+// @Description  Update user's profile.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        request body UserUpdateRequest true "Updated Account Details"
+// @Success      200 {object} domain.Account "Account Updated"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/me/ [patch]
+func (ctrl *UserController) UpdateProfile(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+
+	var req UserUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	// 1. Fetch current account from usecase
+	account, err := ctrl.userUsecase.GetProfile(c.Request.Context(), userID.(string))
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	// 2. Convert DTO → domain.Account with updates applied
+	updatedAccount := ToDomainAccountUpdate(&req, account)
+
+	// 3. Call usecase with pure domain model
+	savedAccount, err := ctrl.userUsecase.UpdateProfile(c.Request.Context(), updatedAccount)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, toUserResponse(savedAccount))
+}
+
+// @Summary      Logout
+// @Description  Logout a user.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Success      200 {string}  "Log out successful"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/logout/ [post]
+func (ctrl *UserController) Logout(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+	err := ctrl.userUsecase.Logout(c.Request.Context(), userID.(string))
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+}
+
+// @Summary      Forgot Password
+// @Description  Forgot password.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body ForgotDTO true "User Email"
+// @Success      200 {string}  "Reset token sent"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/forgot [post]
+func (ctrl *UserController) HandleForgot(c *gin.Context) {
+	var req ForgotDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	err := ctrl.userUsecase.ForgetPassword(c.Request.Context(), req.Email)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Reset token sent"})
+}
+
+// @Summary      Reset Password
+// @Description  Reset password.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body ResetDTO true "Reset Token and New Password"
+// @Success      200 {string}  "Reset token sent"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/reset [post]
+func (ctrl *UserController) HandleReset(c *gin.Context) {
+	var req ResetDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	err := ctrl.userUsecase.ResetPassword(c.Request.Context(), req.ResetToken, req.NewPassword)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password Updated Successfully"})
+}
+
+// @Summary      Verify Account
+// @Description  Verify User Account.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request body ActivateDTO true "Reset Token and New Password"
+// @Success      200 {string}  "Reset token sent"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      500 {string}  "Server error"
+// @Router       /auth/verify [post]
+func (ctrl *UserController) HandleVerify(c *gin.Context) {
+	var req ActivateDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	if err := ctrl.userUsecase.VerifyAccount(c.Request.Context(), req.ActivateToken); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User Activated Successfully"})
 }
 
 // --- HELPER FUNCTIONS ---

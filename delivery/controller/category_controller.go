@@ -19,6 +19,17 @@ func NewCategoryController(cc domain.ICategoryUsecase) *CategoryController {
 	}
 }
 
+// @Summary      Create Category
+// @Description  Create a category for procedures
+// @Tags         Category
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        request body CreateCategoryRequest true "Category Details"
+// @Success      200 {object} domain.Category "New Category"
+// @Failure      400 {string}  "invalid
+// @Failure      500 {string}  "invalid"
+// @Router       /categories [post]
 func (ctrl *CategoryController) CreateCategory(c *gin.Context) {
 	// Implementation for creating a category will go here
 	var req CreateCategoryRequest
@@ -27,8 +38,10 @@ func (ctrl *CategoryController) CreateCategory(c *gin.Context) {
 		return
 	}
 
+	orgID := c.GetString("userID")
+
 	category := &domain.Category{
-		OrganizationID: req.OrganizationID,
+		OrganizationID: orgID,
 		ParentID:       req.ParentID,
 		Title:          req.Title,
 	}
@@ -42,6 +55,21 @@ func (ctrl *CategoryController) CreateCategory(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Category created successfully", "category": category})
 }
 
+// @Summary      Get Categories
+// @Description  Get list of categories
+// @Tags         Category
+// @Accept       json
+// @Produce      json
+// @Param        page query string false "page"
+// @Param        limit query string false "limit"
+// @Param        sortOrder query string false "asc | desc"
+// @Param        parentID query string false "parentID"
+// @Param        organizationID query string false "organizationID"
+// @Param        title query string false "title"
+// @Success      200 {object} PaginatedCategoryResponse "List of Categories"
+// @Failure      400 {string}  "invalid
+// @Failure      500 {string}  "invalid"
+// @Router       /categories [get]
 func (ctrl *CategoryController) GetCategory(c *gin.Context) {
 	// Implementation for creating a category will go here
 	options := domain.CategorySearchAndFilter{}
@@ -67,8 +95,8 @@ func (ctrl *CategoryController) GetCategory(c *gin.Context) {
 		options.SortOrder = domain.SortDesc
 	}
 
-	options.ParentID = c.DefaultQuery("parentId", "")
-	options.OrganizationID = c.DefaultQuery("organizationId", "")
+	options.ParentID = c.DefaultQuery("parentID", "")
+	options.OrganizationID = c.DefaultQuery("organizationID", "")
 	options.Title = c.DefaultQuery("title", "")
 
 	categories, total, err := ctrl.categoryUsecase.GetCategories(c.Request.Context(), &options)

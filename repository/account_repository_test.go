@@ -206,44 +206,216 @@ func (s *AccountRepositoryTestSuite) TestMappingLogic() {
 	})
 }
 
+func (s *AccountRepositoryTestSuite) TestUpdateProfile() {
+	ctx := context.Background()
+
+	// First, create a user to update
+	original := &domain.Account{
+		Name:         "Original Name",
+		Email:        "updateprofile@example.com",
+		PasswordHash: "hashedpassword",
+		Role:         domain.RoleUser,
+		UserDetail: &domain.UserDetail{
+			Username:         "updateuser",
+			SubscriptionPlan: domain.SubscriptionNone,
+			IsBanned:         false,
+			IsVerified:       true,
+		},
+	}
+	err := s.repo.Create(ctx, original)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(original.ID)
+
+	s.Run("Success", func() {
+		updated := *original
+		updated.Name = "Updated Name"
+		updated.UserDetail.Username = "updateduser"
+
+		err := s.repo.UpdateProfile(ctx, updated)
+		s.NoError(err)
+
+		// Fetch and verify
+		fetched, err := s.repo.GetById(ctx, original.ID)
+		s.NoError(err)
+		s.Equal("Updated Name", fetched.Name)
+		s.Equal("updateduser", fetched.UserDetail.Username)
+	})
+
+	s.Run("Failure - Invalid ID", func() {
+		invalid := *original
+		invalid.ID = "badid"
+		err := s.repo.UpdateProfile(ctx, invalid)
+		s.ErrorIs(err, domain.ErrUserNotFound)
+	})
+
+	s.Run("Failure - Not Found", func() {
+		notFound := *original
+		notFound.ID = "507f1f77bcf86cd799439011" // valid ObjectID, but not in DB
+		err := s.repo.UpdateProfile(ctx, notFound)
+		s.ErrorIs(err, domain.ErrUserNotFound)
+	})
+}
+
 func (s *AccountRepositoryTestSuite) TestUpdatePassword() {
-    ctx := context.Background()
+	ctx := context.Background()
 
-    // Arrange: Create a user to update password for
-    account := &domain.Account{
-        Name:         "Password User",
-        Email:        "passworduser@example.com",
-        PasswordHash: "old_hash",
-        Role:         domain.RoleUser,
-        UserDetail: &domain.UserDetail{
-            Username: "passworduser",
-        },
-    }
-    err := s.repo.Create(ctx, account)
-    s.Require().NoError(err)
-    s.Require().NotEmpty(account.ID)
+	// Arrange: Create a user to update password for
+	account := &domain.Account{
+		Name:         "Password User",
+		Email:        "passworduser@example.com",
+		PasswordHash: "old_hash",
+		Role:         domain.RoleUser,
+		UserDetail: &domain.UserDetail{
+			Username: "passworduser",
+		},
+	}
+	err := s.repo.Create(ctx, account)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(account.ID)
 
-    s.Run("Success", func() {
-        newPassword := "new_hash"
-        err := s.repo.UpdatePassword(ctx, account.ID, newPassword)
-        s.NoError(err)
+	s.Run("Success", func() {
+		newPassword := "new_hash"
+		err := s.repo.UpdatePassword(ctx, account.ID, newPassword)
+		s.NoError(err)
 
-        // Verify in DB
-        var model AccountModel
-        objID, _ := primitive.ObjectIDFromHex(account.ID)
-        err = s.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&model)
-        s.NoError(err)
-        s.Equal(newPassword, model.PasswordHash)
-    })
+		// Verify in DB
+		var model AccountModel
+		objID, _ := primitive.ObjectIDFromHex(account.ID)
+		err = s.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&model)
+		s.NoError(err)
+		s.Equal(newPassword, model.PasswordHash)
+	})
 
-    s.Run("Failure - Invalid ID", func() {
-        err := s.repo.UpdatePassword(ctx, "badid", "irrelevant")
-        s.ErrorIs(err, domain.ErrNotFound)
-    })
+	s.Run("Failure - Invalid ID", func() {
+		err := s.repo.UpdatePassword(ctx, "badid", "irrelevant")
+		s.ErrorIs(err, domain.ErrNotFound)
+	})
 
-    s.Run("Failure - Not Found", func() {
-        nonExistentID := primitive.NewObjectID().Hex()
-        err := s.repo.UpdatePassword(ctx, nonExistentID, "irrelevant")
-        s.ErrorIs(err, domain.ErrNotFound)
-    })
+	s.Run("Failure - Not Found", func() {
+		nonExistentID := primitive.NewObjectID().Hex()
+		err := s.repo.UpdatePassword(ctx, nonExistentID, "irrelevant")
+		s.ErrorIs(err, domain.ErrNotFound)
+	})
+}
+
+func (s *AccountRepositoryTestSuite) TestExistsByEmail() {
+	ctx := context.Background()
+
+	// Arrange: Create a user with a known email
+	account := &domain.Account{
+		Name:         "Email Test User",
+		Email:        "exists@example.com",
+		PasswordHash: "hash",
+		Role:         domain.RoleUser,
+		UserDetail: &domain.UserDetail{
+			Username: "emailtestuser",
+		},
+	}
+	err := s.repo.Create(ctx, account)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(account.ID)
+
+	s.Run("Email Exists", func() {
+		exists, err := s.repo.ExistsByEmail(ctx, "exists@example.com", "")
+		s.NoError(err)
+		s.True(exists)
+	})
+
+	s.Run("Email Does Not Exist", func() {
+		exists, err := s.repo.ExistsByEmail(ctx, "nonexistent@example.com", "")
+		s.NoError(err)
+		s.False(exists)
+	})
+
+	s.Run("Email Exists But Excluded By ID", func() {
+		exists, err := s.repo.ExistsByEmail(ctx, "exists@example.com", account.ID)
+		s.NoError(err)
+		s.False(exists)
+	})
+
+	s.Run("Email Exists For Different User", func() {
+		// Create another user with different email
+		otherAccount := &domain.Account{
+			Name:         "Other User",
+			Email:        "other@example.com",
+			PasswordHash: "hash",
+			Role:         domain.RoleUser,
+			UserDetail: &domain.UserDetail{
+				Username: "otheruser",
+			},
+		}
+		err := s.repo.Create(ctx, otherAccount)
+		s.Require().NoError(err)
+
+		// Check if first user's email exists when excluding second user
+		exists, err := s.repo.ExistsByEmail(ctx, "exists@example.com", otherAccount.ID)
+		s.NoError(err)
+		s.True(exists)
+	})
+
+	s.Run("Invalid Exclude ID", func() {
+		_, err := s.repo.ExistsByEmail(ctx, "exists@example.com", "invalid-id")
+		s.Error(err)
+	})
+}
+
+func (s *AccountRepositoryTestSuite) TestExistsByUsername() {
+	ctx := context.Background()
+
+	// Arrange: Create a user with a known username
+	account := &domain.Account{
+		Name:         "Username Test User",
+		Email:        "username@example.com",
+		PasswordHash: "hash",
+		Role:         domain.RoleUser,
+		UserDetail: &domain.UserDetail{
+			Username: "existinguser",
+		},
+	}
+	err := s.repo.Create(ctx, account)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(account.ID)
+
+	s.Run("Username Exists", func() {
+		exists, err := s.repo.ExistsByUsername(ctx, "existinguser", "")
+		s.NoError(err)
+		s.True(exists)
+	})
+
+	s.Run("Username Does Not Exist", func() {
+		exists, err := s.repo.ExistsByUsername(ctx, "nonexistentuser", "")
+		s.NoError(err)
+		s.False(exists)
+	})
+
+	s.Run("Username Exists But Excluded By ID", func() {
+		exists, err := s.repo.ExistsByUsername(ctx, "existinguser", account.ID)
+		s.NoError(err)
+		s.False(exists)
+	})
+
+	s.Run("Username Exists For Different User", func() {
+		// Create another user with different username
+		otherAccount := &domain.Account{
+			Name:         "Other Username User",
+			Email:        "otherusername@example.com",
+			PasswordHash: "hash",
+			Role:         domain.RoleUser,
+			UserDetail: &domain.UserDetail{
+				Username: "otherusername",
+			},
+		}
+		err := s.repo.Create(ctx, otherAccount)
+		s.Require().NoError(err)
+
+		// Check if first user's username exists when excluding second user
+		exists, err := s.repo.ExistsByUsername(ctx, "existinguser", otherAccount.ID)
+		s.NoError(err)
+		s.True(exists)
+	})
+
+	s.Run("Invalid Exclude ID", func() {
+		_, err := s.repo.ExistsByUsername(ctx, "existinguser", "invalid-id")
+		s.Error(err)
+	})
 }

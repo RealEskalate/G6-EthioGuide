@@ -5,6 +5,7 @@ import "time"
 type Role string
 type Subscription string
 type OrganizationType string
+type AuthProvider string
 
 const (
 	RoleUser  Role = "user"
@@ -16,6 +17,10 @@ const (
 
 	OrgTypeGov     OrganizationType = "gov"
 	OrgTypePrivate OrganizationType = "private"
+
+	AuthProviderLocal  AuthProvider = "local"
+	AuthProviderGoogle AuthProvider = "google"
+	AuthProviderFaida  AuthProvider = "faida"
 )
 
 // IsValid checks if the role is one of the predefined valid roles.
@@ -51,6 +56,9 @@ type Account struct {
 	ProfilePicURL string
 	Role          Role
 	CreatedAt     time.Time
+
+	AuthProvider AuthProvider
+	ProviderID   string
 
 	UserDetail         *UserDetail
 	OrganizationDetail *OrganizationDetail
