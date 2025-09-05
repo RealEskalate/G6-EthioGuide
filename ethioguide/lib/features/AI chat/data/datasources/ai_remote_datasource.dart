@@ -158,7 +158,10 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
       }
 
       final List<dynamic> jsonList = response.data['history'];
-      return jsonList.map((json) => ConversationModel.fromJson(json)).toList();
+      final result = jsonList
+          .map((json) => ConversationModel.fromJson(json))
+          .toList();
+      return result;
     } on DioException catch (e) {
       // TODO: remove debug print
       debugPrint('##################################################');
