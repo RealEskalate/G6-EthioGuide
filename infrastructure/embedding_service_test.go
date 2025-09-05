@@ -24,7 +24,7 @@ func (s *EmbeddingServiceSuite) SetupSuite() {
 		s.T().Skip("Skipping EmbeddingService integration tests: EMBEDDING_URL not set.")
 	}
 	s.apiKey = append(s.apiKey, cfg.EmbeddingApiKey)
-	if len(s.apiKey) == 0 {
+	if len(s.apiKey) == 0 || s.apiKey[0] == "" {
 		s.T().Skip("Skipping EmbeddingService integration tests: api key not set.")
 
 	}
