@@ -115,6 +115,14 @@ func SetupRouter(
 				authGroup.PATCH("/me/preferences", PreferencesController.UpdateUserPreferences)
 			}
 
+			orgs := v1.Group("/orgs")
+			{
+				orgs.POST("", authMiddleware, requireAdminRole, userController.HandleCreateOrg)
+				orgs.GET("", userController.HandleGetOrgs)
+				orgs.GET("/:id", userController.HandleGetOrgById)
+				orgs.PATCH("/:id", authMiddleware, requireAdminRole, userController.HandleUpdateOrgs)
+			}
+
 			procedures := v1.Group("/procedures")
 			{
 				procedures.GET("", procedureController.SearchAndFilter)
@@ -170,12 +178,8 @@ func SetupRouter(
 		// 3) Organizations
 		orgs := v1.Group("/orgs")
 		{
-			orgs.POST("", handleCreateOrg)
 			orgs.GET("/pending", handleGetPendingOrgs)
 			orgs.PATCH("/:id/approve", handleApproveOrg)
-			orgs.GET("", handleGetOrgs)
-			orgs.GET("/:id", handleGetOrg)
-			orgs.PATCH("/:id", handleUpdateOrg)
 			orgs.GET("/:id/feedback", handleGetOrgFeedback)
 		}
 
@@ -332,16 +336,6 @@ func handleGetUserSummary(c *gin.Context) {
 }
 
 // 3) Organizations
-func handleCreateOrg(c *gin.Context) {
-	c.JSON(http.StatusCreated, gin.H{
-		"organization": gin.H{
-			"id":   "org_new_123",
-			"name": "New Government Office",
-			"type": "government",
-		},
-	})
-}
-
 func handleGetPendingOrgs(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data": []gin.H{
@@ -361,41 +355,6 @@ func handleApproveOrg(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"id":       c.Param("id"),
 		"approved": true,
-	})
-}
-
-func handleGetOrgs(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"data": []gin.H{
-			{
-				"id":   "org_456",
-				"name": "Ministry of Innovation",
-			},
-		},
-		"page":    1,
-		"limit":   20,
-		"total":   1,
-		"hasNext": false,
-	})
-}
-
-func handleGetOrg(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":          c.Param("id"),
-		"description": "Official government body for innovation.",
-		"location":    "Addis Ababa",
-		"type":        "government",
-		"contact_info": gin.H{
-			"email": "contact@moi.gov.et",
-		},
-		"phone_numbers": []string{"+25111223344"},
-	})
-}
-
-func handleUpdateOrg(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":          c.Param("id"),
-		"description": "Updated description.",
 	})
 }
 
