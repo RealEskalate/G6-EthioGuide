@@ -58,3 +58,11 @@ type IPreferencesRepository interface {
     GetByUserID(ctx context.Context, userID string) (*Preferences, error)
     UpdateByUserID(ctx context.Context, userID string, preferences *Preferences) error
 }
+
+type INoticeRepository interface {
+	Create(ctx context.Context, notice *Notice) error
+	GetByFilter(ctx context.Context, filter *NoticeFilter) ([]*Notice, error)
+	CountByFilter(ctx context.Context, filter *NoticeFilter) (int64, error)
+	Update(ctx context.Context, id string, notice *Notice) error
+	Delete(ctx context.Context, id string) error
+}
