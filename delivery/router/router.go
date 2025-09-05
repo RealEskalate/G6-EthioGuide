@@ -117,6 +117,15 @@ func SetupRouter(
 				authGroup.PATCH("/me/preferences", PreferencesController.UpdateUserPreferences)
 			}
 
+			checklists := v1.Group("/checklists")
+			checklists.Use(authMiddleware)
+			{
+				checklists.POST("", userController.HandleCreateChecklist)
+				checklists.GET("/:userProcedureId", userController.HandleGetChecklistById)
+				checklists.PATCH("/:checklistID", userController.HandleUpdateChecklist)
+				checklists.GET("/myProcedures", userController.HandleGetProcedures)
+			}
+
 			orgs := v1.Group("/orgs")
 			{
 				orgs.POST("", authMiddleware, requireAdminRole, userController.HandleCreateOrg)
@@ -199,15 +208,6 @@ func SetupRouter(
 			procedures.GET("/popular", handleGetPopularProcedures)
 			procedures.GET("/recent", handleGetRecentProcedures)
 		}
-
-		// 7) Checklists & Progress
-		checklists := v1.Group("/checklists")
-		{
-			checklists.POST("", handleCreateChecklist)
-			checklists.GET("/:userProcedureId", handleGetChecklistByUserProcedureId) // Assuming this mapping
-			checklists.PATCH("/:checklistID", handleUpdateChecklistItem)
-		}
-		v1.GET("/myProcedures", handleGetMyProcedures)
 
 		// 8) Documents & File Vault
 		v1.POST("/uploads/signature", handleUploadSignature)
@@ -444,59 +444,6 @@ func handleGetRecentProcedures(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data": []gin.H{{"id": "prc_789", "title": "New Business License", "updatedAt": time.Now().UTC().Format(time.RFC3339)}},
 	})
-}
-
-// 7) Checklists & Progress
-func handleCreateChecklist(c *gin.Context) {
-	c.JSON(http.StatusCreated, gin.H{
-		"id":          "chk_123",
-		"userId":      "user_abc",
-		"procedureId": "prc_123",
-		"checklists": []gin.H{
-			{"checklistID": "item_1", "text": "2 passport photos", "done": false},
-			{"checklistID": "item_2", "text": "Old passport", "done": false},
-		},
-		"status":    "NOT_STARTED",
-		"percent":   0,
-		"updatedAt": time.Now().UTC().Format(time.RFC3339),
-	})
-}
-
-func handleGetMyProcedures(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"data": []gin.H{
-			{
-				"userProcedureId": "up_123",
-				"procedureId":     "prc_123",
-				"procedureTitle":  "Passport Renewal",
-				"status":          "IN_PROGRESS",
-				"percent":         50,
-			},
-		},
-		"page":    1,
-		"limit":   20,
-		"total":   1,
-		"hasNext": false,
-	})
-}
-
-func handleGetChecklistByUserProcedureId(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"id":          c.Param("userProcedureId"),
-		"userId":      "user_abc",
-		"procedureId": "prc_123",
-		"checklists": []gin.H{
-			{"checklistID": "item_1", "text": "2 passport photos", "done": true},
-			{"checklistID": "item_2", "text": "Old passport", "done": false},
-		},
-		"status":    "IN_PROGRESS",
-		"percent":   50,
-		"updatedAt": time.Now().UTC().Format(time.RFC3339),
-	})
-}
-
-func handleUpdateChecklistItem(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"checklistID": c.Param("checklistID"), "done": true})
 }
 
 // 8) Documents & File Vault

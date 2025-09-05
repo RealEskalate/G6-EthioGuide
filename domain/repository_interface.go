@@ -73,3 +73,13 @@ type ISearchRepository interface {
 	FindProcedures(ctx context.Context, filter SearchFilterRequest) ([]*Procedure, error)
 	FindOrganizations(ctx context.Context, filter SearchFilterRequest) ([]*AccountOrgSearch, error)
 }
+
+type IChecklistRepository interface {
+	CreateChecklist(ctx context.Context, userid, procdureID string) (*UserProcedure, error)
+	GetProcedures(ctx context.Context, userid string) ([]*UserProcedure, error)
+	GetChecklistByUserProcedureID(ctx context.Context, userprocedureID string) ([]*Checklist, error)
+	ToggleCheck(ctx context.Context, checklistID string) error
+	FindCheck(ctx context.Context, checklistID string) (*Checklist, error)
+	CountDocumentsChecklist(ctx context.Context, filter interface{}) (int64, error)
+	UpdateUserProcedure(ctx context.Context, filter interface{}, update map[string]interface{}) error
+}

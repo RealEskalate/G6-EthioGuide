@@ -78,3 +78,10 @@ type INoticeUseCase interface {
 type ISearchUseCase interface {
 	Search(ctx context.Context, filter SearchFilterRequest) (*SearchResult, error)
 }
+
+type IChecklistUsecase interface {
+	CreateChecklist(ctx context.Context, userid, procedureID string) (*UserProcedure, error)
+	GetProcedures(ctx context.Context, userid string) ([]*UserProcedure, error)
+	GetChecklistByUserProcedureID(ctx context.Context, userprocedureID string) ([]*Checklist, error)
+	UpdateChecklist(ctx context.Context, checklistID string) (*Checklist, error)
+}

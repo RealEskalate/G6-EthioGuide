@@ -71,6 +71,7 @@ func main() {
 	noticeRepo := repository.NewNoticeRepository(db)
 	postRepo := repository.NewPostRepository(db)
 	searchRepo := repository.NewSearchRepository(db)
+	checklistRepo := repository.NewChecklistRepository(db)
 
 	// --- Infrastructure Services ---
 	// These are concrete implementations of external services.
@@ -107,9 +108,10 @@ func main() {
 
 	postUsecase := usecase.NewPostUseCase(postRepo, cfg.UsecaseTimeout)
 	searchUsecase := usecase.NewSearchUsecase(searchRepo, cfg.UsecaseTimeout)
+	checklistUsecase := usecase.NewChecklistUsecase(checklistRepo)
 	// --- Controllers ---
 	// Controllers handle the HTTP layer, delegating logic to use cases.
-	userController := controller.NewUserController(userUsecase, searchUsecase, cfg.JWTRefreshTTL)
+	userController := controller.NewUserController(userUsecase, searchUsecase, checklistUsecase, cfg.JWTRefreshTTL)
 	procedureController := controller.NewProcedureController(procedureUsecase)
 	catagoryController := controller.NewCategoryController(catagoryUsecase)
 	geminiController := controller.NewGeminiController(geminiUsecase)
