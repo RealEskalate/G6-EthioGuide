@@ -45,10 +45,16 @@ func (ctrl *ProcedureController) CreateProcedure(c *gin.Context) {
 		return
 	}
 
+	userRole, exists := c.Get("userRole")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User Role not found in token"})
+		return
+	}
+
 	proc.OrganizationID = userID.(string)
 
 	domainProc := toDomainProcedure(&proc)
-	err := ctrl.procedureUsecase.CreateProcedure(c.Request.Context(), domainProc)
+	err := ctrl.procedureUsecase.CreateProcedure(c.Request.Context(), domainProc, userID.(string), userRole.(domain.Role))
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -96,7 +102,20 @@ func (pc *ProcedureController) UpdateProcedure(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err := pc.procedureUsecase.UpdateProcedure(ctx.Request.Context(), id, &procedure)
+
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+
+	userRole, exists := ctx.Get("userRole")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User Role not found in token"})
+		return
+	}
+
+	err := pc.procedureUsecase.UpdateProcedure(ctx.Request.Context(), id, &procedure, userID.(string), userRole.(domain.Role))
 	if err != nil {
 		HandleError(ctx, err)
 		return
@@ -116,13 +135,27 @@ func (pc *ProcedureController) UpdateProcedure(ctx *gin.Context) {
 // @Router       /procedures/{id} [delete]
 func (pc *ProcedureController) DeleteProcedure(ctx *gin.Context) {
 	id := ctx.Param("id")
-	err := pc.procedureUsecase.DeleteProcedure(ctx.Request.Context(), id)
+
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+
+	userRole, exists := ctx.Get("userRole")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User Role not found in token"})
+		return
+	}
+
+	err := pc.procedureUsecase.DeleteProcedure(ctx.Request.Context(), id, userID.(string), userRole.(domain.Role))
 	if err != nil {
 		HandleError(ctx, err)
 		return
 	}
 	ctx.Status(http.StatusNoContent)
 }
+
 // @Summary      Search and Filter Procedures
 // @Description  Search and filter procedures with pagination, sorting, and various filters.
 // @Tags         Procedures
@@ -150,7 +183,7 @@ func (pc *ProcedureController) DeleteProcedure(ctx *gin.Context) {
 func (pc *ProcedureController) SearchAndFilter(c *gin.Context) {
 	options := domain.ProcedureSearchFilterOptions{
 		GlobalLogic: domain.GlobalLogicAND, // default
-		SortOrder:   domain.SortDesc,  // default newest first
+		SortOrder:   domain.SortDesc,       // default newest first
 	}
 
 	// --- Pagination ---

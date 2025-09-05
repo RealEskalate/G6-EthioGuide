@@ -109,6 +109,7 @@ func SetupRouter(
 
 			procedures := v1.Group("/procedures")
 			{
+				procedures.GET("", procedureController.SearchAndFilter)
 				procedures.POST("", authMiddleware, requireAdminOrOrgRole, procedureController.CreateProcedure)
 				procedures.GET("/:id", procedureController.GetProcedureByID)
 				procedures.PATCH("/:id", authMiddleware, requireAdminOrOrgRole, procedureController.UpdateProcedure)
@@ -180,7 +181,6 @@ func SetupRouter(
 		// 5) Procedures (core)
 		procedures := v1.Group("/procedures")
 		{
-			procedures.GET("", handleGetProcedures)
 			procedures.PATCH("/:id/verify", handleVerifyProcedure)
 			procedures.GET("/:id/audit", handleGetProcedureAudit)
 			procedures.GET("/popular", handleGetPopularProcedures)
@@ -459,43 +459,43 @@ func handleUpdateCategory(c *gin.Context) {
 
 // 5) Procedures (core)
 
-func handleGetProcedures(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"data": []gin.H{{
-			"id":      "prc_123",
-			"orgId":   "org_456",
-			"title":   "Passport Renewal",
-			"slug":    "passport-renewal",
-			"summary": "Renew your Ethiopian passport in 5 steps.",
-			"requirements": []gin.H{
-				{"text": "2 passport photos"},
-				{"text": "Old passport"},
-			},
-			"steps": []gin.H{
-				{"order": 1, "text": "Book appointment"},
-				{"order": 2, "text": "Submit documents"},
-			},
-			"fees": []gin.H{
-				{"label": "Processing", "amount": 500, "currency": "ETB"},
-			},
-			"processingTime": gin.H{"minDays": 7, "maxDays": 14},
-			"offices": []gin.H{
-				{"city": "Addis Ababa", "address": "...", "hours": "Mon–Fri"},
-			},
-			"documentsRequired": []gin.H{
-				{"name": "Application Form", "templateUrl": nil},
-			},
-			"tags":             []string{"passport", "id"},
-			"languageVersions": gin.H{"enId": "prc_123", "amId": "prc_789"},
-			"verified":         true,
-			"updatedAt":        "2025-08-20T12:00:00Z",
-		}},
-		"page":    1,
-		"limit":   20,
-		"total":   1,
-		"hasNext": false,
-	})
-}
+// func handleGetProcedures(c *gin.Context) {
+// 	c.JSON(http.StatusOK, gin.H{
+// 		"data": []gin.H{{
+// 			"id":      "prc_123",
+// 			"orgId":   "org_456",
+// 			"title":   "Passport Renewal",
+// 			"slug":    "passport-renewal",
+// 			"summary": "Renew your Ethiopian passport in 5 steps.",
+// 			"requirements": []gin.H{
+// 				{"text": "2 passport photos"},
+// 				{"text": "Old passport"},
+// 			},
+// 			"steps": []gin.H{
+// 				{"order": 1, "text": "Book appointment"},
+// 				{"order": 2, "text": "Submit documents"},
+// 			},
+// 			"fees": []gin.H{
+// 				{"label": "Processing", "amount": 500, "currency": "ETB"},
+// 			},
+// 			"processingTime": gin.H{"minDays": 7, "maxDays": 14},
+// 			"offices": []gin.H{
+// 				{"city": "Addis Ababa", "address": "...", "hours": "Mon–Fri"},
+// 			},
+// 			"documentsRequired": []gin.H{
+// 				{"name": "Application Form", "templateUrl": nil},
+// 			},
+// 			"tags":             []string{"passport", "id"},
+// 			"languageVersions": gin.H{"enId": "prc_123", "amId": "prc_789"},
+// 			"verified":         true,
+// 			"updatedAt":        "2025-08-20T12:00:00Z",
+// 		}},
+// 		"page":    1,
+// 		"limit":   20,
+// 		"total":   1,
+// 		"hasNext": false,
+// 	})
+// }
 
 func handleVerifyProcedure(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": c.Param("id"), "verified": true})
