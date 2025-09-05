@@ -335,10 +335,9 @@ export default function CityGovPortal() {
           }
         }
       `}</style>
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="lg:col-span-2 space-y-6">
             {/* Header Section */}
             <div className="bg-white rounded-lg p-6 mb-6 card-hover">
               <h1 className="text-2xl font-semibold text-[#2e4d57] mb-3">
@@ -469,9 +468,9 @@ export default function CityGovPortal() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 order-first lg:order-none">
             {/* Required Documents */}
-            <div className="bg-white rounded-lg p-6 card-hover">
+            <div className="bg-white rounded-lg p-5 sm:p-6 card-hover">
               <h3 className="font-medium text-[#2e4d57] mb-4">Required Documents</h3>
 
               {/* changed: do not render checklistData.checklists here anymore; keep static fallback */}
@@ -635,3 +634,4 @@ export default function CityGovPortal() {
     </div>
   )
 }
+

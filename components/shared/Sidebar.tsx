@@ -32,7 +32,6 @@ export function Sidebar() {
   return (
     <UserSidebar
       menuItems={menuItemsWithHandlers}
-      onSettingsClick={handleSettingsClick}
       onLogoutClick={handleLogoutClick}
     />
   );
