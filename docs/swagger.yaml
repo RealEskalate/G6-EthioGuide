@@ -1,5 +1,10 @@
 basePath: /api/v1
 definitions:
+  controller.ActivateDTO:
+    properties:
+      activatationToken:
+        type: string
+    type: object
   controller.CategoryResponse:
     properties:
       id:
@@ -139,6 +144,11 @@ definitions:
     required:
     - status
     type: object
+  controller.ForgotDTO:
+    properties:
+      email:
+        type: string
+    type: object
   controller.LoginRequest:
     properties:
       identifier:
@@ -200,6 +210,37 @@ definitions:
       total:
         type: integer
     type: object
+  controller.PaginatedProcedureResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/controller.ProcedureResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/controller.Pagination'
+    type: object
+  controller.Pagination:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  controller.ProcedureContentResponse:
+    properties:
+      prerequisites:
+        items:
+          type: string
+        type: array
+      result:
+        type: string
+      steps:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
   controller.ProcedureCreateRequest:
     properties:
       amount:
@@ -232,6 +273,45 @@ definitions:
           type: string
         type: object
     type: object
+  controller.ProcedureFeeResponse:
+    properties:
+      amount:
+        type: number
+      currency:
+        type: string
+      label:
+        type: string
+    type: object
+  controller.ProcedureResponse:
+    properties:
+      content:
+        $ref: '#/definitions/controller.ProcedureContentResponse'
+      createdAt:
+        type: string
+      fees:
+        $ref: '#/definitions/controller.ProcedureFeeResponse'
+      groupId:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      noticeIds:
+        items:
+          type: string
+        type: array
+      organizationId:
+        type: string
+      processingTime:
+        $ref: '#/definitions/controller.ProcessingTimeResponse'
+    type: object
+  controller.ProcessingTimeResponse:
+    properties:
+      maxDays:
+        type: integer
+      minDays:
+        type: integer
+    type: object
   controller.RegisterRequest:
     properties:
       email:
@@ -251,6 +331,13 @@ definitions:
     - name
     - password
     - username
+    type: object
+  controller.ResetDTO:
+    properties:
+      new_password:
+        type: string
+      resetToken:
+        type: string
     type: object
   controller.SocialLoginRequest:
     properties:
@@ -614,6 +701,36 @@ paths:
       summary: Translate Content
       tags:
       - AI
+  /auth/forgot:
+    post:
+      consumes:
+      - application/json
+      description: Forgot password.
+      parameters:
+      - description: User Email
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ForgotDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reset token sent
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Forgot Password
+      tags:
+      - Authentication
   /auth/login:
     post:
       consumes:
@@ -642,6 +759,39 @@ paths:
           schema:
             type: string
       summary: Login a new user
+      tags:
+      - Authentication
+  /auth/logout/:
+    post:
+      consumes:
+      - application/json
+      description: Logout a user.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Log out successful
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Logout
       tags:
       - Authentication
   /auth/me:
@@ -822,6 +972,36 @@ paths:
       summary: Register a new user
       tags:
       - Authentication
+  /auth/reset:
+    post:
+      consumes:
+      - application/json
+      description: Reset password.
+      parameters:
+      - description: Reset Token and New Password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ResetDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reset token sent
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Reset Password
+      tags:
+      - Authentication
   /auth/social:
     post:
       consumes:
@@ -850,6 +1030,36 @@ paths:
           schema:
             type: string
       summary: Social Login
+      tags:
+      - Authentication
+  /auth/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verify User Account.
+      parameters:
+      - description: Reset Token and New Password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ActivateDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reset token sent
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Verify Account
       tags:
       - Authentication
   /categories:
@@ -1188,6 +1398,70 @@ paths:
       tags:
       - Feedback
   /procedures:
+    get:
+      consumes:
+      - application/json
+      description: Search and filter procedures with pagination, sorting, and various
+        filters.
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Results per page (default 10)
+        in: query
+        name: limit
+        type: integer
+      - description: Search by procedure name
+        in: query
+        name: name
+        type: string
+      - description: Filter by organization ID
+        in: query
+        name: organizationID
+        type: string
+      - description: Filter by group ID
+        in: query
+        name: groupID
+        type: string
+      - description: Minimum processing days
+        in: query
+        name: minProcessingDays
+        type: integer
+      - description: Maximum processing days
+        in: query
+        name: maxProcessingDays
+        type: integer
+      - description: Sort by field (e.g. createdAt, fee, processingTime)
+        in: query
+        name: sortBy
+        type: string
+      - description: 'Sort order: ASC or DESC (default DESC)'
+        in: query
+        name: sortOrder
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.PaginatedProcedureResponse'
+        "400":
+          description: Invalid parameter
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Search and Filter Procedures
+      tags:
+      - Procedures
     post:
       consumes:
       - application/json

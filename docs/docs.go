@@ -83,6 +83,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/forgot": {
+            "post": {
+                "description": "Forgot password.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Forgot Password",
+                "parameters": [
+                    {
+                        "description": "User Email",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.ForgotDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reset token sent",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Login a user account with the provided details.",
@@ -122,6 +168,56 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "invalid",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout/": {
+            "post": {
+                "description": "Logout a user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Log out successful",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "string"
                         }
@@ -399,6 +495,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/reset": {
+            "post": {
+                "description": "Reset password.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Reset Password",
+                "parameters": [
+                    {
+                        "description": "Reset Token and New Password",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.ResetDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reset token sent",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/social": {
             "post": {
                 "description": "Login with third party auth.",
@@ -428,6 +570,52 @@ const docTemplate = `{
                         "description": "Login successful",
                         "schema": {
                             "$ref": "#/definitions/controller.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/verify": {
+            "post": {
+                "description": "Verify User Account.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Verify Account",
+                "parameters": [
+                    {
+                        "description": "Reset Token and New Password",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.ActivateDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reset token sent",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -950,6 +1138,101 @@ const docTemplate = `{
             }
         },
         "/procedures": {
+            "get": {
+                "description": "Search and filter procedures with pagination, sorting, and various filters.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Procedures"
+                ],
+                "summary": "Search and Filter Procedures",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Results per page (default 10)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by procedure name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by organization ID",
+                        "name": "organizationID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by group ID",
+                        "name": "groupID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Minimum processing days",
+                        "name": "minProcessingDays",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Maximum processing days",
+                        "name": "maxProcessingDays",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by field (e.g. createdAt, fee, processingTime)",
+                        "name": "sortBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order: ASC or DESC (default DESC)",
+                        "name": "sortOrder",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.PaginatedProcedureResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid parameter",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create new procedure.",
                 "consumes": [
@@ -1287,6 +1570,14 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controller.ActivateDTO": {
+            "type": "object",
+            "properties": {
+                "activatationToken": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.CategoryResponse": {
             "type": "object",
             "properties": {
@@ -1495,6 +1786,14 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.ForgotDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.LoginRequest": {
             "type": "object",
             "required": [
@@ -1588,6 +1887,54 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.PaginatedProcedureResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.ProcedureResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/controller.Pagination"
+                }
+            }
+        },
+        "controller.Pagination": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "controller.ProcedureContentResponse": {
+            "type": "object",
+            "properties": {
+                "prerequisites": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "result": {
+                    "type": "string"
+                },
+                "steps": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "controller.ProcedureCreateRequest": {
             "type": "object",
             "properties": {
@@ -1635,6 +1982,66 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.ProcedureFeeResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.ProcedureResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "$ref": "#/definitions/controller.ProcedureContentResponse"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "fees": {
+                    "$ref": "#/definitions/controller.ProcedureFeeResponse"
+                },
+                "groupId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "noticeIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "organizationId": {
+                    "type": "string"
+                },
+                "processingTime": {
+                    "$ref": "#/definitions/controller.ProcessingTimeResponse"
+                }
+            }
+        },
+        "controller.ProcessingTimeResponse": {
+            "type": "object",
+            "properties": {
+                "maxDays": {
+                    "type": "integer"
+                },
+                "minDays": {
+                    "type": "integer"
+                }
+            }
+        },
         "controller.RegisterRequest": {
             "type": "object",
             "required": [
@@ -1660,6 +2067,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.ResetDTO": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string"
+                },
+                "resetToken": {
                     "type": "string"
                 }
             }
