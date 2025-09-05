@@ -24,6 +24,7 @@ func SetupRouter(
 	postController *controller.PostController,
 	noticeController *controller.NoticeController,
 	PreferencesController *controller.PreferencesController,
+	aiChatController *controller.AIChatController,
 	authMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
 	requireAdminRole gin.HandlerFunc,
@@ -79,8 +80,11 @@ func SetupRouter(
 			// --- Standard User Routes ---
 			// Any logged-in user (regardless of role or subscription) can access these.
 			aiGroup := apiGroup.Group("/ai")
+			aiGroup.Use(authMiddleware)
 			{
 				aiGroup.POST("/translate", geminiController.Translate)
+				aiGroup.POST("/guide", aiChatController.AIChatController)
+				// aiGroup.GET("/history")
 			}
 
 			// --- PRO Subscription Routes ---
@@ -257,7 +261,6 @@ func SetupRouter(
 		// 13) AI Guidance (Gemini)
 		ai := v1.Group("/ai")
 		{
-			ai.POST("/guide", handleAIGuide)
 			ai.GET("/history", handleAIGetHistory)
 			ai.POST("/mark-not-verified", handleAIMarkNotVerified)
 			ai.POST("/speech-to-text", handleAISpeechToText)
@@ -591,14 +594,14 @@ func handleGetNotice(c *gin.Context) {
 }
 
 // 13) AI Guidance
-func handleAIGuide(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"response":  "Here are the verified steps...",
-		"source":    "official",
-		"citations": []gin.H{{"type": "procedure", "id": "prc_123"}},
-		"verified":  true,
-	})
-}
+// func handleAIGuide(c *gin.Context) {
+// 	c.JSON(http.StatusOK, gin.H{
+// 		"response":  "Here are the verified steps...",
+// 		"source":    "official",
+// 		"citations": []gin.H{{"type": "procedure", "id": "prc_123"}},
+// 		"verified":  true,
+// 	})
+// }
 
 func handleAIGetHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
@@ -608,10 +611,11 @@ func handleAIGetHistory(c *gin.Context) {
 				"request":  "How to renew passport?",
 				"response": "Here are the verified steps...",
 				"source":   "official",
-				"procedures": []gin.H{{
-					"id":   "id",
-					"name": "name",
-				},
+				"procedures": []gin.H{
+					{
+						"id":   "id",
+						"name": "name",
+					},
 					{
 						"id":   "id2",
 						"name": "name2",

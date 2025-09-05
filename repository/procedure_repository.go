@@ -1,3 +1,4 @@
+// CreateEmbeddingVectorIndex creates a vector index on the 'embedding' field for vector search.
 package repository
 
 import (
@@ -38,6 +39,7 @@ type ProcedureModel struct {
 	OrganizationID primitive.ObjectID    `bson:"organization_id"`
 	Name           string                `bson:"name"`
 	Content        ProcedureContentModel `bson:"content"`
+	Embedding      []float64             `bson:"embedding,omitempty"`
 	Fees           ProcedureFeeModel     `bson:"fees,omitempty"`
 	ProcessingTime ProcessingTimeModel   `bson:"processing_time,omitempty"`
 	CreatedAt      time.Time             `bson:"created_at"`
@@ -358,4 +360,43 @@ func (r *ProcedureRepository) SearchAndFilter(ctx context.Context, opts domain.P
 	}
 
 	return results, total, nil
+}
+
+func (r *ProcedureRepository) SearchByEmbedding(ctx context.Context, queryVec []float64, limit int) ([]*domain.Procedure, error) {
+	// Vector search stage
+	searchStage := bson.D{
+		{Key: "$vectorSearch", Value: bson.D{
+			{Key: "index", Value: "vector_index"}, // must match your Atlas vector index name
+			{Key: "path", Value: "embedding"},     // the field that stores vectors
+			{Key: "queryVector", Value: queryVec}, // the query embedding
+			{Key: "numCandidates", Value: 100},    // candidate pool before top-k filtering
+			{Key: "limit", Value: limit},          // top-k results
+		}},
+	}
+
+	// // You can add a $project stage if you want only specific fields
+	// projectStage := bson.D{
+	//     {"$project", bson.D{
+	//         {"title", 1},
+	//         {"requirements", 1},
+	//         {"steps", 1},
+	//         {"fees", 1},
+	//         {"score", bson.D{{"$meta", "vectorSearchScore"}}}, // optional score
+	//     }},
+	// }
+
+	// pipeline := mongo.Pipeline{searchStage, projectStage}
+	pipeline := mongo.Pipeline{searchStage}
+
+	cursor, err := r.col.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []*domain.Procedure
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+	return results, nil
 }

@@ -40,6 +40,10 @@ type ICategoryUsecase interface {
 	GetCategories(ctx context.Context, options *CategorySearchAndFilter) ([]*Category, int64, error)
 }
 
+type IAIChatUsecase interface {
+	AIchat(ctx context.Context, query string) (string, error)
+}
+
 type IProcedureUsecase interface {
 	CreateProcedure(ctx context.Context, procedure *Procedure, userId string, userRole Role) error
 	UpdateProcedure(ctx context.Context, id string, procedure *Procedure, userId string, userRole Role) error

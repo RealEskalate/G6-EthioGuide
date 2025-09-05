@@ -72,6 +72,7 @@ func main() {
 	postRepo := repository.NewPostRepository(db)
 	searchRepo := repository.NewSearchRepository(db)
 	checklistRepo := repository.NewChecklistRepository(db)
+	aiChatRepo := repository.NewAIChatRepository(db)
 
 	// --- Infrastructure Services ---
 	// These are concrete implementations of external services.
@@ -85,6 +86,12 @@ func main() {
 	aiService, err := infrastructure.NewGeminiAIService(cfg.GeminiAPIKey, cfg.GeminiModel)
 	if err != nil {
 		log.Printf("WARN: Failed to initialize AI service: %v. AI features will be unavailable.", err)
+	}
+	var apiKeys []string
+	apiKeys = append(apiKeys, cfg.EmbeddingApiKey)
+	embeddingService, err := infrastructure.NewEmbeddingService(apiKeys, cfg.EmbeddingUrl)
+	if err != nil {
+		log.Printf("WARN: Failed to initialize the Embedding service: %v. Embedding service will be unavailable.", err)
 	}
 
 	// --- Use Cases ---
@@ -105,6 +112,7 @@ func main() {
 	feedbackUsecase := usecase.NewFeedbackUsecase(feedbackRepo, procedureRepo, cfg.UsecaseTimeout)
 	noticeUsecase := usecase.NewNoticeUsecase(noticeRepo)
 	preferencesUsecase := usecase.NewPreferencesUsecase(preferencesRepo)
+	aiChatUsecase := usecase.NewChatUsecase(embeddingService, procedureRepo, aiChatRepo, aiService)
 
 	postUsecase := usecase.NewPostUseCase(postRepo, cfg.UsecaseTimeout)
 	searchUsecase := usecase.NewSearchUsecase(searchRepo, cfg.UsecaseTimeout)
@@ -118,6 +126,7 @@ func main() {
 	feedbackController := controller.NewFeedbackController(feedbackUsecase)
 	noticeController := controller.NewNoticeController(noticeUsecase)
 	preferencesController := controller.NewPreferencesController(preferencesUsecase)
+	aiChatController := controller.NewAIChatController(aiChatUsecase)
 
 	postController := controller.NewPostController(postUsecase)
 	// --- Middleware ---
@@ -138,6 +147,7 @@ func main() {
 		postController,
 		noticeController,
 		preferencesController,
+		aiChatController,
 		authMiddleware,
 		proOnlyMiddleware,
 		requireAdminRole,

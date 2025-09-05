@@ -57,6 +57,9 @@ type UpdateOrgRequest struct {
 type TranslateDTO struct {
 	Content string `json:"content" binding:"required"`
 }
+type ChatRequest struct {
+	Content string `json:"content" binding:"required"`
+}
 
 type LoginRequest struct {
 	Identifier string `json:"identifier" binding:"required"`
@@ -688,4 +691,12 @@ func ToControllerChecklist(check *domain.Checklist) *ChecklistResponse {
 		Content:         check.Content,
 		IsChecked:       check.IsChecked,
 	}
+}
+
+type AIChatRequest struct {
+	Query string `json:"query" binding:"required"`
+}
+
+type AIChatResponse struct {
+	Answer string `json:"answer"`
 }

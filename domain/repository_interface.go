@@ -37,6 +37,7 @@ type IProcedureRepository interface {
 	Update(ctx context.Context, id string, procedure *Procedure) error
 	Delete(ctx context.Context, id string) error
 	SearchAndFilter(ctx context.Context, opttions ProcedureSearchFilterOptions) ([]*Procedure, int64, error)
+	SearchByEmbedding(ctx context.Context, queryVec []float64, limit int) ([]*Procedure, error)
 }
 
 type IFeedbackRepository interface {
@@ -82,4 +83,10 @@ type IChecklistRepository interface {
 	FindCheck(ctx context.Context, checklistID string) (*Checklist, error)
 	CountDocumentsChecklist(ctx context.Context, filter interface{}) (int64, error)
 	UpdateUserProcedure(ctx context.Context, filter interface{}, update map[string]interface{}) error
+}
+
+type IAIChatRepository interface {
+	Save(ctx context.Context, chat *AIChat) error
+	GetByUser(ctx context.Context, userID string, limit int) ([]*AIChat, error)
+	DeleteByUser(ctx context.Context, userID string) error
 }

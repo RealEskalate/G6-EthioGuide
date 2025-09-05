@@ -45,6 +45,8 @@ type Config struct {
 
 	VerificationFrontendUrl  string
 	ResetPasswordFrontendUrl string
+	EmbeddingUrl string
+	EmbeddingApiKey string
 }
 
 // Load loads the configuration from .env files and environment variables.
@@ -97,7 +99,9 @@ func Load() *Config {
 
 		VerificationFrontendUrl:  getEnv("VERIFICATION_FRONTEND_URL", "http://localhost:8080/api/v1/auth/verify"),
 		ResetPasswordFrontendUrl: getEnv("RESET_PASSWORD_FRONTEND_URL", "http://localhost:8080/api/v1/password/reset"),
-	}
+		EmbeddingUrl: getEnv("EMBEDDING_URL","https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"),
+		EmbeddingApiKey: getEnv("HF_EMBEDDING_API_KEY", ""),
+	} 
 }
 
 // getEnv is a helper to read an environment variable or return a fallback.
