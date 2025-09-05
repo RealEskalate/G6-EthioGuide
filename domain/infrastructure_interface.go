@@ -49,6 +49,7 @@ type IJWTService interface {
 	ValidateToken(tokenString string) (*JWTClaims, error)
 	ParseExpiredToken(tokenString string) (*JWTClaims, error)
 	GetRefreshTokenExpiry() time.Duration
+	GenerateUtilityToken(userID string) (string, *JWTClaims, error)
 }
 
 type IPasswordService interface {

@@ -11,8 +11,12 @@ COPY go.mod go.sum ./
 # Download dependencies. This is cached as a separate layer, so it only re-runs if dependencies change.
 RUN go mod download
 
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+
 # Copy the rest of the application source code.
 COPY . .
+
+RUN /go/bin/swag init -g ./delivery/main.go
 
 # Build the Go application.
 # -o /app/server specifies the output path for the binary.

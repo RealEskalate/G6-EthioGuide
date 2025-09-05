@@ -18,6 +18,17 @@ func NewGeminiController(geminiUseCase domain.IGeminiUseCase) *GeminiController 
 	}
 }
 
+// @Summary      Translate Content
+// @Description  Get translation of content in different languages.
+// @Tags         AI
+// @Param        lang  header  string  false  "Preferred language (default: en)"
+// @Param        Authorization header string true "Bearer token"
+// @Param        request body TranslateDTO true "Content to be translated"
+// @Success      200  {string}  "Translated output"
+// @Failure      401  {string}  Unauthorized
+// @Failure      403  {string}  Permission Denied
+// @Failure      404  {string}  Procedure not found
+// @Router       /ai/translate [post]
 func (gc *GeminiController) Translate(c *gin.Context) {
 
 	var request TranslateDTO

@@ -1,0 +1,1694 @@
+basePath: /api/v1
+definitions:
+  controller.ActivateDTO:
+    properties:
+      activatationToken:
+        type: string
+    type: object
+  controller.CategoryResponse:
+    properties:
+      id:
+        type: string
+      organization_id:
+        type: string
+      parent_id:
+        type: string
+      title:
+        type: string
+    type: object
+  controller.ChangePasswordRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  controller.ContactInfoUpdate:
+    properties:
+      socials:
+        additionalProperties:
+          type: string
+        type: object
+      website:
+        type: string
+    type: object
+  controller.CreateCategoryRequest:
+    properties:
+      id:
+        type: string
+      organization_id:
+        description: OrganizationID string `json:"organization_id" binding:"required"`
+        type: string
+      parent_id:
+        type: string
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  controller.CreatePostDTO:
+    properties:
+      content:
+        type: string
+      procedures:
+        items:
+          type: string
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    required:
+    - content
+    - title
+    type: object
+  controller.FeedbackCreateRequest:
+    properties:
+      content:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        enum:
+        - inaccuracy
+        - outdated
+        - thanks
+        - missing
+        type: string
+    required:
+    - content
+    - type
+    type: object
+  controller.FeedbackListResponse:
+    properties:
+      feedbacks:
+        items:
+          $ref: '#/definitions/controller.FeedbackResponse'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  controller.FeedbackResponse:
+    properties:
+      admin_response:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      dislike_count:
+        type: integer
+      id:
+        type: string
+      like_count:
+        type: integer
+      procedure_id:
+        type: string
+      status:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      view_count:
+        type: integer
+    type: object
+  controller.FeedbackStatePatchRequest:
+    properties:
+      admin_response:
+        type: string
+      status:
+        enum:
+        - new
+        - in_progress
+        - resolved
+        - declined
+        type: string
+    required:
+    - status
+    type: object
+  controller.ForgotDTO:
+    properties:
+      email:
+        type: string
+    type: object
+  controller.LoginRequest:
+    properties:
+      identifier:
+        type: string
+      password:
+        type: string
+    required:
+    - identifier
+    - password
+    type: object
+  controller.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/controller.UserResponse'
+    type: object
+  controller.OrganizationDetailUpdate:
+    properties:
+      contactInfo:
+        $ref: '#/definitions/controller.ContactInfoUpdate'
+      description:
+        type: string
+      location:
+        type: string
+      phoneNumbers:
+        items:
+          type: string
+        type: array
+      type:
+        description: '"gov" | "private"'
+        type: string
+    type: object
+  controller.PaginatedCategoryResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/controller.CategoryResponse'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  controller.PaginatedPostsResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      posts:
+        items:
+          $ref: '#/definitions/domain.Post'
+        type: array
+      total:
+        type: integer
+    type: object
+  controller.PaginatedProcedureResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/controller.ProcedureResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/controller.Pagination'
+    type: object
+  controller.Pagination:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  controller.ProcedureContentResponse:
+    properties:
+      prerequisites:
+        items:
+          type: string
+        type: array
+      result:
+        type: string
+      steps:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  controller.ProcedureCreateRequest:
+    properties:
+      amount:
+        type: number
+      currency:
+        type: string
+      groupId:
+        type: string
+      label:
+        description: Fees
+        type: string
+      maxDays:
+        type: integer
+      minDays:
+        description: ProcessingTime
+        type: integer
+      name:
+        type: string
+      organizationId:
+        type: string
+      prerequisites:
+        description: content
+        items:
+          type: string
+        type: array
+      result:
+        type: string
+      steps:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  controller.ProcedureFeeResponse:
+    properties:
+      amount:
+        type: number
+      currency:
+        type: string
+      label:
+        type: string
+    type: object
+  controller.ProcedureResponse:
+    properties:
+      content:
+        $ref: '#/definitions/controller.ProcedureContentResponse'
+      createdAt:
+        type: string
+      fees:
+        $ref: '#/definitions/controller.ProcedureFeeResponse'
+      groupId:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      noticeIds:
+        items:
+          type: string
+        type: array
+      organizationId:
+        type: string
+      processingTime:
+        $ref: '#/definitions/controller.ProcessingTimeResponse'
+    type: object
+  controller.ProcessingTimeResponse:
+    properties:
+      maxDays:
+        type: integer
+      minDays:
+        type: integer
+    type: object
+  controller.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      preferredLang:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - username
+    type: object
+  controller.ResetDTO:
+    properties:
+      new_password:
+        type: string
+      resetToken:
+        type: string
+    type: object
+  controller.SocialLoginRequest:
+    properties:
+      code:
+        type: string
+      provider:
+        $ref: '#/definitions/domain.AuthProvider'
+    required:
+    - code
+    - provider
+    type: object
+  controller.TranslateDTO:
+    properties:
+      content:
+        type: string
+    required:
+    - content
+    type: object
+  controller.UpdatePostDTO:
+    properties:
+      content:
+        type: string
+      procedures:
+        items:
+          type: string
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    type: object
+  controller.UserDetailUpdate:
+    properties:
+      username:
+        type: string
+    type: object
+  controller.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      is_verified:
+        type: boolean
+      name:
+        type: string
+      profile_picture:
+        type: string
+      role:
+        $ref: '#/definitions/domain.Role'
+      username:
+        type: string
+    type: object
+  controller.UserUpdateRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      organizationDetail:
+        $ref: '#/definitions/controller.OrganizationDetailUpdate'
+      profilePicURL:
+        type: string
+      userDetail:
+        allOf:
+        - $ref: '#/definitions/controller.UserDetailUpdate'
+        description: Mutually exclusive blocks
+    type: object
+  domain.Account:
+    properties:
+      authProvider:
+        $ref: '#/definitions/domain.AuthProvider'
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      organizationDetail:
+        $ref: '#/definitions/domain.OrganizationDetail'
+      passwordHash:
+        type: string
+      profilePicURL:
+        type: string
+      providerID:
+        type: string
+      role:
+        $ref: '#/definitions/domain.Role'
+      userDetail:
+        $ref: '#/definitions/domain.UserDetail'
+    type: object
+  domain.AuthProvider:
+    enum:
+    - local
+    - google
+    - faida
+    type: string
+    x-enum-varnames:
+    - AuthProviderLocal
+    - AuthProviderGoogle
+    - AuthProviderFaida
+  domain.Category:
+    properties:
+      id:
+        type: string
+      organizationID:
+        type: string
+      parentID:
+        type: string
+      title:
+        type: string
+    type: object
+  domain.ContactInfo:
+    properties:
+      socials:
+        additionalProperties:
+          type: string
+        type: object
+      website:
+        type: string
+    type: object
+  domain.Feedback:
+    properties:
+      adminResponse:
+        type: string
+      content:
+        type: string
+      createdAT:
+        type: string
+      dislikeCount:
+        type: integer
+      id:
+        type: string
+      likeCount:
+        type: integer
+      procedureID:
+        type: string
+      status:
+        $ref: '#/definitions/domain.FeedbackStatus'
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        $ref: '#/definitions/domain.FeedbackType'
+      updatedAT:
+        type: string
+      userID:
+        type: string
+      viewCount:
+        type: integer
+    type: object
+  domain.FeedbackStatus:
+    enum:
+    - new
+    - in_progress
+    - resolved
+    - declined
+    type: string
+    x-enum-varnames:
+    - NewFeedback
+    - InProgressFeedback
+    - ResolvedFeedback
+    - DeclinedFeedback
+  domain.FeedbackType:
+    enum:
+    - inaccuracy
+    - outdated
+    - thanks
+    - missing
+    type: string
+    x-enum-varnames:
+    - InaccuracyFeedback
+    - OutdatedFeedback
+    - ThanksFeedback
+    - MissingFeedback
+  domain.OrganizationDetail:
+    properties:
+      contactInfo:
+        $ref: '#/definitions/domain.ContactInfo'
+      description:
+        type: string
+      location:
+        type: string
+      phoneNumbers:
+        items:
+          type: string
+        type: array
+      type:
+        $ref: '#/definitions/domain.OrganizationType'
+    type: object
+  domain.OrganizationType:
+    enum:
+    - gov
+    - private
+    type: string
+    x-enum-varnames:
+    - OrgTypeGov
+    - OrgTypePrivate
+  domain.Post:
+    properties:
+      content:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      procedures:
+        items:
+          type: string
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      updatedAt:
+        type: string
+      userID:
+        type: string
+    type: object
+  domain.Procedure:
+    properties:
+      content:
+        $ref: '#/definitions/domain.ProcedureContent'
+      createdAt:
+        type: string
+      fees:
+        $ref: '#/definitions/domain.ProcedureFee'
+      groupID:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      noticeIDs:
+        items:
+          type: string
+        type: array
+      organizationID:
+        type: string
+      processingTime:
+        $ref: '#/definitions/domain.ProcessingTime'
+    type: object
+  domain.ProcedureContent:
+    properties:
+      prerequisites:
+        items:
+          type: string
+        type: array
+      result:
+        type: string
+      steps:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  domain.ProcedureFee:
+    properties:
+      amount:
+        format: float64
+        type: number
+      currency:
+        type: string
+      label:
+        type: string
+    type: object
+  domain.ProcessingTime:
+    properties:
+      maxDays:
+        type: integer
+      minDays:
+        type: integer
+    type: object
+  domain.Role:
+    enum:
+    - user
+    - admin
+    - org
+    type: string
+    x-enum-varnames:
+    - RoleUser
+    - RoleAdmin
+    - RoleOrg
+  domain.Subscription:
+    enum:
+    - none
+    - pro
+    type: string
+    x-enum-varnames:
+    - SubscriptionNone
+    - SubscriptionPro
+  domain.UserDetail:
+    properties:
+      isBanned:
+        type: boolean
+      isVerified:
+        type: boolean
+      subscriptionPlan:
+        $ref: '#/definitions/domain.Subscription'
+      username:
+        type: string
+    type: object
+host: ethio-guide-backend.onrender.com
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is the API server for the EthioGuide application.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: EthioGuide API
+  version: "1.0"
+paths:
+  /ai/translate:
+    post:
+      description: Get translation of content in different languages.
+      parameters:
+      - description: 'Preferred language (default: en)'
+        in: header
+        name: lang
+        type: string
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Content to be translated
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.TranslateDTO'
+      responses:
+        "200":
+          description: Translated output
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Translate Content
+      tags:
+      - AI
+  /auth/forgot:
+    post:
+      consumes:
+      - application/json
+      description: Forgot password.
+      parameters:
+      - description: User Email
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ForgotDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reset token sent
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Forgot Password
+      tags:
+      - Authentication
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login a user account with the provided details.
+      parameters:
+      - description: User Registration Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Login Successful
+          schema:
+            $ref: '#/definitions/controller.LoginResponse'
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Login a new user
+      tags:
+      - Authentication
+  /auth/logout/:
+    post:
+      consumes:
+      - application/json
+      description: Logout a user.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Log out successful
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Logout
+      tags:
+      - Authentication
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: Get user's profile detail.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile Retrieved
+          schema:
+            $ref: '#/definitions/controller.UserResponse'
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "404":
+          description: Invalid request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get Profile
+      tags:
+      - Authentication
+  /auth/me/:
+    patch:
+      consumes:
+      - application/json
+      description: Update user's profile.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Updated Account Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.UserUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Account Updated
+          schema:
+            $ref: '#/definitions/domain.Account'
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Update Profile
+      tags:
+      - Authentication
+  /auth/me/password:
+    patch:
+      consumes:
+      - application/json
+      description: Update user's password.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Password Change Detail
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password changed
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Update password
+      tags:
+      - Authentication
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh Access Token for web and mobile
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New Access Token
+          schema:
+            type: string
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "409":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Refresh Access Token
+      tags:
+      - Authentication
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account with the provided details.
+      parameters:
+      - description: User Registration Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created Successfully
+          schema:
+            $ref: '#/definitions/controller.UserResponse'
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "409":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Register a new user
+      tags:
+      - Authentication
+  /auth/reset:
+    post:
+      consumes:
+      - application/json
+      description: Reset password.
+      parameters:
+      - description: Reset Token and New Password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ResetDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reset token sent
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Reset Password
+      tags:
+      - Authentication
+  /auth/social:
+    post:
+      consumes:
+      - application/json
+      description: Login with third party auth.
+      parameters:
+      - description: Social Login Detail.
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.SocialLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/controller.LoginResponse'
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Social Login
+      tags:
+      - Authentication
+  /auth/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verify User Account.
+      parameters:
+      - description: Reset Token and New Password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ActivateDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reset token sent
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Verify Account
+      tags:
+      - Authentication
+  /categories:
+    get:
+      consumes:
+      - application/json
+      description: Get list of categories
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: string
+      - description: asc | desc
+        in: query
+        name: sortOrder
+        type: string
+      - description: parentID
+        in: query
+        name: parentID
+        type: string
+      - description: organizationID
+        in: query
+        name: organizationID
+        type: string
+      - description: title
+        in: query
+        name: title
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of Categories
+          schema:
+            $ref: '#/definitions/controller.PaginatedCategoryResponse'
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Get Categories
+      tags:
+      - Category
+    post:
+      consumes:
+      - application/json
+      description: Create a category for procedures
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Category Details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New Category
+          schema:
+            $ref: '#/definitions/domain.Category'
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Create Category
+      tags:
+      - Category
+  /discussions:
+    get:
+      consumes:
+      - application/json
+      description: Fetch list of posts
+      parameters:
+      - description: procedure ids
+        in: query
+        name: title
+        type: string
+      - description: procedure ids
+        in: query
+        name: procedure_ids
+        type: array
+      - description: tags
+        in: query
+        name: tags
+        type: array
+      - description: page
+        in: query
+        name: page
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: string
+      - description: sort_by
+        in: query
+        name: sort_by
+        type: string
+      - description: sort_order
+        in: query
+        name: sort_order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Posts
+          schema:
+            $ref: '#/definitions/controller.PaginatedPostsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal
+          schema:
+            type: string
+      summary: Fetch Posts
+      tags:
+      - Post
+    post:
+      consumes:
+      - application/json
+      description: Create a new post.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Post Detail
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CreatePostDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Post Created
+          schema:
+            $ref: '#/definitions/domain.Post'
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Create Post
+      tags:
+      - Post
+  /discussions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a post
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "500":
+          description: Internal
+          schema:
+            type: string
+      summary: Delete Post
+      tags:
+      - Post
+    get:
+      consumes:
+      - application/json
+      description: Fetch a post
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Post
+          schema:
+            $ref: '#/definitions/domain.Post'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal
+          schema:
+            type: string
+      summary: Fetch Post
+      tags:
+      - Post
+    patch:
+      consumes:
+      - application/json
+      description: Update a post
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Post update details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.UpdatePostDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Post
+          schema:
+            $ref: '#/definitions/domain.Post'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "500":
+          description: Internal
+          schema:
+            type: string
+      summary: Update Post
+      tags:
+      - Post
+  /feedback/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update the status of a feedback
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Feedback ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update Status of Feedback
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.FeedbackStatePatchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Feedback Updated Successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal
+          schema:
+            type: string
+      summary: Update Feedback
+      tags:
+      - Feedback
+  /procedures:
+    get:
+      consumes:
+      - application/json
+      description: Search and filter procedures with pagination, sorting, and various
+        filters.
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Results per page (default 10)
+        in: query
+        name: limit
+        type: integer
+      - description: Search by procedure name
+        in: query
+        name: name
+        type: string
+      - description: Filter by organization ID
+        in: query
+        name: organizationID
+        type: string
+      - description: Filter by group ID
+        in: query
+        name: groupID
+        type: string
+      - description: Minimum processing days
+        in: query
+        name: minProcessingDays
+        type: integer
+      - description: Maximum processing days
+        in: query
+        name: maxProcessingDays
+        type: integer
+      - description: Sort by field (e.g. createdAt, fee, processingTime)
+        in: query
+        name: sortBy
+        type: string
+      - description: 'Sort order: ASC or DESC (default DESC)'
+        in: query
+        name: sortOrder
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.PaginatedProcedureResponse'
+        "400":
+          description: Invalid parameter
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Search and Filter Procedures
+      tags:
+      - Procedures
+    post:
+      consumes:
+      - application/json
+      description: Create new procedure.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Procedure Detail
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ProcedureCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Procedure Created
+          schema:
+            $ref: '#/definitions/domain.Procedure'
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Create Procedure
+      tags:
+      - Procedures
+  /procedures/{id}:
+    delete:
+      description: Deletes an existing procedure. Requires admin or organization ownership.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Procedure ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Delete Procedure
+      tags:
+      - Procedures
+    get:
+      description: Retrieves a single procedure by its unique ID.
+      parameters:
+      - description: Procedure ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Procedure'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get Procedure by ID
+      tags:
+      - Procedures
+    patch:
+      consumes:
+      - application/json
+      description: Updates an existing procedure. Requires admin or organization ownership.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Procedure ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Procedure Update Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Procedure'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Update Procedure
+      tags:
+      - Procedures
+  /procedures/{id}/feedback:
+    get:
+      consumes:
+      - application/json
+      description: Fetch list of feedbacks for a procedure
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: string
+      - description: status
+        in: query
+        name: status
+        type: string
+      - description: Procedure ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Feedbacks
+          schema:
+            $ref: '#/definitions/controller.FeedbackListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal
+          schema:
+            type: string
+      summary: Fetch Feedbacks
+      tags:
+      - Feedback
+    post:
+      consumes:
+      - application/json
+      description: Submit a feedback for a procedure
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Procedure ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Feedback Detail
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.FeedbackCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Feedback Submitted Successfully
+          schema:
+            $ref: '#/definitions/domain.Feedback'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal
+          schema:
+            type: string
+      summary: Submit Feedback
+      tags:
+      - Feedback
+securityDefinitions:
+  BearerAuth:
+    description: '"Type ''Bearer'' followed by a space and a JWT token."'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

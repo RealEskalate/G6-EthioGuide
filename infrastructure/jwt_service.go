@@ -15,15 +15,17 @@ type jwtService struct {
 	issuer          string
 	accessTokenTTL  time.Duration
 	refreshTokenTTL time.Duration
+	utilityTokenTTL time.Duration
 }
 
 // NewJWTService creates a new JWT service instance.
-func NewJWTService(secret, issuer string, accessTokenTTL, refreshTokenTTL time.Duration) domain.IJWTService {
+func NewJWTService(secret, issuer string, accessTokenTTL, refreshTokenTTL, utilityTokenTTL time.Duration) domain.IJWTService {
 	return &jwtService{
 		secretKey:       secret,
 		issuer:          issuer,
 		accessTokenTTL:  accessTokenTTL,
 		refreshTokenTTL: refreshTokenTTL,
+		utilityTokenTTL: utilityTokenTTL,
 	}
 }
 
@@ -67,6 +69,21 @@ func (s *jwtService) GenerateRefreshToken(userID string) (string, *domain.JWTCla
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate((time.Now().Add((s.refreshTokenTTL)))),
+			Issuer:    s.issuer,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ID:        uuid.NewString(),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(s.secretKey))
+	return tokenString, claims, err
+}
+
+func (s *jwtService) GenerateUtilityToken(userID string) (string, *domain.JWTClaims, error) {
+	claims := &domain.JWTClaims{
+		UserID: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate((time.Now().Add((s.utilityTokenTTL)))),
 			Issuer:    s.issuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ID:        uuid.NewString(),
