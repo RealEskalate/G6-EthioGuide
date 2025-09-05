@@ -365,12 +365,12 @@ func (r *ProcedureRepository) SearchAndFilter(ctx context.Context, opts domain.P
 func (r *ProcedureRepository) SearchByEmbedding(ctx context.Context, queryVec []float64, limit int) ([]*domain.Procedure, error) {
 	// Vector search stage
 	searchStage := bson.D{
-		{"$vectorSearch", bson.D{
-			{"index", "vector_index"}, // must match your Atlas vector index name
-			{"path", "embedding"},     // the field that stores vectors
-			{"queryVector", queryVec}, // the query embedding
-			{"numCandidates", 100},    // candidate pool before top-k filtering
-			{"limit", limit},          // top-k results
+		{Key: "$vectorSearch", Value: bson.D{
+			{Key: "index", Value: "vector_index"}, // must match your Atlas vector index name
+			{Key: "path", Value: "embedding"},     // the field that stores vectors
+			{Key: "queryVector", Value: queryVec}, // the query embedding
+			{Key: "numCandidates", Value: 100},    // candidate pool before top-k filtering
+			{Key: "limit", Value: limit},          // top-k results
 		}},
 	}
 
@@ -388,7 +388,7 @@ func (r *ProcedureRepository) SearchByEmbedding(ctx context.Context, queryVec []
 	// pipeline := mongo.Pipeline{searchStage, projectStage}
 	pipeline := mongo.Pipeline{searchStage}
 
-	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	cursor, err := r.col.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}

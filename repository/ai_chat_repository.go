@@ -12,13 +12,13 @@ import (
 )
 
 type AIChatRepository struct {
-    collection *mongo.Collection
+	collection *mongo.Collection
 }
 
-func NewAIChatRepository(db *mongo.Database) domain.IAIChatRepository{
-    return &AIChatRepository{
-        collection: db.Collection("ai_chats"),
-    }
+func NewAIChatRepository(db *mongo.Database) domain.IAIChatRepository {
+	return &AIChatRepository{
+		collection: db.Collection("ai_chats"),
+	}
 }
 
 func (r *AIChatRepository) Save(ctx context.Context, chat *domain.AIChat) error {
@@ -37,7 +37,7 @@ func (r *AIChatRepository) GetByUser(ctx context.Context, userID string, limit i
 		return nil, err
 	}
 	filter := bson.M{"user_id": userObjID}
-	opts := options.Find().SetSort(bson.D{{"timestamp", int32(-1)}}).SetLimit(int64(limit))
+	opts := options.Find().SetSort(bson.D{{Key: "timestamp", Value: int32(-1)}}).SetLimit(int64(limit))
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
@@ -65,11 +65,8 @@ func (r *AIChatRepository) DeleteByUser(ctx context.Context, userID string) erro
 	return err
 }
 
-
-
 ////////-----------------------Dto----------------/////////////////
 ////////////////==============================///////////////////////
-
 
 type AIUserChatMessageModel struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty"`
