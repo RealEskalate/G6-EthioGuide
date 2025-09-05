@@ -1,6 +1,5 @@
 import 'package:ethioguide/features/AI%20chat/Domain/entities/conversation.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/entities/translated_conversation.dart';
-import 'package:ethioguide/features/AI%20chat/data/models/conversation_model.dart';
 import 'package:ethioguide/features/AI%20chat/data/models/translated_conversation_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
