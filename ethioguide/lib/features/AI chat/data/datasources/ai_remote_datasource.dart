@@ -92,7 +92,10 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
 
     /// if device is online
     try {
-      final response = await dio.post(EndPoints.sendQueryEndPoint, data: {'query': query});
+      final response = await dio.post(
+        EndPoints.sendQueryEndPoint,
+        data: {'query': query},
+      );
       final statusCode = response.statusCode;
 
       if (statusCode! >= 300) {
@@ -153,7 +156,8 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
         debugPrint('##################################################');
         throw throwsException(statusCode);
       }
-      final List<dynamic> jsonList = response.data;
+
+      final List<dynamic> jsonList = response.data['history'];
       return jsonList.map((json) => ConversationModel.fromJson(json)).toList();
     } on DioException catch (e) {
       // TODO: remove debug print

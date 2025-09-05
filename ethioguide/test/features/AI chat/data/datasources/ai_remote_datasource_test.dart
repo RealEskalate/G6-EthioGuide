@@ -138,23 +138,29 @@ void main() {
     final tHistory = [
       ConversationModel(
         id: 'id',
-        request: 'How to get a passport?',
-        response: 'Steps to get a passport...',
+        request: 'How to renew passport?',
+        response: 'Here are the verified steps...',
         source: 'official',
-        procedures: [ProcedureModel(id: '1', name: 'Passport Application')],
+        procedures: [
+          ProcedureModel(id: 'id', name: 'name'),
+          ProcedureModel(id: 'id2', name: 'name2'),
+        ],
       ),
     ];
-    final tResponseData = [
-      {
-        'id': 'id',
-        'request': 'How to get a passport?',
-        'response': 'Steps to get a passport...',
-        'source': 'official',
-        'procedures': [
-          {'id': '1', 'name': 'Passport Application'},
-        ],
-      },
-    ];
+    final tResponseData = {
+      "history": [
+        {
+          "id": "id",
+          "procedures": [
+            {"id": "id", "name": "name"},
+            {"id": "id2", "name": "name2"},
+          ],
+          "request": "How to renew passport?",
+          "response": "Here are the verified steps...",
+          "source": "official",
+        },
+      ],
+    };
 
     test(
       'should return List<ConversationModel> when the request is successful',
