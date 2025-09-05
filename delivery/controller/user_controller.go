@@ -272,36 +272,36 @@ func (ctrl *UserController) SocialLogin(c *gin.Context) {
 // @Failure      500 {string}  "Server error"
 // @Router       /auth/me/ [patch]
 func (ctrl *UserController) UpdateProfile(c *gin.Context) {
-    userID, exists := c.Get("userID")
-    if !exists {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-        return
-    }
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
 
-    var req UserUpdateRequest
-    if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-        return
-    }
+	var req UserUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
 
-    // 1. Fetch current account from usecase
-    account, err := ctrl.userUsecase.GetProfile(c.Request.Context(), userID.(string))
-    if err != nil {
-        HandleError(c, err)
-        return
-    }
+	// 1. Fetch current account from usecase
+	account, err := ctrl.userUsecase.GetProfile(c.Request.Context(), userID.(string))
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
 
-    // 2. Convert DTO → domain.Account with updates applied
-    updatedAccount := ToDomainAccountUpdate(&req, account)
+	// 2. Convert DTO → domain.Account with updates applied
+	updatedAccount := ToDomainAccountUpdate(&req, account)
 
-    // 3. Call usecase with pure domain model
-    savedAccount, err := ctrl.userUsecase.UpdateProfile(c.Request.Context(), updatedAccount)
-    if err != nil {
-        HandleError(c, err)
-        return
-    }
+	// 3. Call usecase with pure domain model
+	savedAccount, err := ctrl.userUsecase.UpdateProfile(c.Request.Context(), updatedAccount)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
 
-    c.JSON(http.StatusOK, toUserResponse(savedAccount))
+	c.JSON(http.StatusOK, toUserResponse(savedAccount))
 }
 
 func (ctrl *UserController) Logout(c *gin.Context) {
@@ -311,11 +311,58 @@ func (ctrl *UserController) Logout(c *gin.Context) {
 		return
 	}
 	err := ctrl.userUsecase.Logout(c.Request.Context(), userID.(string))
-	if err != nil{
+	if err != nil {
 		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+}
+
+func (ctrl *UserController) HandleForgot(c *gin.Context) {
+	var req ForgotDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	err := ctrl.userUsecase.ForgetPassword(c.Request.Context(), req.Email)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Reset token sent"})
+}
+
+func (ctrl *UserController) HandleReset(c *gin.Context) {
+	var req ResetDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	err := ctrl.userUsecase.ResetPassword(c.Request.Context(), req.ResetToken, req.NewPassword)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password Updated Successfully"})
+}
+
+func (ctrl *UserController) HandleVerify(c *gin.Context) {
+	var req ActivateDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	if err := ctrl.userUsecase.VerifyAccount(c.Request.Context(), req.ActivateToken); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User Activated Successfully"})
 }
 
 // --- HELPER FUNCTIONS ---

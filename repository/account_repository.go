@@ -283,3 +283,31 @@ func (r *AccountRepository) ExistsByUsername(ctx context.Context, username, excl
 	count, err := r.collection.CountDocuments(ctx, filter)
 	return count > 0, err
 }
+
+func (r *AccountRepository) UpdateUserFields(ctx context.Context, userIDstr string, update map[string]interface{}) error {
+	if len(update) == 0 {
+		return nil
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDstr)
+	if err != nil {
+		return domain.ErrUserNotFound
+	}
+
+	filter := bson.M{
+		"_id": userID,
+	}
+	updates := bson.M{
+		"$set": update,
+	}
+
+	result, errUpdate := r.collection.UpdateOne(ctx, filter, updates)
+	if errUpdate != nil {
+		return errUpdate
+	}
+	if result.MatchedCount == 0 {
+		return domain.ErrUserNotFound
+	}
+
+	return nil
+}
