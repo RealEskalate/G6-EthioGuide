@@ -31,7 +31,7 @@ type UserResponse struct {
 	CreatedAt      time.Time   `json:"created_at"`
 }
 
-func toUserResponse(a *domain.Account) UserResponse {
+func ToUserResponse(a *domain.Account) UserResponse {
 	return UserResponse{
 		ID:       a.ID,
 		Name:     a.Name,
@@ -545,5 +545,97 @@ func ToOrganizationDetailDTO(account *domain.Account) OrganizationDetailDTO {
 			Website: account.OrganizationDetail.ContactInfo.Website,
 		},
 		PhoneNumbers: account.OrganizationDetail.PhoneNumbers,
+	}
+}
+
+// =================================================================================
+// --- Search DTOs ---
+// =================================================================================
+
+// SearchResultResponse defines the response for a search query.
+type SearchResultResponse struct {
+	Procedures    []*domain.Procedure         `json:"procedures"`
+	Organizations []*AccountOrgSearchResponse `json:"organizations"`
+}
+
+// AccountOrgSearchResponse defines the public-facing information for an organization in search results.
+type AccountOrgSearchResponse struct {
+	ID                 string                      `json:"id"`
+	Name               string                      `json:"name"`
+	Email              string                      `json:"email"`
+	ProfilePicURL      string                      `json:"profile_pic_url,omitempty"`
+	Role               domain.Role                 `json:"role"`
+	OrganizationDetail *OrganizationDetailResponse `json:"organization_detail,omitempty"`
+}
+
+// OrganizationDetailResponse defines the public-facing organization details.
+type OrganizationDetailResponse struct {
+	Description  string                  `json:"description,omitempty"`
+	Location     string                  `json:"location,omitempty"`
+	Type         domain.OrganizationType `json:"type,omitempty"`
+	ContactInfo  *ContactInfoResponse    `json:"contact_info,omitempty"`
+	PhoneNumbers []string                `json:"phone_numbers,omitempty"`
+}
+
+// ContactInfoResponse defines the public-facing contact information.
+type ContactInfoResponse struct {
+	Socials map[string]string `json:"socials,omitempty"`
+	Website string            `json:"website,omitempty"`
+}
+
+// =================================================================================
+// --- Search Mapper Functions ---
+// =================================================================================
+
+// ToSearchJSON converts the domain search result to a JSON-friendly response.
+func ToSearchJSON(sr *domain.SearchResult) *SearchResultResponse {
+	orgs := make([]*AccountOrgSearchResponse, 0, len(sr.Organizations))
+	for _, acc := range sr.Organizations {
+		orgs = append(orgs, toAccountOrgSearchResponse(acc))
+	}
+	return &SearchResultResponse{
+		Procedures:    sr.Procedures,
+		Organizations: orgs,
+	}
+}
+
+// toAccountOrgSearchResponse converts a domain search result for an org to a response DTO.
+// (Renamed from ToAccountResponse for clarity)
+func toAccountOrgSearchResponse(acc *domain.AccountOrgSearch) *AccountOrgSearchResponse {
+	if acc == nil {
+		return nil
+	}
+	return &AccountOrgSearchResponse{
+		ID:                 acc.ID,
+		Name:               acc.Name,
+		Email:              acc.Email,
+		ProfilePicURL:      acc.ProfilePicURL,
+		Role:               acc.Role,
+		OrganizationDetail: toOrganizationDetailResponse(acc.OrganizationDetail),
+	}
+}
+
+// toOrganizationDetailResponse converts a domain org detail to a response DTO.
+func toOrganizationDetailResponse(od *domain.OrganizationDetail) *OrganizationDetailResponse {
+	if od == nil {
+		return nil
+	}
+	return &OrganizationDetailResponse{
+		Description:  od.Description,
+		Location:     od.Location,
+		Type:         od.Type,
+		ContactInfo:  toContactInfoResponse(&od.ContactInfo),
+		PhoneNumbers: od.PhoneNumbers,
+	}
+}
+
+// toContactInfoResponse makes the mapping from domain to DTO explicit and safe.
+func toContactInfoResponse(ci *domain.ContactInfo) *ContactInfoResponse {
+	if ci == nil {
+		return nil
+	}
+	return &ContactInfoResponse{
+		Socials: ci.Socials,
+		Website: ci.Website,
 	}
 }

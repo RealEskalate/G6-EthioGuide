@@ -33,9 +33,9 @@ type Procedure struct {
 	NoticeIDs      []string
 }
 
-
 // ====== Search & Filter Options ======
 type GlobalLogic string
+
 // type SortOrder string
 
 const (
@@ -45,7 +45,7 @@ const (
 
 type ProcedureSearchFilterOptions struct {
 	// Search
-	Name     *string // search in name
+	Name *string // search in name
 
 	// Filters
 	OrganizationID *string

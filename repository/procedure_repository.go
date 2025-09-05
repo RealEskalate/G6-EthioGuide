@@ -248,6 +248,7 @@ func (pr *ProcedureRepository) Delete(ctx context.Context, id string) error {
 
 	return nil
 }
+
 // SearchAndFilter searches procedures based on the options and returns paginated results.
 func (r *ProcedureRepository) SearchAndFilter(ctx context.Context, opts domain.ProcedureSearchFilterOptions) ([]*domain.Procedure, int64, error) {
 	filter := bson.M{}

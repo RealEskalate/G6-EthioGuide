@@ -74,3 +74,7 @@ type INoticeUseCase interface {
 	UpdateNotice(ctx context.Context, id string, notice *Notice) error
 	DeleteNotice(ctx context.Context, id string) error
 }
+
+type ISearchUseCase interface {
+	Search(ctx context.Context, filter SearchFilterRequest) (*SearchResult, error)
+}

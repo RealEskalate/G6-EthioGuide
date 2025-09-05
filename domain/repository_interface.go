@@ -67,3 +67,9 @@ type INoticeRepository interface {
 	Update(ctx context.Context, id string, notice *Notice) error
 	Delete(ctx context.Context, id string) error
 }
+
+type ISearchRepository interface {
+	Search(ctx context.Context, filter SearchFilterRequest) (*SearchResult, error)
+	FindProcedures(ctx context.Context, filter SearchFilterRequest) ([]*Procedure, error)
+	FindOrganizations(ctx context.Context, filter SearchFilterRequest) ([]*AccountOrgSearch, error)
+}
