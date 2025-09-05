@@ -514,7 +514,7 @@ func (uc *UserUsecase) ResetPassword(ctx context.Context, resetToken, newPasswor
 		return err
 	}
 
-	if err := uc.tokenRepo.DeleteToken(ctx, string(domain.ResetPasswordToken), resetToken); err != nil {
+	if err := uc.tokenRepo.DeleteToken(ctx, string(domain.ResetPasswordToken), claims.ID); err != nil {
 		return err
 	}
 
