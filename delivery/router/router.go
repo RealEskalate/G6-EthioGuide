@@ -44,9 +44,10 @@ func SetupRouter(
 			// --- Standard User Routes ---
 			// Any logged-in user (regardless of role or subscription) can access these.
 			aiGroup := apiGroup.Group("/ai")
+			aiGroup.Use(authMiddleware)
 			{
 				aiGroup.POST("/translate", geminiController.Translate)
-				aiGroup.POST("/translate", aiChatController.AIChatController)
+				aiGroup.POST("/guide", aiChatController.AIChatController)
 			}
 
 			// --- PRO Subscription Routes ---
