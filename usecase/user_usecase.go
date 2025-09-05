@@ -130,7 +130,7 @@ func (uc *UserUsecase) VerifyAccount(ctx context.Context, activationTokenValue s
 		return domain.ErrInvalidActivationToken
 	}
 
-	if _, err := uc.tokenRepo.GetToken(ctx, string(domain.VerificationToken), activationTokenValue); err != nil {
+	if _, err := uc.tokenRepo.GetToken(ctx, string(domain.VerificationToken), claims.ID); err != nil {
 		return domain.ErrInvalidActivationToken
 	}
 
@@ -501,7 +501,7 @@ func (uc *UserUsecase) ResetPassword(ctx context.Context, resetToken, newPasswor
 		return fmt.Errorf("invalid refresh token: %w", err)
 	}
 
-	if _, err := uc.tokenRepo.GetToken(ctx, string(domain.ResetPasswordToken), resetToken); err != nil {
+	if _, err := uc.tokenRepo.GetToken(ctx, string(domain.ResetPasswordToken), claims.ID); err != nil {
 		return domain.ErrInvalidResetToken
 	}
 
