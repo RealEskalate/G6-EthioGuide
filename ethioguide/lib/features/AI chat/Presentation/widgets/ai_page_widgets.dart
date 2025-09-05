@@ -1,7 +1,9 @@
+import 'package:ethioguide/core/config/route_names.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/entities/conversation.dart';
 import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 AppBar appBar({required BuildContext context}) {
   return AppBar(

@@ -1,3 +1,4 @@
+import 'package:ethioguide/core/components/bottom_nav_bar.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/entities/conversation.dart';
 import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
 import 'package:ethioguide/features/AI%20chat/Presentation/widgets/ai_page_widgets.dart';
@@ -16,6 +17,7 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   final FocusNode _queryFocusNode = FocusNode();
   List<Conversation> _history = [];
+  final pageIndex = 2;
 
   @override
   void initState() {
@@ -216,15 +218,15 @@ class _ChatPageState extends State<ChatPage> {
                             borderRadius: BorderRadius.circular(18),
                             borderSide: BorderSide(
                               color: _queryFocusNode.hasFocus
-                                  ? Colors.blue
+                                  ? Colors.teal
                                   : Colors.grey,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(18),
                             borderSide: const BorderSide(
-                              color: Colors.blue,
-                              width: 2,
+                              color: Colors.teal,
+                              width: 1,
                             ),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
@@ -252,7 +254,10 @@ class _ChatPageState extends State<ChatPage> {
                               ? const SizedBox(
                                   width: 24,
                                   height: 24,
-                                  child: Icon(Icons.square, color: Colors.white,),
+                                  child: Icon(
+                                    Icons.square,
+                                    color: Colors.white,
+                                  ),
                                   // child: CircularProgressIndicator(
                                   //   strokeWidth: 2,
                                   //   valueColor: AlwaysStoppedAnimation<Color>(
@@ -274,6 +279,8 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ],
         ),
+
+        bottomNavigationBar: bottomNav(context: context, selectedIndex: pageIndex),
       ),
     );
   }
