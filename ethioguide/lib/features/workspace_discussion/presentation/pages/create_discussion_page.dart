@@ -322,6 +322,7 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
     title: _titleController.text.trim(),
     content: _contentController.text.trim(),
     tags: tags,
+    procedure: []
   ),
 );
 

@@ -16,6 +16,7 @@ abstract class WorkspaceDiscussionRemoteDataSource {
     required String title,
     required String content,
     required List<String> tags,
+    required List<String> procedure,
     // required String category,
   });
   Future<bool> likeDiscussion(String discussionId);
@@ -81,6 +82,7 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
     required String title,
     required String content,
     required List<String> tags,
+    required List<String> procedure,
     // required String category,
   }) async {
     final response = await dio.post(
@@ -89,6 +91,7 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
         'title': title,
         'content': content,
         'tags': tags,
+        'procedures': procedure,
         // 'category': category,
       },
     );

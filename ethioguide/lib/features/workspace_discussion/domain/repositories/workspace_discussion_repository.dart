@@ -20,6 +20,7 @@ abstract class WorkspaceDiscussionRepository {
     required String title,
     required String content,
     required List<String> tags,
+    required List<String> procedure,
     // required String category,
   });
   
