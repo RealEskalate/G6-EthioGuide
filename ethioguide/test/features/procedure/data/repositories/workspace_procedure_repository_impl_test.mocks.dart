@@ -5,9 +5,9 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i5;
 
-import 'package:ethioguide/core/network/network_info.dart' as _i6;
+import 'package:ethioguide/core/network/network_info.dart' as _i4;
 import 'package:ethioguide/features/procedure/data/datasources/workspace_procedure_remote_data_source.dart'
-    as _i4;
+    as _i6;
 import 'package:ethioguide/features/procedure/data/models/workspace_procedure_model.dart'
     as _i3;
 import 'package:ethioguide/features/procedure/data/models/workspace_summary_model.dart'
@@ -40,11 +40,28 @@ class _FakeWorkspaceProcedureModel_1 extends _i1.SmartFake
     : super(parent, parentInvocation);
 }
 
+/// A class which mocks [NetworkInfo].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockNetworkInfo extends _i1.Mock implements _i4.NetworkInfo {
+  MockNetworkInfo() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i5.Future<bool> get isConnected =>
+      (super.noSuchMethod(
+            Invocation.getter(#isConnected),
+            returnValue: _i5.Future<bool>.value(false),
+          )
+          as _i5.Future<bool>);
+}
+
 /// A class which mocks [WorkspaceProcedureRemoteDataSource].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockWorkspaceProcedureRemoteDataSource extends _i1.Mock
-    implements _i4.WorkspaceProcedureRemoteDataSource {
+    implements _i6.WorkspaceProcedureRemoteDataSource {
   MockWorkspaceProcedureRemoteDataSource() {
     _i1.throwOnMissingStub(this);
   }
@@ -129,23 +146,6 @@ class MockWorkspaceProcedureRemoteDataSource extends _i1.Mock
   _i5.Future<bool> saveProgress(String? procedureId) =>
       (super.noSuchMethod(
             Invocation.method(#saveProgress, [procedureId]),
-            returnValue: _i5.Future<bool>.value(false),
-          )
-          as _i5.Future<bool>);
-}
-
-/// A class which mocks [NetworkInfo].
-///
-/// See the documentation for Mockito's code generation for more information.
-class MockNetworkInfo extends _i1.Mock implements _i6.NetworkInfo {
-  MockNetworkInfo() {
-    _i1.throwOnMissingStub(this);
-  }
-
-  @override
-  _i5.Future<bool> get isConnected =>
-      (super.noSuchMethod(
-            Invocation.getter(#isConnected),
             returnValue: _i5.Future<bool>.value(false),
           )
           as _i5.Future<bool>);

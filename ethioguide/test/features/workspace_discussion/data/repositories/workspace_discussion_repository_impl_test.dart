@@ -9,17 +9,20 @@ import 'package:ethioguide/features/workspace_discussion/domain/entities/communi
 import 'package:ethioguide/features/workspace_discussion/domain/entities/discussion.dart';
 import 'package:ethioguide/features/workspace_discussion/domain/entities/user.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-class MockRemote extends Mock implements WorkspaceDiscussionRemoteDataSource {}
 
+
+
+@GenerateMocks([WorkspaceDiscussionRemoteDataSource])
 void main() {
   group('WorkspaceDiscussionRepositoryImpl', () {
-    late MockRemote remote;
+    late MockWorkspaceDiscussionRemoteDataSource remote;
     late WorkspaceDiscussionRepositoryImpl repository;
 
     setUp(() {
-      remote = MockRemote();
+      remote = MockWorkspaceDiscussionRemoteDataSource();
       repository = WorkspaceDiscussionRepositoryImpl(remote);
     });
 

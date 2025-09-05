@@ -12,13 +12,12 @@ class CreateDiscussion {
     required String title,
     required String content,
     required List<String> tags,
-    required String category,
   }) async {
     return await repository.createDiscussion(
       title: title,
       content: content,
       tags: tags,
-      category: category,
+      // category: category,
     );
   }
 }

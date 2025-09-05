@@ -20,7 +20,10 @@ class AuthInterceptor extends Interceptor {
   ) async {
     if (await _authRepository.isAuthenticated()) {
       final accessToken = await _authRepository.getAccessToken();
-      options.headers['Authorization'] = 'Bearer $accessToken';
+      options.headers['Authorization'] =
+          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjhiN2YyZmE1Mzc2MjI3YTc4ZmYxZTJiIiwicm9sZSI6InVzZXIiLCJzdWJzY3JpcHRpb24iOiIiLCJpc3MiOiJldGhpby1ndWlkZS1hcGkiLCJleHAiOjE3NTcyNzU2NzUsImlhdCI6MTc1NzA1OTY3NSwianRpIjoiZTM1M2I1NTctNTRmMS00YWE1LWEyMmEtNGY1MmZiNTEzMDJhIn0.BnztsPv3gB6fZB5z-j4t59YSdEHMhMBcN-Qo5T8aFjA';
+
+      //  'Bearer $accessToken';
     }
     return handler.next(options);
   }

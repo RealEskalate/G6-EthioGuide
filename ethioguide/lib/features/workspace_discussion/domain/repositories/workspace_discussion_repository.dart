@@ -20,7 +20,7 @@ abstract class WorkspaceDiscussionRepository {
     required String title,
     required String content,
     required List<String> tags,
-    required String category,
+    // required String category,
   });
   
   /// Like a discussion

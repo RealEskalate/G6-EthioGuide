@@ -1,5 +1,6 @@
 import 'package:ethioguide/core/config/app_theme.dart';
 import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
+import 'package:ethioguide/features/workspace_discussion/presentation/bloc/workspace_discussion_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/config/app_router.dart'; // <-- 1. Import your new router file.
@@ -25,7 +26,8 @@ class MyApp extends StatelessWidget {
     // 2. Use the MaterialApp.router constructor.
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => di.sl<AiBloc>())
+        BlocProvider(create: (context) => di.sl<AiBloc>()),
+        BlocProvider(create: (context) => di.sl<WorkspaceDiscussionBloc>()),
       ],
       child: MaterialApp.router(
         themeMode: _themeMode,

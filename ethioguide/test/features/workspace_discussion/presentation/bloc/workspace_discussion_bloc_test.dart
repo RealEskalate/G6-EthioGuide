@@ -16,26 +16,25 @@ import 'package:ethioguide/features/workspace_discussion/domain/usecases/report_
 import 'package:ethioguide/features/workspace_discussion/presentation/bloc/workspace_discussion_bloc.dart';
 import 'package:ethioguide/features/workspace_discussion/presentation/bloc/worspace_discustion_state.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-class MockGetCommunityStats extends Mock implements GetCommunityStats {}
+import 'workspace_discussion_bloc_test.mocks.dart';
 
-class MockGetDiscussions extends Mock implements GetDiscussions {}
 
-class MockCreateDiscussion extends Mock implements CreateDiscussion {}
 
-class MockLikeDiscussion extends Mock implements LikeDiscussion {}
 
-class MockReportDiscussion extends Mock implements ReportDiscussion {}
-
-class MockGetComments extends Mock implements GetComments {}
-
-class MockAddComment extends Mock implements AddComment {}
-
-class MockLikeComment extends Mock implements LikeComment {}
-
-class MockReportComment extends Mock implements ReportComment {}
-
+@GenerateMocks([
+  GetCommunityStats,
+  GetDiscussions,
+  CreateDiscussion,
+  LikeDiscussion,
+  ReportDiscussion,
+  GetComments,
+  AddComment,
+  LikeComment,
+  ReportComment,
+])
 void main() {
   group('WorkspaceDiscussionBloc', () {
     late MockGetCommunityStats getStats;
