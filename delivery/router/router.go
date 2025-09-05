@@ -62,6 +62,7 @@ func SetupRouter(
 			authGroup.POST("/login", userController.Login)
 			authGroup.POST("/refresh", userController.HandleRefreshToken)
 			authGroup.POST("/social", userController.SocialLogin)
+			authGroup.POST("/logout", userController.Logout)
 		}
 
 		// --- Private Routes (Require Authentication) ---
