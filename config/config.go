@@ -95,7 +95,7 @@ func Load() *Config {
 		SMTPPass: getEnv("SMTP_PASSWORD", ""),
 		SMTPFrom: getEnv("SMTP_FROM_EMAIL", "no-reply@example.com"),
 
-		VerificationFrontendUrl:  getEnv("VERIFICATION_FRONTEND-URL", "http://localhost:8080/api/v1/auth/verify"),
+		VerificationFrontendUrl:  getEnv("VERIFICATION_FRONTEND_URL", "http://localhost:8080/api/v1/auth/verify"),
 		ResetPasswordFrontendUrl: getEnv("RESET_PASSWORD_FRONTEND_URL", "http://localhost:8080/api/v1/password/reset"),
 	}
 }
