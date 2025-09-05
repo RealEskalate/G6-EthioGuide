@@ -367,36 +367,36 @@ func (uc *UserUsecase) loginWithGoogle(ctx context.Context, code string) (*domai
 }
 
 func (uc *UserUsecase) UpdateProfile(ctx context.Context, account *domain.Account) (*domain.Account, error) {
-    ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
 
-    // --- validation rules ---
-    if account.UserDetail != nil && account.OrganizationDetail != nil {
-        return nil, domain.ErrConflict
-    }
+	// --- validation rules ---
+	if account.UserDetail != nil && account.OrganizationDetail != nil {
+		return nil, domain.ErrConflict
+	}
 
-    exists, err := uc.userRepo.ExistsByEmail(ctx, account.Email, account.ID)
+	exists, err := uc.userRepo.ExistsByEmail(ctx, account.Email, account.ID)
 	if err != nil {
-	    return nil, err
+		return nil, err
 	}
 	if exists {
-	    return nil, domain.ErrEmailExists
+		return nil, domain.ErrEmailExists
 	}
-    
+
 	exists, err = uc.userRepo.ExistsByUsername(ctx, account.UserDetail.Username, account.ID)
 	if err != nil {
-	    return nil, err
+		return nil, err
 	}
 	if exists {
-	    return nil, domain.ErrEmailExists
+		return nil, domain.ErrEmailExists
 	}
 
-    // --- persist ---
-    if err := uc.userRepo.UpdateProfile(ctx, *account); err != nil {
-        return nil, err
-    }
+	// --- persist ---
+	if err := uc.userRepo.UpdateProfile(ctx, *account); err != nil {
+		return nil, err
+	}
 
-    return account, nil
+	return account, nil
 }
 
 func (uc *UserUsecase) Logout(ctx context.Context, userID string) error {
@@ -408,42 +408,3 @@ func (uc *UserUsecase) Logout(ctx context.Context, userID string) error {
 	}
 	return nil
 }
-
-// func (uc *UserUsecase) UpdateProfile(ctx context.Context, userID string, updates map[string]interface{}) (*domain.Account, error) {
-// 	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
-// 	defer cancel()
-
-// 	account, err := uc.userRepo.GetById(ctx, userID)
-// 	if err != nil || account == nil {
-// 		return nil, domain.ErrNotFound
-// 	}
-
-// 	if newName, ok := updates["name"].(string); ok {
-// 		account.Name = newName
-// 	}
-
-// 	if newProfilePicUrl, ok := updates["profile_picture"].(string); ok {
-// 		account.ProfilePicURL = newProfilePicUrl
-// 	}
-
-// 	if account.OrganizationDetail != nil {
-// 		if newDescription, ok := updates["description"].(string); ok {
-// 			account.OrganizationDetail.Description = newDescription
-// 		}
-// 		if newLocation, ok := updates["location"].(string); ok {
-// 			account.OrganizationDetail.Location = newLocation
-// 		}
-// 		if newContactInfo, ok := updates["contact_info"].(domain.ContactInfo); ok {
-// 			account.OrganizationDetail.ContactInfo = domain.ContactInfo(newContactInfo)
-// 		}
-// 		if newPhoneNumbers, ok := updates["phone_numbers"].([]string); ok {
-// 			account.OrganizationDetail.PhoneNumbers = newPhoneNumbers
-// 		}
-// 	}
-
-// 	if err := uc.userRepo.UpdateProfile(ctx, *account); err != nil {
-// 		return nil, err
-// 	}
-
-// 	return account, nil
-// }
