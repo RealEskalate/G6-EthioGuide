@@ -136,7 +136,8 @@ Widget buildMessage({
                   _buildChecklistButton(context: context),
                 if (conv.procedures.isNotEmpty && !isError && !isLoading)
                   ...conv.procedures.map(
-                    (procedure) => _buildInfoCard(procedure: procedure!, context: context),
+                    (procedure) =>
+                        _buildInfoCard(procedure: procedure!, context: context),
                   ),
               ],
             ),
@@ -260,33 +261,35 @@ Widget _buildInfoCard({
 }
 
 Widget _buildChecklistButton({required BuildContext context}) {
-    return Card(
-      color: Colors.teal[100],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: ExpansionTile(
-        leading: const Icon(Icons.checklist, color: Colors.teal),
-        title: const Text(
-          'Save Checklist',
-          style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
-        ),
-        children: [
-          ListTile(
-            leading: const Icon(Icons.play_arrow),
-            title: const Text('Start Procedure'),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Starting procedure...')),
-              );
-              // TODO: Navigate to procedure start page
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.translate),
-            title: const Text('Translate'),
-            // onTap: _showTranslateDialog,
-          ),
-        ],
+  return Card(
+    color: Colors.teal[100],
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    margin: const EdgeInsets.symmetric(vertical: 8),
+    child: ExpansionTile(
+      leading: const Icon(Icons.checklist, color: Colors.teal),
+      title: const Text(
+        'Save Checklist',
+        style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
       ),
-    );
-  }
+      children: [
+        ListTile(
+          leading: const Icon(Icons.play_arrow),
+          title: const Text('Start Procedure'),
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Starting procedure...')),
+            );
+            // TODO: Navigate to procedure start page
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.translate),
+          title: const Text('Translate'),
+          onTap: () {
+            SnackBar(content: Text('Translating response'));
+          },
+        ),
+      ],
+    ),
+  );
+}
