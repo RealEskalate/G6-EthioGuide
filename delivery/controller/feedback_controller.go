@@ -52,11 +52,11 @@ func (ctrl *FeedbackController) SubmitFeedback(c *gin.Context) {
 	}
 
 	feedback := &domain.Feedback{
-		UserID: userID,
+		UserID:      userID,
 		ProcedureID: procedureID,
-		Content: req.Content,
-		Type: domain.FeedbackType(req.Type),
-		Tags: req.Tags,
+		Content:     req.Content,
+		Type:        domain.FeedbackType(req.Type),
+		Tags:        req.Tags,
 	}
 
 	err := ctrl.feedbackUsecase.SubmitFeedback(c.Request.Context(), feedback)
@@ -111,10 +111,8 @@ func (ctrl *FeedbackController) GetAllFeedbacksForProcedure(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"feedbacks": toFeedbackListResponse(feedbacks, total, page, limit)})
 }
 
-
-
 // @Summary      Update Feedback
-// @Description  Update the status of a feedback 
+// @Description  Update the status of a feedback
 // @Tags         Feedback
 // @Accept       json
 // @Produce      json
@@ -145,11 +143,10 @@ func (ctrl *FeedbackController) UpdateFeedbackStatus(c *gin.Context) {
 
 	if err != nil {
 		HandleError(c, err)
-		return 
+		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Feedback status updated successfully"})
 }
-
 
 func (ctrl *FeedbackController) GetAllFeedbacks(c *gin.Context) {
 	filter := domain.FeedbackFilter{}
@@ -158,7 +155,7 @@ func (ctrl *FeedbackController) GetAllFeedbacks(c *gin.Context) {
 		HandleError(c, domain.ErrInvalidQueryParam)
 		return
 	}
-	limit, err := strconv.ParseInt(c.DefaultQuery("page", "1"), 10, 64)
+	limit, err := strconv.ParseInt(c.DefaultQuery("limit", "10"), 10, 64)
 	if err != nil {
 		HandleError(c, domain.ErrInvalidQueryParam)
 		return
