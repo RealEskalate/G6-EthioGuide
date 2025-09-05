@@ -19,6 +19,7 @@ type IUserUsecase interface {
 	UpdatePassword(ctx context.Context, userID, currentPassword, newPassword string) error
 	LoginWithSocial(ctx context.Context, provider AuthProvider, code string) (*Account, string, string, error)
 	// UpdateProfile(ctx context.Context, userID string, updates map[string]interface{}) (*Account, error)
+	Logout(ctx context.Context, userID string) error
 
 	// ----
 	UpdateProfile(ctx context.Context, account *Account) (*Account, error)

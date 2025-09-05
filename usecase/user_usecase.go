@@ -399,6 +399,16 @@ func (uc *UserUsecase) UpdateProfile(ctx context.Context, account *domain.Accoun
     return account, nil
 }
 
+func (uc *UserUsecase) Logout(ctx context.Context, userID string) error {
+	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
+	defer cancel()
+	err := uc.tokenRepo.DeleteToken(ctx, string(domain.RefreshToken), userID)
+	if err != nil {
+		return fmt.Errorf("failed to logout user: %w", err)
+	}
+	return nil
+}
+
 // func (uc *UserUsecase) UpdateProfile(ctx context.Context, userID string, updates map[string]interface{}) (*domain.Account, error) {
 // 	ctx, cancel := context.WithTimeout(ctx, uc.contextTimeout)
 // 	defer cancel()
