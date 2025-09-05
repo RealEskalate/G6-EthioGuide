@@ -326,24 +326,41 @@ class _CreateDiscussionPageState extends State<CreateDiscussionPage> {
 );
 
 
-
-BlocListener(
-  listener:
-      (context, state) {
+BlocListener<WorkspaceDiscussionBloc, WorkspaceDiscussionState>(
+  listener: (context, state) {
     if (state is ActionSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Discussion created successfully!')),
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Success'),
+          content: const Text('Discussion created successfully!'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
       );
-      
-    } else if (state is ActionFailure)
-      {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error:')),
+    } else if (state is ActionFailure) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Error'),
+          content: Text(state.message ?? 'Something went wrong.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
       );
     }
   },
-  child: const CircularProgressIndicator(),
+  child: Container(), // <-- keep your page/form here
 );
+
    
 
 
