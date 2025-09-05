@@ -62,7 +62,6 @@ func SetupRouter(
 			authGroup.POST("/login", userController.Login)
 			authGroup.POST("/refresh", userController.HandleRefreshToken)
 			authGroup.POST("/social", userController.SocialLogin)
-			authGroup.POST("/logout", userController.Logout)
 			authGroup.POST("/verify", userController.HandleVerify)
 			authGroup.POST("/forgot", userController.HandleForgot)
 			authGroup.POST("/reset", userController.HandleReset)
@@ -106,6 +105,7 @@ func SetupRouter(
 			authGroup := apiGroup.Group("/auth")
 			authGroup.Use(authMiddleware)
 			{
+				authGroup.POST("/logout", userController.Logout)
 				authGroup.GET("/me", userController.GetProfile)
 				authGroup.PATCH("/me/password", userController.UpdatePassword)
 				authGroup.PATCH("/me", userController.UpdateProfile)
