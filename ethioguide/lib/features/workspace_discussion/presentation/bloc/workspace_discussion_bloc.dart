@@ -138,6 +138,10 @@ class WorkspaceDiscussionBloc
         content: event.content,
         tags: event.tags,
       );
+
+      print(result);
+
+      
       result.fold(
         (failure) => emit(ActionFailure(failure)),
         (_) => emit(const ActionSuccess('Discussion created successfully!')),

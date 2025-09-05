@@ -347,7 +347,7 @@ BlocListener<WorkspaceDiscussionBloc, WorkspaceDiscussionState>(
         context: context,
         builder: (_) => AlertDialog(
           title: const Text('Error'),
-          content: Text(state.message ?? 'Something went wrong.'),
+          content: Text(state.message),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
