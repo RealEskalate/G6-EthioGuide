@@ -124,6 +124,7 @@ func SetupRouter(
 
 			feedback := v1.Group("/feedback")
 			{
+				feedback.GET("", authMiddleware, requireAdminOrOrgRole, feedbackController.GetAllFeedbacks)
 				feedback.PATCH("/:id", authMiddleware, requireAdminOrOrgRole, feedbackController.UpdateFeedbackStatus)
 			}
 

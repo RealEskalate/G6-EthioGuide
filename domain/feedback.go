@@ -40,4 +40,5 @@ type FeedbackFilter struct {
 	Page int64
 	Limit int64
 	Status *string
+	ProcedureID *string
 }

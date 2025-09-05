@@ -39,6 +39,10 @@ func (m *MockFeedbackUsecase) UpdateFeedbackStatus(ctx context.Context, feedback
     args := m.Called(ctx, feedbackID, userID, status, adminResponse)
     return args.Error(0)
 }
+func (m *MockFeedbackUsecase) GetAllFeedbacks(ctx context.Context, filter *domain.FeedbackFilter) ([]*domain.Feedback, int64, error) {
+    args := m.Called(ctx, filter)
+    return args.Get(0).([]*domain.Feedback), args.Get(1).(int64), args.Error(2)
+}
 
 // --- Test Suite ---
 type FeedbackControllerTestSuite struct {

@@ -68,3 +68,9 @@ func (fu *feedbackUsecase) UpdateFeedbackStatus(ctx context.Context, feedbackID,
 
 	return fu.feedbackRepo.UpdateFeedbackStatus(ctx, feedbackID, feedback)
 }
+
+func (fu *feedbackUsecase) GetAllFeedbacks(c context.Context, filter *domain.FeedbackFilter) ([]*domain.Feedback, int64, error) {
+	ctx, cancel := context.WithTimeout(c, fu.contextTimeout)
+	defer cancel()
+	return fu.feedbackRepo.GetAllFeedbacks(ctx, filter)
+}

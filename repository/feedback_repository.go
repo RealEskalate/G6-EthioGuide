@@ -201,3 +201,40 @@ func (r *FeedbackRepository) UpdateFeedbackStatus(ctx context.Context, feedbackI
 
 	return nil
 }
+
+func (r *FeedbackRepository) GetAllFeedbacks(ctx context.Context, filter *domain.FeedbackFilter) ([]*domain.Feedback, int64, error) {
+	f := []bson.M{}
+	if filter.Status != nil {
+		f = append(f, bson.M{"status": *filter.Status})
+	}
+	if filter.ProcedureID != nil {
+		pid, err := primitive.ObjectIDFromHex(*filter.ProcedureID)
+		if err != nil {
+			return nil, 0, fmt.Errorf("invalid procedure ID: %w", err)
+		}
+		f = append(f, bson.M{"procedure_id": pid})
+	}
+	filters := bson.M{"$and": f}
+
+	total, err := r.collection.CountDocuments(ctx, filters)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count feedbacks: %w", err)
+	}
+	opts := options.Find()
+	opts.SetSkip((filter.Page - 1) * filter.Limit)
+	opts.SetLimit(filter.Limit)
+	opts.SetSort(bson.D{{Key: "created_at", Value: -1}}) 
+	cursor, err := r.collection.Find(ctx, filters, opts)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to fetch feedbacks: %w", err)
+	}
+	var feedbacks []*FeedbackModel
+	if err := cursor.All(ctx, &feedbacks); err != nil {
+		return nil, 0, fmt.Errorf("failed to decode feedbacks: %w", err)
+	}
+	domainFeedbacks := make([]*domain.Feedback, len(feedbacks))
+	for i, f := range feedbacks {
+		domainFeedbacks[i] = toDomainFeedback(f)
+	}
+	return domainFeedbacks, total, nil
+}
