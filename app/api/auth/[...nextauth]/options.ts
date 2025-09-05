@@ -34,14 +34,14 @@ export const options: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-          redirect_uri: "http://localhost:3000/api/social/google-callback",
-        },
-      },
+      // authorization: {
+      //   params: {
+      //     prompt: "consent",
+      //     access_type: "offline",
+      //     response_type: "code",
+      //     redirect_uri: "http://localhost:3000/api/social/google-callback",
+      //   },
+      // },
     }),
 
     CredentialsProvider({
