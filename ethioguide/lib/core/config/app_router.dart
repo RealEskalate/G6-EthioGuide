@@ -70,10 +70,6 @@ final GoRouter router = GoRouter(
       builder: (context, state) =>
           const WorkspaceDiscussionPage(), // The function that builds the widget for this screen.
     ),
-    // This is the route for our temporary placeholder screen.
-      name: RouteNames.splash, 
-      builder: (context, state) => const SplashScreen(),
-    ),
     GoRoute(
       path: '/onboarding',
       name: RouteNames.onboarding, // Assuming you have this
