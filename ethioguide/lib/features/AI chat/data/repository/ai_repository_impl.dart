@@ -45,33 +45,26 @@ class AiRepositoryImpl implements AiRepository {
 
   @override
   Future<Either<Failure, List<Conversation>>> getHistory() async {
+    try {
+      final localHistory = await localDatasource.getCachedHistory();
+      if (localHistory.isNotEmpty) {
+        return Right(localHistory);
+      }
+    } on CacheException {
+      // Ignore → will fallback to remote
+    }
+
+    // If cache empty or missing → go to remote
     if (await networkInfo.isConnected) {
       try {
         final remoteHistory = await remoteDatasource.getHistory();
-        try {
-          await localDatasource.cacheHistory(remoteHistory);
-        } on CacheException {
-          //TODO: Log but ignore
-        }
+        await localDatasource.cacheHistory(remoteHistory);
         return Right(remoteHistory);
       } catch (e) {
-        // Remote failed → fallback to cache
-        try {
-          final localHistory = await localDatasource.getCachedHistory();
-          return Right(localHistory);
-        } on CacheException {
-          // No cache either → then fail
-          return Left(ServerFailure(message: 'Remote failed: $e'));
-        }
+        return Right([]);
       }
     } else {
-      // Offline → always fallback to cache
-      try {
-        final localHistory = await localDatasource.getCachedHistory();
-        return Right(localHistory);
-      } on CacheException catch (e) {
-        return Left(CachedFailure(message: e.message));
-      }
+      return Right([]);
     }
   }
 
