@@ -58,7 +58,7 @@ export default function ResetPasswordPage() {
   );
 
   return (
-    <div className="min-h-screen bg-neutral-light text-foreground flex flex-col items-center justify-center px-4 py-8">
+    <div className=" bg-neutral-light text-foreground flex flex-col items-center justify-center px-4 py-6">
       <div className="flex items-center justify-center gap-3 mb-2">
         <Image
           src="/images/ethioguide-symbol.png"
