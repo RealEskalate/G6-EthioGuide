@@ -1,216 +1,146 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Image from "next/image"
-import { Search, Plus, MessageSquare, Filter, X, ChevronRight, ChevronLeft } from "lucide-react"
+import { Search, Plus, MessageSquare, Pin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
-import { useGetDiscussionsQuery } from "@/app/store/slices/discussionsSlice"
-import { motion, useReducedMotion } from "framer-motion"
 
 export default function CommunityPage() {
-  const [searchInput, setSearchInput] = useState("")
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const router = useRouter()
+  const [expanded, setExpanded] = useState<{ [key: number]: boolean }>({});
 
-  // added: pagination state
-  const [page, setPage] = useState(0)
-  const limit = 10
-  const { data, isLoading, isError } = useGetDiscussionsQuery({ page, limit })
+  const discussions = [
+    {
+      id: 1,
+      author: "Alex Chen",
+      avatar: "/images/profile-photo.jpg",
+      timestamp: "2h ago",
+      title: "How to integrate AI tools into daily study routine?",
+      content:
+        "I've been experimenting with various AI tools for studying and note-taking. Would love to hear your experiences and recommendations for the best workflow...",
+      tags: ["#AI", "#StudyTips"],
+      likes: 24,
+      replies: 12,
+      views: 156,
+      shares: 8,
+    },
+    {
+      id: 2,
+      author: "Sarah Johnson",
+      avatar: "/images/profile-photo.jpg",
+      timestamp: "4h ago",
+      title: "📌 Welcome to the Community Guidelines",
+      content:
+        "Please take a moment to read our community guidelines to ensure a positive and productive environment for everyone. Let's build an amazing learning community together!",
+      tags: ["#Guidelines", "#Pinned"],
+      likes: 56,
+      replies: 8,
+      views: 234,
+      shares: 15,
+      isPinned: true,
+      isModerator: true,
+    },
+    {
+      id: 3,
+      author: "Mike Rodriguez",
+      avatar: "/images/profile-photo.jpg",
+      timestamp: "6h ago",
+      title: "Best note-taking apps for university students?",
+      content:
+        "Looking for recommendations on digital note-taking apps that work well for lectures, research, and collaboration. Currently using Notion but wondering if there are better alternatives...",
+      tags: ["#Notes", "#Apps"],
+      likes: 18,
+      replies: 15,
+      views: 89,
+      shares: 4,
+    },
+  ]
 
-  // added: mobile sidebar toggle
-  const [mobilePanelOpen, setMobilePanelOpen] = useState(false)
+  const popularTags = [
+    { name: "#AI", count: 45 },
+    { name: "#StudyTips", count: 32 },
+    { name: "#Events", count: 28 },
+    { name: "#Notes", count: 24 },
+    { name: "#Research", count: 19 },
+  ]
 
-  // added: compute totalPages once for reuse (desktop + sticky bar)
-  const totalPages =
-    typeof data?.total === "number" && typeof data?.limit === "number" && data.limit > 0
-      ? Math.max(1, Math.ceil(data.total / data.limit))
-      : 1
+  const topContributors = [
+    { name: "Emma Wilson", posts: "42 contributions", avatar: "/images/profile-photo.jpg" },
+    { name: "David Kim", posts: "38 contributions", avatar: "/images/profile-photo.jpg"},
+    { name: "Lisa Chang", posts: "35 contributions", avatar: "/images/profile-photo.jpg" },
+  ]
 
-  useEffect(() => {
-    if (data) {
-      console.log("Discussions list:", data)
+  const pinnedDiscussions = [{ title: "Community Guidelines", author: "Sarah Johnson" }]
+
+  const quickTags = ["#AI", "#passport", "#tax", "#business"]
+
+  // Filter discussions by search query (title or content) and category
+  const filteredDiscussions = discussions.filter(
+    (discussion) => {
+      const matchesSearch =
+        discussion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        discussion.content.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "all" ||
+        (selectedCategory === "ai" && discussion.tags.some(tag => tag.toLowerCase().includes("ai"))) ||
+        (selectedCategory === "study" && discussion.tags.some(tag => tag.toLowerCase().includes("study"))) ||
+        (selectedCategory === "business" && discussion.tags.some(tag => tag.toLowerCase().includes("business")));
+      return matchesSearch && matchesCategory;
     }
-  }, [data])
+  );
 
-  const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({})
+  const handleToggleExpand = (id: number) => {
+    setExpanded((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
-  // reset expanded per page
-  useEffect(() => {
-    setExpandedMap({})
-  }, [page])
-
-  const tagPillClasses = (i: number) => {
-    const styles = [
-      "bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800",
-      // replaced blue with amber
-      "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:text-amber-800",
-      "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100 hover:text-teal-800",
-      "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:text-indigo-800",
-      "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800",
-      "bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100 hover:text-cyan-800",
-    ]
-    return `cursor-pointer rounded-full ${styles[i % styles.length]}`
-  }
-
-  const apiDiscussions =
-    Array.isArray(data?.posts)
-      ? data!.posts.map((p) => ({
-          id: p.ID,
-          author: p.UserID || "User",
-          avatar: "/images/profile-photo.jpg",
-          timestamp: new Date(p.CreatedAt || p.UpdatedAt || Date.now()).toLocaleString(),
-          title: p.Title ?? "Untitled",
-          content: p.Content ?? "",
-          tags: Array.isArray(p.Tags) ? p.Tags.map((t) => String(t)) : [],
-        }))
-      : []
-
-  // only use backend data
-  const discussionsData = apiDiscussions
-
-  // build tags from backend posts for filters and fallback usage
-  const searchTags = (() => {
-    if (!Array.isArray(data?.posts)) return []
-    const set = new Set<string>()
-    data!.posts.forEach((p) => {
-      const tags = Array.isArray(p.Tags) ? p.Tags : []
-      tags.forEach((t) => {
-        const clean = String(t).replace(/^#/, "").trim()
-        if (clean) set.add(clean)
-      })
-    })
-    return Array.from(set)
-  })()
-
-  // helper to normalize tags for comparison
-  const normalizeTag = (s: string) => String(s || "").replace(/^#/, "").trim().toLowerCase()
-
-  const popularTags = (() => {
-    const counts = new Map<string, number>()
-    discussionsData.forEach((d) =>
-      (d.tags || []).forEach((t: string) => {
-        const clean = String(t).replace(/^#/, "").trim()
-        if (clean) counts.set(clean, (counts.get(clean) || 0) + 1)
-      })
-    )
-    let list = Array.from(counts.entries()).map(([name, count]) => ({ name, count }))
-    // fallback to backend-provided tags only (no dummy tags)
-    if (!list.length) {
-      list = searchTags.map((name) => ({ name, count: 1 }))
-    }
-    return list.sort((a, b) => b.count - a.count).slice(0, 20)
-  })()
-
-  const filteredDiscussions = discussionsData.filter((discussion) => {
-    const matchesSearch =
-      discussion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      discussion.content.toLowerCase().includes(searchQuery.toLowerCase())
-    // updated: exact tag match using backend tags (no hardcoded categories)
-    const matchesCategory =
-      selectedCategory === "all" ||
-      (Array.isArray(discussion.tags) &&
-        discussion.tags.some((tag: string) => normalizeTag(tag) === normalizeTag(selectedCategory)))
-    return matchesSearch && matchesCategory
-  })
-
-  const prefersReducedMotion = useReducedMotion()
-  const itemVariants = prefersReducedMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.15 } } }
-    : {
-        hidden: { opacity: 0, y: 12, scale: 0.985, filter: "blur(0.2px)" },
-        visible: (i: number) => ({
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          filter: "none",
-          transition: {
-            type: "spring" as const,
-            stiffness: 220,
-            damping: 18,
-            mass: 0.9,
-            delay: i * 0.05 + 0.06,
-          },
-        }),
-      }
+  const guidelinesList = [
+    "Be respectful and courteous to others.",
+    "No spam, self-promotion, or irrelevant links.",
+    "Keep discussions constructive and on-topic.",
+    "Use clear language and avoid offensive terms.",
+    "Report inappropriate content to moderators.",
+    "Help others and share your knowledge.",
+    "Follow all applicable laws and platform rules.",
+    "Thank you for making this a great place to learn and collaborate!"
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col page-fade">
-      {/* animations (scoped) */}
-      <style jsx>{`
-        .page-fade { animation: fadeIn .45s ease-out both; }
-        .fade-in-up { animation: fadeInUp .5s ease-out both; }
-        .slide-up { animation: slideUp .4s ease-out both; }
-        .card-tilt { transition: transform .25s ease, box-shadow .25s ease; }
-        .card-tilt:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,.08); }
-        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } }
-        @keyframes slideUp { from { transform: translateY(16px); opacity: .6 } to { transform: translateY(0); opacity: 1 } }
-        @media (prefers-reduced-motion: reduce) {
-          .page-fade, .fade-in-up, .slide-up, .card-enter, .card-enter-left, .card-enter-right { animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; }
-          .card-tilt, .card-tilt:hover { transform: none !important; box-shadow: none !important; }
-        }
-      `}</style>
-
-      <div className="max-w-7xl mx-auto w-full flex-1">
+    <div className="min-h-screen bg-gray-50 p-2 sm:p-4">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white/90 border border-gray-100 rounded-xl p-4 sm:p-5 mb-4 sm:mb-6 shadow-sm fade-in-up">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="w-full">
-              <div className="flex items-center gap-3 mb-1">
-                <MessageSquare className="h-7 w-7 text-[#3A6A8D]" />
-                <h1 className="text-xl leading-snug sm:text-3xl font-bold text-gray-900">
-                  Community Discussions
-                </h1>
-              </div>
-              <p className="text-gray-600 text-xs sm:text-sm md:text-base">
-                Join the conversation. Share, ask, and collaborate.
-              </p>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <MessageSquare className="h-8 w-8 text-[#3A6A8D]" />
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Community Discussions</h1>
             </div>
-            <div className="hidden sm:flex gap-2">
-              <Button
-                variant="outline"
-                className="border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5"
-                onClick={() => router.push("/user/my-discussions")}
-              >
-                My Discussions
-              </Button>
-              <Button
-                className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
-                onClick={() => router.push("/user/create-post")}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Discussion
-              </Button>
-            </div>
-            {/* Mobile quick button to open filters */}
-            <div className="w-full sm:hidden flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1 border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5"
-                onClick={() => setMobilePanelOpen(true)}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filters & Tags
-              </Button>
-            </div>
+            <p className="text-gray-600 text-sm sm:text-base">Join the conversation. Share, ask, and collaborate.</p>
           </div>
+          <Button
+            className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white w-full sm:w-auto"
+            onClick={() => router.push("/user/create-post")}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Discussion
+          </Button>
         </div>
-
-        {/* Search & Filters (desktop / tablet) */}
-        <Card className="p-4 mb-4 sm:mb-6 hidden sm:block fade-in-up" style={{ animationDelay: "80ms" }}>
-          {/* ...existing search/filter block unchanged... */}
+        {/* Search and Filters */}
+        <Card className="p-4 mb-6">
           <div className="flex flex-col gap-4 w-full mb-2 sm:flex-row">
             <div className="relative flex-1 flex">
-              {/* ...existing code... */}
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                // ...existing props...
                 placeholder="Search discussions..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -224,320 +154,179 @@ export default function CommunityPage() {
                 Search
               </Button>
             </div>
-            {/* Categories only (backend tags); fixed width so search expands */}
-            <div className="flex gap-2 flex-none w-56">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-full border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent">
+            <div className="flex gap-2 flex-1">
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {searchTags.map((tag) => (
-                    <SelectItem key={tag} value={tag}>
-                      {tag}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="ai">AI & Technology</SelectItem>
+                  <SelectItem value="study">Study Tips</SelectItem>
+                  <SelectItem value="business">Business</SelectItem>
                 </SelectContent>
               </Select>
-              {/* removed Sort/Latest select */}
+              <Select defaultValue="latest">
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Latest" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="latest">Latest</SelectItem>
+                  <SelectItem value="popular">Popular</SelectItem>
+                  <SelectItem value="trending">Trending</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          {searchTags.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
-              {searchTags.map((tag, i) => (
-                <Badge key={tag} variant="outline" className={`${tagPillClasses(i)} flex-shrink-0`}>
-                  {tag}
-                </Badge>
+          {/* Quick Tags */}
+          <div className="flex flex-wrap gap-3 mb-3">
+            {quickTags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="outline"
+                className="cursor-pointer hover:bg-blue-100 hover:text-blue-700 transition-colors "
+              >
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-9 space-y-6">
+            <div className="space-y-6 mt-2">
+              {filteredDiscussions.map((discussion, index) => (
+                <Card
+                  key={discussion.id}
+                  className={`p-4 sm:p-6 bg-white hover:shadow-lg transition-all duration-300 cursor-pointer animate-in fade-in slide-in-from-bottom-4`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <CardContent className="p-0">
+                    <div className="flex gap-4 flex-col sm:flex-row">
+                      <Image
+                        src={discussion.avatar || "/placeholder.svg"}
+                        alt={discussion.author}
+                        width={48}
+                        height={48}
+                        className="w-12 h-12 rounded-full object-cover mx-auto sm:mx-0"
+                      />
+                      <div className="flex-1">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2">
+                          <span className="text-lg font-semibold text-gray-900">{discussion.author}</span>
+                          {discussion.isModerator && (
+                            <Badge variant="secondary" className="text-xs">
+                              Moderator
+                            </Badge>
+                          )}
+                          {discussion.isPinned && <Pin className="h-4 w-4 text-[#3A6A8D]" />}
+                          <span className="text-gray-500 text-sm">{discussion.timestamp}</span>
+                        </div>
+                        <h3 className="text-base font-semibold text-gray-900 mb-2 ">
+                          {discussion.title}
+                        </h3>
+                        <div>
+                          <p
+                            className={`text-gray-700 mb-4 ${
+                              expanded[discussion.id] ? "" : "line-clamp-2"
+                            }`}
+                          >
+                            {discussion.title.includes("Community Guidelines") && expanded[discussion.id] ? (
+                              <ul className="list-disc pl-6 space-y-2">
+                                {guidelinesList.map((item, idx) => (
+                                  <li key={idx}>{item}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              discussion.content
+                            )}
+                          </p>
+                          <div className="flex flex-wrap gap-2 pb-6">
+                            {discussion.tags.map((tag) => (
+                              <Badge key={tag} variant="outline" className="text-xs cursor-pointer hover:bg-blue-100 hover:text-blue-700">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="flex justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-[#3A6A8D] hover:bg-blue-100 hover:text-blue-700"
+                              onClick={() => handleToggleExpand(discussion.id)}
+                            >
+                              {expanded[discussion.id] ? "View Less" : "View More"}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
-          )}
-        </Card>
-
-        {/* Mobile slide-over panel */}
-        {mobilePanelOpen && (
-          <div className="fixed inset-0 z-50 sm:hidden">
-            <div
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-              onClick={() => setMobilePanelOpen(false)}
-            />
-            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl max-h-[85vh] flex flex-col slide-up">
-              <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b">
-                <h2 className="text-base font-semibold text-gray-800">Filters & Tags</h2>
-                <Button variant="ghost" size="sm" onClick={() => setMobilePanelOpen(false)}>
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              <div className="p-4 space-y-5 overflow-y-auto">
-                {/* Mobile search */}
-                <div>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search discussions..."
-                      value={searchInput}
-                      onChange={(e) => setSearchInput(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3A6A8D]"
-                    />
-                  </div>
-                  <Button
-                    className="mt-2 w-full bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
-                    onClick={() => {
-                      setSearchQuery(searchInput)
-                      setMobilePanelOpen(false)
-                    }}
-                  >
-                    Apply
-                  </Button>
-                </div>
-                {/* Category select (mobile) - backend tags + style like My Discussions */}
-                <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-wide text-gray-500 font-medium">
-                    Category
-                  </label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-full border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent">
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {searchTags.map((tag) => (
-                        <SelectItem key={tag} value={tag}>
-                          {tag}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* Tags */}
-                {searchTags.length > 0 && (
-                  <div className="space-y-2">
-                    <label className="text-xs uppercase tracking-wide text-gray-500 font-medium">
-                      Popular Tags
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {searchTags.map((tag, i) => (
-                        <Badge
-                          key={tag}
-                          variant="outline"
-                          className={`${tagPillClasses(i)} px-3 py-1`}
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div className="pt-2">
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      setSelectedCategory("all")
-                      setSearchInput("")
-                      setSearchQuery("")
-                    }}
-                  >
-                    Reset
-                  </Button>
-                </div>
-              </div>
-            </div>
           </div>
-        )}
+          {/* Sidebar */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Popular Tags */}
+            <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-105">
+              <h3 className="font-semibold text-gray-900 mb-4">Popular Tags</h3>
+              <div className="space-y-2">
+                {popularTags.map((tag) => (
+                  <div key={tag.name} className="flex items-center justify-between">
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer  hover:bg-blue-100 hover:text-blue-700"
+                    >
+                      {tag.name}
+                    </Badge>
+                    <span className="text-sm text-gray-500">{tag.count}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-9 space-y-4 sm:space-y-6">
-            {isLoading && (
-              <div className="space-y-4">
-                {[0,1,2].map(i=>(
-                  <div key={i} className="border border-gray-100 rounded-xl bg-white p-4 sm:p-6 shadow-sm animate-pulse">
-                    <div className="flex gap-4">
-                      <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gray-200" />
-                      <div className="flex-1 space-y-3">
-                        <div className="h-4 w-1/2 bg-gray-200 rounded" />
-                        <div className="h-3 w-full bg-gray-100 rounded" />
-                        <div className="h-3 w-5/6 bg-gray-100 rounded" />
-                      </div>
+            {/* Top Contributors */}
+            <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-105">
+              <h3 className="font-semibold text-gray-900 mb-4">Top Contributors</h3>
+              <div className="space-y-3">
+                {topContributors.map((contributor) => (
+                  <div key={contributor.name} className="flex items-center gap-3">
+                    <Image
+                      src={contributor.avatar || "/placeholder.svg"}
+                      alt={contributor.name}
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{contributor.name}</p>
+                      <p className="text-xs text-gray-500">{contributor.posts}</p>
                     </div>
                   </div>
                 ))}
               </div>
-            )}
+            </Card>
 
-            {!isLoading && (
-              <div className="space-y-4 sm:space-y-6">
-                {filteredDiscussions.map((discussion, index) => {
-                  const rowKey = `${discussion.title}-${index}`
-                  const isExpanded = !!expandedMap[rowKey]
-                  return (
-                    <motion.div
-                      key={rowKey}
-                      variants={itemVariants}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={{ once: true, amount: 0.2 }}
-                      custom={index}
-                    >
-                      <Card
-                        className="p-3 sm:p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all card-tilt"
-                      >
-                        <CardContent className="p-0">
-                          <div className="flex gap-3 sm:gap-4 flex-col sm:flex-row">
-                            <Image
-                              src={discussion.avatar || "/placeholder.svg"}
-                              alt={discussion.title}
-                              width={44}
-                              height={44}
-                              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover mx-auto sm:mx-0 ring-2 ring-white shadow"
-                            />
-                            <div className="flex-1">
-                              <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-2">
-                                {discussion.title}
-                              </h3>
-                              <p className={`text-gray-700 text-sm sm:text-[15px] mb-3 ${isExpanded ? "" : "line-clamp-2"}`}>
-                                {discussion.content}
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                {discussion.tags.map((tag: string, i: number) => {
-                                  const clean = tag.replace(/^#/, "")
-                                  return (
-                                    <Badge
-                                      key={`${discussion.title}-${clean}-${i}`}
-                                      variant="outline"
-                                      className={`text-[10px] sm:text-xs ${tagPillClasses(i)}`}
-                                    >
-                                      {clean}
-                                    </Badge>
-                                  )
-                                })}
-                              </div>
-                              <div className="flex justify-end pt-1 sm:pt-3">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-[#3A6A8D] hover:bg-[#3A6A8D]/10 hover:text-[#2d5470] text-xs sm:text-sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setExpandedMap((prev) => ({ ...prev, [rowKey]: !prev[rowKey] }))
-                                  }}
-                                >
-                                  {isExpanded ? "View Less" : "View More"}
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  )
-                })}
-                {filteredDiscussions.length === 0 && !isLoading && (
-                  <div className="text-center text-sm text-gray-500 py-10 border border-dashed rounded-lg fade-in-up" style={{ animationDelay: "120ms" }}>
-                    No discussions match your filters.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Desktop pagination footer */}
-            {totalPages > 1 && (
-              <div className="hidden sm:flex mt-2 bg-white/90 border border-gray-100 rounded-xl px-3 py-3 items-center justify-between shadow-sm fade-in-up" style={{ animationDelay: "140ms" }}>
-                <div className="text-sm text-gray-600">
-                  Page {page + 1} of {totalPages}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="border-gray-300"
-                    disabled={page <= 0 || isLoading}
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
-                    disabled={page >= totalPages - 1 || isLoading}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar (desktop only) */}
-          <div className="lg:col-span-3 space-y-6 hidden lg:block fade-in-up" style={{ animationDelay: "100ms" }}>
-            <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-[1.02]">
-              <h3 className="font-semibold text-gray-900 mb-4 text-sm sm:text-base">Popular Tags</h3>
+            {/* Pinned Discussions */}
+            <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-105">
+              <h3 className="font-semibold text-gray-900 mb-4">Pinned Discussions</h3>
               <div className="space-y-2">
-                {popularTags.map((tag, i) => (
-                  <div key={tag.name} className="flex items-center justify-between text-sm">
-                    <Badge variant="outline" className={tagPillClasses(i)}>
-                      {tag.name}
-                    </Badge>
-                    <span className="text-xs text-gray-500">{tag.count}</span>
+                {pinnedDiscussions.map((discussion, index) => (
+                  <div key={index} className="p-3 bg-blue-50 rounded-lg border-l-4 border-[#3A6A8D]">
+                    <p className="font-medium text-gray-900 text-sm">{discussion.title}</p>
+                    <p className="text-xs text-gray-500">by {discussion.author}</p>
                   </div>
                 ))}
               </div>
             </Card>
           </div>
         </div>
-
-        {/* Status / meta */}
-        <div className="mt-6 text-center sm:text-left fade-in-up" style={{ animationDelay: "160ms" }}>
-          {isLoading && <div className="text-sm text-gray-500">Loading...</div>}
-          {isError && <div className="text-sm text-red-600">Failed to load discussions.</div>}
-          {!isLoading && !isError && data && (
-            <div className="text-xs sm:text-sm text-gray-600">
-              Total: {data.total} • Page: {data.page} • Limit: {data.limit}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Sticky mobile action bar */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t shadow-lg px-2 py-2 flex items-center justify-between fade-in-up" style={{ animationDelay: "180ms" }}>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 mx-1 text-[#3A6A8D] border-[#3A6A8D]"
-          onClick={() => router.push("/user/my-discussions")}
-        >
-          Me
-        </Button>
-        <Button
-          size="sm"
-          className="flex-1 mx-1 bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
-          onClick={() => router.push("/user/create-post")}
-        >
-          <Plus className="h-4 w-4 mr-1" /> New
-        </Button>
-        {totalPages > 1 && (
-          <div className="flex flex-1 mx-1 gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              disabled={page <= 0}
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   )
 }
+
+
