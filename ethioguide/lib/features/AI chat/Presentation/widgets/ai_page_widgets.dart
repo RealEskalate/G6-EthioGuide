@@ -3,6 +3,12 @@ import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+//############################################################################################
+//#                                                                                          #
+//#                                     App Bar                                              #
+//#                                                                                          #
+//############################################################################################
+
 AppBar appBar({required BuildContext context}) {
   return AppBar(
     leading: Icon(Icons.menu),
@@ -57,6 +63,12 @@ AppBar appBar({required BuildContext context}) {
     ],
   );
 }
+
+//############################################################################################
+//#                                                                                          #
+//#                                     Single Conversation Card                             #
+//#                                                                                          #
+//############################################################################################
 
 Widget buildMessage({
   required Conversation conv,
@@ -147,6 +159,12 @@ Widget buildMessage({
   );
 }
 
+//############################################################################################
+//#                                                                                          #
+//#                                     AI Resonse Content                                   #
+//#                                                                                          #
+//############################################################################################
+
 Widget _buildStepCard({
   required IconData icon,
   required String title,
@@ -186,20 +204,33 @@ Widget _buildStepCard({
   );
 }
 
+//############################################################################################
+//#                                                                                          #
+//#                                     related Procedure cards                              #
+//#                                                                                          #
+//############################################################################################
+
 Widget _buildInfoCard({
   required Procedure procedure,
   required BuildContext context,
 }) {
   return Card(
-    color: Colors.yellow[50],
+    elevation: 2,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    margin: const EdgeInsets.symmetric(vertical: 4),
+    margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+    color: const Color(0xFFF1FAF9), // pale teal background
+    shadowColor: Colors.black.withOpacity(0.05),
     child: Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.info, color: Colors.yellow),
-          const SizedBox(width: 8),
+          const Icon(
+            Icons.info,
+            color: Colors.teal,
+            size: 22,
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,47 +238,40 @@ Widget _buildInfoCard({
                 Text(
                   procedure.name,
                   style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Row(
                   children: [
-                    ElevatedButton(
+                    _buildCompactButton(
+                      context: context,
+                      label: 'View',
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(
-                              'Viewing procedure: ${procedure.name}',
-                            ),
+                            content: Text('Viewing procedure: ${procedure.name}'),
+                            duration: const Duration(seconds: 2),
                           ),
                         );
-                        // TODO: Navigate to procedure details page
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal[300],
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('View'),
                     ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
+                    const SizedBox(width: 6),
+                    _buildCompactButton(
+                      context: context,
+                      label: 'Start',
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(
-                              'Starting procedure: ${procedure.name}',
-                            ),
+                            content: Text('Starting procedure: ${procedure.name}'),
+                            duration: const Duration(seconds: 2),
                           ),
                         );
-                        // TODO: Navigate to procedure start page
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal[300],
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Start Procedure'),
                     ),
                   ],
                 ),
@@ -259,6 +283,33 @@ Widget _buildInfoCard({
     ),
   );
 }
+
+Widget _buildCompactButton({
+  required BuildContext context,
+  required String label,
+  required VoidCallback onPressed,
+}) {
+  return ElevatedButton(
+    onPressed: onPressed,
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color.fromARGB(255, 18, 159, 145),
+      foregroundColor: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      minimumSize: const Size(64, 30),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      elevation: 0,
+      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+    ),
+    child: Text(label),
+  );
+}
+
+
+//############################################################################################
+//#                                                                                          #
+//#                                     CheckList button                                     #
+//#                                                                                          #
+//############################################################################################
 
 Widget _buildChecklistButton({required BuildContext context}) {
   return Card(
@@ -290,6 +341,48 @@ Widget _buildChecklistButton({required BuildContext context}) {
           },
         ),
       ],
+    ),
+  );
+}
+
+
+//############################################################################################
+//#                                                                                          #
+//#                                     For FOQ's                                            #
+//#                                                                                          #
+//############################################################################################
+Widget questionCard(String question) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [
+          Color(0xFF00695C), // Teal
+          Color.fromARGB(255, 23, 89, 124), // Blue
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.2),
+          blurRadius: 8,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Text(
+      question,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
+      ),
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
     ),
   );
 }
