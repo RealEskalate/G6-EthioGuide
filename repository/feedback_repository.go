@@ -165,7 +165,7 @@ func (r *FeedbackRepository) GetFeedbackByID(ctx context.Context, id string) (*d
 		return nil, fmt.Errorf("invalid feedback ID: %w", err)
 	}
 
-	var model FeedbackModel 
+	var model FeedbackModel
 	err = r.collection.FindOne(ctx, bson.M{"_id": fid}).Decode(&model)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -179,7 +179,7 @@ func (r *FeedbackRepository) GetFeedbackByID(ctx context.Context, id string) (*d
 
 func (r *FeedbackRepository) UpdateFeedbackStatus(ctx context.Context, feedbackID string, newFeedback *domain.Feedback) error {
 	model := fromDomainFeedback(newFeedback)
-	
+
 	fid, err := primitive.ObjectIDFromHex(feedbackID)
 	if err != nil {
 		return fmt.Errorf("invalid feedback ID: %w", err)
@@ -214,7 +214,11 @@ func (r *FeedbackRepository) GetAllFeedbacks(ctx context.Context, filter *domain
 		}
 		f = append(f, bson.M{"procedure_id": pid})
 	}
-	filters := bson.M{"$and": f}
+
+	filters := bson.M{}
+	if len(f) > 0 {
+		filters = bson.M{"$and": f}
+	}
 
 	total, err := r.collection.CountDocuments(ctx, filters)
 	if err != nil {
@@ -223,7 +227,7 @@ func (r *FeedbackRepository) GetAllFeedbacks(ctx context.Context, filter *domain
 	opts := options.Find()
 	opts.SetSkip((filter.Page - 1) * filter.Limit)
 	opts.SetLimit(filter.Limit)
-	opts.SetSort(bson.D{{Key: "created_at", Value: -1}}) 
+	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 	cursor, err := r.collection.Find(ctx, filters, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to fetch feedbacks: %w", err)

@@ -3,11 +3,13 @@ package repository
 import (
 	"EthioGuide/domain"
 	"context"
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ChecklistItemModel struct {
@@ -159,15 +161,82 @@ func (cr *ChecklistRepository) GetChecklistByUserProcedureID(ctx context.Context
 func (cr *ChecklistRepository) ToggleCheck(ctx context.Context, checklistID string) error {
 	objID, err := primitive.ObjectIDFromHex(checklistID)
 	if err != nil {
-		return err
+		return err // Invalid ID format
 	}
 
-	update := []bson.M{{"$set": bson.M{"is_checked": bson.M{"$not": "$is_checked"}}}}
-	if _, err := cr.collectionChecklist.UpdateOne(ctx, bson.M{"_id": objID}, update); err != nil {
+	// Use a session for the transaction
+	session, err := cr.collectionChecklist.Database().Client().StartSession()
+	if err != nil {
 		return err
 	}
+	defer session.EndSession(ctx)
 
-	return nil
+	// The WithTransaction function handles starting, committing, and aborting the transaction.
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		// --- Step 1: Atomically toggle the item and get its updated state ---
+		// We use FindOneAndUpdate to get the document back after the update.
+		// We need the `user_procedure_id` from it.
+		opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+		filter := bson.M{"_id": objID}
+		// The update pipeline '$not' efficiently flips the boolean value.
+		update := bson.A{bson.D{{Key: "$set", Value: bson.D{{Key: "is_checked", Value: bson.D{{Key: "$not", Value: "$is_checked"}}}}}}}
+
+		var updatedChecklistItem ChecklistItemModel
+		err := cr.collectionChecklist.FindOneAndUpdate(sessCtx, filter, update, opts).Decode(&updatedChecklistItem)
+		if err != nil {
+			if errors.Is(err, mongo.ErrNoDocuments) {
+				return nil, domain.ErrNotFound
+			}
+			return nil, err // Other database error
+		}
+
+		userProcedureID := updatedChecklistItem.UserProcedureID
+
+		// --- Step 2: Count total and checked items for the parent procedure ---
+		// Both counts must be performed within the session context.
+		totalItemsFilter := bson.M{"user_procedure_id": userProcedureID}
+		totalCount, err := cr.collectionChecklist.CountDocuments(sessCtx, totalItemsFilter)
+		if err != nil {
+			return nil, err
+		}
+
+		if totalCount == 0 {
+			// This is a safety check; should not happen if a checklist item exists.
+			return nil, domain.ErrNotFound
+		}
+
+		checkedItemsFilter := bson.M{"user_procedure_id": userProcedureID, "is_checked": true}
+		checkedCount, err := cr.collectionChecklist.CountDocuments(sessCtx, checkedItemsFilter)
+		if err != nil {
+			return nil, err
+		}
+
+		// --- Step 3: Calculate the new percentage ---
+		// Use float64 for division to get an accurate ratio.
+		percentage := int((float64(checkedCount) / float64(totalCount)) * 100.0)
+
+		// --- Step 4: Update the parent UserProcedure document ---
+		parentUpdateFilter := bson.M{"_id": userProcedureID}
+		parentUpdate := bson.M{
+			"$set": bson.M{
+				"percent":    percentage,
+				"updated_at": time.Now(),
+			},
+		}
+
+		result, err := cr.collectionUserProcedure.UpdateOne(sessCtx, parentUpdateFilter, parentUpdate)
+		if err != nil {
+			return nil, err
+		}
+		if result.MatchedCount == 0 {
+			return nil, domain.ErrNotFound
+		}
+
+		// If everything succeeded, return nil to commit the transaction.
+		return nil, nil
+	})
+
+	return err
 }
 
 func (cr *ChecklistRepository) FindCheck(ctx context.Context, checklistID string) (*domain.Checklist, error) {
