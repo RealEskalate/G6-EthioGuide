@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -8,50 +8,52 @@ import { FaUsers } from "react-icons/fa6";
 import { Plus, Megaphone, FileText, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+const stats = [
+  {
+    data: 127,
+    description: "Procedures Managed",
+    icon: (
+      <div className="bg-gray-100 p-3 rounded-2xl ">
+        <FileText className="w-6 h-6  text-[#3A6A8D] mb-2" />
+      </div>
+    ),
+  },
+  {
+    data: 8,
+    description: "Active Notices",
+    icon: (
+      <div className="bg-gray-100 p-3 rounded-2xl ">
+        <IoMegaphoneOutline className="w-6 h-6 text-[#5E9C8D] mb-2" />
+      </div>
+    ),
+  },
+  {
+    data: 23,
+    description: "Pending Feedback",
+    icon: (
+      <div className="bg-gray-100 p-3 rounded-2xl ">
+        <MdOutlineFeedback className="w-6 h-6 text-[#1C3B2E] mb-2" />
+      </div>
+    ),
+  },
+  {
+    data: 1284,
+    description: "User Interactions",
+    icon: (
+      <div className="bg-gray-100 p-3 rounded-2xl ">
+        <FaUsers className="w-6 h-6 text-[#1C3B2E] mb-2" />
+      </div>
+    ),
+  },
+];
+
 export default function AdminDashboard() {
-  const route = useRouter()
-  const stats = [
-    {
-      data: 127,
-      description: "Procedures Managed",
-      icon: (
-        <div className="bg-gray-100 p-3 rounded-2xl ">
-          <FileText className="w-6 h-6  text-[#3A6A8D] mb-2" />
-        </div>
-      ),
-    },
-    {
-      data: 8,
-      description: "Active Notices",
-      icon: (
-        <div className="bg-gray-100 p-3 rounded-2xl ">
-          <IoMegaphoneOutline className="w-6 h-6 text-[#5E9C8D] mb-2" />
-        </div>
-      ),
-    },
-    {
-      data: 23,
-      description: "Pending Feedback",
-      icon: (
-        <div className="bg-gray-100 p-3 rounded-2xl ">
-          <MdOutlineFeedback className="w-6 h-6 text-[#1C3B2E] mb-2" />
-        </div>
-      ),
-    },
-    {
-      data: 1284,
-      description: "User Interactions",
-      icon: (
-        <div className="bg-gray-100 p-3 rounded-2xl ">
-          <FaUsers className="w-6 h-6 text-[#1C3B2E] mb-2" />
-        </div>
-      ),
-    },
-  ];
+  const route = useRouter();
+
   return (
     <div className="p-6 space-y-6 w-full">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r bg-[#3A6A8D] text-white p-6 rounded-2xl shadow py-10">
+      <div className="bg-gradient-to-r from-primary-dark to-primary-light text-white p-6 rounded-2xl shadow py-10">
         <h1 className="text-2xl font-semibold">Welcome back, Admin</h1>
       </div>
 
@@ -75,7 +77,10 @@ export default function AdminDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {stats.map(({ data, description, icon }) => (
-          <Card key={data} className="shadow-sm border-gray-50">
+          <Card
+            key={data}
+            className="shadow-sm border-gray-50 hover:scale-105 transition-transform duration-300 cursor-pointer"
+          >
             <CardContent className="flex items-center justify-between p-4 ">
               {icon}
 
