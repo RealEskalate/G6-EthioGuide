@@ -20,11 +20,13 @@ import { signIn } from "next-auth/react";
 import { FaGoogle, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation"; 
 
 export default function RegisterPage() {
   const { t } = useTranslation("auth");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter(); // Initialize useRouter
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -37,24 +39,6 @@ export default function RegisterPage() {
       confirmPassword: "",
     },
   });
-
-  // const handleGoogleLogin = () => {
-  //   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
-  //   // THIS IS THE CRUCIAL PART: Redirect to your custom API route
-  //   const redirectUri = `${window.location.origin}/api/auth/google-social-callback`;
-  //   const scope =
-  //     "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid";
-
-  //   const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${encodeURIComponent(
-  //     clientId
-  //   )}&redirect_uri=${encodeURIComponent(
-  //     redirectUri
-  //   )}&response_type=code&scope=${encodeURIComponent(
-  //     scope
-  //   )}&access_type=offline&prompt=consent`; // Include access_type and prompt if needed
-
-  //   window.location.href = googleAuthUrl;
-  // };
 
   const onSubmit = async (data: RegisterFormData) => {
     console.log("Form submitted:", data);
@@ -83,6 +67,11 @@ export default function RegisterPage() {
       if (!registerResponse.ok) {
         throw new Error(registerResult.message || t("register.error"));
       }
+
+      // --- NEW: Redirect on successful registration ---
+      router.push("/auth/check-email"); // Redirect to the new page
+      // --- END NEW ---
+
     } catch (err) {
       console.error("Registration error:", err);
       form.setError("root", {
@@ -102,7 +91,6 @@ export default function RegisterPage() {
           alt="EthioGuide Symbol"
           width={50}
           height={50}
-          // className="h-10 w-10"
           priority
         />
         <span className="text-gray-800 font-semibold text-3xl">EthioGuide</span>
@@ -114,7 +102,6 @@ export default function RegisterPage() {
               <CardTitle className="text-2xl font-bold text-center font-amharic">
                 {t("register.title")}
               </CardTitle>
-              {/* <LanguageSwitcher /> */}
             </div>
           </div>
           <p className="text-sm text-center text-neutral-dark ">
@@ -199,12 +186,12 @@ export default function RegisterPage() {
                           placeholder={t("register.phone_number_placeholder")}
                           className="border-neutral focus:border-primary rounded-l-none"
                           {...field}
-                          value={field.value?.replace(/^\+251/, "") || ""} // Remove +251 for display
+                          value={field.value?.replace(/^\+251/, "") || ""}
                           onChange={(e) =>
                             field.onChange(
                               `+251${e.target.value.replace(/^\+251/, "")}`
                             )
-                          } // Prepend +251 on change
+                          }
                         />
                       </div>
                     </FormControl>
@@ -304,7 +291,6 @@ export default function RegisterPage() {
               <Button
                 variant="outline"
                 className="w-full border-neutral text-primary-dark hover:bg-secondary/20 rounded-md"
-                // onClick={handleGoogleLogin}
                 onClick={() =>
                   signIn("google", { callbackUrl: "/api/auth/callback/google" })
                 }

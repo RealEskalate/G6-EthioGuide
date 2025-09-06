@@ -22,12 +22,9 @@ import {
 } from "@/lib/validation/reset-password";
 import Image from "next/image";
 
-// Prevent static prerendering to avoid i18n SSR issues
-export const dynamic = "force-dynamic";
-
 function ResetPasswordContent() {
-  const { t } = useTranslation("auth");
-
+  const { t, i18n } = useTranslation("auth");
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
@@ -38,7 +35,7 @@ function ResetPasswordContent() {
   const onSubmit = async (data: ResetPasswordFormData) => {
     try {
       // Placeholder: Replace with your backend API call
-      const response = await fetch("/api/auth/reset-password", {
+      const response = await fetch(`${API_URL}/auth/forgot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
