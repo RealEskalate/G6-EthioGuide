@@ -8,12 +8,31 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send } from "lucide-react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCreateDiscussionMutation } from "@/app/store/slices/discussionsSlice";
+import { toast } from "react-hot-toast";
 
 export default function CreatePostPage() {
   const [tag, setTag] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [createDiscussion, { isLoading: creating }] = useCreateDiscussionMutation();
   const router = useRouter();
+
+  const handlePublish = async () => {
+    if (!title.trim() || !content.trim()) return;
+    try {
+      await createDiscussion({
+        title: title.trim(),
+        content: content.trim(),
+        tags: tag ? [tag] : [],
+      }).unwrap();
+      toast.success("Post created successfully");
+      router.push("/user/discussions");
+    } catch (e) {
+      console.error("Failed to create post:", e);
+      alert("Failed to publish post. Please try again.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -32,7 +51,7 @@ export default function CreatePostPage() {
         </div>
 
         {/* Post Type Card */}
-  <div className="bg-white rounded-xl p-6 mb-6 shadow-lg">
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-lg">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Post Type</h2>
           <div className="mb-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
@@ -51,7 +70,7 @@ export default function CreatePostPage() {
         </div>
 
         {/* Title & Content Card */}
-  <div className="bg-white rounded-xl p-6 mb-6 shadow-lg">
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-lg">
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">Title / Headline <span className="text-red-500">*</span></label>
             <Input
@@ -89,13 +108,14 @@ export default function CreatePostPage() {
         <div className="flex gap-4">
           <Button
             className="flex items-center gap-2 px-6 py-2 bg-primary hover:bg-[#2d5470] text-white"
-            disabled={title.trim() === "" || content.trim() === ""}
-            onClick={() => router.push("./discussions")}
+            disabled={title.trim() === "" || content.trim() === "" || creating}
+            onClick={handlePublish}
           >
-            <Send className="w-4 h-4" /> Publish Post
+            <Send className="w-4 h-4" /> {creating ? "Publishing..." : "Publish Post"}
           </Button>
         </div>
       </div>
     </div>
   );
 }
+       

@@ -20,11 +20,13 @@ import { signIn } from "next-auth/react";
 import { FaGoogle, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation"; 
 
 export default function RegisterPage() {
   const { t } = useTranslation("auth");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter(); // Initialize useRouter
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -37,24 +39,6 @@ export default function RegisterPage() {
       confirmPassword: "",
     },
   });
-
-  // const handleGoogleLogin = () => {
-  //   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
-  //   // THIS IS THE CRUCIAL PART: Redirect to your custom API route
-  //   const redirectUri = `${window.location.origin}/api/auth/google-social-callback`;
-  //   const scope =
-  //     "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid";
-
-  //   const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${encodeURIComponent(
-  //     clientId
-  //   )}&redirect_uri=${encodeURIComponent(
-  //     redirectUri
-  //   )}&response_type=code&scope=${encodeURIComponent(
-  //     scope
-  //   )}&access_type=offline&prompt=consent`; // Include access_type and prompt if needed
-
-  //   window.location.href = googleAuthUrl;
-  // };
 
   const onSubmit = async (data: RegisterFormData) => {
     console.log("Form submitted:", data);
@@ -83,6 +67,11 @@ export default function RegisterPage() {
       if (!registerResponse.ok) {
         throw new Error(registerResult.message || t("register.error"));
       }
+
+      // --- NEW: Redirect on successful registration ---
+      router.push("/auth/check-email"); // Redirect to the new page
+      // --- END NEW ---
+
     } catch (err) {
       console.error("Registration error:", err);
       form.setError("root", {
@@ -108,6 +97,19 @@ export default function RegisterPage() {
             />
             <span className="text-gray-900 font-semibold text-2xl">EthioGuide</span>
           </div>
+    <div className="bg-neutral-light text-foreground flex flex-col items-center p-4 font-sans min-h-full">
+      <div className="flex items-center gap-3">
+        <Image
+          src="/images/ethioguide-symbol.png"
+          alt="EthioGuide Symbol"
+          width={50}
+          height={50}
+          priority
+        />
+        <span className="text-gray-800 font-semibold text-3xl">EthioGuide</span>
+      </div>
+      <Card className="bg-background-light w-full max-w-md border-neutral mt-6 mb-8">
+        <CardHeader>
           <div className="flex flex-col items-center space-y-4">
             <div className="flex justify-center items-center w-full">
               <CardTitle className="text-2xl sm:text-3xl font-bold text-center font-amharic bg-gradient-to-r from-[#2e4d57] to-[#1c3b2e] bg-clip-text text-transparent">
@@ -197,12 +199,12 @@ export default function RegisterPage() {
                           placeholder={t("register.phone_number_placeholder")}
                           className="border-2 border-[#a7b3b9]/50 focus:border-[#3a6a8d] focus:ring-2 focus:ring-[#3a6a8d]/20 rounded-l-none rounded-r-xl h-12 bg-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-white/90"
                           {...field}
-                          value={field.value?.replace(/^\+251/, "") || ""} // Remove +251 for display
+                          value={field.value?.replace(/^\+251/, "") || ""}
                           onChange={(e) =>
                             field.onChange(
                               `+251${e.target.value.replace(/^\+251/, "")}`
                             )
-                          } // Prepend +251 on change
+                          }
                         />
                       </div>
                     </FormControl>
@@ -298,8 +300,7 @@ export default function RegisterPage() {
               </div>
               <Button
                 variant="outline"
-                className="w-full h-12 border-[#a7b3b9] text-[#2e4d57] hover:bg-[#a7b3b9]/20 rounded-xl"
-                // onClick={handleGoogleLogin}
+                className="w-full border-neutral text-primary-dark hover:bg-secondary/20 rounded-md"
                 onClick={() =>
                   signIn("google", { callbackUrl: "/api/auth/callback/google" })
                 }
