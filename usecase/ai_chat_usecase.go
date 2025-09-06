@@ -20,6 +20,26 @@ func NewChatUsecase(e domain.IEmbeddingService, s domain.IProcedureRepository, a
 }
 
 func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error) {
+	classifierPrompt := fmt.Sprintf(`
+	Classify the following user query into one of these categories:
+	- procedure   (government services, documents, licenses, permits, taxes, etc.)
+	- irrelevant  (math, politics, jokes, casual talk, health, personal advice, etc.)
+	- offensive   (insults, hate speech, profanity, harassment, NSFW, etc.)
+
+	Query: "%s"
+	Return only one word: procedure, irrelevant, or offensive.`, query)
+
+	category, err := u.LLMService.GenerateCompletion(ctx, classifierPrompt)
+	if err != nil {
+		return "", err
+	}
+	if category == "offensive"{
+		return "", errors.New("your query contains offensive content and cannot be processed")
+
+	}else if category == "irrelevant"{
+		return "Sorry, I can only answer questions related to Ethiopian government procedures.", nil
+	}
+
 	// detect the language
 	prompt := fmt.Sprintf("I want you to identify the language of this promt %s and i want to give me the only the language in small later like if it is Amharic give me amharic. and if you do not know the language just give me only  a word 'unkown'.", query)
 	orglang, err := u.LLMService.GenerateCompletion(ctx, prompt)
