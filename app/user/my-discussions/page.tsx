@@ -13,11 +13,32 @@ import {
   useUpdateDiscussionMutation,
   type DiscussionPost,
 } from "@/app/store/slices/discussionsSlice"
+import { motion, useReducedMotion } from "framer-motion"
 
 export default function MyDiscussionsPage() {
   const router = useRouter()
   const { data, isLoading, isError, refetch } = useGetDiscussionsQuery({ page: 0, limit: 20 })
   const [updateDiscussion, { isLoading: isUpdating }] = useUpdateDiscussionMutation()
+  const prefersReducedMotion = useReducedMotion()
+
+  const itemVariants = prefersReducedMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.15 } } }
+    : {
+        hidden: { opacity: 0, y: 12, scale: 0.985, filter: "blur(0.2px)" },
+        visible: (i: number) => ({
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          filter: "none",
+          transition: {
+            type: "spring" as const,
+            stiffness: 220,
+            damping: 18,
+            mass: 0.9,
+            delay: i * 0.05 + 0.06,
+          },
+        }),
+      }
 
   // Inline edit state
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -64,6 +85,11 @@ export default function MyDiscussionsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      <style jsx>{`
+        .card-tilt { transition: transform .25s ease, box-shadow .25s ease; }
+        .card-tilt:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,.08); }
+      `}</style>
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
@@ -88,87 +114,94 @@ export default function MyDiscussionsPage() {
             {posts.map((p, index) => {
               const isEditing = editingId === p.ID
               return (
-                <Card
+                <motion.div
                   key={p.ID}
-                  className="p-4 sm:p-6 bg-white hover:shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
-                  style={{ animationDelay: `${index * 80}ms` }}
+                  variants={itemVariants}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, amount: 0.2 }}
+                  custom={index}
                 >
-                  <CardContent className="p-0 overflow-hidden">
-                    <div className="flex gap-4 flex-col sm:flex-row">
-                      <Image
-                        src={"/images/profile-photo.jpg"}
-                        alt={p.Title}
-                        width={48}
-                        height={48}
-                        className="w-12 h-12 rounded-full object-cover mx-auto sm:mx-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        {!isEditing ? (
-                          <>
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 break-words">{p.Title}</h3>
-                            <p className="text-gray-700 mb-4 line-clamp-2 break-words">{p.Content}</p>
-                          </>
-                        ) : (
-                          <div className="space-y-2 mb-3">
-                            <Input
-                              value={editTitle}
-                              onChange={(e) => setEditTitle(e.target.value)}
-                              placeholder="Edit title"
-                            />
-                            <Textarea
-                              value={editContent}
-                              onChange={(e) => setEditContent(e.target.value)}
-                              rows={4}
-                              placeholder="Edit content"
-                            />
-                          </div>
-                        )}
-
-                        {/* Tags */}
-                        <div className="flex flex-wrap gap-2">
-                          {(p.Tags ?? []).map((t, i) => {
-                            const clean = String(t).replace(/^#/, "")
-                            return (
-                              <Badge key={`${p.ID}-${clean}-${i}`} variant="outline" className={tagPillClasses(i)}>
-                                {clean}
-                              </Badge>
-                            )
-                          })}
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex gap-2 justify-end mt-3 flex-col sm:flex-row">
+                  <Card
+                    className="p-4 sm:p-6 bg-white hover:shadow-lg transition-all duration-300 card-tilt"
+                  >
+                    <CardContent className="p-0 overflow-hidden">
+                      <div className="flex gap-4 flex-col sm:flex-row">
+                        <Image
+                          src={"/images/profile-photo.jpg"}
+                          alt={p.Title}
+                          width={48}
+                          height={48}
+                          className="w-12 h-12 rounded-full object-cover mx-auto sm:mx-0"
+                        />
+                        <div className="flex-1 min-w-0">
                           {!isEditing ? (
                             <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-gray-300 w-full sm:w-auto"
-                                onClick={() => onEdit(p)}
-                              >
-                                Edit
-                              </Button>
+                              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 break-words">{p.Title}</h3>
+                              <p className="text-gray-700 mb-4 line-clamp-2 break-words">{p.Content}</p>
                             </>
                           ) : (
-                            <>
-                              <Button
-                                size="sm"
-                                className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white w-full sm:w-auto"
-                                disabled={isUpdating || !editTitle.trim() || !editContent.trim()}
-                                onClick={() => onSave(p.ID)}
-                              >
-                                Save
-                              </Button>
-                              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={onCancel}>
-                                Cancel
-                              </Button>
-                            </>
+                            <div className="space-y-2 mb-3">
+                              <Input
+                                value={editTitle}
+                                onChange={(e) => setEditTitle(e.target.value)}
+                                placeholder="Edit title"
+                              />
+                              <Textarea
+                                value={editContent}
+                                onChange={(e) => setEditContent(e.target.value)}
+                                rows={4}
+                                placeholder="Edit content"
+                              />
+                            </div>
                           )}
+
+                          {/* Tags */}
+                          <div className="flex flex-wrap gap-2">
+                            {(p.Tags ?? []).map((t, i) => {
+                              const clean = String(t).replace(/^#/, "")
+                              return (
+                                <Badge key={`${p.ID}-${clean}-${i}`} variant="outline" className={tagPillClasses(i)}>
+                                  {clean}
+                                </Badge>
+                              )
+                            })}
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex gap-2 justify-end mt-3 flex-col sm:flex-row">
+                            {!isEditing ? (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-gray-300 w-full sm:w-auto"
+                                  onClick={() => onEdit(p)}
+                                >
+                                  Edit
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  size="sm"
+                                  className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white w-full sm:w-auto"
+                                  disabled={isUpdating || !editTitle.trim() || !editContent.trim()}
+                                  onClick={() => onSave(p.ID)}
+                                >
+                                  Save
+                                </Button>
+                                <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={onCancel}>
+                                  Cancel
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               )
             })}
             {posts.length === 0 && <div className="text-gray-600">No discussions found.</div>}
@@ -178,4 +211,3 @@ export default function MyDiscussionsPage() {
     </div>
   )
 }
-                         

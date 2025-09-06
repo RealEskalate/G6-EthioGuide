@@ -392,8 +392,9 @@ export const discussionsApi = apiSlice.injectEndpoints({
             const { toast } = await import("react-hot-toast");
             toast.success("Changes saved successfully.", {
               icon: "✅",
+              // changed: white background for edit success toast
               style: {
-                background: "#f0fdf4",
+                background: "#ffffff",
                 color: "#065f46",
                 border: "1px solid #86efac",
               },
@@ -404,8 +405,9 @@ export const discussionsApi = apiSlice.injectEndpoints({
             const { toast } = await import("react-hot-toast");
             toast.error(extractErrorMessage(e, "Failed to save changes."), {
               icon: "⚠️",
+              // changed: white background for edit error toast
               style: {
-                background: "#fef2f2",
+                background: "#ffffff",
                 color: "#991b1b",
                 border: "1px solid #fecaca",
               },

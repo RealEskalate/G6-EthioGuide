@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { Search, Plus, MessagesSquare, Filter, X, ChevronRight, ChevronLeft } from "lucide-react"
+import { Search, Plus, MessageSquare, Filter, X, ChevronRight, ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useGetDiscussionsQuery } from "@/app/store/slices/discussionsSlice"
 import { motion, useReducedMotion } from "framer-motion"
 
@@ -16,16 +16,11 @@ export default function CommunityPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const mine =
-    (searchParams.get("mine") ?? "").toLowerCase() === "1" ||
-    (searchParams.get("mine") ?? "").toLowerCase() === "true"
-  const isMine = mine // alias for readability
 
   // added: pagination state
   const [page, setPage] = useState(0)
   const limit = 10
-  const { data, isLoading, isError } = useGetDiscussionsQuery({ page, limit, selfOnly: mine }) // pass selfOnly
+  const { data, isLoading, isError } = useGetDiscussionsQuery({ page, limit })
 
   // added: mobile sidebar toggle
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false)
@@ -52,7 +47,7 @@ export default function CommunityPage() {
   const tagPillClasses = (i: number) => {
     const styles = [
       "bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800",
-      // replaced blue with amber for a softer look
+      // replaced blue with amber
       "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:text-amber-800",
       "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100 hover:text-teal-800",
       "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:text-indigo-800",
@@ -61,53 +56,6 @@ export default function CommunityPage() {
     ]
     return `cursor-pointer rounded-full ${styles[i % styles.length]}`
   }
-
-  const discussions = [
-    {
-      id: 1,
-      author: "Alex Chen",
-      avatar: "/images/profile-photo.jpg",
-      timestamp: "2h ago",
-      title: "How to integrate AI tools into daily study routine?",
-      content:
-        "I've been experimenting with various AI tools for studying and note-taking. Would love to hear your experiences and recommendations for the best workflow...",
-      tags: ["#AI", "#StudyTips"],
-      likes: 24,
-      replies: 12,
-      views: 156,
-      shares: 8,
-    },
-    {
-      id: 2,
-      author: "Sarah Johnson",
-      avatar: "/images/profile-photo.jpg",
-      timestamp: "4h ago",
-      title: "📌 Welcome to the Community Guidelines",
-      content:
-        "Please take a moment to read our community guidelines to ensure a positive and productive environment for everyone. Let's build an amazing learning community together!",
-      tags: ["#Guidelines", "#Pinned"],
-      likes: 56,
-      replies: 8,
-      views: 234,
-      shares: 15,
-      isPinned: true,
-      isModerator: true,
-    },
-    {
-      id: 3,
-      author: "Mike Rodriguez",
-      avatar: "/images/profile-photo.jpg",
-      timestamp: "6h ago",
-      title: "Best note-taking apps for university students?",
-      content:
-        "Looking for recommendations on digital note-taking apps that work well for lectures, research, and collaboration. Currently using Notion but wondering if there are better alternatives...",
-      tags: ["#Notes", "#Apps"],
-      likes: 18,
-      replies: 15,
-      views: 89,
-      shares: 4,
-    },
-  ]
 
   const apiDiscussions =
     Array.isArray(data?.posts)
@@ -122,8 +70,10 @@ export default function CommunityPage() {
         }))
       : []
 
-  const discussionsData = apiDiscussions.length ? apiDiscussions : discussions
+  // only use backend data
+  const discussionsData = apiDiscussions
 
+  // build tags from backend posts for filters and fallback usage
   const searchTags = (() => {
     if (!Array.isArray(data?.posts)) return []
     const set = new Set<string>()
@@ -137,14 +87,8 @@ export default function CommunityPage() {
     return Array.from(set)
   })()
 
-  // helper: normalize tags (strip #, trim, lowercase)
+  // helper to normalize tags for comparison
   const normalizeTag = (s: string) => String(s || "").replace(/^#/, "").trim().toLowerCase()
-
-  // build tag options from backend tags (clean, no '#')
-  const tagOptions = [...searchTags]
-    .map((t) => normalizeTag(t))
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b))
 
   const popularTags = (() => {
     const counts = new Map<string, number>()
@@ -155,9 +99,9 @@ export default function CommunityPage() {
       })
     )
     let list = Array.from(counts.entries()).map(([name, count]) => ({ name, count }))
-    // fallback to dynamic tags if no counts yet
+    // fallback to backend-provided tags only (no dummy tags)
     if (!list.length) {
-      list = tagOptions.map((name) => ({ name, count: 1 }))
+      list = searchTags.map((name) => ({ name, count: 1 }))
     }
     return list.sort((a, b) => b.count - a.count).slice(0, 20)
   })()
@@ -166,30 +110,22 @@ export default function CommunityPage() {
     const matchesSearch =
       discussion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       discussion.content.toLowerCase().includes(searchQuery.toLowerCase())
-
-    // category is now a tag filter: "all" or exact tag match
+    // updated: exact tag match using backend tags (no hardcoded categories)
     const matchesCategory =
       selectedCategory === "all" ||
       (Array.isArray(discussion.tags) &&
         discussion.tags.some((tag: string) => normalizeTag(tag) === normalizeTag(selectedCategory)))
-
     return matchesSearch && matchesCategory
   })
 
   const prefersReducedMotion = useReducedMotion()
-
-  // speed up: reduce delay and tighten spring
   const itemVariants = prefersReducedMotion
-    ? {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { duration: 0.15 } },
-      }
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.15 } } }
     : {
         hidden: { opacity: 0, y: 12, scale: 0.985, filter: "blur(0.2px)" },
         visible: (i: number) => ({
           opacity: 1,
           y: 0,
-          x: i % 2 === 0 ? -4 : 4,
           scale: 1,
           filter: "none",
           transition: {
@@ -197,229 +133,134 @@ export default function CommunityPage() {
             stiffness: 220,
             damping: 18,
             mass: 0.9,
-            delay: i * 0.05 + 0.06, // increased a little bit
+            delay: i * 0.05 + 0.06,
           },
         }),
       }
 
-  // header animation (spring on mount) - slightly increased delay
-  const headerVariants = prefersReducedMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.15 } } }
-    : {
-        hidden: { opacity: 0, y: -12, scale: 0.99 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          transition: { type: "spring" as const, stiffness: 240, damping: 18, delay: 0.08 },
-        },
-      }
-
-  // add: filters card animation
-  const filterVariants = prefersReducedMotion
-    ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.15 } } }
-    : {
-        hidden: { opacity: 0, y: 10, scale: 0.995 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          transition: { type: "spring" as const, stiffness: 220, damping: 18, delay: 0.12 },
-        },
-      }
-
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col page-fade">
       {/* animations (scoped) */}
       <style jsx>{`
-        /* Smooth, GPU-accelerated entrance animations */
-        .card-enter {
-          opacity: 0;
-          filter: saturate(0.9) blur(0.2px);
-          transform: translateY(12px) scale(0.98);
-          transform-origin: center;
-          animation-fill-mode: forwards;
-          will-change: opacity, transform, filter;
-        }
-        .card-enter-left {
-          animation: cardInLeft 600ms cubic-bezier(.2,.65,.25,1);
-        }
-        .card-enter-right {
-          animation: cardInRight 600ms cubic-bezier(.2,.65,.25,1);
-        }
-
-        @keyframes cardInLeft {
-          0%   { opacity: 0; transform: translateX(-18px) translateY(10px) scale(0.985); filter: saturate(.9) blur(0.2px); }
-          60%  { opacity: 1; transform: translateX(2px)  translateY(0)     scale(1.001); filter: saturate(1); }
-          100% { opacity: 1; transform: translateX(0)    translateY(0)     scale(1);     filter: none; }
-        }
-        @keyframes cardInRight {
-          0%   { opacity: 0; transform: translateX(18px) translateY(10px) scale(0.985); filter: saturate(.9) blur(0.2px); }
-          60%  { opacity: 1; transform: translateX(-2px) translateY(0)    scale(1.001); filter: saturate(1); }
-          100% { opacity: 1; transform: translateX(0)    translateY(0)    scale(1);     filter: none; }
-        }
-
-        /* Subtle hover lift */
-        .card-tilt {
-          transition: transform .25s ease, box-shadow .25s ease;
-        }
-        .card-tilt:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 12px 28px rgba(0,0,0,.08);
-        }
-
-        /* Respect reduced motion */
+        .page-fade { animation: fadeIn .45s ease-out both; }
+        .fade-in-up { animation: fadeInUp .5s ease-out both; }
+        .slide-up { animation: slideUp .4s ease-out both; }
+        .card-tilt { transition: transform .25s ease, box-shadow .25s ease; }
+        .card-tilt:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,.08); }
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } }
+        @keyframes slideUp { from { transform: translateY(16px); opacity: .6 } to { transform: translateY(0); opacity: 1 } }
         @media (prefers-reduced-motion: reduce) {
-          .card-enter,
-          .card-enter-left,
-          .card-enter-right {
-            animation: none !important;
-            opacity: 1 !important;
-            transform: none !important;
-            filter: none !important;
-          }
+          .page-fade, .fade-in-up, .slide-up, .card-enter, .card-enter-left, .card-enter-right { animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; }
+          .card-tilt, .card-tilt:hover { transform: none !important; box-shadow: none !important; }
         }
       `}</style>
 
       <div className="max-w-7xl mx-auto w-full flex-1">
-        {/* Header: animate on mount */}
-        <motion.div
-          className="bg-white/90 border border-gray-100 rounded-xl p-4 sm:p-5 mb-4 sm:mb-6 shadow-sm"
-          variants={headerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {isMine ? (
-            // Minimal header for My Discussions
-            <div className="flex items-center justify-between gap-3">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">My Discussions</h1>
+        {/* Header */}
+        <div className="bg-white/90 border border-gray-100 rounded-xl p-4 sm:p-5 mb-4 sm:mb-6 shadow-sm fade-in-up">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="w-full">
+              <div className="flex items-center gap-3 mb-1">
+                <MessageSquare className="h-7 w-7 text-[#3A6A8D]" />
+                <h1 className="text-xl leading-snug sm:text-3xl font-bold text-gray-900">
+                  Community Discussions
+                </h1>
+              </div>
+              <p className="text-gray-600 text-xs sm:text-sm md:text-base">
+                Join the conversation. Share, ask, and collaborate.
+              </p>
+            </div>
+            <div className="hidden sm:flex gap-2">
               <Button
                 variant="outline"
                 className="border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5"
-                onClick={() => router.push("/user/discussions")}
+                onClick={() => router.push("/user/my-discussions")}
               >
-                Back to Discussions
+                My Discussions
+              </Button>
+              <Button
+                className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
+                onClick={() => router.push("/user/create-post")}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Discussion
               </Button>
             </div>
-          ) : (
-            // ...existing Community Discussions header...
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="w-full">
-                <div className="flex items-center gap-3 mb-1">
-                  <MessagesSquare className="h-7 w-7 text-[#3A6A8D]" />
-                  <h1 className="text-xl leading-snug sm:text-3xl font-bold text-gray-900">
-                    Community Discussions
-                  </h1>
-                </div>
-                <p className="text-gray-600 text-xs sm:text-sm md:text-base">
-                  Join the conversation. Share, ask, and collaborate.
-                </p>
-              </div>
-              <div className="hidden sm:flex gap-2">
-                <Button
-                  variant="outline"
-                  className="border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5"
-                  onClick={() => router.push("/user/discussions?mine=1")}
-                >
-                  My Discussions
-                </Button>
-                <Button
-                  className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
-                  onClick={() => router.push("/user/create-post")}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Discussion
-                </Button>
-              </div>
-              {/* Mobile quick button to open filters */}
-              <div className="w-full sm:hidden flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5"
-                  onClick={() => setMobilePanelOpen(true)}
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters & Tags
-                </Button>
-              </div>
+            {/* Mobile quick button to open filters */}
+            <div className="w-full sm:hidden flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5"
+                onClick={() => setMobilePanelOpen(true)}
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filters & Tags
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Search & Filters (desktop / tablet) */}
+        <Card className="p-4 mb-4 sm:mb-6 hidden sm:block fade-in-up" style={{ animationDelay: "80ms" }}>
+          {/* ...existing search/filter block unchanged... */}
+          <div className="flex flex-col gap-4 w-full mb-2 sm:flex-row">
+            <div className="relative flex-1 flex">
+              {/* ...existing code... */}
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                // ...existing props...
+                placeholder="Search discussions..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent"
+              />
+              <Button
+                type="button"
+                className="ml-2 px-4 py-2 bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
+                onClick={() => setSearchQuery(searchInput)}
+              >
+                Search
+              </Button>
+            </div>
+            {/* Categories only (backend tags); fixed width so search expands */}
+            <div className="flex gap-2 flex-none w-56">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-full border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {searchTags.map((tag) => (
+                    <SelectItem key={tag} value={tag}>
+                      {tag}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* removed Sort/Latest select */}
+            </div>
+          </div>
+          {searchTags.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
+              {searchTags.map((tag, i) => (
+                <Badge key={tag} variant="outline" className={`${tagPillClasses(i)} flex-shrink-0`}>
+                  {tag}
+                </Badge>
+              ))}
             </div>
           )}
-        </motion.div>
+        </Card>
 
-        {/* Search & Filters (desktop / tablet) - hidden on My Discussions */}
-        {!isMine && (
-          <motion.div
-            className="hidden sm:block"
-            variants={filterVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <Card className="p-4 mb-4 sm:mb-6">
-              {/* ...existing search/filter block unchanged... */}
-              <div className="flex flex-col gap-4 w-full mb-2 sm:flex-row">
-                <div className="relative flex-1 flex">
-                  {/* ...existing code... */}
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    // ...existing props...
-                    placeholder="Search discussions..."
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent"
-                  />
-                  <Button
-                    type="button"
-                    className="ml-2 px-4 py-2 bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
-                    onClick={() => setSearchQuery(searchInput)}
-                  >
-                    Search
-                  </Button>
-                </div>
-
-                {/* Categories from dynamic tags only */}
-                <div className="flex gap-2 flex-none w-56">
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger
-                      className="w-full border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent"
-                    >
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {/* dynamic tags (no '#') */}
-                      {tagOptions.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {/* removed previous dummy Sort/filters */}
-                </div>
-              </div>
-
-              {searchTags.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
-                  {searchTags.map((tag, i) => (
-                    <Badge key={tag} variant="outline" className={`${tagPillClasses(i)} flex-shrink-0`}>
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Mobile slide-over panel - hidden on My Discussions */}
-        {!isMine && mobilePanelOpen && (
+        {/* Mobile slide-over panel */}
+        {mobilePanelOpen && (
           <div className="fixed inset-0 z-50 sm:hidden">
             <div
               className="absolute inset-0 bg-black/40 backdrop-blur-sm"
               onClick={() => setMobilePanelOpen(false)}
             />
-            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl max-h-[85vh] flex flex-col">
+            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl max-h-[85vh] flex flex-col slide-up">
               <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b">
                 <h2 className="text-base font-semibold text-gray-800">Filters & Tags</h2>
                 <Button variant="ghost" size="sm" onClick={() => setMobilePanelOpen(false)}>
@@ -449,23 +290,20 @@ export default function CommunityPage() {
                     Apply
                   </Button>
                 </div>
-                {/* Category select (mobile) */}
+                {/* Category select (mobile) - backend tags + style like My Discussions */}
                 <div className="space-y-2">
                   <label className="text-xs uppercase tracking-wide text-gray-500 font-medium">
                     Category
                   </label>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger
-                      className="w-full border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent"
-                    >
+                    <SelectTrigger className="w-full border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent">
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      {/* dynamic tags (no '#') */}
-                      {tagOptions.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
+                      {searchTags.map((tag) => (
+                        <SelectItem key={tag} value={tag}>
+                          {tag}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -510,15 +348,11 @@ export default function CommunityPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
           {/* Main Content */}
-          <div className={isMine ? "lg:col-span-12 space-y-4 sm:space-y-6" : "lg:col-span-9 space-y-4 sm:space-y-6"}>
+          <div className="lg:col-span-9 space-y-4 sm:space-y-6">
             {isLoading && (
               <div className="space-y-4">
-                {[0,1,2].map(i => (
-                  <div
-                    key={i}
-                    className="border border-gray-100 rounded-xl bg-white p-4 sm:p-6 shadow-sm"
-                    style={{ animationDelay: `${i * 50 + 80}ms` }} // slightly increased
-                  >
+                {[0,1,2].map(i=>(
+                  <div key={i} className="border border-gray-100 rounded-xl bg-white p-4 sm:p-6 shadow-sm animate-pulse">
                     <div className="flex gap-4">
                       <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gray-200" />
                       <div className="flex-1 space-y-3">
@@ -537,9 +371,6 @@ export default function CommunityPage() {
                 {filteredDiscussions.map((discussion, index) => {
                   const rowKey = `${discussion.title}-${index}`
                   const isExpanded = !!expandedMap[rowKey]
-                  const enterClass =
-                    index % 2 === 0 ? "card-enter card-enter-left" : "card-enter card-enter-right"
-
                   return (
                     <motion.div
                       key={rowKey}
@@ -550,8 +381,7 @@ export default function CommunityPage() {
                       custom={index}
                     >
                       <Card
-                        className={`p-3 sm:p-6 bg-white border border-gray-100 rounded-xl shadow-sm transition-all card-tilt transform-gpu ${enterClass}`}
-                        style={{ animationDelay: `${index * 60 + 90}ms` }} // slightly increased
+                        className="p-3 sm:p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all card-tilt"
                       >
                         <CardContent className="p-0">
                           <div className="flex gap-3 sm:gap-4 flex-col sm:flex-row">
@@ -604,16 +434,16 @@ export default function CommunityPage() {
                   )
                 })}
                 {filteredDiscussions.length === 0 && !isLoading && (
-                  <div className="text-center text-sm text-gray-500 py-10 border border-dashed rounded-lg">
+                  <div className="text-center text-sm text-gray-500 py-10 border border-dashed rounded-lg fade-in-up" style={{ animationDelay: "120ms" }}>
                     No discussions match your filters.
                   </div>
                 )}
               </div>
             )}
 
-            {/* Desktop pagination footer - hidden on My Discussions */}
-            {!isMine && totalPages > 1 && (
-              <div className="hidden sm:flex mt-2 bg-white/90 border border-gray-100 rounded-xl px-3 py-3 items-center justify-between shadow-sm">
+            {/* Desktop pagination footer */}
+            {totalPages > 1 && (
+              <div className="hidden sm:flex mt-2 bg-white/90 border border-gray-100 rounded-xl px-3 py-3 items-center justify-between shadow-sm fade-in-up" style={{ animationDelay: "140ms" }}>
                 <div className="text-sm text-gray-600">
                   Page {page + 1} of {totalPages}
                 </div>
@@ -638,77 +468,76 @@ export default function CommunityPage() {
             )}
           </div>
 
-            {/* Sidebar (desktop only) - hidden on My Discussions */}
-            {!isMine && (
-              <div className="lg:col-span-3 space-y-6 hidden lg:block">
-                <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-[1.02]">
-                  <h3 className="font-semibold text-gray-900 mb-4 text-sm sm:text-base">Popular Tags</h3>
-                  <div className="space-y-2">
-                    {popularTags.map((tag, i) => (
-                      <div key={tag.name} className="flex items-center justify-between text-sm">
-                        <Badge variant="outline" className={tagPillClasses(i)}>
-                          {tag.name}
-                        </Badge>
-                        <span className="text-xs text-gray-500">{tag.count}</span>
-                      </div>
-                    ))}
+          {/* Sidebar (desktop only) */}
+          <div className="lg:col-span-3 space-y-6 hidden lg:block fade-in-up" style={{ animationDelay: "100ms" }}>
+            <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-[1.02]">
+              <h3 className="font-semibold text-gray-900 mb-4 text-sm sm:text-base">Popular Tags</h3>
+              <div className="space-y-2">
+                {popularTags.map((tag, i) => (
+                  <div key={tag.name} className="flex items-center justify-between text-sm">
+                    <Badge variant="outline" className={tagPillClasses(i)}>
+                      {tag.name}
+                    </Badge>
+                    <span className="text-xs text-gray-500">{tag.count}</span>
                   </div>
-                </Card>
+                ))}
               </div>
-            )}
+            </Card>
+          </div>
         </div>
 
-        {/* Status / meta - hidden on My Discussions */}
-        {!isMine && (
-          <div className="mt-6 text-center sm:text-left">
-            {isLoading && <div className="text-sm text-gray-500">Loading...</div>}
-            {isError && <div className="text-sm text-red-600">Failed to load discussions.</div>}
-          </div>
-        )}
-      </div>
-
-      {/* Sticky mobile action bar - hidden on My Discussions */}
-      {!isMine && (
-        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t shadow-lg px-2 py-2 flex items-center justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 mx-1 text-[#3A6A8D] border-[#3A6A8D]"
-            onClick={() => router.push("/user/discussions?mine=1")} // route to animated page with mine filter
-          >
-            Me
-          </Button>
-          <Button
-            size="sm"
-            className="flex-1 mx-1 bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
-            onClick={() => router.push("/user/create-post")}
-          >
-            <Plus className="h-4 w-4 mr-1" /> New
-          </Button>
-          {totalPages > 1 && (
-            <div className="flex flex-1 mx-1 gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                disabled={page <= 0}
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+        {/* Status / meta */}
+        <div className="mt-6 text-center sm:text-left fade-in-up" style={{ animationDelay: "160ms" }}>
+          {isLoading && <div className="text-sm text-gray-500">Loading...</div>}
+          {isError && <div className="text-sm text-red-600">Failed to load discussions.</div>}
+          {!isLoading && !isError && data && (
+            <div className="text-xs sm:text-sm text-gray-600">
+              Total: {data.total} • Page: {data.page} • Limit: {data.limit}
             </div>
           )}
         </div>
-      )}
+      </div>
+
+      {/* Sticky mobile action bar */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t shadow-lg px-2 py-2 flex items-center justify-between fade-in-up" style={{ animationDelay: "180ms" }}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 mx-1 text-[#3A6A8D] border-[#3A6A8D]"
+          onClick={() => router.push("/user/my-discussions")}
+        >
+          Me
+        </Button>
+        <Button
+          size="sm"
+          className="flex-1 mx-1 bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
+          onClick={() => router.push("/user/create-post")}
+        >
+          <Plus className="h-4 w-4 mr-1" /> New
+        </Button>
+        {totalPages > 1 && (
+          <div className="flex flex-1 mx-1 gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              disabled={page <= 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
