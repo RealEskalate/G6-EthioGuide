@@ -80,66 +80,6 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
-  // void _showTranslateDialog() {
-  //   final TextEditingController translateController = TextEditingController();
-  //   String selectedLang = 'am'; // Default to Amharic
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: const Text('Translate Text'),
-  //       content: Column(
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           TextField(
-  //             controller: translateController,
-  //             decoration: const InputDecoration(
-  //               hintText: 'Enter text to translate...',
-  //               border: OutlineInputBorder(),
-  //             ),
-  //           ),
-  //           const SizedBox(height: 16),
-  //           DropdownButton<String>(
-  //             value: selectedLang,
-  //             isExpanded: true,
-  //             items: const [
-  //               DropdownMenuItem(value: 'am', child: Text('Amharic')),
-  //               DropdownMenuItem(value: 'ti', child: Text('Tigrinya')),
-  //               DropdownMenuItem(value: 'en', child: Text('English')),
-  //             ],
-  //             onChanged: (value) {
-  //               setState(() {
-  //                 selectedLang = value!;
-  //               });
-  //             },
-  //           ),
-  //         ],
-  //       ),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.pop(context),
-  //           child: const Text('Cancel'),
-  //         ),
-  //         ElevatedButton(
-  //           onPressed: () {
-  //             final content = translateController.text.trim();
-  //             if (content.isNotEmpty) {
-  //               context.read<AiBloc>().add(
-  //                 TranslateContentEvent(content: content, lang: selectedLang),
-  //               );
-  //               Navigator.pop(context);
-  //             }
-  //           },
-  //           style: ElevatedButton.styleFrom(
-  //             backgroundColor: Colors.teal,
-  //             foregroundColor: Colors.white,
-  //           ),
-  //           child: const Text('Translate'),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     return BlocListener<AiBloc, AiState>(
@@ -185,7 +125,7 @@ class _ChatPageState extends State<ChatPage> {
                     itemCount: _history.length,
                     itemBuilder: (context, index) {
                       final conv = _history[index];
-                      return buildMessage(conv: conv, context: context);
+                      return conv.source != 'error' ? buildMessage(conv: conv, context: context): errorCard(conv.response);
                     },
                   );
                 },
@@ -258,12 +198,6 @@ class _ChatPageState extends State<ChatPage> {
                                     Icons.square,
                                     color: Colors.white,
                                   ),
-                                  // child: CircularProgressIndicator(
-                                  //   strokeWidth: 2,
-                                  //   valueColor: AlwaysStoppedAnimation<Color>(
-                                  //     Colors.white,
-                                  //   ),
-                                  // ),
                                 )
                               : const Icon(
                                   Icons.send,
@@ -280,7 +214,10 @@ class _ChatPageState extends State<ChatPage> {
           ],
         ),
 
-        bottomNavigationBar: bottomNav(context: context, selectedIndex: pageIndex),
+        bottomNavigationBar: bottomNav(
+          context: context,
+          selectedIndex: pageIndex,
+        ),
       ),
     );
   }

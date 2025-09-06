@@ -147,10 +147,7 @@ Widget buildMessage({
                 if (!isError && !isLoading && conv.id != 'initial')
                   _buildChecklistButton(context: context),
                 if (conv.procedures.isNotEmpty && !isError && !isLoading)
-                  ...conv.procedures.map(
-                    (procedure) =>
-                        _buildInfoCard(procedure: procedure!, context: context),
-                  ),
+                  _buildRelatedProcedures(procedures: conv.procedures, context: context)
               ],
             ),
           ),
@@ -158,6 +155,54 @@ Widget buildMessage({
     ],
   );
 }
+
+//############################################################################################
+//#                                                                                          #
+//#                                     Error response                                       #
+//#                                                                                          #
+//############################################################################################
+
+Widget errorCard(String errorMessage) {
+  return Align(
+    alignment: Alignment.centerLeft,
+    child: Card(
+      color: Colors.red[50],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Colors.red.shade300,
+          width: 1,
+        ),
+      ),
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: Colors.red,
+              size: 22,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                errorMessage,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.red.shade900,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 
 //############################################################################################
 //#                                                                                          #
@@ -210,79 +255,142 @@ Widget _buildStepCard({
 //#                                                                                          #
 //############################################################################################
 
-Widget _buildInfoCard({
-  required Procedure procedure,
+Widget _buildRelatedProcedures({
+  required List<Procedure?> procedures,
   required BuildContext context,
 }) {
+  if (procedures.isEmpty) return const SizedBox.shrink();
+
   return Card(
-    elevation: 2,
+    color: Colors.teal[100],
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-    color: const Color(0xFFF1FAF9), // pale teal background
-    shadowColor: Colors.black.withOpacity(0.05),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.info,
-            color: Colors.teal,
-            size: 22,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  procedure.name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    _buildCompactButton(
-                      context: context,
-                      label: 'View',
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Viewing procedure: ${procedure.name}'),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 6),
-                    _buildCompactButton(
-                      context: context,
-                      label: 'Start',
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Starting procedure: ${procedure.name}'),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+    margin: const EdgeInsets.symmetric(vertical: 8),
+    child: ExpansionTile(
+      leading: const Icon(Icons.folder_copy, color: Colors.teal),
+      title: const Text(
+        'Related Procedures',
+        style: TextStyle(
+          color: Colors.teal,
+          fontWeight: FontWeight.bold,
+        ),
       ),
+      children: procedures.map((procedure) {
+        return ListTile(
+          leading: const Icon(Icons.info, color: Colors.teal),
+          title: Text(
+            procedure!.name,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: Wrap(
+            spacing: 6,
+            children: [
+              _buildCompactButton(
+                context: context,
+                label: 'View',
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Viewing procedure: ${procedure.name}'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
+              _buildCompactButton(
+                context: context,
+                label: 'Start',
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Starting procedure: ${procedure.name}'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     ),
   );
 }
+
+
+// Widget _buildInfoCard({
+//   required Procedure procedure,
+//   required BuildContext context,
+// }) {
+//   return Card(
+//     elevation: 2,
+//     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//     margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+//     color: const Color(0xFFF1FAF9), // pale teal background
+//     shadowColor: Colors.black.withOpacity(0.05),
+//     child: Padding(
+//       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+//       child: Row(
+//         crossAxisAlignment: CrossAxisAlignment.center,
+//         children: [
+//           const Icon(
+//             Icons.info,
+//             color: Colors.teal,
+//             size: 22,
+//           ),
+//           const SizedBox(width: 10),
+//           Expanded(
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 Text(
+//                   procedure.name,
+//                   style: const TextStyle(
+//                     fontSize: 14,
+//                     fontWeight: FontWeight.w600,
+//                     color: Colors.black87,
+//                   ),
+//                   maxLines: 1,
+//                   overflow: TextOverflow.ellipsis,
+//                 ),
+//                 const SizedBox(height: 4),
+//                 Row(
+//                   children: [
+//                     _buildCompactButton(
+//                       context: context,
+//                       label: 'View',
+//                       onPressed: () {
+//                         ScaffoldMessenger.of(context).showSnackBar(
+//                           SnackBar(
+//                             content: Text('Viewing procedure: ${procedure.name}'),
+//                             duration: const Duration(seconds: 2),
+//                           ),
+//                         );
+//                       },
+//                     ),
+//                     const SizedBox(width: 6),
+//                     _buildCompactButton(
+//                       context: context,
+//                       label: 'Start',
+//                       onPressed: () {
+//                         ScaffoldMessenger.of(context).showSnackBar(
+//                           SnackBar(
+//                             content: Text('Starting procedure: ${procedure.name}'),
+//                             duration: const Duration(seconds: 2),
+//                           ),
+//                         );
+//                       },
+//                     ),
+//                   ],
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     ),
+//   );
+// }
 
 Widget _buildCompactButton({
   required BuildContext context,
@@ -353,32 +461,29 @@ Widget _buildChecklistButton({required BuildContext context}) {
 //############################################################################################
 Widget questionCard(String question) {
   return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
     decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [
-          Color(0xFF00695C), // Teal
-          Color.fromARGB(255, 23, 89, 124), // Blue
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
+      color: const Color(0xFFF1FAF9), // soft pale teal background
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: Colors.teal.withOpacity(0.3), // subtle border
+        width: 1,
       ),
-      borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.2),
-          blurRadius: 8,
-          offset: const Offset(0, 4),
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 6,
+          offset: const Offset(0, 3),
         ),
       ],
     ),
     child: Text(
       question,
       style: const TextStyle(
-        color: Colors.white,
-        fontSize: 10,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.5,
+        color: Colors.black87,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.3,
       ),
       textAlign: TextAlign.center,
       maxLines: 2,
@@ -386,3 +491,4 @@ Widget questionCard(String question) {
     ),
   );
 }
+
