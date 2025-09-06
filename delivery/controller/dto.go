@@ -697,6 +697,59 @@ type AIChatRequest struct {
 	Query string `json:"query" binding:"required"`
 }
 
-type AIChatResponse struct {
-	Answer string `json:"answer"`
+type AIConversationResponse struct {
+	ID        string    `bson:"_id,omitempty"`
+	UserID    string    `bson:"user_id"`
+	Source    string    `bson:"source,omitempty"`
+	Request   string    `bson:"request"`
+	Response  string    `bson:"response"`
+	Timestamp time.Time `bson:"timestamp"`
+}
+
+func ToAIChatResponse(answer *domain.AIChat) *AIConversationResponse {
+	return &AIConversationResponse{
+		ID:        answer.ID,
+		UserID:    answer.UserID,
+		Source:    answer.Source,
+		Request:   answer.Request,
+		Response:  answer.Response,
+		Timestamp: answer.Timestamp,
+	}
+}
+
+type PaginatedAIHisoryResponse struct {
+	Data       []AIConversationResponse `json:"data"`
+	Pagination Pagination               `json:"pagination"`
+}
+
+func toPaginatedAIHisory(aiHistory []*domain.AIChat, total, page, limit int64) *PaginatedAIHisoryResponse {
+	conv := make([]AIConversationResponse, len(aiHistory))
+	for i, conversation := range aiHistory {
+		conv[i] = *ToAIChatResponse(conversation)
+	}
+
+	return &PaginatedAIHisoryResponse{
+		Data: conv,
+		Pagination: Pagination{
+			Total: total,
+			Page:  page,
+			Limit: limit,
+		},
+	}
+}
+
+type OrgsListPaginated struct {
+	Orgs   []OrganizationResponseDTO  `json:"orgs"`
+	Total  int64                      `json:"total"`
+	Page   int64                      `json:"page"`
+	PageSize int64                    `json:"pageSize"`
+}
+
+func toOrgsListPaginated (orgs []OrganizationResponseDTO, total, page, pageSize int64) *OrgsListPaginated {
+	return &OrgsListPaginated{
+		Orgs: orgs,
+		Total: total,
+		Page: page,
+		PageSize: pageSize,
+	}
 }

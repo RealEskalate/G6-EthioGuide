@@ -19,7 +19,7 @@ func NewChatUsecase(e domain.IEmbeddingService, s domain.IProcedureRepository, a
 	return &AIChatUsecase{EmbedService: e, ProcedureRepo: s, AiChatRepo: aiChatRepo, LLMService: l}
 }
 
-func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error) {
+func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*domain.AIChat, error) {
 	classifierPrompt := fmt.Sprintf(`
 	Classify the following user query into one of these categories:
 	- procedure   (government services, documents, licenses, permits, taxes, etc.)
@@ -31,41 +31,41 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error
 
 	category, err := u.LLMService.GenerateCompletion(ctx, classifierPrompt)
 	if err != nil {
-		return "", err
+		return &domain.AIChat{}, err
 	}
-	if category == "offensive"{
-		return "", errors.New("your query contains offensive content and cannot be processed")
+	if category == "offensive" {
+		return &domain.AIChat{}, errors.New("your query contains offensive content and cannot be processed")
 
-	}else if category == "irrelevant"{
-		return "Sorry, I can only answer questions related to Ethiopian government procedures.", nil
+	} else if category == "irrelevant" {
+		return &domain.AIChat{}, nil
 	}
 
 	// detect the language
 	prompt := fmt.Sprintf("I want you to identify the language of this promt %s and i want to give me the only the language in small later like if it is Amharic give me amharic. and if you do not know the language just give me only  a word 'unkown'.", query)
 	orglang, err := u.LLMService.GenerateCompletion(ctx, prompt)
 	if err != nil {
-		return "", err
+		return &domain.AIChat{}, err
 	}
-	if orglang != "english" {
+	if orglang != "unkown" {
+		return &domain.AIChat{}, domain.ErrUnsupportedLanguage
+	} else if orglang != "english" {
 		prompt := fmt.Sprintf("translate this query %s in to English lanuage. And i do not want you to add another thing by yourself", query)
 		query, err = u.LLMService.GenerateCompletion(ctx, prompt)
 		if err != nil {
-			return "", nil
+			return &domain.AIChat{}, domain.ErrUnsupportedLanguage
 		}
-	} else if orglang != "unkown" {
-		return "", errors.New("unknown language")
 	}
 
 	// 1. embed query
 	vec, err := u.EmbedService.GenerateEmbedding(ctx, query)
 	if err != nil {
-		return "", err
+		return &domain.AIChat{}, err
 	}
 
 	// 2. vector search
 	docs, err := u.ProcedureRepo.SearchByEmbedding(ctx, vec, 3)
 	if err != nil {
-		return "", err
+		return &domain.AIChat{}, err
 	}
 
 	// 3. call LLM
@@ -89,7 +89,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error
 
 	answer, err := u.LLMService.GenerateCompletion(ctx, prompt)
 	if err != nil {
-		return "", err
+		return &domain.AIChat{}, err
 	}
 	source := "unofficial"
 	if len(docs) > 0 {
@@ -97,20 +97,6 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error
 	}
 	// After: return answer, nil
 
-	// Example: Save chat history (pseudo, adjust as needed)
-	userID, _ := ctx.Value("userID").(string)
-	chat := &domain.AIChat{
-		UserID:   userID, // You need to get this from context or as a parameter
-		Source:   source,
-		Request:  query,
-		Response: answer,
-		// Timestamp will be set in the repository
-	}
-	err = u.AiChatRepo.Save(ctx, chat)
-	if err != nil {
-		// Optionally log or handle the error, but don't block the user
-		log.Println("the chat is not saved")
-	}
 	if orglang != "english" {
 		prompt := fmt.Sprintf(`I want you to translate procedure into this %s language by keeping its format as it is.
 		here is the procedure
@@ -118,9 +104,27 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, query string) (string, error
 		`, orglang, answer)
 		answer, err = u.LLMService.GenerateCompletion(ctx, prompt)
 		if err != nil {
-			return "", err
+			return &domain.AIChat{}, err
 		}
 	}
 
-	return answer, nil
+	// Example: Save chat history (pseudo, adjust as needed)
+	chat := &domain.AIChat{
+		UserID:   userId,
+		Source:   source,
+		Request:  query,
+		Response: answer,
+	}
+
+	err = u.AiChatRepo.Save(ctx, chat)
+	if err != nil {
+		// Optionally log or handle the error, but don't block the user
+		log.Println("the chat is not saved")
+	}
+
+	return chat, nil
+}
+
+func (u *AIChatUsecase) AIHistory(ctx context.Context, userId string, page, limit int64) ([]*domain.AIChat, int64, error) {
+	return u.AiChatRepo.GetByUser(ctx, userId, page, limit)
 }

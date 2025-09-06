@@ -148,6 +148,19 @@ func (ctrl *FeedbackController) UpdateFeedbackStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Feedback status updated successfully"})
 }
 
+// @Summary      Fetch Feedbacks
+// @Description  Fetch list of feedbacks for admin
+// @Tags         Feedback
+// @Accept       json
+// @Produce      json
+// @Param        page query string false "page"
+// @Param        limit query string false "limit"
+// @Param        status query string false "status"
+// @Param        procedure_id query string false "Procedure ID"
+// @Success      200 {object} FeedbackListResponse "Feedbacks"
+// @Failure      400 {string}  "Bad Request"
+// @Failure      500 {string}  "Internal"
+// @Router       /feedback [get]
 func (ctrl *FeedbackController) GetAllFeedbacks(c *gin.Context) {
 	filter := domain.FeedbackFilter{}
 	page, err := strconv.ParseInt(c.DefaultQuery("page", "1"), 10, 64)
