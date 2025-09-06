@@ -23,18 +23,8 @@ import {
 } from "@/lib/validation/reset-password";
 import Image from "next/image";
 
-// init a minimal i18n instance to avoid react-i18next warning
-if (!i18n.isInitialized) {
-  i18n.use(initReactI18next).init({
-    resources: {},
-    lng: "en",
-    fallbackLng: "en",
-    interpolation: { escapeValue: false },
-  });
-}
-
 function ResetPasswordContent() {
-  const { t } = useTranslation("auth");
+  const { t, i18n } = useTranslation("auth");
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
