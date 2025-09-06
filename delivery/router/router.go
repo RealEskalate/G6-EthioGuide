@@ -135,7 +135,7 @@ func SetupRouter(
 				orgs.POST("", authMiddleware, requireAdminRole, userController.HandleCreateOrg)
 				orgs.GET("", userController.HandleGetOrgs)
 				orgs.GET("/:id", userController.HandleGetOrgById)
-				orgs.PATCH("/:id", authMiddleware, requireAdminRole, userController.HandleUpdateOrgs)
+				orgs.PATCH("/:id", authMiddleware, requireAdminOrOrgRole, userController.HandleUpdateOrgs)
 			}
 
 			procedures := v1.Group("/procedures")
