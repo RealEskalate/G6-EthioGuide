@@ -1,7 +1,7 @@
 "use client";
 import { Input } from "@/components/ui/input";
 import { BiSolidEdit } from "react-icons/bi";
-import { FaEye } from "react-icons/fa";
+// import { FaEye } from "react-icons/fa";
 import { TableCell } from "@/components/ui/table";
 import DeleteConfirmDialog from "../shared/AdminAndOrg/DeleteConfirmDialog";
 import { toast } from "sonner";
@@ -107,24 +107,31 @@ import Pagination from "../shared/pagination";
 
 export default function AdminProcedures() {
   const { data: session } = useSession();
-  const token = session?.accessToken
+  const token = session?.accessToken;
+  const [reload, setReload] = useState(false);
 
-  const handleDelete = async (id : string) => {
+  // const triggerReload = () => setReload((prev) => !prev);
+
+  const handleDelete = async (id: string) => {
     toast.success("Item deleted successfully!");
-    await fetch(`https://ethio-guide-backend.onrender.com/api/v1/procedures/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    await fetch(
+      `https://ethio-guide-backend.onrender.com/api/v1/procedures/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    setReload((prev) => !prev);
   };
   const [procedures, setProcedures] = useState<ProcedureProp[]>([]);
   const [page, setPage] = useState(1);
   // const [totalProcedures, setTotalProcedures] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const userId = session?.user!.id!;
+  const userId = session?.user?.id;
   useEffect(() => {
     if (!userId) return; // wait until session loaded
     const fetchProcedures = async () => {
@@ -148,7 +155,7 @@ export default function AdminProcedures() {
     };
 
     fetchProcedures();
-  }, [page, userId, procedures]);
+  }, [page, userId, reload]);
 
   return (
     <div className="p-6 space-y-6 w-full">
@@ -195,9 +202,9 @@ export default function AdminProcedures() {
                   })}
                 </td>
                 <TableCell className="flex space-x-2 mt-3">
-                  <FaEye className="w-4 h-4 text-primary cursor-pointer" />
+                  {/* <FaEye className="w-4 h-4 text-primary cursor-pointer" /> */}
                   <Link href={`/admin/procedures/${p.id}`}>
-                    <BiSolidEdit className="w-4 h-4 text-primary cursor-pointer" />
+                    <BiSolidEdit className="w-4 h-4 text-primary mt-3 cursor-pointer" />
                   </Link>
                   <DeleteConfirmDialog
                     title="Delete Procedure"

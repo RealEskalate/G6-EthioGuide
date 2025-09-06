@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import ProcedurePropCapital from "@/types/procedureRecive";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function EditProcedurePage({
   procedure,
@@ -61,6 +62,7 @@ export default function EditProcedurePage({
     }
   }, [procedure]);
 
+    const route = useRouter()
   // ---------------- Update ----------------
   const handleUpdate = async () => {
     if (!token) return;
@@ -95,6 +97,7 @@ export default function EditProcedurePage({
       console.error("Failed to update procedure");
     } else {
       console.log("Procedure updated!");
+      route.push("/admin/procedures")
     }
   };
 

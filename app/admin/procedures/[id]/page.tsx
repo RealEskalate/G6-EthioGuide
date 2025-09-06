@@ -1,7 +1,7 @@
 import EditProcedurePage from "../../(adminRelatedPages)/editProcedure/page";
-import ProcedureProp from "@/types/procedure";
-import { getServerSession } from "next-auth/next";
-import { options } from "@/app/api/auth/[...nextauth]/options";
+import ProcedurePropCapital from "@/types/procedureRecive";
+// import { getServerSession } from "next-auth/next";
+// import { options } from "@/app/api/auth/[...nextauth]/options";
 
 interface Props {
   params: { id: string };
@@ -9,8 +9,8 @@ interface Props {
 
 export default async function EditProcedure({ params }: Props) {
   const { id } = await params;
-  const session = await getServerSession(options);
-  const token = session?.accessToken;
+  // const session = await getServerSession(options);
+  // const token = session?.accessToken;
   
   const res = await fetch(
     `https://ethio-guide-backend.onrender.com/api/v1/procedures/${id}`,
@@ -27,7 +27,7 @@ export default async function EditProcedure({ params }: Props) {
     throw new Error("Failed to fetch procedure");
   }
 
-  const procedure: ProcedureProp = await res.json();
+  const procedure: ProcedurePropCapital = await res.json();
   console.log("get",procedure)
 
   return <EditProcedurePage procedure={procedure} />;
