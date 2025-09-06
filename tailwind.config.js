@@ -40,7 +40,9 @@ const config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    
+  ],
   darkMode: 'class',
 };
 
