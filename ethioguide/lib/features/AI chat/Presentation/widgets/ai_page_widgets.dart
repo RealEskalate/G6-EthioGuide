@@ -75,8 +75,9 @@ Widget buildMessage({
   required BuildContext context,
 }) {
   final hasRequest = conv.request.isNotEmpty;
-  final hasResponse = conv.response.isNotEmpty || conv.source == 'loading';
+  final hasResponse = conv.response.isNotEmpty;
   final isLoading = conv.source == 'loading';
+  final hasFailed = conv.source == 'failed';
 
   return Column(
     children: [
@@ -98,19 +99,17 @@ Widget buildMessage({
                   'You: ${conv.request}',
                   style: const TextStyle(color: Colors.white),
                 ),
-                if (isLoading) ...[
+                if (hasFailed) ...[
                   const SizedBox(width: 8),
                   const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: Icon(Icons.error, color: Color.fromARGB(255, 245, 102, 91),),
                   ),
                 ],
               ],
             ),
           ),
         ),
-      // AI response, error, or initial greeting (left-aligned)
+      // AI response, or initial greeting (left-aligned)
       if (hasResponse)
         Align(
           alignment: Alignment.centerLeft,
@@ -413,10 +412,7 @@ Widget loadingCard() {
       color: Colors.blueGrey.shade50,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Colors.blueGrey.shade100,
-          width: 1,
-        ),
+        side: BorderSide(color: Colors.blueGrey.shade100, width: 1),
       ),
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       child: Padding(
@@ -446,8 +442,6 @@ Widget loadingCard() {
   );
 }
 
-
-
 //?############################################################################################
 //?#                                                                                          #
 //?#                                  Loading Animation                                       #
@@ -465,13 +459,14 @@ class _AnimatedDotsState extends State<_AnimatedDots>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  
+
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1))
-          ..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat();
     _animation = Tween<double>(begin: 0, end: 3).animate(_controller);
   }
 

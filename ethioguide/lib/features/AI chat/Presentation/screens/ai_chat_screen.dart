@@ -63,8 +63,17 @@ class _ChatPageState extends State<ChatPage> {
 
   void _removeLoadingMessage() {
     setState(() {
-      _history.removeLast();
-      // _history.removeWhere((conv) => conv.source == 'loading');
+      final conv = _history.removeLast();
+      // Add Just the query to display as failed
+      _history.add(
+        Conversation(
+          id: conv.id,
+          request: conv.request,
+          response: '',
+          source: 'failed',
+          procedures: [],
+        ),
+      );
     });
   }
 
@@ -126,7 +135,17 @@ class _ChatPageState extends State<ChatPage> {
                     itemBuilder: (context, index) {
                       final conv = _history[index];
                       return conv.source != 'error'
-                          ? conv.source != 'loading' ? buildMessage(conv: conv, context: context) : loadingCard()
+                          ? conv.source != 'loading'
+                                ? buildMessage(conv: conv, context: context)
+                                : Column(
+                                    children: [
+                                      buildMessage(
+                                        conv: conv,
+                                        context: context,
+                                      ),
+                                      loadingCard(),
+                                    ],
+                                  )
                           : errorCard(
                               conv.response,
                             ); // Determine whether the response is error or response
