@@ -162,7 +162,7 @@ func (cr *ChecklistRepository) ToggleCheck(ctx context.Context, checklistID stri
 		return err
 	}
 
-	update := bson.M{"$bit": bson.M{"is_checked": bson.M{"xor": 1}}}
+	update := []bson.M{{"$set": bson.M{"is_checked": bson.M{"$not": "$is_checked"}}}}
 	if _, err := cr.collectionChecklist.UpdateOne(ctx, bson.M{"_id": objID}, update); err != nil {
 		return err
 	}
