@@ -87,6 +87,6 @@ type IChecklistRepository interface {
 
 type IAIChatRepository interface {
 	Save(ctx context.Context, chat *AIChat) error
-	GetByUser(ctx context.Context, userID string, limit int) ([]*AIChat, error)
+	GetByUser(ctx context.Context, userID string, page, limit int64) ([]*AIChat, int64, error)
 	DeleteByUser(ctx context.Context, userID string) error
 }
