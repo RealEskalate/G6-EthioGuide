@@ -50,7 +50,7 @@ func (h *HuggingFaceEmbedding) GenerateEmbedding(ctx context.Context, text strin
 	req.Header.Set("Authorization", "Bearer "+h.getNextKey())
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 15 * time.Second}
+	client := &http.Client{Timeout: 60 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -58,6 +58,7 @@ func (h *HuggingFaceEmbedding) GenerateEmbedding(ctx context.Context, text strin
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
+		println(resp.StatusCode)
 		return nil, errors.New("huggingface embedding request failed")
 	}
 

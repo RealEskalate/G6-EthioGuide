@@ -29,7 +29,7 @@ import (
 // @license.name  Apache 2.0
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host      ethio-guide-backend.onrender.com
+// @host      localhost:8080
 // @BasePath  /api/v1
 
 // @securityDefinitions.apikey BearerAuth
@@ -89,7 +89,7 @@ func main() {
 	}
 	var apiKeys []string
 	apiKeys = append(apiKeys, cfg.EmbeddingApiKey)
-	embeddingService, err := infrastructure.NewEmbeddingService(apiKeys, cfg.EmbeddingUrl)
+	embeddingService, err := infrastructure.NewCohereEmbedding(apiKeys, cfg.EmbeddingUrl)
 	if err != nil {
 		log.Printf("WARN: Failed to initialize the Embedding service: %v. Embedding service will be unavailable.", err)
 	}

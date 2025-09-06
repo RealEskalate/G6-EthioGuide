@@ -100,7 +100,7 @@ func Load() *Config {
 
 		VerificationFrontendUrl:  frontendBaseUrl + getEnv("VERIFICATION_FRONTEND_URL", "/api/auth/verify"),
 		ResetPasswordFrontendUrl: frontendBaseUrl + getEnv("RESET_PASSWORD_FRONTEND_URL", "/api/auth/forgot-password"),
-		EmbeddingUrl:             getEnv("EMBEDDING_URL", "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"),
+		EmbeddingUrl:             getEnv("EMBEDDING_URL", "https://api.cohere.ai/v1/embed"),
 		EmbeddingApiKey:          getEnv("HF_EMBEDDING_API_KEY", ""),
 	}
 }
