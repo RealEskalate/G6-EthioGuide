@@ -698,22 +698,40 @@ type AIChatRequest struct {
 }
 
 type AIConversationResponse struct {
-	ID        string    `bson:"_id,omitempty"`
-	UserID    string    `bson:"user_id"`
-	Source    string    `bson:"source,omitempty"`
-	Request   string    `bson:"request"`
-	Response  string    `bson:"response"`
-	Timestamp time.Time `bson:"timestamp"`
+	ID                string                 `json:"id,omitempty"`
+	UserID            string                 `json:"user_id"`
+	Source            string                 `json:"source,omitempty"`
+	Request           string                 `json:"request"`
+	Response          string                 `json:"response"`
+	Timestamp         time.Time              `json:"timestamp"`
+	RelatedProcedures []*AIProcedureResponse `json:"procedures"`
+}
+
+type AIProcedureResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func ToAIProcedureResponse(procedures *domain.AIProcedure) *AIProcedureResponse {
+	return &AIProcedureResponse{
+		ID:   procedures.Id,
+		Name: procedures.Name,
+	}
 }
 
 func ToAIChatResponse(answer *domain.AIChat) *AIConversationResponse {
+	procedures := make([]*AIProcedureResponse, len(answer.RelatedProcedures))
+	for i, proc := range answer.RelatedProcedures {
+		procedures[i] = ToAIProcedureResponse(proc)
+	}
 	return &AIConversationResponse{
-		ID:        answer.ID,
-		UserID:    answer.UserID,
-		Source:    answer.Source,
-		Request:   answer.Request,
-		Response:  answer.Response,
-		Timestamp: answer.Timestamp,
+		ID:                answer.ID,
+		UserID:            answer.UserID,
+		Source:            answer.Source,
+		Request:           answer.Request,
+		Response:          answer.Response,
+		Timestamp:         answer.Timestamp,
+		RelatedProcedures: procedures,
 	}
 }
 
@@ -739,17 +757,17 @@ func toPaginatedAIHisory(aiHistory []*domain.AIChat, total, page, limit int64) *
 }
 
 type OrgsListPaginated struct {
-	Orgs   []OrganizationResponseDTO  `json:"orgs"`
-	Total  int64                      `json:"total"`
-	Page   int64                      `json:"page"`
-	PageSize int64                    `json:"pageSize"`
+	Orgs     []OrganizationResponseDTO `json:"orgs"`
+	Total    int64                     `json:"total"`
+	Page     int64                     `json:"page"`
+	PageSize int64                     `json:"pageSize"`
 }
 
-func toOrgsListPaginated (orgs []OrganizationResponseDTO, total, page, pageSize int64) *OrgsListPaginated {
+func toOrgsListPaginated(orgs []OrganizationResponseDTO, total, page, pageSize int64) *OrgsListPaginated {
 	return &OrgsListPaginated{
-		Orgs: orgs,
-		Total: total,
-		Page: page,
+		Orgs:     orgs,
+		Total:    total,
+		Page:     page,
 		PageSize: pageSize,
 	}
 }

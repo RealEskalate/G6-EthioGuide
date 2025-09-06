@@ -39,15 +39,14 @@ func (r *AIChatRepository) GetByUser(ctx context.Context, userID string, page, l
 		return nil, 0, err
 	}
 	filter := bson.M{"user_id": userObjID}
-	opts := options.Find().SetSort(bson.D{{Key: "timestamp", Value: int32(-1)}})
-	total, err := r.collection.CountDocuments(ctx, opts)
+	total, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, 0, domain.ErrNotFound
 		}
 		return nil, 0, err
 	}
-	opts.SetLimit(int64(limit)).SetSkip((page - 1) * limit)
+	opts := options.Find().SetSort(bson.D{{Key: "timestamp", Value: int32(-1)}}).SetLimit(int64(limit)).SetSkip((page - 1) * limit)
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
@@ -78,24 +77,53 @@ func (r *AIChatRepository) DeleteByUser(ctx context.Context, userID string) erro
 ////////-----------------------Dto----------------/////////////////
 ////////////////==============================///////////////////////
 
+type AIProcedureModel struct {
+	ID   primitive.ObjectID `bson:"id"`
+	Name string             `bson:"name"`
+}
+
 type AIUserChatMessageModel struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	UserID    primitive.ObjectID `bson:"user_id"`
-	Source    string             `bson:"source,omitempty"`
-	Request   string             `bson:"request"`
-	Response  string             `bson:"response"`
-	Timestamp time.Time          `bson:"timestamp"`
+	ID                primitive.ObjectID  `bson:"_id,omitempty"`
+	UserID            primitive.ObjectID  `bson:"user_id"`
+	Source            string              `bson:"source,omitempty"`
+	Request           string              `bson:"request"`
+	Response          string              `bson:"response"`
+	Timestamp         time.Time           `bson:"timestamp"`
+	RelatedProcedures []*AIProcedureModel `bson:"related_procedures"`
+}
+
+func AIProcedureModelToDomain(dto *AIProcedureModel) *domain.AIProcedure {
+	return &domain.AIProcedure{
+		Id:   dto.ID.Hex(),
+		Name: dto.Name,
+	}
+}
+
+func DomainAIProcedureToModel(proc *domain.AIProcedure) *AIProcedureModel {
+	id, err := primitive.ObjectIDFromHex(proc.Id)
+	if err != nil {
+		id = primitive.NewObjectID()
+	}
+	return &AIProcedureModel{
+		ID:   id,
+		Name: proc.Name,
+	}
 }
 
 // Convert AIUserChatMessageModel (DTO) to domain.AIChat
 func AIUserChatMessageModelToDomain(dto *AIUserChatMessageModel) *domain.AIChat {
+	proc := make([]*domain.AIProcedure, len(dto.RelatedProcedures))
+	for i, p := range dto.RelatedProcedures {
+		proc[i] = AIProcedureModelToDomain(p)
+	}
 	return &domain.AIChat{
-		ID:        dto.ID.Hex(),
-		UserID:    dto.UserID.Hex(),
-		Source:    dto.Source,
-		Request:   dto.Request,
-		Response:  dto.Response,
-		Timestamp: dto.Timestamp,
+		ID:                dto.ID.Hex(),
+		UserID:            dto.UserID.Hex(),
+		Source:            dto.Source,
+		Request:           dto.Request,
+		Response:          dto.Response,
+		Timestamp:         dto.Timestamp,
+		RelatedProcedures: proc,
 	}
 }
 
@@ -116,12 +144,17 @@ func DomainAIChatToMessageModel(chat *domain.AIChat) (*AIUserChatMessageModel, e
 			return nil, err
 		}
 	}
+	proc := make([]*AIProcedureModel, len(chat.RelatedProcedures))
+	for i, p := range chat.RelatedProcedures {
+		proc[i] = DomainAIProcedureToModel(p)
+	}
 	return &AIUserChatMessageModel{
-		ID:        id,
-		UserID:    userID,
-		Source:    chat.Source,
-		Request:   chat.Request,
-		Response:  chat.Response,
-		Timestamp: chat.Timestamp,
+		ID:                id,
+		UserID:            userID,
+		Source:            chat.Source,
+		Request:           chat.Request,
+		Response:          chat.Response,
+		Timestamp:         chat.Timestamp,
+		RelatedProcedures: proc,
 	}, nil
 }

@@ -84,7 +84,7 @@ func SetupRouter(
 			{
 				aiGroup.POST("/translate", geminiController.Translate)
 				aiGroup.POST("/guide", aiChatController.AIChatController)
-				// aiGroup.GET("/history")
+				aiGroup.GET("/history", aiChatController.AIChatHistoryController)
 			}
 
 			// --- PRO Subscription Routes ---
@@ -261,7 +261,6 @@ func SetupRouter(
 		// 13) AI Guidance (Gemini)
 		ai := v1.Group("/ai")
 		{
-			ai.GET("/history", handleAIGetHistory)
 			ai.POST("/mark-not-verified", handleAIMarkNotVerified)
 			ai.POST("/speech-to-text", handleAISpeechToText)
 		}
@@ -593,38 +592,7 @@ func handleGetNotice(c *gin.Context) {
 	})
 }
 
-// 13) AI Guidance
-// func handleAIGuide(c *gin.Context) {
-// 	c.JSON(http.StatusOK, gin.H{
-// 		"response":  "Here are the verified steps...",
-// 		"source":    "official",
-// 		"citations": []gin.H{{"type": "procedure", "id": "prc_123"}},
-// 		"verified":  true,
-// 	})
-// }
-
-func handleAIGetHistory(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"history": []gin.H{
-			{
-				"id":       "id",
-				"request":  "How to renew passport?",
-				"response": "Here are the verified steps...",
-				"source":   "official",
-				"procedures": []gin.H{
-					{
-						"id":   "id",
-						"name": "name",
-					},
-					{
-						"id":   "id2",
-						"name": "name2",
-					},
-				},
-			},
-		},
-	})
-}
+// 13) AI Guidance}
 
 func handleAIMarkNotVerified(c *gin.Context) {
 	c.Status(http.StatusAccepted)

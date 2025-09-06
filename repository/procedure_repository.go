@@ -397,9 +397,15 @@ func (r *ProcedureRepository) SearchByEmbedding(ctx context.Context, queryVec []
 	}
 	defer cursor.Close(ctx)
 
-	var results []*domain.Procedure
-	if err := cursor.All(ctx, &results); err != nil {
+	var models []*ProcedureModel
+	if err := cursor.All(ctx, &models); err != nil {
 		return nil, err
+	}
+
+	// --- Convert to domain ---
+	results := make([]*domain.Procedure, len(models))
+	for i, m := range models {
+		results[i] = m.ToDomain()
 	}
 	return results, nil
 }
