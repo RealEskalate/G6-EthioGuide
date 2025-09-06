@@ -17,13 +17,19 @@ func NewAIChatController(usecase domain.IAIChatUsecase) *AIChatController {
 }
 
 func (c *AIChatController) AIChatController(ctx *gin.Context) {
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+
 	var req AIChatRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
-	answer, err := c.usecase.AIchat(ctx.Request.Context(), req.Query)
+	answer, err := c.usecase.AIchat(ctx.Request.Context(), userID.(string), req.Query)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -51,7 +57,7 @@ func (c *AIChatController) AIChatHistoryController(ctx *gin.Context) {
 		return
 	}
 
-	conversations, total, err := c.usecase.AIHistory(userID, page, limit)
+	conversations, total, err := c.usecase.AIHistory(ctx.Request.Context(), userID.(string), page, limit)
 	if err != nil {
 		HandleError(ctx, err)
 		return

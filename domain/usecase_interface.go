@@ -41,7 +41,8 @@ type ICategoryUsecase interface {
 }
 
 type IAIChatUsecase interface {
-	AIchat(ctx context.Context, query string) (string, error)
+	AIchat(ctx context.Context, userId, query string) (*AIChat, error)
+	AIHistory(ctx context.Context, userId string, page, limit int64) ([]*AIChat, int64, error)
 }
 
 type IProcedureUsecase interface {

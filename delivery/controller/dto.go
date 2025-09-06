@@ -722,10 +722,10 @@ type PaginatedAIHisoryResponse struct {
 	Pagination Pagination               `json:"pagination"`
 }
 
-func toPaginatedAIHisory(aiHistory *[]domain.AIChat, total, page, limit int64) *PaginatedAIHisoryResponse {
-	conv := make([]AIConversationResponse, len(*aiHistory))
-	for i, conversation := range *aiHistory {
-		conv[i] = *ToAIChatResponse(&conversation)
+func toPaginatedAIHisory(aiHistory []*domain.AIChat, total, page, limit int64) *PaginatedAIHisoryResponse {
+	conv := make([]AIConversationResponse, len(aiHistory))
+	for i, conversation := range aiHistory {
+		conv[i] = *ToAIChatResponse(conversation)
 	}
 
 	return &PaginatedAIHisoryResponse{

@@ -27,33 +27,43 @@ func (r *AIChatRepository) Save(ctx context.Context, chat *domain.AIChat) error 
 	if err != nil {
 		return err
 	}
+	dto.ID = primitive.NewObjectID()
 	_, err = r.collection.InsertOne(ctx, dto)
+	chat.ID = dto.ID.Hex()
 	return err
 }
 
-func (r *AIChatRepository) GetByUser(ctx context.Context, userID string, limit int) ([]*domain.AIChat, error) {
+func (r *AIChatRepository) GetByUser(ctx context.Context, userID string, page, limit int64) ([]*domain.AIChat, int64, error) {
 	userObjID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	filter := bson.M{"user_id": userObjID}
-	opts := options.Find().SetSort(bson.D{{Key: "timestamp", Value: int32(-1)}}).SetLimit(int64(limit))
+	opts := options.Find().SetSort(bson.D{{Key: "timestamp", Value: int32(-1)}})
+	total, err := r.collection.CountDocuments(ctx, opts)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, 0, domain.ErrNotFound
+		}
+		return nil, 0, err
+	}
+	opts.SetLimit(int64(limit)).SetSkip((page - 1) * limit)
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer cursor.Close(ctx)
 
 	var dtos []*AIUserChatMessageModel
 	if err := cursor.All(ctx, &dtos); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	var chats []*domain.AIChat
 	for _, dto := range dtos {
 		chats = append(chats, AIUserChatMessageModelToDomain(dto))
 	}
-	return chats, nil
+	return chats, total, nil
 }
 
 func (r *AIChatRepository) DeleteByUser(ctx context.Context, userID string) error {
