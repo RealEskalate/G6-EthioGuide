@@ -1,6 +1,7 @@
 // store/store.ts
 import { configureStore } from "@reduxjs/toolkit";
 import { apiSlice } from "./slices/workspaceSlice";
+import userReducer from './slices/userSlice';
 import { historyApi } from "./slices/historySlice";
 import { discussionsListApi } from "./slices/discussionsGetSlice"; // added
 // i18n bootstrap (prevents "NO_I18NEXT_INSTANCE" warnings app-wide)
@@ -18,6 +19,7 @@ if (!i18n.isInitialized) {
 
 export const store = configureStore({
   reducer: {
+    user: userReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
     [historyApi.reducerPath]: historyApi.reducer,
     [discussionsListApi.reducerPath]: discussionsListApi.reducer, // added
@@ -33,3 +35,4 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+
