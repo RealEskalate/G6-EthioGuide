@@ -4,6 +4,7 @@ import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
 import 'package:ethioguide/features/AI%20chat/Presentation/widgets/ai_page_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -17,6 +18,10 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   final FocusNode _queryFocusNode = FocusNode();
   List<Conversation> _history = [];
+  // For speech to text
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  // For bottom naviagation bar
   final pageIndex = 2;
 
   @override
@@ -37,6 +42,29 @@ class _ChatPageState extends State<ChatPage> {
     context.read<AiBloc>().add(GetHistoryEvent());
     // Update border color on focus
     _queryFocusNode.addListener(() => setState(() {}));
+    // Initialize SpeechToText object
+    _speech = stt.SpeechToText();
+  }
+
+  void _listen() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => print('onStatus: $val'),
+        onError: (val) => print('onError: $val'),
+      );
+
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _queryController.text = val.recognizedWords;
+          }),
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
   }
 
   void _addMessage({required Conversation conversation}) {
@@ -63,8 +91,17 @@ class _ChatPageState extends State<ChatPage> {
 
   void _removeLoadingMessage() {
     setState(() {
-      _history.removeLast();
-      // _history.removeWhere((conv) => conv.source == 'loading');
+      final conv = _history.removeLast();
+      // Add Just the query to display as failed
+      _history.add(
+        Conversation(
+          id: conv.id,
+          request: conv.request,
+          response: '',
+          source: 'failed',
+          procedures: [],
+        ),
+      );
     });
   }
 
@@ -79,66 +116,6 @@ class _ChatPageState extends State<ChatPage> {
       }
     });
   }
-
-  // void _showTranslateDialog() {
-  //   final TextEditingController translateController = TextEditingController();
-  //   String selectedLang = 'am'; // Default to Amharic
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: const Text('Translate Text'),
-  //       content: Column(
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           TextField(
-  //             controller: translateController,
-  //             decoration: const InputDecoration(
-  //               hintText: 'Enter text to translate...',
-  //               border: OutlineInputBorder(),
-  //             ),
-  //           ),
-  //           const SizedBox(height: 16),
-  //           DropdownButton<String>(
-  //             value: selectedLang,
-  //             isExpanded: true,
-  //             items: const [
-  //               DropdownMenuItem(value: 'am', child: Text('Amharic')),
-  //               DropdownMenuItem(value: 'ti', child: Text('Tigrinya')),
-  //               DropdownMenuItem(value: 'en', child: Text('English')),
-  //             ],
-  //             onChanged: (value) {
-  //               setState(() {
-  //                 selectedLang = value!;
-  //               });
-  //             },
-  //           ),
-  //         ],
-  //       ),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.pop(context),
-  //           child: const Text('Cancel'),
-  //         ),
-  //         ElevatedButton(
-  //           onPressed: () {
-  //             final content = translateController.text.trim();
-  //             if (content.isNotEmpty) {
-  //               context.read<AiBloc>().add(
-  //                 TranslateContentEvent(content: content, lang: selectedLang),
-  //               );
-  //               Navigator.pop(context);
-  //             }
-  //           },
-  //           style: ElevatedButton.styleFrom(
-  //             backgroundColor: Colors.teal,
-  //             foregroundColor: Colors.white,
-  //           ),
-  //           child: const Text('Translate'),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -185,7 +162,21 @@ class _ChatPageState extends State<ChatPage> {
                     itemCount: _history.length,
                     itemBuilder: (context, index) {
                       final conv = _history[index];
-                      return buildMessage(conv: conv, context: context);
+                      return conv.source != 'error'
+                          ? conv.source != 'loading'
+                                ? buildMessage(conv: conv, context: context)
+                                : Column(
+                                    children: [
+                                      buildMessage(
+                                        conv: conv,
+                                        context: context,
+                                      ),
+                                      loadingCard(),
+                                    ],
+                                  )
+                          : errorCard(
+                              conv.response,
+                            ); // Determine whether the response is error or response
                     },
                   );
                 },
@@ -214,6 +205,10 @@ class _ChatPageState extends State<ChatPage> {
                         focusNode: _queryFocusNode,
                         decoration: InputDecoration(
                           hintText: 'Type your question here...',
+                          prefixIcon: IconButton(
+                            onPressed: _listen,
+                            icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(18),
                             borderSide: BorderSide(
@@ -258,12 +253,6 @@ class _ChatPageState extends State<ChatPage> {
                                     Icons.square,
                                     color: Colors.white,
                                   ),
-                                  // child: CircularProgressIndicator(
-                                  //   strokeWidth: 2,
-                                  //   valueColor: AlwaysStoppedAnimation<Color>(
-                                  //     Colors.white,
-                                  //   ),
-                                  // ),
                                 )
                               : const Icon(
                                   Icons.send,
@@ -280,7 +269,10 @@ class _ChatPageState extends State<ChatPage> {
           ],
         ),
 
-        bottomNavigationBar: bottomNav(context: context, selectedIndex: pageIndex),
+        bottomNavigationBar: bottomNav(
+          context: context,
+          selectedIndex: pageIndex,
+        ),
       ),
     );
   }
