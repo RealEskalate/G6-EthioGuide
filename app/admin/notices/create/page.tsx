@@ -20,10 +20,10 @@ export default function CreateOfficialNotice() {
   // const now = new Date().toISOString();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [department, setDepartment] = useState("");
-  const [status, setStatus] = useState("active");
-  const [priority, setPriority] = useState("medium");
+  // const [tags, setTags] = useState<string[]>([]);
+  // const [department, setDepartment] = useState("");
+  // const [status, setStatus] = useState("active");
+  // const [priority, setPriority] = useState("medium");
   // const [publicationDate, setPublicationDate] = useState("");
   // const [publicationTime, setPublicationTime] = useState("");
   
@@ -38,12 +38,8 @@ export default function CreateOfficialNotice() {
     organization_id: "YOUR_ORG_ID", // replace dynamically
     title,
     content,
-    tags,
-    department,
-    status,
-    priority,
-    created_at: now, 
-    updated_at: now,   
+    created_at: now,
+    updated_at: now,
   };
 
   console.log("Submitting payload:", payload);
