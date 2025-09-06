@@ -585,14 +585,14 @@ func (ctrl *UserController) HandleUpdateOrgs(c *gin.Context) {
 // @Failure      500 {string}  "invalid"
 // @Router       /search [get]
 func (ctrl *UserController) HandleSearch(c *gin.Context) {
-	query := c.Param("q")
-	page, err := strconv.ParseInt(c.Param("page"), 10, 64)
+	query := c.Query("q")
+	page, err := strconv.ParseInt(c.Query("page"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
-	limit, errlimit := strconv.ParseInt(c.Param("limit"), 10, 64)
+	limit, errlimit := strconv.ParseInt(c.Query("limit"), 10, 64)
 	if errlimit != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
