@@ -174,11 +174,13 @@ func (uc *UserUsecase) Login(c context.Context, identifier, password string) (*d
 		return nil, "", "", fmt.Errorf("repository error during login: %w", err)
 	}
 
-	if !account.UserDetail.IsVerified {
-		if err = uc.sendVerificationEmail(ctx, account); err != nil {
-			return nil, "", "", err
+	if account.Role == domain.RoleUser {
+		if !account.UserDetail.IsVerified {
+			if err = uc.sendVerificationEmail(ctx, account); err != nil {
+				return nil, "", "", err
+			}
+			return nil, "", "", domain.ErrAccountNotActive
 		}
-		return nil, "", "", domain.ErrAccountNotActive
 	}
 
 	err = uc.passwordService.ComparePassword(account.PasswordHash, password)
@@ -540,10 +542,15 @@ func (uc *UserUsecase) RegisterOrg(ctx context.Context, Name, Email, OrgType str
 	if !errors.Is(err, domain.ErrNotFound) {
 		return fmt.Errorf("error checking email existence: %w", err)
 	}
-
+	hashedPassword, err := uc.passwordService.HashPassword("defaultPassword123")
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
 	orgAccount := domain.Account{
 		Name:  Name,
 		Email: Email,
+		Role: domain.RoleOrg,
+		PasswordHash: hashedPassword,
 		OrganizationDetail: &domain.OrganizationDetail{
 			Type: domain.OrganizationType(OrgType),
 		},
