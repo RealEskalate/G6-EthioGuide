@@ -19,6 +19,19 @@ func NewNoticeController(noticeUsecase domain.INoticeUseCase) *NoticeController 
 	}
 }
 
+// @Summary      Create Notice
+// @Description  Create new notice.
+// @Tags         Notice
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        request body NoticeDTO true "Procedure Detail"
+// @Success      200 {string}  "Notice Created successfully."
+// @Failure      400 {string}  "Invalid request"
+// @Failure      404 {string}  "Not Found"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /notices [post]
 func (nc *NoticeController) CreateNotice(ctx *gin.Context) {
 	var noticeDTO NoticeDTO
 	if err := ctx.ShouldBindJSON(&noticeDTO); err != nil {
@@ -35,6 +48,20 @@ func (nc *NoticeController) CreateNotice(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, "Notice Created successfully.")
 }
 
+// @Summary      Get List of Notices
+// @Description  Search and filter Notices with pagination, sorting, and various filters.
+// @Tags         Notice
+// @Accept       json
+// @Produce      json
+// @Param        page              query     int     false  "Page number (default 1)"
+// @Param        limit             query     int     false  "Results per page (default 10)"
+// @Param        organizationId    query     string  false  "Filter by organization ID"
+// @Param        sortBy            query     string  false  "Sort by field (e.g. createdAt, fee, processingTime)"
+// @Param        sortOrder         query     string  false  "Sort order: ASC or DESC (default DESC)"
+// @Success      200  {object}  NoticeListResponse "List of Notices"
+// @Failure      400  {string}   "Bad Request"
+// @Failure      500  {string}   "Server error"
+// @Router       /notices [get]
 func (nc *NoticeController) GetNoticesByFilter(ctx *gin.Context) {
 	filter := &domain.NoticeFilter{}
 
@@ -92,6 +119,18 @@ func (nc *NoticeController) GetNoticesByFilter(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, resp)
 }
 
+// @Summary      Update Notice
+// @Description  Update a notice.
+// @Tags         Notice
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        id path string true "Notice ID"
+// @param        request body NoticeDTO true "Details of updated notice"
+// @Success      200  {string}  "Notice Updated successfully."
+// @Failure      400  {string}   "Bad Request"
+// @Failure      500  {string}   "Server error"
+// @Router       /notices/{id} [patch]
 func (nc *NoticeController) UpdateNotice(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var noticeDTO NoticeDTO
@@ -109,6 +148,16 @@ func (nc *NoticeController) UpdateNotice(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, "Notice Updated successfully.")
 }
 
+// @Summary      Delete Notice
+// @Description  Deletes an existing Notice. Requires admin or organization ownership.
+// @Tags         Notice
+// @Param        Authorization header string true "Bearer token"
+// @Param        id path string true "Notice ID"
+// @Success      200  "Notice Deleted successfully."
+// @Failure      401  {string} Unauthorized
+// @Failure      403  {string} Permission Denied
+// @Failure      404  {string} Procedure not found
+// @Router       /notices/{id} [delete]
 func (nc *NoticeController) DeleteNotice(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if err := nc.noticeUsecase.DeleteNotice(ctx, id); err != nil {

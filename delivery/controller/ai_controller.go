@@ -50,6 +50,19 @@ func (gc *GeminiController) Translate(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"content": translated})
 
 }
+
+// @Summary      AI Chat
+// @Description  Interact with the chatbot.
+// @Tags         AI
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        request body ChatRequest true "Prompt"
+// @Success      200 {string}  "Response"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /ai/guide [post]
 func (gc *GeminiController) AIChat(c *gin.Context) {
 	var request ChatRequest 
 	if err := c.ShouldBindJSON(&request); err != nil {
