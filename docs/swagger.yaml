@@ -905,7 +905,7 @@ definitions:
       username:
         type: string
     type: object
-host: localhost:8080
+host: ethio-guide-backend.onrender.com
 info:
   contact:
     email: support@swagger.io

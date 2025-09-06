@@ -6,20 +6,31 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 )
 
 type AIChatUsecase struct {
-	EmbedService  domain.IEmbeddingService
-	ProcedureRepo domain.IProcedureRepository // abstracts Mongo / vector DB
-	AiChatRepo    domain.IAIChatRepository
-	LLMService    domain.IAIService // abstracts Gemini / OpenAI
+	EmbedService   domain.IEmbeddingService
+	ProcedureRepo  domain.IProcedureRepository // abstracts Mongo / vector DB
+	AiChatRepo     domain.IAIChatRepository
+	LLMService     domain.IAIService // abstracts Gemini / OpenAI
+	contextTimeout time.Duration
 }
 
-func NewChatUsecase(e domain.IEmbeddingService, s domain.IProcedureRepository, aiChatRepo domain.IAIChatRepository, l domain.IAIService) domain.IAIChatUsecase {
-	return &AIChatUsecase{EmbedService: e, ProcedureRepo: s, AiChatRepo: aiChatRepo, LLMService: l}
+func NewChatUsecase(e domain.IEmbeddingService, s domain.IProcedureRepository, aiChatRepo domain.IAIChatRepository, l domain.IAIService, timeOut time.Duration) domain.IAIChatUsecase {
+	return &AIChatUsecase{
+		EmbedService:   e,
+		ProcedureRepo:  s,
+		AiChatRepo:     aiChatRepo,
+		LLMService:     l,
+		contextTimeout: timeOut,
+	}
 }
 
 func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*domain.AIChat, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
 	classifierPrompt := fmt.Sprintf(`
 	Classify the following user query into one of these categories:
 	- procedure   (government services, documents, licenses, permits, taxes, etc.)
@@ -136,5 +147,8 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 }
 
 func (u *AIChatUsecase) AIHistory(ctx context.Context, userId string, page, limit int64) ([]*domain.AIChat, int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
 	return u.AiChatRepo.GetByUser(ctx, userId, page, limit)
 }

@@ -29,7 +29,7 @@ import (
 // @license.name  Apache 2.0
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host      localhost:8080
+// @host      ethio-guide-backend.onrender.com
 // @BasePath  /api/v1
 
 // @securityDefinitions.apikey BearerAuth
@@ -108,11 +108,11 @@ func main() {
 	)
 	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, embeddingService, cfg.UsecaseTimeout)
 	catagoryUsecase := usecase.NewCategoryUsecase(catagoryRepo, cfg.UsecaseTimeout)
-	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
+	geminiUsecase := usecase.NewGeminiUsecase(aiService, 10*cfg.UsecaseTimeout)
 	feedbackUsecase := usecase.NewFeedbackUsecase(feedbackRepo, procedureRepo, cfg.UsecaseTimeout)
 	noticeUsecase := usecase.NewNoticeUsecase(noticeRepo)
 	preferencesUsecase := usecase.NewPreferencesUsecase(preferencesRepo)
-	aiChatUsecase := usecase.NewChatUsecase(embeddingService, procedureRepo, aiChatRepo, aiService)
+	aiChatUsecase := usecase.NewChatUsecase(embeddingService, procedureRepo, aiChatRepo, aiService, 10*cfg.UsecaseTimeout)
 
 	postUsecase := usecase.NewPostUseCase(postRepo, cfg.UsecaseTimeout)
 	searchUsecase := usecase.NewSearchUsecase(searchRepo, cfg.UsecaseTimeout)
