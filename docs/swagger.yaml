@@ -571,7 +571,8 @@ definitions:
   controller.TranslateDTO:
     properties:
       content:
-        type: string
+        additionalProperties: true
+        type: object
     required:
     - content
     type: object
