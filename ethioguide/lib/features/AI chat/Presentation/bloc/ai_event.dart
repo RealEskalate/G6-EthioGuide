@@ -16,6 +16,8 @@ class SendQueryEvent extends AiEvent {
   List<Object> get props => [query];
 }
 
+class CancleQueryEvent extends AiEvent {}
+
 class GetHistoryEvent extends AiEvent {}
 
 class TranslateContentEvent extends AiEvent {
