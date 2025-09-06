@@ -14,18 +14,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function CreateOfficialNotice() {
-  // Frontend state
-  // const now = new Date().toISOString();
+  const route = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  // const [tags, setTags] = useState<string[]>([]);
-  // const [department, setDepartment] = useState("");
-  // const [status, setStatus] = useState("active");
-  // const [priority, setPriority] = useState("medium");
-  // const [publicationDate, setPublicationDate] = useState("");
-  // const [publicationTime, setPublicationTime] = useState("");
   
   const { data: session } = useSession();
   const token = session?.accessToken;
@@ -61,7 +55,8 @@ export default function CreateOfficialNotice() {
 
     const data = await res.json();
     console.log("Notice created:", data);
-    alert("Notice created successfully!");
+    route.push("/admin/notices");
+    // alert("Notice created successfully!");
   } catch (err) {
     console.error(err);
     alert("Error creating notice.");

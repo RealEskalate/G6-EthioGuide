@@ -4,120 +4,145 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
-type Requirement = { text: string; optional?: boolean };
-type Step = { order: number; text: string };
-type Fee = { label: string; amount: number; currency: string };
-type ProcessingTime = { minDays?: number; maxDays?: number };
+// Shape of payload sent to backend
+interface ProcedurePayload {
+  name: string;
+  prerequisites: string[];
+  steps: Record<string, string>;
+  amount: number;
+  minDays: number;
+  maxDays: number;
+  result: string;
+}
 
 export default function AddProcedurePage() {
-  const [title, setTitle] = useState("");
-  const [requirements, setRequirements] = useState<Requirement[]>([]);
-  const [steps, setSteps] = useState<Step[]>([]);
-  const [fees, setFees] = useState<Fee[]>([]);
-  const [processingTime, setProcessingTime] = useState<ProcessingTime>({});
+  const router = useRouter();
 
-  // Handlers for arrays
-  const addRequirement = () => {
-    if (
-      requirements.length === 0 ||
-      requirements[requirements.length - 1].text.trim() !== ""
-    ) {
-      setRequirements((prev) => [...prev, { text: "", optional: false }]);
-    }
+  const { data: session } = useSession();
+  const token = (session as { accessToken?: string } | null)?.accessToken;
+
+  // State matching backend structure
+  const [name, setName] = useState<string>("");
+  const [prerequisites, setPrerequisites] = useState<string[]>([""]);
+  const [steps, setSteps] = useState<string[]>([""]);
+  const [amount, setAmount] = useState<number>(0);
+  const [minDays, setMinDays] = useState<number>(0);
+  const [maxDays, setMaxDays] = useState<number>(0);
+  const [result, setResult] = useState<string>("");
+
+  // Handlers for dynamic arrays
+  const updatePrerequisite = (index: number, value: string) => {
+    const copy = [...prerequisites];
+    copy[index] = value;
+    setPrerequisites(copy);
   };
 
-  const updateRequirement = <K extends keyof Requirement>(
-    i: number,
-    field: K,
-    value: Requirement[K]
-  ) => {
-    const copy = [...requirements];
-    copy[i][field] = value;
-    setRequirements(copy);
-  };
+  const addPrerequisite = () => setPrerequisites([...prerequisites, ""]);
 
-  const addStep = () => {
-    if (steps.length === 0 || steps[steps.length - 1].text.trim() !== "") {
-      setSteps((prev) => [...prev, { order: prev.length + 1, text: "" }]);
-    }
-  };
+  const removePrerequisite = (index: number) =>
+    setPrerequisites(prerequisites.filter((_, i) => i !== index));
 
-  const updateStep = (i: number, value: string) => {
+  const updateStep = (index: number, value: string) => {
     const copy = [...steps];
-    copy[i].text = value;
+    copy[index] = value;
     setSteps(copy);
   };
 
-  const addFee = () => {
-    const last = fees[fees.length - 1];
-    if (fees.length === 0 || (last.label.trim() !== "" && last.amount > 0)) {
-      setFees((prev) => [...prev, { label: "", amount: 0, currency: "Birr" }]);
-    }
-  };
+  const addStep = () => setSteps([...steps, ""]);
 
-  const updateFee = <K extends keyof Fee>(
-    i: number,
-    field: K,
-    value: Fee[K]
-  ) => {
-    const copy = [...fees];
-    copy[i][field] = value;
-    setFees(copy);
-  };
+  const removeStep = (index: number) =>
+    setSteps(steps.filter((_, i) => i !== index));
 
-  const handleSubmit = () => {
-    const payload = {
-      title,
-      requirements,
-      steps,
-      fees,
-      processingTime,
-      updatedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
+  // Submit handler
+  const handleSubmit = async () => {
+    if (!name.trim()) return alert("Procedure name is required");
+    if (prerequisites.some((p) => !p.trim()))
+      return alert("All prerequisites must have text");
+    if (steps.some((s) => !s.trim())) return alert("All steps must have text");
+
+    const payload: ProcedurePayload = {
+      name,
+      prerequisites,
+      steps: steps.reduce<Record<string, string>>((acc, step, i) => {
+        acc[(i + 1).toString()] = step;
+        return acc;
+      }, {}),
+      amount,
+      minDays,
+      maxDays,
+      result,
     };
-    console.log("Submitting:", payload);
-    // TODO: send to API
+
+    try {
+      console.log("Submitting payload:", payload);
+
+      const res = await fetch(
+        "https://ethio-guide-backend.onrender.com/api/v1/procedures",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = (await res.json().catch(() => null)) as
+          | { message?: string }
+          | null;
+        throw new Error(errorData?.message || "Failed to add procedure");
+      }
+
+      router.push("/admin/procedures");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error:", error);
+        alert(`Failed to add procedure: ${error.message}`);
+      } else {
+        console.error("Unknown error:", error);
+        alert("Failed to add procedure: Unknown error");
+      }
+    }
   };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 text-primary-dark">
       <h2 className="text-xl font-semibold">Add New Procedure</h2>
 
-      {/* Title */}
+      {/* Name */}
       <div>
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="name">Procedure Name</Label>
         <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
       </div>
 
-      {/* Requirements */}
+      {/* Prerequisites */}
       <div>
-        <h3 className="font-medium">Requirements</h3>
-        {requirements.map((req, i) => (
-          <div key={i} className="flex gap-2 items-center mb-2">
+        <h3 className="font-medium">Prerequisites</h3>
+        {prerequisites.map((p, i) => (
+          <div key={i} className="flex gap-2 mb-2 items-center">
             <Input
-              placeholder="Requirement text"
-              value={req.text}
-              onChange={(e) => updateRequirement(i, "text", e.target.value)}
+              placeholder={`Prerequisite ${i + 1}`}
+              value={p}
+              onChange={(e) => updatePrerequisite(i, e.target.value)}
             />
-            <label className="flex items-center gap-1 text-sm">
-              <input
-                type="checkbox"
-                checked={req.optional}
-                onChange={(e) =>
-                  updateRequirement(i, "optional", e.target.checked)
-                }
-              />
-              Optional
-            </label>
+            {prerequisites.length > 1 && (
+              <Button variant="outline" onClick={() => removePrerequisite(i)}>
+                Remove
+              </Button>
+            )}
           </div>
         ))}
-        <Button variant="outline" onClick={addRequirement}>
-          + Add Requirement
+        <Button variant="outline" onClick={addPrerequisite}>
+          + Add Prerequisite
         </Button>
       </div>
 
@@ -125,12 +150,17 @@ export default function AddProcedurePage() {
       <div>
         <h3 className="font-medium">Steps</h3>
         {steps.map((s, i) => (
-          <div key={i} className="mb-2">
+          <div key={i} className="flex gap-2 mb-2 items-center">
             <Input
               placeholder={`Step ${i + 1}`}
-              value={s.text}
+              value={s}
               onChange={(e) => updateStep(i, e.target.value)}
             />
+            {steps.length > 1 && (
+              <Button variant="outline" onClick={() => removeStep(i)}>
+                Remove
+              </Button>
+            )}
           </div>
         ))}
         <Button variant="outline" onClick={addStep}>
@@ -138,96 +168,50 @@ export default function AddProcedurePage() {
         </Button>
       </div>
 
-      {/* Fees */}
+      {/* Amount */}
       <div>
-        <h3 className="font-medium">Fees</h3>
-        {fees.map((f, i) => (
-          <div key={i} className="flex gap-2 mb-2">
-            <Input
-              placeholder="Label"
-              value={f.label}
-              onChange={(e) => updateFee(i, "label", e.target.value)}
-            />
-            <Input
-              type="number"
-              min={0}
-              placeholder="Amount"
-              value={f.amount}
-              onChange={(e) => updateFee(i, "amount", Number(e.target.value))}
-            />
-            <Input
-              placeholder="Currency"
-              value={f.currency}
-              onChange={(e) => updateFee(i, "currency", e.target.value)}
-            />
-          </div>
-        ))}
-        <Button variant="outline" onClick={addFee}>
-          + Add Fee
-        </Button>
+        <Label htmlFor="amount">Fee Amount</Label>
+        <Input
+          type="number"
+          id="amount"
+          min={0}
+          value={amount}
+          onChange={(e) => setAmount(Number(e.target.value))}
+        />
       </div>
 
       {/* Processing Time */}
       <div>
-        <h3 className="font-medium">Processing Time</h3>
+        <h3 className="font-medium">Processing Time (Days)</h3>
         <div className="flex gap-2">
           <Input
             type="number"
             min={0}
             placeholder="Min Days"
-            value={processingTime.minDays ?? ""}
-            onChange={(e) =>
-              setProcessingTime({
-                ...processingTime,
-                minDays: Number(e.target.value),
-              })
-            }
+            value={minDays}
+            onChange={(e) => setMinDays(Number(e.target.value))}
           />
           <Input
             type="number"
             min={0}
             placeholder="Max Days"
-            value={processingTime.maxDays ?? ""}
-            onChange={(e) =>
-              setProcessingTime({
-                ...processingTime,
-                maxDays: Number(e.target.value),
-              })
-            }
+            value={maxDays}
+            onChange={(e) => setMaxDays(Number(e.target.value))}
           />
         </div>
       </div>
 
-      {/* Documents */}
-      {/* <div>
-        <h3 className="font-medium">Documents Required</h3>
-        {documents.map((d, i) => (
-          <div key={i} className="flex gap-2 mb-2">
-            <Input
-              placeholder="Document Name"
-              value={d.name}
-              onChange={(e) => updateDocument(i, "name", e.target.value)}
-            />
-            <Input
-              placeholder="Template URL"
-              value={d.templateUrl ?? ""}
-              onChange={(e) => updateDocument(i, "templateUrl", e.target.value)}
-            />
-          </div>
-        ))}
-        <Button variant="outline" onClick={addDocument}>+ Add Document</Button>
-      </div> */}
-
-      {/* Tags */}
-      {/* <div>
-        <h3 className="font-medium">Tags</h3>
+      {/* Result */}
+      <div>
+        <Label htmlFor="result">Result</Label>
         <Input
-          placeholder="Comma separated tags"
-          value={tags.join(",")}
-          onChange={(e) => setTags(e.target.value.split(","))}
+          id="result"
+          value={result}
+          onChange={(e) => setResult(e.target.value)}
         />
-      </div> */}
+      </div>
 
+      {/* Submit */}
       <Button className="bg-primary text-white" onClick={handleSubmit}>
         Save Procedure
       </Button>

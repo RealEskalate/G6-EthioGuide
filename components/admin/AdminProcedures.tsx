@@ -149,7 +149,7 @@ export default function AdminProcedures() {
 
         setProcedures(data.data);
         setTotalPages(Math.ceil(data.pagination.total / 5));
-        // console.log(data);
+        console.log(data);
       } catch (err) {
         console.error(err);
       }

@@ -17,6 +17,12 @@ export function Providers({ children }: ProvidersProps) {
 
     <SessionProvider>
       <I18nextProvider i18n={i18next}>
+
+{/* <Provider store={store}> 
+{children} 
+<Toaster position="top-right" toastOptions={{ duration: 3000 }} /> 
+</Provider> */}
+
   <Provider store={store}>{children}<Toaster /></Provider>
       </I18nextProvider>
     </SessionProvider>
