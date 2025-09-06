@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import ProcedureProp from "@/types/procedure";
 import Pagination from "../shared/pagination";
+import { Button } from "../ui/button";
 
 // const procedures = [
 //   {
@@ -185,7 +186,7 @@ export default function AdminProcedures() {
           </thead>
           <tbody>
             {procedures.map((p) => (
-              <tr key={p.id} className="border-b hover:bg-gray-50">
+              <tr key={p.id} className="border-b hover:bg-accent">
                 <td className="py-3 px-4">
                   <div className="font-medium text-gray-900">{p.name}</div>
                   <p className="text-sm text-muted-foreground text-neutral">
@@ -203,8 +204,13 @@ export default function AdminProcedures() {
                 </td>
                 <TableCell className="flex space-x-2 mt-3">
                   {/* <FaEye className="w-4 h-4 text-primary cursor-pointer" /> */}
-                  <Link href={`/admin/procedures/${p.id}`}>
+                  {/* <Link href={`/admin/procedures/${p.id}`}>
                     <BiSolidEdit className="w-4 h-4 text-primary mt-3 cursor-pointer" />
+                  </Link> */}
+                  <Link href={`/admin/procedures/${p.id}`}>
+                    <Button className="p-2 bg-transparent hover:bg-blue-50 rounded-full transition-all duration-200 hover:scale-105">
+                      <BiSolidEdit className="w-4 h-4 text-blue-600" />
+                    </Button>
                   </Link>
                   <DeleteConfirmDialog
                     title="Delete Procedure"
