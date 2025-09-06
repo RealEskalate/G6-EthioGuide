@@ -6,6 +6,10 @@ const RAW_BACKEND = process.env.NEXT_PUBLIC_API_URL || ''
 const NORMALIZED = RAW_BACKEND.replace(/\/$/, '')
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    // Force correct workspace root to avoid picking parent lockfile
+    root: __dirname,
+  },
   async rewrites() {
     // If an external backend is configured, proxy /api/v1/* to it so that
     // frontend calls to relative /api/v1 still work without CORS issues in dev.

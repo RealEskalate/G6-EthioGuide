@@ -28,41 +28,41 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 	})
 }
 
+type FeedbackPayload = { Content: string; Type: string; Tags?: string[]; ProcedureID?: string }
+
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
 	const { id } = params
 	const dest = backendUrl(`/procedures/${encodeURIComponent(id)}/feedback`)
 
 	// Accept incoming payload and convert to backend-required keys when needed.
-	let payload: any = null
+	let payload: FeedbackPayload | Record<string, unknown> | null = null
 	try {
-		const json: any = await req.json()
-		const hasBackendKeys = json && (Object.prototype.hasOwnProperty.call(json, 'Content') || Object.prototype.hasOwnProperty.call(json, 'Type'))
+		const json: unknown = await req.json()
+		const hasBackendKeys = !!(json && typeof json === 'object' && (Object.prototype.hasOwnProperty.call(json, 'Content') || Object.prototype.hasOwnProperty.call(json, 'Type')))
 		if (hasBackendKeys) {
 			// Already in the expected format; normalize Type
-			const norm = (val: any) => String(val ?? '').toLowerCase().trim().replace(/\s+/g,'_')
+			const norm = (val: unknown) => String(val ?? '').toLowerCase().trim().replace(/\s+/g,'_')
 			const toEnum = (v: string) => {
 				const s = norm(v)
 				if (['inaccuracy','inacuuracy','inacuracy','incorrect','error','issue'].includes(s)) return 'inaccuracy'
 				if (['improvement','inmprovement','improvment','enhancement','suggestion'].includes(s)) return 'improvement'
 				return 'other'
 			}
-			payload = {
-				...json,
-				Type: toEnum(json.Type)
-			}
+			payload = { ...(json as Record<string, unknown>), Type: toEnum((json as Record<string, unknown>).Type as string) }
 		} else {
 			// Build { Content, Type, Tags? } from common lower-case inputs
-			const contentStr = (json?.content ?? json?.body ?? json?.message ?? '').toString().trim()
-			const rawType = (json?.type ?? json?.feedbackType ?? 'inaccuracy').toString()
+			const obj = (json && typeof json === 'object') ? (json as Record<string, unknown>) : {}
+			const contentStr = String((obj.content ?? obj.body ?? obj.message ?? '') as string).trim()
+			const rawType = String((obj.type ?? obj.feedbackType ?? 'inaccuracy') as string)
 			const mapToEnum = (v: string) => {
 				const s = String(v || '').toLowerCase().trim().replace(/\s+/g,'_')
 				if (['inaccuracy','inacuuracy','inacuracy','incorrect','error','issue'].includes(s)) return 'inaccuracy'
 				if (['improvement','inmprovement','improvment','enhancement','suggestion'].includes(s)) return 'improvement'
 				return 'other'
 			}
-			const maybeTags = Array.isArray(json?.tags) ? json.tags : (Array.isArray(json?.Tags) ? json.Tags : undefined)
+			const maybeTags = Array.isArray(obj.tags) ? obj.tags : (Array.isArray(obj.Tags as unknown[]) ? (obj.Tags as string[]) : undefined)
 			const tags = Array.isArray(maybeTags)
-				? maybeTags.filter((t: unknown) => typeof t === 'string' && String(t).trim()).slice(0, 5)
+				? (maybeTags as unknown[]).filter((t) => typeof t === 'string' && String(t).trim()).slice(0, 5) as string[]
 				: undefined
 			payload = { Content: contentStr, Type: mapToEnum(rawType), ...(tags && tags.length ? { Tags: tags } : {}), ProcedureID: id }
 		}
@@ -91,8 +91,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 		try { errorText = await res.clone().text() } catch {}
 		const mentionsOneOf = /oneof/i.test(errorText) && /Type/i.test(errorText)
 		if (mentionsOneOf) {
-			const contentValue = (payload.Content ?? payload.content ?? '').toString()
-			const tagsValue = Array.isArray(payload.Tags) ? payload.Tags : (Array.isArray(payload.tags) ? payload.tags : undefined)
+			const p = payload as Record<string, unknown>
+			const contentValue = String((p.Content ?? (p as any).content ?? '') as string)
+			const tagsValue = Array.isArray((p as any).Tags) ? (p as any).Tags as string[] : (Array.isArray((p as any).tags) ? (p as any).tags as string[] : undefined)
 			const extracted: string[] = []
 			// Try to extract allowed values from messages like: oneof=INACCURACY IMPROVEMENT GENERAL
 			const oneofMatch = errorText.match(/oneof[^A-Za-z0-9_\-]*([A-Za-z0-9_\- ,|/]+)/i)
@@ -126,8 +127,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 				let success = false
 				for (const cand of variants) {
 					tried.push(cand)
-					const attemptPayload: any = { Content: contentValue, Type: cand, ProcedureID: id }
-					if (tagsValue && tagsValue.length) attemptPayload.Tags = tagsValue
+					const attemptPayload: FeedbackPayload = { Content: contentValue, Type: cand, ProcedureID: id, ...(tagsValue && tagsValue.length ? { Tags: tagsValue } : {}) }
 					const attempt = await fetch(dest, {
 						method: 'POST',
 						headers,
@@ -151,11 +151,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 			try { text = await res.text() } catch {}
 			console.error('[feedback POST] backend error:', res.status, text)
 			let errorMsg = 'Bad Request'
-			let details: any = undefined
+			let details: unknown = undefined
 			try {
-				const parsed = text ? JSON.parse(text) : null
+				const parsed: unknown = text ? JSON.parse(text) : null
 				if (parsed && typeof parsed === 'object') {
-					errorMsg = (parsed.error || parsed.message || errorMsg)
+					errorMsg = ((parsed as Record<string, unknown>).error as string) || ((parsed as Record<string, unknown>).message as string) || errorMsg
 					details = parsed
 				} else if (typeof parsed === 'string' && parsed) {
 					errorMsg = parsed

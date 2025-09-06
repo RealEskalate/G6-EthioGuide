@@ -41,62 +41,41 @@ export default function RegisterPage() {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    console.log("Form submitted:", data);
     try {
-      // Step 1: Register with backend
-      const registerResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: data.fullName,
-            username: data.username,
-            email: data.email,
-            password: data.password,
-          }),
-        }
-      );
+      const base = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
+      const registerResponse = await fetch(`${base}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.fullName,
+          username: data.username,
+          email: data.email,
+          password: data.password,
+        }),
+      })
 
-      const registerResult = await registerResponse.json();
-      console.log("Register response:", {
-        status: registerResponse.status,
-        result: registerResult,
-      });
-
+      const registerResult: unknown = await registerResponse.json().catch(() => ({}))
       if (!registerResponse.ok) {
-        throw new Error(registerResult.message || t("register.error"));
+        // Try to read a message from the response if it is an object
+        let msg = t('register.error')
+        if (registerResult && typeof registerResult === 'object') {
+          const obj = registerResult as Record<string, unknown>
+          const m = obj.message
+          const e = obj.error
+          if (typeof m === 'string' && m) msg = m
+          else if (typeof e === 'string' && e) msg = e
+        }
+        throw new Error(msg)
       }
 
-      // --- NEW: Redirect on successful registration ---
-      router.push("/auth/check-email"); // Redirect to the new page
-      // --- END NEW ---
-
-    } catch (err) {
-      console.error("Registration error:", err);
-      form.setError("root", {
-        message:
-          typeof err === "object" && err !== null && "message" in err
-            ? (err as { message?: string }).message || t("register.error")
-            : t("register.error"),
-      });
+      router.push('/auth/check-email')
+    } catch (err: unknown) {
+      const message = err instanceof Error && err.message ? err.message : t('register.error')
+      form.setError('root', { message })
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-foreground flex flex-col items-center justify-center px-4 py-8 font-sans">
-      <Card className="w-full max-w-md bg-white border border-gray-200 shadow-lg rounded-2xl overflow-hidden">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <Image
-              src="/images/ethioguide-symbol.png"
-              alt="EthioGuide Symbol"
-              width={40}
-              height={40}
-              priority
-            />
-            <span className="text-gray-900 font-semibold text-2xl">EthioGuide</span>
-          </div>
     <div className="bg-neutral-light text-foreground flex flex-col items-center p-4 font-sans min-h-full">
       <div className="flex items-center gap-3">
         <Image

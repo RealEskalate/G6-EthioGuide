@@ -1,10 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { Procedure, ProcedureDocument, ProcedureFee, ProcedureProcessingTime, ProcedureStep } from '@/app/types/procedure'
-
-// Small helpers for type-safe narrowing without using 'any'
-const hasKey = <K extends string>(o: unknown, k: K): o is Record<K, unknown> =>
-  typeof o === 'object' && o !== null && k in (o as Record<string, unknown>)
-const isErrorResult = (res: unknown): res is { error: unknown } => hasKey(res, 'error')
+import type { Procedure } from '@/app/types/procedure'
 
 interface BackendPagination { page?: number; limit?: number; total?: number }
 interface Paginated<T> { data?: T[]; items?: T[]; results?: T[]; hasNext?: boolean; pagination?: BackendPagination }
@@ -51,10 +46,10 @@ export const proceduresApi = createApi({
         return `/procedures${params.size ? `?${params.toString()}` : ''}`
       },
       transformResponse: (raw: Paginated<Procedure> | Procedure[]): ProcedureListResponse => {
-        const arr = (raw as Paginated<Procedure>).data || (raw as Paginated<Procedure>).items || (raw as Paginated<Procedure>).results || (Array.isArray(raw) ? (raw as Procedure[]) : [])
+        const arr = (raw as Paginated<Procedure>).data || (raw as Paginated<Procedure>).items || (raw as Paginated<Procedure>).results || (Array.isArray(raw) ? raw as Procedure[] : [])
         const pagination = (raw as Paginated<Procedure>).pagination || {}
         const page = pagination.page ?? 1
-        const limit = (pagination.limit ?? arr.length) || 10
+  const limit = (pagination.limit ?? arr.length) || 10
         const total = pagination.total ?? ((raw as Paginated<Procedure>).hasNext ? page * limit + 1 : arr.length)
         const totalPages = total && limit ? Math.max(1, Math.ceil(total / limit)) : 1
         // Determine hasNext: prefer explicit flag, else compute
@@ -62,18 +57,99 @@ export const proceduresApi = createApi({
         const hasNext = typeof hasNextExplicit === 'boolean' ? hasNextExplicit : (page < totalPages)
         return {
           list: arr.map(p => {
-            // tolerate alternative id fields from backend without introducing any
-            const id = (p as unknown as { id?: string; _id?: string; procedureId?: string; slug?: string; code?: string }).id
-              || (p as unknown as { _id?: string })._id
-              || (p as unknown as { procedureId?: string }).procedureId
-              || (p as unknown as { slug?: string }).slug
-              || (p as unknown as { code?: string }).code
-              || undefined
-            return { ...p, id: id as string }
-          }).filter((p): p is Procedure => Boolean(p.id)),
+            const anyP: any = p
+            const id = anyP.id || anyP._id || anyP.procedureId || anyP.procedure_id || anyP.slug || anyP.code || null
+            const contentBlock = anyP.content || anyP.Content || {}
+
+            // Documents normalization
+            let documentsRequired: any =
+              anyP.documentsRequired ||
+              anyP.requiredDocuments ||
+              anyP.RequiredDocuments ||
+              anyP.documentRequirements ||
+              anyP.DocumentRequirements ||
+              anyP.documents ||
+              anyP.docs ||
+              anyP?.content?.documentsRequired ||
+              (anyP?.content as any)?.requiredDocuments ||
+              anyP?.content?.documents ||
+              (anyP?.content as any)?.documents_required ||
+              contentBlock?.Documents ||
+              (contentBlock as any)?.RequiredDocuments ||
+              (contentBlock as any)?.DocumentsRequired ||
+              (contentBlock as any)?.documents ||
+              (contentBlock as any)?.requiredDocuments ||
+              (contentBlock as any)?.documents_required
+            if (!documentsRequired && (contentBlock?.Prerequisites || (contentBlock as any)?.prerequisites)) {
+              const preArr = (contentBlock as any).Prerequisites || (contentBlock as any).prerequisites
+              if (Array.isArray(preArr)) {
+                documentsRequired = preArr.map((d: any) => ({ name: typeof d === 'string' ? d : (d.name || d.title || 'Document'), templateUrl: null }))
+              }
+            }
+            if (Array.isArray(documentsRequired)) {
+              documentsRequired = documentsRequired.map((d: any) => ({ name: d.name || d.title || d.label || d.filename || 'Document', templateUrl: d.templateUrl || d.url || null }))
+            }
+
+            // Fees normalization (array or object or alternate keys)
+            let fees: any =
+              anyP.fees ||
+              anyP.Fees ||
+              (anyP as any).costs ||
+              (anyP as any).Costs ||
+              anyP?.content?.fees ||
+              (anyP?.content as any)?.costs ||
+              contentBlock?.Fees ||
+              (contentBlock as any)?.fees ||
+              (contentBlock as any)?.Costs ||
+              (contentBlock as any)?.costs
+            if (fees && !Array.isArray(fees) && typeof fees === 'object') {
+              const hasAmount = 'Amount' in fees || 'amount' in fees
+              if (hasAmount) {
+                fees = [{
+                  amount: (fees as any).Amount ?? (fees as any).amount ?? 0,
+                  currency: (fees as any).Currency ?? (fees as any).currency ?? '',
+                  label: (fees as any).Label ?? (fees as any).label ?? 'Fee'
+                }]
+              } else {
+                fees = Object.values(fees)
+              }
+            }
+
+            // Processing time normalization (supports snake/case variants)
+            let processingTime: any =
+              anyP.processingTime ||
+              (anyP as any).processing_time ||
+              anyP.ProcessingTime ||
+              anyP?.content?.processingTime ||
+              (anyP?.content as any)?.processing_time ||
+              contentBlock?.ProcessingTime ||
+              (contentBlock as any)?.processingTime ||
+              (contentBlock as any)?.processing_time
+            if (processingTime && typeof processingTime === 'number') {
+              processingTime = { minDays: processingTime, maxDays: processingTime }
+            }
+            if (processingTime && typeof processingTime === 'object') {
+              if ('MinDays' in processingTime || 'MaxDays' in processingTime) {
+                processingTime = {
+                  minDays: (processingTime as any).MinDays ?? (processingTime as any).minDays ?? null,
+                  maxDays: (processingTime as any).MaxDays ?? (processingTime as any).maxDays ?? null
+                }
+              } else if ('min_days' in (processingTime as any) || 'max_days' in (processingTime as any)) {
+                processingTime = {
+                  minDays: (processingTime as any).min_days ?? (processingTime as any).minDays ?? null,
+                  maxDays: (processingTime as any).max_days ?? (processingTime as any).maxDays ?? null
+                }
+              }
+            }
+
+            const title = anyP.title || anyP.Title || anyP.name || anyP.Name || anyP?.content?.title || contentBlock?.Title || (contentBlock as any)?.Result
+            const summary = anyP.summary || anyP.Summary || anyP.description || anyP.Description || anyP?.content?.summary || anyP?.content?.result || contentBlock?.Summary || (contentBlock as any)?.Result
+
+            return { ...anyP, id, documentsRequired, fees, processingTime, title, name: (anyP.name || anyP.Name), summary }
+          }).filter(p => p.id),
           page,
           limit,
-          total,
+            total,
           totalPages,
           hasNext
         }
@@ -85,139 +161,122 @@ export const proceduresApi = createApi({
     }),
     getProcedure: builder.query<Procedure, string>({
       query: (id) => `/procedures/${id}`,
-      transformResponse: (raw: unknown): Procedure => {
-        const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
-        const getRecord = (o: unknown, key: string): Record<string, unknown> | undefined => {
-          if (!isRecord(o)) return undefined
-          const v = o[key]
-          return isRecord(v) ? v : undefined
-        }
-        const pickStr = (o: unknown, keys: string[]): string | undefined => {
-          if (!isRecord(o)) return undefined
-          for (const k of keys) {
-            const v = o[k]
-            if (typeof v === 'string') return v
-          }
-          return undefined
-        }
-        const pickNum = (o: unknown, keys: string[]): number | undefined => {
-          if (!isRecord(o)) return undefined
-          for (const k of keys) {
-            const v = o[k]
-            if (typeof v === 'number') return v
-          }
-          return undefined
-        }
-
+      transformResponse: (raw: any): Procedure => {
         // Accept various envelope shapes
-        let source: unknown = raw
-        const dataObj = getRecord(source, 'data')
-        if (dataObj) source = dataObj
-        const procObj = getRecord(source, 'procedure')
-        if (procObj) source = procObj
-        const nestedData = getRecord(getRecord(source, 'data'), 'procedure')
-        if (nestedData) source = nestedData
-        if (Array.isArray(source)) source = source[0] ?? {}
+        let source = raw
+        if (raw?.data && typeof raw.data === 'object' && !Array.isArray(raw.data)) source = raw.data
+        if (raw?.procedure) source = raw.procedure
+        if (raw?.data?.procedure) source = raw.data.procedure
+        if (Array.isArray(source)) source = source[0] || {}
 
-        const contentBlock: Record<string, unknown> = getRecord(source, 'content') || getRecord(source, 'Content') || {}
+        // Normalize capitalized backend keys to expected camelCase
+        // (non-mutating: just read from both variants)
+        const id = source?.id || source?.ID || source?._id || source?.procedureId || source?.procedure_id || source?.uuid || source?.slug || source?.code || undefined
 
-  const idPick = pickStr(source, ['id', 'ID', '_id', 'procedureId', 'procedure_id', 'uuid', 'slug', 'code'])
+        // Extract capitalized Content structure if present
+        const contentBlock = source.content || source.Content || {}
 
-        // Steps
-        let steps: ProcedureStep[] | undefined
-        const directSteps = (isRecord(source) ? source['steps'] : undefined) as unknown
-        const altSteps = (isRecord(contentBlock) ? (contentBlock['steps'] ?? contentBlock['Steps']) : undefined) as unknown
-        const rawSteps = directSteps ?? altSteps
-        if (Array.isArray(rawSteps)) {
-      steps = rawSteps.map((s, i) => {
-            if (typeof s === 'string') return { order: i + 1, text: s }
-            if (isRecord(s)) {
-              const order = typeof s.order === 'number' ? s.order : i + 1
-              const text = typeof s.text === 'string' ? s.text : (typeof s.description === 'string' ? s.description : JSON.stringify(s))
-              const title = typeof s.title === 'string' ? s.title : undefined
-              const description = typeof s.description === 'string' ? s.description : undefined
-        const estimatedTime = typeof s.estimatedTime === 'number' ? String(s.estimatedTime) : (typeof s.estimatedTime === 'string' ? s.estimatedTime : undefined)
-        const time = typeof s.time === 'number' ? String(s.time) : (typeof s.time === 'string' ? s.time : undefined)
-        return { order, text, title, description, estimatedTime, time }
-            }
-            return { order: i + 1, text: JSON.stringify(s) }
-          })
-        } else if (isRecord(rawSteps)) {
-          steps = Object.entries(rawSteps).map(([k, v], idx) => ({ order: Number(k) || idx + 1, text: typeof v === 'string' ? v : JSON.stringify(v) }))
-        }
-
-        // Documents
-        let documentsRequired: ProcedureDocument[] | undefined
-        const docsCandidate = (isRecord(source) ? (source['documentsRequired'] ?? source['documents'] ?? source['docs']) : undefined)
-          ?? (isRecord(getRecord(source, 'content')) ? (getRecord(source, 'content')!['documentsRequired'] ?? getRecord(source, 'content')!['documents']) : undefined)
-          ?? (contentBlock['Documents'] ?? contentBlock['documents'])
-        if (Array.isArray(docsCandidate)) {
-          documentsRequired = docsCandidate.map((d) => {
-            if (typeof d === 'string') return { name: d, templateUrl: null }
-            if (isRecord(d)) {
-              const name = pickStr(d, ['name', 'title', 'label', 'filename']) || 'Document'
-              const templateUrl = pickStr(d, ['templateUrl', 'url']) || null
-              return { name, templateUrl }
-            }
-            return { name: 'Document', templateUrl: null }
-          })
-        } else {
-          const pre = (contentBlock['Prerequisites'] ?? contentBlock['prerequisites']) as unknown
-          if (Array.isArray(pre)) {
-            documentsRequired = pre.map((d) => typeof d === 'string' ? { name: d, templateUrl: null } : { name: (isRecord(d) ? (pickStr(d, ['name', 'title']) || 'Document') : 'Document'), templateUrl: null })
+        // Build steps
+        let steps = source.steps
+        if (!steps && (source?.content?.steps || contentBlock?.Steps)) {
+          const rawSteps = source.content?.steps || contentBlock.Steps
+          if (Array.isArray(rawSteps)) {
+            steps = rawSteps.map((s: any, i: number) => typeof s === 'string' ? ({ order: i + 1, text: s }) : ({ order: s.order || i + 1, text: s.text || JSON.stringify(s) }))
+          } else if (typeof rawSteps === 'object') {
+            steps = Object.entries(rawSteps).map(([k, v]: any, idx) => ({ order: Number(k) || idx + 1, text: typeof v === 'string' ? v : JSON.stringify(v) }))
           }
         }
 
-        // Fees
-        let fees: ProcedureFee[] | undefined
-        const feesRaw = (isRecord(source) ? source['fees'] : undefined) ?? (getRecord(source, 'content')?.['fees']) ?? (contentBlock['Fees'] as unknown)
-        if (Array.isArray(feesRaw)) {
-          fees = feesRaw.filter(isRecord).map((f) => ({
-            amount: pickNum(f, ['amount', 'Amount']) ?? 0,
-            currency: pickStr(f, ['currency', 'Currency']) || '',
-            label: pickStr(f, ['label', 'Label']) || 'Fee'
-          }))
-        } else if (isRecord(feesRaw)) {
-          const hasAmount = typeof feesRaw['Amount'] === 'number' || typeof feesRaw['amount'] === 'number'
-          if (hasAmount) {
-            fees = [{
-              amount: pickNum(feesRaw, ['Amount', 'amount']) ?? 0,
-              currency: pickStr(feesRaw, ['Currency', 'currency']) || '',
-              label: pickStr(feesRaw, ['Label', 'label']) || 'Fee'
-            }]
+        // Documents (support many backend variants)
+        let documentsRequired =
+          source.documentsRequired ||
+          source.requiredDocuments ||
+          source.RequiredDocuments ||
+          source.documentRequirements ||
+          source.DocumentRequirements ||
+          source.documents ||
+          source.docs ||
+          source?.content?.documentsRequired ||
+          source?.content?.requiredDocuments ||
+          source?.content?.documents ||
+          (source?.content as any)?.documents_required ||
+          contentBlock?.Documents ||
+          contentBlock?.RequiredDocuments ||
+          contentBlock?.DocumentsRequired ||
+          (contentBlock as any)?.documents ||
+          (contentBlock as any)?.requiredDocuments ||
+          (contentBlock as any)?.documents_required
+        // Map prerequisites (capitalized) as documents if no docs provided
+        if (!documentsRequired && (contentBlock?.Prerequisites || contentBlock?.prerequisites)) {
+          const preArr = contentBlock.Prerequisites || contentBlock.prerequisites
+          if (Array.isArray(preArr)) {
+            documentsRequired = preArr.map((d: any) => ({ name: typeof d === 'string' ? d : (d.name || d.title || 'Document'), templateUrl: null }))
+          }
+        }
+        if (Array.isArray(documentsRequired)) {
+          documentsRequired = documentsRequired.map((d: any) => ({ name: d.name || d.title || d.label || d.filename || 'Document', templateUrl: d.templateUrl || d.url || null }))
+        }
+
+        // Fees (array or object, support alternate keys)
+        let fees: any =
+          source.fees ||
+          source.Fees ||
+          (source as any).costs ||
+          (source as any).Costs ||
+          source?.content?.fees ||
+          (source?.content as any)?.costs ||
+          contentBlock?.Fees ||
+          (contentBlock as any)?.fees ||
+          (contentBlock as any)?.Costs ||
+          (contentBlock as any)?.costs
+        if (fees && !Array.isArray(fees) && typeof fees === 'object') {
+          // Single object with Amount / Currency / Label (capitalized) => wrap into array
+          const keys = Object.keys(fees)
+          const hasAmount = 'Amount' in fees || 'amount' in fees
+          if (hasAmount && ('Currency' in fees || 'currency' in fees)) {
+            const single = {
+              amount: (fees as any).Amount ?? (fees as any).amount ?? 0,
+              currency: (fees as any).Currency ?? (fees as any).currency ?? '',
+              label: (fees as any).Label ?? (fees as any).label ?? 'Fee'
+            }
+            fees = [single]
           } else {
-            fees = Object.values(feesRaw).filter(isRecord).map((f) => ({
-              amount: pickNum(f, ['amount', 'Amount']) ?? 0,
-              currency: pickStr(f, ['currency', 'Currency']) || '',
-              label: pickStr(f, ['label', 'Label']) || 'Fee'
-            }))
+            // Convert keyed object {registration: {amount, currency}, ...}
+            fees = Object.values(fees)
           }
         }
 
-        // Processing time
-        let processingTime: ProcedureProcessingTime | undefined
-        const ptRaw = (isRecord(source) ? source['processingTime'] : undefined) ?? (getRecord(source, 'content')?.['processingTime']) ?? (contentBlock['ProcessingTime'] as unknown)
-        if (typeof ptRaw === 'number') {
-          processingTime = { minDays: ptRaw, maxDays: ptRaw }
-        } else if (isRecord(ptRaw)) {
-          processingTime = {
-            minDays: pickNum(ptRaw, ['MinDays', 'minDays']),
-            maxDays: pickNum(ptRaw, ['MaxDays', 'maxDays'])
+        // Processing time: may be at root or inside content (handle snake_case too)
+        let processingTime: any =
+          source.processingTime ||
+          (source as any).processing_time ||
+          source.ProcessingTime ||
+          source?.content?.processingTime ||
+          (source?.content as any)?.processing_time ||
+          contentBlock?.ProcessingTime ||
+          (contentBlock as any)?.processingTime ||
+          (contentBlock as any)?.processing_time
+        if (processingTime && typeof processingTime === 'number') {
+          processingTime = { minDays: processingTime, maxDays: processingTime }
+        }
+        if (processingTime && typeof processingTime === 'object') {
+          if ('MinDays' in processingTime || 'MaxDays' in processingTime) {
+            processingTime = {
+              minDays: (processingTime as any).MinDays ?? (processingTime as any).minDays ?? null,
+              maxDays: (processingTime as any).MaxDays ?? (processingTime as any).maxDays ?? null
+            }
+          } else if ('min_days' in (processingTime as any) || 'max_days' in (processingTime as any)) {
+            processingTime = {
+              minDays: (processingTime as any).min_days ?? (processingTime as any).minDays ?? null,
+              maxDays: (processingTime as any).max_days ?? (processingTime as any).maxDays ?? null
+            }
           }
         }
 
-  const name = pickStr(source, ['name', 'Name'])
-  const titlePick = pickStr(source, ['title', 'Title', 'name', 'Name']) || pickStr(contentBlock, ['title', 'Title', 'Result'])
-  const title = titlePick || name || 'Untitled Procedure'
-  const summary = pickStr(source, ['summary', 'Summary', 'description', 'Description']) || pickStr(contentBlock, ['summary', 'Summary', 'result', 'Result'])
-        const tags = (isRecord(source) && Array.isArray(source['tags'])) ? (source['tags'] as string[]) : undefined
-        const verified = (isRecord(source) && typeof source['verified'] === 'boolean') ? (source['verified'] as boolean) : undefined
-        const updatedAt = pickStr(source, ['updatedAt', 'updated_at'])
-        const views = pickNum(source, ['views'])
-        const likes = pickNum(source, ['likes'])
+        const title = source.title || source.Title || source.name || source.Name || source?.content?.title || contentBlock?.Title || contentBlock?.Result
+        const summary = source.summary || source.Summary || source.description || source.Description || source?.content?.summary || source?.content?.result || contentBlock?.Summary || contentBlock?.Result
 
-  const id = idPick ?? (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : 'unknown')
-  return { id, steps, documentsRequired, fees, processingTime, title, name, summary, tags, verified, updatedAt, views, likes }
+        return { ...source, id, steps, documentsRequired, fees, processingTime, title, name: (source.name || source.Name), summary, __raw: raw }
       },
       providesTags: (result, error, id) => [{ type: 'Procedure', id }]
     })
@@ -226,96 +285,108 @@ export const proceduresApi = createApi({
     getProcedureFlexible: builder.query<Procedure, string>({
       // We'll implement custom logic via queryFn to try several endpoints
       // Order: /procedures/{id} -> /procedure/{id} -> /procedures?id={id}
-  async queryFn(id, _api, _extra, baseFetch) {
+      async queryFn(id, _api, _extra, baseFetch) {
         const paths = [`/procedures/${id}`, `/procedure/${id}`, `/procedures?id=${encodeURIComponent(id)}`]
-        let lastError: unknown = null
+        let lastError: any = null
         for (const p of paths) {
-          const res = await baseFetch(p)
-          if (isErrorResult(res)) { lastError = (res as { error: unknown }).error; continue }
-          const raw = (res as { data?: unknown }).data
+          const res: any = await baseFetch(p)
+          if (res.error) { lastError = res.error; continue }
+          const raw = res.data
           // Heuristic: if raw is empty object or array length 0, continue
-          if (!raw || (Array.isArray(raw) && raw.length === 0) || (typeof raw === 'object' && raw !== null && !Array.isArray(raw) && Object.keys(raw as Record<string, unknown>).length === 0)) {
+          if (!raw || (Array.isArray(raw) && raw.length === 0) || (typeof raw === 'object' && !Array.isArray(raw) && Object.keys(raw).length === 0)) {
             continue
           }
-          // reuse helpers
-          const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
-          const getRecord = (o: unknown, key: string): Record<string, unknown> | undefined => {
-            if (!isRecord(o)) return undefined
-            const v = o[key]
-            return isRecord(v) ? v : undefined
+          // Reuse existing transform logic by mimicking previous function
+          let source: any = raw
+          if (raw?.data && typeof raw.data === 'object' && !Array.isArray(raw.data)) source = raw.data
+          if (raw?.procedure) source = raw.procedure
+          if (raw?.data?.procedure) source = raw.data.procedure
+          if (Array.isArray(source)) source = source[0] || {}
+          const contentBlock = source.content || source.Content || {}
+          const resolvedId = source?.id || source?.ID || source?._id || source?.procedureId || source?.procedure_id || source?.uuid || source?.slug || source?.code || id
+          // Steps normalization (copy from main transform)
+          let steps = source.steps
+          if (!steps && (source?.content?.steps || contentBlock?.Steps)) {
+            const rawSteps = source.content?.steps || contentBlock?.Steps
+            if (Array.isArray(rawSteps)) {
+              steps = rawSteps.map((s: any, i: number) => typeof s === 'string' ? ({ order: i + 1, text: s }) : ({ order: s.order || i + 1, text: s.text || JSON.stringify(s) }))
+            } else if (typeof rawSteps === 'object') {
+              steps = Object.entries(rawSteps).map(([k, v]: any, idx) => ({ order: Number(k) || idx + 1, text: typeof v === 'string' ? v : JSON.stringify(v) }))
+            }
           }
-          const pickStr = (o: unknown, keys: string[]): string | undefined => {
-            if (!isRecord(o)) return undefined
-            for (const k of keys) { const v = o[k]; if (typeof v === 'string') return v }
-            return undefined
+          let documentsRequired: any =
+            source.documentsRequired ||
+            (source as any).requiredDocuments ||
+            (source as any).RequiredDocuments ||
+            (source as any).documentRequirements ||
+            (source as any).DocumentRequirements ||
+            source.documents ||
+            source.docs ||
+            source?.content?.documentsRequired ||
+            (source?.content as any)?.requiredDocuments ||
+            source?.content?.documents ||
+            (source?.content as any)?.documents_required ||
+            contentBlock?.Documents ||
+            (contentBlock as any)?.RequiredDocuments ||
+            (contentBlock as any)?.DocumentsRequired ||
+            (contentBlock as any)?.documents ||
+            (contentBlock as any)?.requiredDocuments ||
+            (contentBlock as any)?.documents_required
+          if (!documentsRequired && (contentBlock?.Prerequisites || contentBlock?.prerequisites)) {
+            const preArr = contentBlock.Prerequisites || contentBlock.prerequisites
+            if (Array.isArray(preArr)) {
+              documentsRequired = preArr.map((d: any) => ({ name: typeof d === 'string' ? d : (d.name || d.title || 'Document'), templateUrl: null }))
+            }
           }
-          const pickNum = (o: unknown, keys: string[]): number | undefined => {
-            if (!isRecord(o)) return undefined
-            for (const k of keys) { const v = o[k]; if (typeof v === 'number') return v }
-            return undefined
+          if (Array.isArray(documentsRequired)) {
+            documentsRequired = documentsRequired.map((d: any) => ({ name: d.name || d.title || d.label || d.filename || 'Document', templateUrl: d.templateUrl || d.url || null }))
           }
-          let source: unknown = raw
-          const dataObj = getRecord(source, 'data'); if (dataObj) source = dataObj
-          const procObj = getRecord(source, 'procedure'); if (procObj) source = procObj
-          const nested = getRecord(getRecord(source, 'data'), 'procedure'); if (nested) source = nested
-          if (Array.isArray(source)) source = source[0] ?? {}
-          const contentBlock: Record<string, unknown> = getRecord(source, 'content') || getRecord(source, 'Content') || {}
-          const resolvedId = pickStr(source, ['id', 'ID', '_id', 'procedureId', 'procedure_id', 'uuid', 'slug', 'code']) || id
-          // Steps
-          let steps: ProcedureStep[] | undefined
-          const stepsRaw = (isRecord(source) ? source['steps'] : undefined) ?? (contentBlock['steps'] ?? contentBlock['Steps'])
-          if (Array.isArray(stepsRaw)) {
-            steps = stepsRaw.map((s, i) => {
-              if (typeof s === 'string') return { order: i + 1, text: s }
-              if (isRecord(s)) {
-                const order = typeof s.order === 'number' ? s.order : i + 1
-                const text = typeof s.text === 'string' ? s.text : (typeof s.description === 'string' ? s.description : JSON.stringify(s))
-                const estimatedTime = typeof s.estimatedTime === 'number' ? String(s.estimatedTime) : (typeof s.estimatedTime === 'string' ? s.estimatedTime : undefined)
-                const time = typeof s.time === 'number' ? String(s.time) : (typeof s.time === 'string' ? s.time : undefined)
-                return { order, text, estimatedTime, time }
-              }
-              return { order: i + 1, text: JSON.stringify(s) }
-            })
-          } else if (isRecord(stepsRaw)) {
-            steps = Object.entries(stepsRaw).map(([k, v], idx) => ({ order: Number(k) || idx + 1, text: typeof v === 'string' ? v : JSON.stringify(v) }))
+          let fees: any =
+            source.fees ||
+            source.Fees ||
+            (source as any).costs ||
+            (source as any).Costs ||
+            source?.content?.fees ||
+            (source?.content as any)?.costs ||
+            contentBlock?.Fees ||
+            (contentBlock as any)?.fees ||
+            (contentBlock as any)?.Costs ||
+            (contentBlock as any)?.costs
+          if (fees && !Array.isArray(fees) && typeof fees === 'object') {
+            const hasAmount = 'Amount' in fees || 'amount' in fees
+            if (hasAmount) {
+              fees = [{
+                amount: (fees as any).Amount ?? (fees as any).amount ?? 0,
+                currency: (fees as any).Currency ?? (fees as any).currency ?? '',
+                label: (fees as any).Label ?? (fees as any).label ?? 'Fee'
+              }]
+            } else {
+              fees = Object.values(fees)
+            }
           }
-          // Documents
-          let documentsRequired: ProcedureDocument[] | undefined
-          const docsRaw = (isRecord(source) ? (source['documentsRequired'] ?? source['documents'] ?? source['docs']) : undefined) ?? (contentBlock['Documents'] ?? contentBlock['documents'])
-          if (Array.isArray(docsRaw)) {
-            documentsRequired = docsRaw.map((d) => typeof d === 'string' ? ({ name: d, templateUrl: null }) : (isRecord(d) ? ({ name: pickStr(d, ['name', 'title', 'label', 'filename']) || 'Document', templateUrl: pickStr(d, ['templateUrl', 'url']) || null }) : ({ name: 'Document', templateUrl: null })))
+          let processingTime: any =
+            source.processingTime ||
+            (source as any).processing_time ||
+            source.ProcessingTime ||
+            source?.content?.processingTime ||
+            (source?.content as any)?.processing_time ||
+            contentBlock?.ProcessingTime ||
+            (contentBlock as any)?.processingTime ||
+            (contentBlock as any)?.processing_time
+          if (processingTime && typeof processingTime === 'number') {
+            processingTime = { minDays: processingTime, maxDays: processingTime }
           }
-          // Fees
-          let fees: ProcedureFee[] | undefined
-          const feesRaw2 = (isRecord(source) ? source['fees'] : undefined) ?? (contentBlock['Fees'])
-          if (Array.isArray(feesRaw2)) {
-            fees = feesRaw2.filter(isRecord).map((f) => ({ amount: pickNum(f, ['amount', 'Amount']) ?? 0, currency: pickStr(f, ['currency', 'Currency']) || '', label: pickStr(f, ['label', 'Label']) || 'Fee' }))
-          } else if (isRecord(feesRaw2)) {
-            const hasAmount = typeof feesRaw2['Amount'] === 'number' || typeof feesRaw2['amount'] === 'number'
-            fees = hasAmount ? [{ amount: pickNum(feesRaw2, ['Amount', 'amount']) ?? 0, currency: pickStr(feesRaw2, ['Currency', 'currency']) || '', label: pickStr(feesRaw2, ['Label', 'label']) || 'Fee' }] : Object.values(feesRaw2).filter(isRecord).map((f) => ({ amount: pickNum(f, ['amount', 'Amount']) ?? 0, currency: pickStr(f, ['currency', 'Currency']) || '', label: pickStr(f, ['label', 'Label']) || 'Fee' }))
+          if (processingTime && typeof processingTime === 'object' && ('MinDays' in processingTime || 'MaxDays' in processingTime)) {
+            processingTime = { minDays: (processingTime as any).MinDays ?? (processingTime as any).minDays ?? null, maxDays: (processingTime as any).MaxDays ?? (processingTime as any).maxDays ?? null }
+          } else if (processingTime && typeof processingTime === 'object' && ('min_days' in (processingTime as any) || 'max_days' in (processingTime as any))) {
+            processingTime = { minDays: (processingTime as any).min_days ?? (processingTime as any).minDays ?? null, maxDays: (processingTime as any).max_days ?? (processingTime as any).maxDays ?? null }
           }
-          // Processing time
-          let processingTime: ProcedureProcessingTime | undefined
-          const ptRaw = (isRecord(source) ? source['processingTime'] : undefined) ?? (contentBlock['ProcessingTime'])
-          if (typeof ptRaw === 'number') processingTime = { minDays: ptRaw, maxDays: ptRaw }
-          else if (isRecord(ptRaw)) processingTime = { minDays: pickNum(ptRaw, ['MinDays', 'minDays']), maxDays: pickNum(ptRaw, ['MaxDays', 'maxDays']) }
-
-          const name = pickStr(source, ['name', 'Name'])
-          const titlePick = pickStr(source, ['title', 'Title', 'name', 'Name']) || pickStr(contentBlock, ['title', 'Title', 'Result'])
-          const title = titlePick || name || 'Untitled Procedure'
-          const summary = pickStr(source, ['summary', 'Summary', 'description', 'Description']) || pickStr(contentBlock, ['summary', 'Summary', 'result', 'Result'])
-          const tags = (isRecord(source) && Array.isArray(source['tags'])) ? (source['tags'] as string[]) : undefined
-          const verified = (isRecord(source) && typeof source['verified'] === 'boolean') ? (source['verified'] as boolean) : undefined
-          const updatedAt = pickStr(source, ['updatedAt', 'updated_at'])
-          const views = pickNum(source, ['views'])
-          const likes = pickNum(source, ['likes'])
-          const procedure: Procedure = { id: (resolvedId || id) as string, steps, documentsRequired, fees, processingTime, title, name, summary, tags, verified, updatedAt, views, likes }
+          const title = source.title || source.Title || source.name || source.Name || source?.content?.title || contentBlock?.Title || contentBlock?.Result
+          const summary = source.summary || source.Summary || source.description || source.Description || source?.content?.summary || source?.content?.result || contentBlock?.Summary || contentBlock?.Result
+          const procedure: Procedure = { ...source, id: resolvedId, steps, documentsRequired, fees, processingTime, title, name: (source.name || source.Name), summary, __raw: raw }
           return { data: procedure }
         }
-        // Ensure error conforms to FetchBaseQueryError likeness
-        const fallbackError = { status: 404, data: { message: 'Procedure not found via any fallback path' } }
-        const err = (lastError && typeof lastError === 'object') ? (lastError as never) : (fallbackError as never)
-        return { error: err }
+        return { error: lastError || { status: 404, data: { message: 'Procedure not found via any fallback path' } } }
       },
       providesTags: (result, error, id) => [{ type: 'Procedure', id }]
     })

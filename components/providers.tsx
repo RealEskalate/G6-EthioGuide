@@ -6,8 +6,6 @@ import i18next from '@/lib/i18n/i18n';
 import { store } from '@/app/store/store';
 import { Provider } from "react-redux";
 import { ReactNode } from 'react';
-import { Provider } from 'react-redux';
-import { store } from '@/app/store/store';
 import { Toaster } from "@/components/ui/sonner";
 
 interface ProvidersProps {
@@ -19,11 +17,7 @@ export function Providers({ children }: ProvidersProps) {
 
     <SessionProvider>
       <I18nextProvider i18n={i18next}>
-        <Provider store={store}>{children}</Provider>
-        <Provider store={store}>
-          {children}
-          <Toaster />
-        </Provider>
+  <Provider store={store}>{children}<Toaster /></Provider>
       </I18nextProvider>
     </SessionProvider>
 
