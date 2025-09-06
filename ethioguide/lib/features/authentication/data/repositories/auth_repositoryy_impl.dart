@@ -82,15 +82,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, void>> resetPassword({
-    required String email,
-    required String token,
+    required String resetToken,
     required String newPassword,
   }) async {
     if (await networkInfo.isConnected) {
       try {
         await remoteDataSource.resetPassword(
-          email: email,
-          token: token,
+          resetToken: resetToken, 
           newPassword: newPassword,
         );
         return const Right(null);
@@ -121,6 +119,22 @@ class AuthRepositoryImpl implements AuthRepository {
         return Right(user);
       } on CacheException catch (e) {
         return Left(CachedFailure(message: e.message));
+      } on ServerException catch (e) {
+        return Left(ServerFailure(message: e.message));
+      }
+    } else {
+      return Left(NetworkFailure());
+    }
+  }
+    @override
+  Future<Either<Failure, User>> verifyAccount(String activationToken) async {
+    if (await networkInfo.isConnected) {
+      try {
+        // After verification, the user is logged in, so we get back a user and tokens.
+        final (user, tokens) = await remoteDataSource.verifyAccount(activationToken);
+        // We must save these new tokens to complete the login.
+        await saveTokens(accessToken: tokens.accessToken, refreshToken: tokens.refreshToken);
+        return Right(user);
       } on ServerException catch (e) {
         return Left(ServerFailure(message: e.message));
       }

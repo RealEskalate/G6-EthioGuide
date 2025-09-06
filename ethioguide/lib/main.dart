@@ -1,4 +1,5 @@
 import 'package:ethioguide/core/config/app_theme.dart';
+import 'package:ethioguide/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,7 +26,9 @@ class MyApp extends StatelessWidget {
     // 2. Use the MaterialApp.router constructor.
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => di.sl<AiBloc>())
+        BlocProvider(create: (context) => di.sl<AiBloc>()),
+
+        BlocProvider(create: (context) => di.sl<AuthBloc>()),
       ],
       child: MaterialApp.router(
         themeMode: _themeMode,

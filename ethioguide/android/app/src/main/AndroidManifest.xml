@@ -2,6 +2,7 @@
 <!-- Micraphon permission for speech to text -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="ethioguide"
         android:name="${applicationName}"

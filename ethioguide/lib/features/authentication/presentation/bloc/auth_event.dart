@@ -44,15 +44,19 @@ class ForgotPasswordSubmitted extends AuthEvent {
 }
 
 class ResetPasswordSubmitted extends AuthEvent {
-  final String email;
-  final String token;
+  final String resetToken;
   final String newPassword;
   const ResetPasswordSubmitted({
-    required this.email,
-    required this.token,
+    required this.resetToken,
     required this.newPassword,
   });
+
   
+}
+
+class VerificationSubmitted extends AuthEvent {
+  final String activationToken;
+  const VerificationSubmitted({required this.activationToken});
 }
 
 class GoogleSignInSubmitted extends AuthEvent {}

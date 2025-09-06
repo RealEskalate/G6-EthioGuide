@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 enum AuthView { login, signUp, forgotPassword, resetPassword }
 
 // Enum to represent the status of form submission
-enum AuthStatus { initial, loading, success, failure, resetLinkSent }
+enum AuthStatus { initial, loading, success, failure, resetLinkSent, registrationSuccess  }
 
 class AuthState extends Equatable {
   final AuthView authView;
