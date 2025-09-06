@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import React, { Suspense } from "react" // add Suspense
 import {
   Download,
   Upload,
@@ -18,7 +19,6 @@ import { Progress } from "@/components/ui/progress"
 import { useSearchParams } from "next/navigation"
 import { useGetChecklistQuery } from "@/app/store/slices/checklistSlice"
 import { useGetMyProceduresQuery } from "@/app/store/slices/workspaceSlice"
-import React from "react"
 import type { ChecklistItem } from "@/app/types/checklist" // added
 
 interface ApplicationState {
@@ -46,7 +46,7 @@ interface ApplicationState {
   }
 }
 
-export default function CityGovPortal() {
+function CityGovPortal() {
   const [applicationState, setApplicationState] = useState<ApplicationState>({
     step1: { completed: true, formFilled: true },
     step2: { completed: true, idUploaded: true },
@@ -632,6 +632,15 @@ export default function CityGovPortal() {
       </div>
 
     </div>
+  )
+}
+
+// new default export that wraps content in Suspense
+export default function CityGovPortalPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-gray-600">Loading...</div>}>
+      <CityGovPortal />
+    </Suspense>
   )
 }
 

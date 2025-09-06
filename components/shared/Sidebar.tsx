@@ -47,9 +47,6 @@ export function Sidebar() {
     onClick: () => router.push(item.href),
   }));
 
-  const handleSettingsClick = () => {
-    // Example: router.push('/settings');
-  };
   const handleLogoutClick = async () => {
     await signOut({ callbackUrl: "/" }); // Call signOut and redirect to login page
   };

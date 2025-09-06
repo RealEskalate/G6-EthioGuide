@@ -21,6 +21,9 @@ interface UserSidebarProps {
   logoutLabel?: string
   onLogoutClick?: () => void
   className?: string
+  // added for AdminSidebar compatibility
+  settingsLabel?: string
+  onSettingsClick?: () => void
 }
 
 export function UserSidebar({
@@ -28,6 +31,9 @@ export function UserSidebar({
   logoutLabel = "Logout",
   onLogoutClick,
   className,
+  // added
+  settingsLabel = "Settings",
+  onSettingsClick,
 }: UserSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
 
@@ -106,6 +112,46 @@ export function UserSidebar({
         </nav>
 
         <div className="p-3 md:p-4 border-t border-gray-100">
+          {/* optional Settings row */}
+          {onSettingsClick && (
+            <div
+              className={cn(
+                "group relative flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors mb-2",
+                "text-black hover:bg-gray-100",
+                collapsed && "justify-center md:justify-start",
+              )}
+              onClick={onSettingsClick}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") onSettingsClick?.()
+              }}
+            >
+              <CustomIcon
+                src="/icons/settings.svg"
+                alt="Settings"
+                className="w-8 h-8 md:w-5 md:h-5 group-hover:scale-110 transition-transform"
+              />
+              {!collapsed && (
+                <span className="hidden md:inline text-sm font-medium text-black">
+                  {settingsLabel}
+                </span>
+              )}
+              <span
+                className={cn(
+                  "pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2",
+                  "px-2 py-1 rounded-md bg-white text-black border border-gray-200 text-xs font-medium shadow-lg",
+                  "opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0",
+                  "transition-all duration-200 whitespace-nowrap z-50",
+                  !collapsed ? "md:opacity-0 md:group-hover:opacity-0 md:hidden" : ""
+                )}
+              >
+                {settingsLabel}
+              </span>
+            </div>
+          )}
+
+          {/* Logout row */}
           <div
             className={cn(
               "group relative flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors",

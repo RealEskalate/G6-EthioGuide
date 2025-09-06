@@ -1,5 +1,6 @@
 "use client";
 
+import React, { Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,11 @@ import {
 } from "@/lib/validation/reset-password";
 import Image from "next/image";
 
-export default function ResetPasswordPage() {
-  const { t, i18n } = useTranslation("auth");
+// Prevent static prerendering to avoid i18n SSR issues
+export const dynamic = "force-dynamic";
+
+function ResetPasswordContent() {
+  const { t } = useTranslation("auth");
 
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
@@ -49,13 +53,6 @@ export default function ResetPasswordPage() {
       form.setError("root", { message: t("new_password.error") });
     }
   };
-
-  // Debug translation loading
-  console.log("Current language:", i18n.language);
-  console.log(
-    "Auth translations:",
-    i18n.getResourceBundle(i18n.language, "auth")
-  );
 
   return (
     <div className="bg-neutral-light text-foreground min-h-[73dvh] flex flex-col flex-1 items-center p-4 sm:pt-6 space-y-2">
@@ -131,3 +128,13 @@ export default function ResetPasswordPage() {
     </div>
   );
 }
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-gray-600">Loading...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
+  );
+}
+     
+

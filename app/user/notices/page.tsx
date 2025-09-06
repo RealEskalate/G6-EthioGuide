@@ -70,7 +70,7 @@ export default function NoticesPage() {
 
         {/* Notices List */}
         <div className="space-y-4 sm:space-y-6">
-          {notices.map((notice, index) => (
+          {notices.map((notice) => (
             <Card
               key={notice.id}
               className="bg-white p-4 sm:p-6 hover:shadow-lg transition-all duration-300"
