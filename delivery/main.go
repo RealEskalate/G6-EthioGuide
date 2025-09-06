@@ -118,6 +118,8 @@ func main() {
 	postUsecase := usecase.NewPostUseCase(postRepo, cfg.UsecaseTimeout)
 	searchUsecase := usecase.NewSearchUsecase(searchRepo, cfg.UsecaseTimeout)
 	checklistUsecase := usecase.NewChecklistUsecase(checklistRepo)
+
+	translationMiddleware := infrastructure.NewTranslationMiddleware(geminiUsecase)
 	// --- Controllers ---
 	// Controllers handle the HTTP layer, delegating logic to use cases.
 	userController := controller.NewUserController(userUsecase, searchUsecase, checklistUsecase, cfg.JWTRefreshTTL)
@@ -150,6 +152,7 @@ func main() {
 		preferencesController,
 		aiChatController,
 		authMiddleware,
+		translationMiddleware,
 		proOnlyMiddleware,
 		requireAdminRole,
 		requireAdminOrOrgRole,
