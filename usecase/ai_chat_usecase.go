@@ -31,6 +31,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
+	orgQuery := query
 	classifierPrompt := fmt.Sprintf(`
 	Classify the following user query into one of these categories:
 	- procedure   (government services, documents, licenses, permits, taxes, etc.)
@@ -45,7 +46,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 		return &domain.AIChat{
 			UserID:   userId,
 			Source:   "unofficial",
-			Request:  query,
+			Request:  orgQuery,
 			Response: err.Error(),
 		}, err
 	}
@@ -54,7 +55,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 		return &domain.AIChat{
 			UserID:   userId,
 			Source:   "unofficial",
-			Request:  query,
+			Request:  orgQuery,
 			Response: "The request is offensive!!",
 		}, errors.New("your query contains offensive content and cannot be processed")
 
@@ -62,7 +63,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 		return &domain.AIChat{
 			UserID:   userId,
 			Source:   "unofficial",
-			Request:  query,
+			Request:  orgQuery,
 			Response: "The request is irrelevant to this application!!",
 		}, nil
 	}
@@ -74,7 +75,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 		return &domain.AIChat{
 			UserID:   userId,
 			Source:   "unofficial",
-			Request:  query,
+			Request:  orgQuery,
 			Response: err.Error(),
 		}, err
 	}
@@ -82,7 +83,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 		return &domain.AIChat{
 			UserID:   userId,
 			Source:   "unofficial",
-			Request:  query,
+			Request:  orgQuery,
 			Response: "This is unknown language",
 		}, domain.ErrUnsupportedLanguage
 	} else if orglang != "english" {
@@ -92,7 +93,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 			return &domain.AIChat{
 				UserID:   userId,
 				Source:   "Couldn't translate the request",
-				Request:  query,
+				Request:  orgQuery,
 				Response: err.Error(),
 			}, domain.ErrUnsupportedLanguage
 		}
@@ -104,7 +105,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 		return &domain.AIChat{
 			UserID:   userId,
 			Source:   "unofficial",
-			Request:  query,
+			Request:  orgQuery,
 			Response: err.Error(),
 		}, err
 	}
@@ -115,7 +116,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 		return &domain.AIChat{
 			UserID:   userId,
 			Source:   "unofficial",
-			Request:  query,
+			Request:  orgQuery,
 			Response: err.Error(),
 		}, err
 	}
@@ -144,7 +145,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 		return &domain.AIChat{
 			UserID:   userId,
 			Source:   "unofficial",
-			Request:  query,
+			Request:  orgQuery,
 			Response: err.Error(),
 		}, err
 	}
@@ -164,7 +165,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 			return &domain.AIChat{
 				UserID:   userId,
 				Source:   "unofficial",
-				Request:  query,
+				Request:  orgQuery,
 				Response: err.Error(),
 			}, err
 		}
@@ -182,7 +183,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 	chat := &domain.AIChat{
 		UserID:            userId,
 		Source:            source,
-		Request:           query,
+		Request:           orgQuery,
 		Response:          answer,
 		RelatedProcedures: related_procedures,
 	}
