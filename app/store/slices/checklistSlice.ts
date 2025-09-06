@@ -1,5 +1,5 @@
 import { apiSlice } from "./workspaceSlice";
-import type { ChecklistResponse } from "@/app/types/checklist";
+// import type { ChecklistResponse } from "@/app/types/checklist";
 
 export const checklistApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({

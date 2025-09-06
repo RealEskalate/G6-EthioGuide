@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { ProceduresResponse } from "@/app/types/myprocedures";
+// import type { ProceduresResponse } from "@/app/types/myprocedures";
 
 // Read token from env (name: ACCESS_TOKEN or NEXT_PUBLIC_ACCESS_TOKEN)
 function readEnvToken(): string | null {
