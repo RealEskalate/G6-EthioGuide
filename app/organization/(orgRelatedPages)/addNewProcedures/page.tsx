@@ -7,12 +7,11 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-const route = useRouter();
-
 export default function AddProcedurePage() {
   const { data: session } = useSession();
   const token = session?.accessToken;
 
+  const route = useRouter();
   // State matching backend structure
   const [name, setName] = useState(""); // title
   const [prerequisites, setPrerequisites] = useState([""]);
@@ -88,10 +87,9 @@ export default function AddProcedurePage() {
 
       // alert("Procedure added successfully!");
       route.push("/admin/procedures");
-      
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error:", error);
-      alert(`Failed to add procedure: ${error.message}`);
+      alert(`Failed to add procedure: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   };
 

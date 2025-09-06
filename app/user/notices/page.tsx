@@ -25,7 +25,7 @@ export default function NoticesPage() {
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const router = useRouter();
+  // const router = useRouter();
 
   const { data: apiNotices, isLoading: noticesLoading, isError: noticesError } =
     useGetNoticesQuery({ page: 1, limit: 10 });
@@ -247,5 +247,4 @@ export default function NoticesPage() {
     </motion.div>
   );
 }
-
 

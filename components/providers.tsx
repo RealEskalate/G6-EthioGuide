@@ -20,7 +20,6 @@ export function Providers({ children }: ProvidersProps) {
       <I18nextProvider i18n={i18next}>
         <Provider store={store}>
           {children}
-          {/* global toaster */}
           <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
         </Provider>
       </I18nextProvider>
