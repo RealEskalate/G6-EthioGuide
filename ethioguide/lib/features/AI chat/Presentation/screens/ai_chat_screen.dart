@@ -4,6 +4,7 @@ import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
 import 'package:ethioguide/features/AI%20chat/Presentation/widgets/ai_page_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -17,6 +18,10 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   final FocusNode _queryFocusNode = FocusNode();
   List<Conversation> _history = [];
+  // For speech to text
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  // For bottom naviagation bar
   final pageIndex = 2;
 
   @override
@@ -37,6 +42,29 @@ class _ChatPageState extends State<ChatPage> {
     context.read<AiBloc>().add(GetHistoryEvent());
     // Update border color on focus
     _queryFocusNode.addListener(() => setState(() {}));
+    // Initialize SpeechToText object
+    _speech = stt.SpeechToText();
+  }
+
+  void _listen() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => print('onStatus: $val'),
+        onError: (val) => print('onError: $val'),
+      );
+
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _queryController.text = val.recognizedWords;
+          }),
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
   }
 
   void _addMessage({required Conversation conversation}) {
@@ -177,6 +205,10 @@ class _ChatPageState extends State<ChatPage> {
                         focusNode: _queryFocusNode,
                         decoration: InputDecoration(
                           hintText: 'Type your question here...',
+                          prefixIcon: IconButton(
+                            onPressed: _listen,
+                            icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(18),
                             borderSide: BorderSide(
