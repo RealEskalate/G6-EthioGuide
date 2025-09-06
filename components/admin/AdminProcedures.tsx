@@ -10,7 +10,6 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import ProcedureProp from "@/types/procedure";
 import Pagination from "../shared/pagination";
-import { redirect, useRouter } from "next/navigation";
 
 // const procedures = [
 //   {
@@ -107,21 +106,24 @@ import { redirect, useRouter } from "next/navigation";
 // console.log(procedures)
 
 export default function AdminProcedures() {
-  const handleDelete = () => {
+  const { data: session } = useSession();
+  const token = session?.accessToken
+
+  const handleDelete = async (id : string) => {
     toast.success("Item deleted successfully!");
+    await fetch(`https://ethio-guide-backend.onrender.com/api/v1/procedures/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
   };
   const [procedures, setProcedures] = useState<ProcedureProp[]>([]);
   const [page, setPage] = useState(1);
   // const [totalProcedures, setTotalProcedures] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const { data: session } = useSession();
-  // console.log(session);
-  // const route = useRouter();
-  // if (!session?.user?.id) {
-  //   // redirect to  home page
-  //   // route.push("/"); don't forget to uncomment me !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  //   return null;
-  // }
+
   const userId = session?.user!.id!;
   useEffect(() => {
     if (!userId) return; // wait until session loaded
@@ -137,17 +139,16 @@ export default function AdminProcedures() {
 
         const data = await res.json();
 
-        setProcedures(data.data); // adjust to your API response
-        // setTotalProcedures(data.total); // if returned
+        setProcedures(data.data);
         setTotalPages(Math.ceil(data.pagination.total / 5));
-        console.log(data);
+        // console.log(data);
       } catch (err) {
         console.error(err);
       }
     };
 
     fetchProcedures();
-  }, [page, userId]); // <-- this will re-run whenever 'page' changes
+  }, [page, userId, procedures]);
 
   return (
     <div className="p-6 space-y-6 w-full">
@@ -201,8 +202,8 @@ export default function AdminProcedures() {
                   <DeleteConfirmDialog
                     title="Delete Procedure"
                     description="This will permanently remove the procedure from your organization."
-                    confirmLabel="Delete Procedure"
-                    onConfirm={handleDelete}
+                    confirmLabel="Delete"
+                    onConfirm={() => handleDelete(p.id)}
                   />
                 </TableCell>
               </tr>
