@@ -346,7 +346,7 @@ type ResetDTO struct {
 }
 
 type ActivateDTO struct {
-	ActivateToken string `json:"activatationToken"`
+	ActivateToken string `json:"activationToken"`
 }
 
 // //////////////////////////// procedure////
