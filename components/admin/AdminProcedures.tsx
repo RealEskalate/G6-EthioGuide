@@ -7,8 +7,10 @@ import DeleteConfirmDialog from "../shared/AdminAndOrg/DeleteConfirmDialog";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import ProcedureProp from "@/types/procedure";
 import Pagination from "../shared/pagination";
+import { redirect, useRouter } from "next/navigation";
 
 // const procedures = [
 //   {
@@ -112,11 +114,23 @@ export default function AdminProcedures() {
   const [page, setPage] = useState(1);
   // const [totalProcedures, setTotalProcedures] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
+  const { data: session } = useSession();
+  // console.log(session);
+  // const route = useRouter();
+  // if (!session?.user?.id) {
+  //   // redirect to  home page
+  //   // route.push("/"); don't forget to uncomment me !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  //   return null;
+  // }
+  const userId = session?.user!.id!;
   useEffect(() => {
+    if (!userId) return; // wait until session loaded
     const fetchProcedures = async () => {
       try {
-        const res = await fetch(`https://ethio-guide-backend.onrender.com/api/v1/procedures?page=${page}&limit=${5}`);
+        const res = await fetch(
+          `https://ethio-guide-backend.onrender.com/api/v1/procedures?page=${page}&limit=${5}&organizationID=${userId}`
+        );
+
         // const res = await fetch(
         //   `https://ethio-guide-backend.onrender.com/api/v1/procedures`
         // );
@@ -133,7 +147,7 @@ export default function AdminProcedures() {
     };
 
     fetchProcedures();
-  }, [page]); // <-- this will re-run whenever 'page' changes
+  }, [page, userId]); // <-- this will re-run whenever 'page' changes
 
   return (
     <div className="p-6 space-y-6 w-full">
