@@ -6,31 +6,17 @@ function readEnvToken(): string | null {
     process.env.NEXT_PUBLIC_ACCESS_TOKEN || process.env.ACCESS_TOKEN || null
   );
 }
-function readAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  const ls =
-    localStorage.getItem("accessToken") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("authToken") ||
-    localStorage.getItem("access_token");
-  const ss =
-    sessionStorage.getItem("accessToken") ||
-    sessionStorage.getItem("token") ||
-    sessionStorage.getItem("authToken") ||
-    sessionStorage.getItem("access_token");
-  if (ls) return ls;
-  if (ss) return ss;
-  const m = document.cookie.match(/(?:^|; )accessToken=([^;]+)/);
-  return m ? decodeURIComponent(m[1]) : null;
-}
 
 export const historyApi = createApi({
   reducerPath: "historyApi",
   baseQuery: fetchBaseQuery({
     baseUrl: "https://ethio-guide-backend.onrender.com/api/v1",
-    credentials: "include", // added
     prepareHeaders: (headers) => {
-      const token = readAuthToken() || readEnvToken();
+      // keep default header set (may be overwritten by endpoint-level headers)
+      const token =
+        (typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null) || readEnvToken();
       if (token) headers.set("Authorization", `Bearer ${token}`);
       return headers;
     },
@@ -45,10 +31,7 @@ export const historyApi = createApi({
               localStorage.getItem("authToken") ||
               localStorage.getItem("access_token")
             : null;
-        const envToken =
-          process.env.NEXT_PUBLIC_ACCESS_TOKEN ||
-          process.env.ACCESS_TOKEN ||
-          null;
+        const envToken = readEnvToken();
         return {
           url: "/ai/history",
           method: "GET",
@@ -71,12 +54,11 @@ export const historyApi = createApi({
           createdAt?: string;
         };
         const r = res as { history?: RawHistoryItem[] } | RawHistoryItem[];
-        const items =
-          Array.isArray(r) || Array.isArray(r?.history)
-            ? Array.isArray(r)
-              ? r
-              : r.history
-            : [];
+        const items = Array.isArray(r)
+          ? r
+          : Array.isArray(r?.history)
+          ? r.history
+          : [];
         return (items ?? []).map(
           (it: RawHistoryItem): ChatHistoryItem => ({
             id: String(
@@ -102,10 +84,7 @@ export const historyApi = createApi({
               localStorage.getItem("authToken") ||
               localStorage.getItem("access_token")
             : null;
-        const envToken =
-          process.env.NEXT_PUBLIC_ACCESS_TOKEN ||
-          process.env.ACCESS_TOKEN ||
-          null;
+        const envToken = readEnvToken();
         return {
           url: "/translate",
           method: "POST",

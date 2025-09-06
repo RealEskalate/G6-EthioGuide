@@ -1,12 +1,11 @@
 import { apiSlice } from "./workspaceSlice";
-// import type { ChecklistResponse } from "@/app/types/checklist";
+import type { ChecklistResponse } from "@/app/types/checklist";
 
 export const checklistApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getChecklist: builder.query<ChecklistResponse, string>({
-      //   Calls backend directly via apiSlice baseUrl (https://ethio-guide-backend.onrender.com/api/v1/)
+      // Calls backend directly via apiSlice baseUrl
       query: (userProcedureId) => {
-        // resolve token from storage/env
         const lsToken =
           typeof window !== "undefined"
             ? localStorage.getItem("accessToken") ||
