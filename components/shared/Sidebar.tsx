@@ -1,12 +1,36 @@
 "use client";
 
+import { useEffect } from "react";
 import { UserSidebar } from "./UserSidebar";
 import { usePathname, useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, getSession } from "next-auth/react";
 
 export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+
+  // persist access token so RTK slices can read it
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const session = await getSession();
+        if (!alive || !session) return;
+        const token =
+          (session as unknown as { accessToken?: string })?.accessToken ||
+          (session as unknown as { user?: { accessToken?: string } })?.user?.accessToken;
+        if (token) {
+          localStorage.setItem("accessToken", token);
+          document.cookie = `accessToken=${encodeURIComponent(token)}; path=/; max-age=${60 * 60 * 12}`;
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const menuItems = [
     {

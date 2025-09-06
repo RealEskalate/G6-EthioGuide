@@ -5,8 +5,28 @@ export const checklistApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getChecklist: builder.query<ChecklistResponse, string>({
       //   Calls backend directly via apiSlice baseUrl (https://ethio-guide-backend.onrender.com/api/v1/)
-      query: (userProcedureId) =>
-        `checklists/${encodeURIComponent(userProcedureId)}`,
+      query: (userProcedureId) => {
+        // resolve token from storage/env
+        const lsToken =
+          typeof window !== "undefined"
+            ? localStorage.getItem("accessToken") ||
+              localStorage.getItem("token") ||
+              localStorage.getItem("authToken")
+            : null;
+        const envToken =
+          process.env.NEXT_PUBLIC_ACCESS_TOKEN ||
+          process.env.ACCESS_TOKEN ||
+          null;
+
+        return {
+          url: `checklists/${encodeURIComponent(userProcedureId)}`,
+          method: "GET",
+          headers:
+            lsToken || envToken
+              ? { Authorization: `Bearer ${lsToken ?? envToken}` }
+              : undefined,
+        };
+      },
       providesTags: ["Procedure"],
     }),
   }),
