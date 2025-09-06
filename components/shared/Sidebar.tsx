@@ -1,19 +1,44 @@
-"use client"
+"use client";
 
-import { UserSidebar } from "./UserSidebar"
-import { usePathname, useRouter } from "next/navigation"
-
+import { UserSidebar } from "./UserSidebar";
+import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
 
   const menuItems = [
-    { iconSrc: "/icons/dashboard.svg", iconAlt: "Dashboard", label: "Dashboard", href: "/user/home" },
-    { iconSrc: "/icons/workspace.svg", iconAlt: "Workspace", label: "Workspace", href: "/user/workspace" },
-    { iconSrc: "/icons/ai-chat.svg", iconAlt: "AI Chat", label: "AI Chat", href: "/user/chat" },
-    { iconSrc: "/icons/discussions.svg", iconAlt: "Discussions", label: "Discussions", href: "/user/discussions" },
-    { iconSrc: "/icons/official-notices.svg", iconAlt: "Official Notices", label: "Official Notices", href: "/user/notices" },
+    {
+      iconSrc: "/icons/dashboard.svg",
+      iconAlt: "Dashboard",
+      label: "Dashboard",
+      href: "/user/home",
+    },
+    {
+      iconSrc: "/icons/workspace.svg",
+      iconAlt: "Workspace",
+      label: "Workspace",
+      href: "/user/workspace",
+    },
+    {
+      iconSrc: "/icons/ai-chat.svg",
+      iconAlt: "AI Chat",
+      label: "AI Chat",
+      href: "/user/chat",
+    },
+    {
+      iconSrc: "/icons/discussions.svg",
+      iconAlt: "Discussions",
+      label: "Discussions",
+      href: "/user/discussions",
+    },
+    {
+      iconSrc: "/icons/official-notices.svg",
+      iconAlt: "Official Notices",
+      label: "Official Notices",
+      href: "/user/notices",
+    },
   ];
 
   const menuItemsWithHandlers = menuItems.map((item) => ({
@@ -25,8 +50,8 @@ export function Sidebar() {
   const handleSettingsClick = () => {
     // Example: router.push('/settings');
   };
-  const handleLogoutClick = () => {
-    // Example: router.push('/logout');
+  const handleLogoutClick = async () => {
+    await signOut({ callbackUrl: "/" }); // Call signOut and redirect to login page
   };
 
   return (
