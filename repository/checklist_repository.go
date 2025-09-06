@@ -97,6 +97,7 @@ func (cr *ChecklistRepository) CreateChecklist(ctx context.Context, userid, proc
 		return nil, err
 	}
 
+	doc.ID = userprocedureID
 	return ToDomainUserProcedure(doc), nil
 }
 
@@ -161,7 +162,7 @@ func (cr *ChecklistRepository) ToggleCheck(ctx context.Context, checklistID stri
 		return err
 	}
 
-	update := bson.M{"$bit": bson.M{"is_checked": bson.M{"xor": true}}}
+	update := bson.M{"$bit": bson.M{"is_checked": bson.M{"xor": 1}}}
 	if _, err := cr.collectionChecklist.UpdateOne(ctx, bson.M{"_id": objID}, update); err != nil {
 		return err
 	}
