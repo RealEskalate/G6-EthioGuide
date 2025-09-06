@@ -1,6 +1,7 @@
 import 'package:ethioguide/features/authentication/domain/usecases/forgot_password.dart';
 import 'package:ethioguide/features/authentication/domain/usecases/reset_password.dart';
 import 'package:ethioguide/features/authentication/domain/usecases/sign_in_with_google.dart';
+import 'package:ethioguide/features/authentication/domain/usecases/verify_account.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ethioguide/features/authentication/domain/usecases/login_user.dart';
 import 'package:ethioguide/features/authentication/domain/usecases/register_user.dart';
@@ -13,10 +14,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
    final ForgotPassword forgotPassword; 
   final ResetPassword resetPassword;
   final SignInWithGoogle signInWithGoogle;
+  final VerifyAccount verifyAccount;
 
   AuthBloc({required this.loginUser, required this.registerUser,  required this.forgotPassword, // ADDED
     required this.resetPassword,
-    required this.signInWithGoogle,}) : super(const AuthState()) {
+    required this.signInWithGoogle, required this.verifyAccount}) : super(const AuthState()) {
     on<AuthViewSwitched>(_onAuthViewSwitched);
     on<PasswordVisibilityToggled>(_onPasswordVisibilityToggled);
     on<LoginSubmitted>(_onLoginSubmitted);
@@ -24,6 +26,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<GoogleSignInSubmitted>(_onGoogleSignInSubmitted);
     on<ForgotPasswordSubmitted>(_onForgotPasswordSubmitted);
     on<ResetPasswordSubmitted>(_onResetPasswordSubmitted);
+      on<VerificationSubmitted>(_onVerificationSubmitted);
   }
 
   void _onAuthViewSwitched(AuthViewSwitched event, Emitter<AuthState> emit) {
@@ -53,7 +56,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     ));
     result.fold(
       (failure) => emit(state.copyWith(status: AuthStatus.failure, errorMessage: failure.message)),
-      (_) => emit(state.copyWith(status: AuthStatus.success)), // Or a specific 'needs verification' state
+       (_) => emit(state.copyWith(status: AuthStatus.registrationSuccess)), // Or a specific 'needs verification' state
     );
   }
   Future<void> _onGoogleSignInSubmitted(GoogleSignInSubmitted event, Emitter<AuthState> emit) async {
@@ -87,4 +90,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (_) => emit(state.copyWith(status: AuthStatus.initial, authView: AuthView.login)),
     );
   }
+
+  // Handler for the verification event
+  Future<void> _onVerificationSubmitted(VerificationSubmitted event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(status: AuthStatus.loading));
+    final result = await verifyAccount(event.activationToken);
+    result.fold(
+      (failure) => emit(state.copyWith(status: AuthStatus.failure, errorMessage: failure.message)),
+      // On successful verification, the user is logged in.
+      (user) => emit(state.copyWith(status: AuthStatus.success)),
+    );
+}
 }

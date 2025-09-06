@@ -1,3 +1,4 @@
+import 'package:ethioguide/core/config/route_names.dart';
 import 'package:ethioguide/features/home_screen/domain/entities/home_data.dart';
 import 'package:ethioguide/features/home_screen/domain/repositories/home_repository.dart';
 import 'package:flutter/material.dart';
@@ -11,13 +12,13 @@ class HomeRepositoryImpl implements HomeRepository {
         icon: Icons.add,
         title: 'Start New Process',
         subtitle: 'Begin a new government service',
-        routeName: '/Procedure', 
+        routeName:  RouteNames.procedure, 
       ),
       QuickAction(
         icon: Icons.work_outline,
         title: 'My Workspace',
         subtitle: 'Manage your ongoing procedures',
-        routeName: '/workspace',
+        routeName:  RouteNames.workspace,
       ),
     ];
   }
@@ -40,7 +41,7 @@ class HomeRepositoryImpl implements HomeRepository {
         title: 'Legal Assistant Chat',
         subtitle: 'Get instant AI-powered guidance for Ethiopian government processes and legal requirements',
         details: ['Instant responses', 'Step-by-step guides'],
-        routeName: '/aiChat', // This one goes to a specific route
+        routeName: RouteNames.aiChat,  // This one goes to a specific route
       ),
       ContentCard(
         sectionTitle: 'Community & Support',
@@ -48,7 +49,7 @@ class HomeRepositoryImpl implements HomeRepository {
         title: 'Community Discussions',
         subtitle: 'Ask questions, share experiences, and help others navigate government processes',
         details: ['1.2k members', '42 active discussions'],
-        routeName: '/discussion',
+        routeName: RouteNames.workspacediscussion,
       ),
     ];
   }

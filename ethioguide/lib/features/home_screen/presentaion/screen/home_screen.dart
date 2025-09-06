@@ -86,7 +86,7 @@ class HomeView extends StatelessWidget {
                   IconButton(
                     onPressed: () {
                       // Use go_router to navigate to the profile page
-                      context.go('/profile');
+                      context.pushNamed('profile');
                     },
                     icon: const Icon(
                       Icons.person_outline,
@@ -180,7 +180,7 @@ class _QuickActionsGrid extends StatelessWidget {
           icon: action.icon,
           title: action.title,
           subtitle: action.subtitle,
-          onTap: () => context.go(action.routeName),
+          onTap: () => context.pushNamed(action.routeName),
         );
       },
     );
@@ -201,7 +201,7 @@ class _ContentCardWidget extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: GestureDetector(
-            onTap: () => context.go(card.routeName),
+            onTap: () => context.pushNamed(card.routeName),
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -249,7 +249,7 @@ class _PopularServiceCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: GestureDetector(
-        onTap: () => context.go(service.routeName),
+        onTap: () => context.pushNamed(service.routeName),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(

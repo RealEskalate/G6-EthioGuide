@@ -18,6 +18,7 @@ abstract class AuthRepository {
     required String newPassword,
   });
   Future<Either<Failure, User>> signInWithGoogle();
+  Future<Either<Failure, User>> verifyAccount(String activationToken);
 
   // ... existing token methods ...
   Future<void> saveTokens({ required String accessToken, required String refreshToken });

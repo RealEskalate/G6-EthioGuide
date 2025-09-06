@@ -14,5 +14,6 @@ class EndPoints {
   static const String getProfile = '/auth/me';
   static const String updateProfile = '/auth/me';
   static const String updatePassword = '/auth/me/password';
+  
 
 }

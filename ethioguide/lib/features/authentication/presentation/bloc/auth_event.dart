@@ -50,7 +50,13 @@ class ResetPasswordSubmitted extends AuthEvent {
     required this.resetToken,
     required this.newPassword,
   });
+
   
+}
+
+class VerificationSubmitted extends AuthEvent {
+  final String activationToken;
+  const VerificationSubmitted({required this.activationToken});
 }
 
 class GoogleSignInSubmitted extends AuthEvent {}

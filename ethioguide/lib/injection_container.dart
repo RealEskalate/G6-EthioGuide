@@ -9,6 +9,7 @@ import 'package:ethioguide/features/authentication/domain/usecases/login_user.da
 import 'package:ethioguide/features/authentication/domain/usecases/register_user.dart';
 import 'package:ethioguide/features/authentication/domain/usecases/reset_password.dart';
 import 'package:ethioguide/features/authentication/domain/usecases/sign_in_with_google.dart';
+import 'package:ethioguide/features/authentication/domain/usecases/verify_account.dart';
 import 'package:ethioguide/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:ethioguide/features/home_screen/presentaion/bloc/home_bloc.dart';
 import 'package:ethioguide/features/profile/data/datasources/profile_remote_data_source.dart';
@@ -48,7 +49,7 @@ final sl = GetIt.instance;
 
 Future<void> init() async {
   //* Features - Authentication
-  sl.registerFactory(() => AuthBloc(loginUser: sl(), registerUser: sl(), forgotPassword: sl(), resetPassword: sl(), signInWithGoogle: sl()));
+  sl.registerFactory(() => AuthBloc(loginUser: sl(), registerUser: sl(), forgotPassword: sl(), resetPassword: sl(), signInWithGoogle: sl(), verifyAccount: sl(),));
   sl.registerLazySingleton(() => LoginUser(sl()));
   sl.registerLazySingleton(() => RegisterUser(sl()));
   sl.registerLazySingleton(() => ForgotPassword(sl()));
@@ -89,6 +90,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetHomeData(sl()));
    sl.registerLazySingleton(() => GetUserProfile(sl()));
   sl.registerLazySingleton(() => LogoutUser(sl()));
+   sl.registerLazySingleton(() => VerifyAccount(sl()));
 
   // Repositories
   sl.registerLazySingleton<AiRepository>(

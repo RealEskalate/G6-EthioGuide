@@ -126,6 +126,22 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(NetworkFailure());
     }
   }
+    @override
+  Future<Either<Failure, User>> verifyAccount(String activationToken) async {
+    if (await networkInfo.isConnected) {
+      try {
+        // After verification, the user is logged in, so we get back a user and tokens.
+        final (user, tokens) = await remoteDataSource.verifyAccount(activationToken);
+        // We must save these new tokens to complete the login.
+        await saveTokens(accessToken: tokens.accessToken, refreshToken: tokens.refreshToken);
+        return Right(user);
+      } on ServerException catch (e) {
+        return Left(ServerFailure(message: e.message));
+      }
+    } else {
+      return Left(NetworkFailure());
+    }
+  }
 
   // --- ALL YOUR EXISTING TOKEN MANAGEMENT METHODS ---
   // These do not need to change.

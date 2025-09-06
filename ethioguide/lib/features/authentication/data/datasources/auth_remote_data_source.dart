@@ -20,6 +20,7 @@ abstract class AuthRemoteDataSource {
     required String newPassword,
   });
   Future<(UserModel, TokensModel)> signInWithGoogle(String idToken);
+  Future<(UserModel, TokensModel)> verifyAccount(String activationToken);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -202,5 +203,27 @@ return (user, tokens);
 
     
   }
-
+  @override
+  Future<(UserModel, TokensModel)> verifyAccount(String activationToken) async {
+    try {
+      final response = await dio.post(
+        EndPoints.verifyAccount, // Add this to your EndPoints.dart
+        data: {'activatationToken': activationToken}, // Matches the API doc
+      );
+      
+      // I am assuming a 200 OK response with user and tokens, similar to login.
+      // Please confirm this with your backend team.
+      if (response.statusCode == 200 && response.data != null) {
+        final user = UserModel.fromJson(response.data['user']);
+        final tokens = TokensModel.fromJson(response.data);
+        return (user, tokens);
+      } else {
+        throw ServerException(message: 'Account verification failed', statusCode: response.statusCode);
+      }
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.response?.data?['error'] ?? 'Verification failed.';
+      throw ServerException(message: errorMessage, statusCode: e.response?.statusCode);
+    }
+  }
 }
+
