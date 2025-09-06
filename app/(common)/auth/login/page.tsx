@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa";
 import { loginSchema, type LoginFormData } from "@/lib/validation/login";
 import { useState } from "react";
 import Image from "next/image";
@@ -131,6 +131,7 @@ export default function LoginPage() {
                           )}
                         </button>
                       </div>
+                      
                     </FormControl>
                     <FormMessage className="text-red-500 text-xs" />
                   </FormItem>
@@ -179,8 +180,23 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
-
+                <div className="flex items-center justify-center my-4">
+                                <div className="border-t border-[#a7b3b9] flex-grow"></div>
+                                <span className="px-4 text-[#2e4d57]/80 text-sm">or</span>
+                                <div className="border-t border-[#a7b3b9] flex-grow"></div>
+                              </div>
+                              <Button
+                                variant="outline"
+                                className="w-full border-neutral text-primary-dark hover:bg-secondary/20 rounded-md"
+                                onClick={() =>
+                                  signIn("google", { callbackUrl: "/api/auth/callback/google" })
+                                }
+                              >
+                                <FaGoogle className="h-4 w-4 mr-2" />
+                                {t("register.sign_in_with_google")}
+                              </Button>
           <p className="mt-6 text-sm text-center text-[#2e4d57]/80">
+          
             {t("login.new_to_ethioguide")}{" "}
             <Link
               href="/auth/register"
