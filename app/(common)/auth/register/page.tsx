@@ -26,7 +26,9 @@ export default function RegisterPage() {
   const { t } = useTranslation("auth");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const router = useRouter(); // Initialize useRouter
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const router = useRouter();
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -52,22 +54,26 @@ export default function RegisterPage() {
           email: data.email,
           password: data.password,
         }),
-      })
+      });
 
-      const registerResult: unknown = await registerResponse.json().catch(() => ({}))
+      const registerResult: unknown = await registerResponse.json().catch(() => ({}));
       if (!registerResponse.ok) {
         const msg = (registerResult && typeof registerResult === 'object' && registerResult !== null && ('message' in registerResult || 'error' in registerResult))
           ? (String((registerResult as { message?: string; error?: string }).message || (registerResult as { error?: string }).error))
-          : t('register.error')
-        throw new Error(msg)
+          : t('register.error');
+        throw new Error(msg);
       }
 
-      router.push('/auth/check-email')
+      setSuccessMessage(t('register.success') || "Registration successful! Please check your email.");
+      setTimeout(() => {
+        setSuccessMessage("");
+        router.push('/auth/check-email');
+      }, 3000);
     } catch (err) {
-      const message = (err instanceof Error && err.message) ? err.message : t('register.error')
-      form.setError('root', { message })
+      const message = (err instanceof Error && err.message) ? err.message : t('register.error');
+      setErrorMessage(message);
     }
-  }
+  };
 
   return (
     <div className="bg-neutral-light text-foreground flex flex-col items-center p-4 font-sans min-h-full">
@@ -95,6 +101,8 @@ export default function RegisterPage() {
           </p>
         </CardHeader>
         <CardContent className="px-6 pb-6">
+          {successMessage && <p className="text-green-500 text-sm mb-4 text-center">{successMessage}</p>}
+          {errorMessage && <p className="text-red-500 text-sm mb-4 text-center">{errorMessage}</p>}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -103,7 +111,7 @@ export default function RegisterPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
-                      {t("register.full_name")}
+                      {t("register.full_name")} *
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -122,7 +130,7 @@ export default function RegisterPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
-                      {t("register.username")}
+                      {t("register.username")} *
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -141,7 +149,7 @@ export default function RegisterPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
-                      {t("register.email")}
+                      {t("register.email")} *
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -191,7 +199,7 @@ export default function RegisterPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
-                      {t("register.password")}
+                      {t("register.password")} *
                     </FormLabel>
                     <FormControl>
                       <div className="relative">
@@ -227,7 +235,7 @@ export default function RegisterPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
-                      {t("register.confirm_password")}
+                      {t("register.confirm_password")} *
                     </FormLabel>
                     <FormControl>
                       <div className="relative">
