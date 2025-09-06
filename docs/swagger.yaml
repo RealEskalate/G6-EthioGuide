@@ -2249,7 +2249,7 @@ paths:
         "201":
           description: Organization created Successfully
           schema:
-            $ref: '#/definitions/controller.OrganizationDetailDTO'
+            $ref: '#/definitions/controller.OrganizationResponseDTO'
         "400":
           description: invalid
           schema:

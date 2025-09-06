@@ -9,8 +9,65 @@ import (
 )
 
 var supportedLangs = map[string]bool{
-	"en": true,
-	"am": true,
+	"en": true, // English
+	"am": true, // Amharic
+	// Add other supported languages here
+}
+
+// nonTranslatableKeys defines a set of JSON keys whose string values should NOT be translated.
+// This is more reliable than guessing based on content.
+var nonTranslatableKeys = map[string]bool{
+	// Identifiers
+	"id":                true,
+	"ID":                true,
+	"groupId":           true,
+	"GroupID":           true,
+	"organizationId":    true,
+	"OrganizationID":    true,
+	"organization_id":   true,
+	"parent_id":         true,
+	"userId":            true,
+	"UserID":            true,
+	"user_id":           true,
+	"procedure_id":      true,
+	"ProcedureID":       true,
+	"user_procedure_id": true,
+	"checklist_id":      true,
+	"noticeIds":         true,
+
+	// User account & auth fields
+	"username":        true,
+	"email":           true,
+	"phone":           true,
+	"password":        true,
+	"old_password":    true,
+	"new_password":    true,
+	"preferredLang":   true,
+	"provider":        true,
+	"code":            true,
+	"role":            true,
+	"access_token":    true,
+	"refresh_token":   true,
+	"resetToken":      true,
+	"activationToken": true,
+
+	// URLs and file paths
+	"profile_picture": true,
+	"profilePicURL":   true,
+	"profile_pic_url": true,
+	"website":         true,
+
+	// Enumerated types or statuses
+	"status":   true,
+	"type":     true,
+	"currency": true,
+
+	// Timestamps and technical metadata
+	"created_at": true,
+	"CreatedAt":  true,
+	"updated_at": true,
+	"UpdatedAt":  true,
+	"source":     true,
 }
 
 type geminiUseCase struct {
@@ -25,38 +82,113 @@ func NewGeminiUsecase(geminiServices domain.IAIService, timeOut time.Duration) d
 	}
 }
 
-func (g *geminiUseCase) TranslateContent(ctx context.Context, content string, targetLang string) (string, error) {
+// TranslateJSON translates all eligible string values within a JSON object based on a key denylist.
+func (g *geminiUseCase) TranslateJSON(ctx context.Context, data map[string]interface{}, targetLang string) (map[string]interface{}, error) {
 	ctx, cancel := context.WithTimeout(ctx, g.contextTimeout)
 	defer cancel()
 
-	content = strings.TrimSpace(content)
-	if content == "" {
-		return "", nil // Return early for empty content.
+	if !supportedLangs[targetLang] {
+		return nil, fmt.Errorf("%w: %s", domain.ErrUnsupportedLanguage, targetLang)
 	}
 
-	if !supportedLangs[targetLang] {
-		// Fail fast for unsupported languages.
-		return "", fmt.Errorf("%w: %s", domain.ErrUnsupportedLanguage, targetLang)
+	// === PASS 1: Collect all strings from keys that are allowed to be translated ===
+	stringMap := make(map[string]bool)
+	collectStringsByKey(data, stringMap)
+
+	if len(stringMap) == 0 {
+		return data, nil // Nothing to translate
 	}
+
+	var originals []string
+	for s := range stringMap {
+		originals = append(originals, s)
+	}
+
+	// === Translate in a single batch call ===
+	const separator = "|||"
+	contentToTranslate := strings.Join(originals, separator)
 
 	prompt := fmt.Sprintf(`
-	Translate the following content to %s.
-	Ensure the translation is accurate, maintains the original meaning, and uses natural, fluent language appropriate for the context. Do not add or omit any information. 
-	Do not include any other text or markdown formatting.
-	If you don't know the language I requested, send only the text "unknown language".
-	Here is the content:
+	You are an expert JSON translator. Translate each text segment separated by "%s" into the language with code '%s'.
+	- IMPORTANT: Preserve the "%s" separator between each translated segment in your response.
+	- Do not alter the number of segments.
+	- Do not add any introductory text, explanations, or markdown formatting. Your response must only contain the translated segments joined by the separator.
+	
+	Here is the text to translate:
 	%s
-	`, targetLang, content)
+	`, separator, targetLang, separator, contentToTranslate)
 
-	translated, err := g.geminiServices.GenerateCompletion(ctx, prompt)
+	translatedBlock, err := g.geminiServices.GenerateCompletion(ctx, prompt)
 	if err != nil {
-		return "", fmt.Errorf("gemini service failed to generate completion: %w", err)
+		return nil, fmt.Errorf("gemini service failed to generate completion: %w", err)
 	}
 
-	// This check remains a valuable safety net.
-	if translated == "unknown language" {
-		return "", domain.ErrUnsupportedLanguage
+	translatedParts := strings.Split(translatedBlock, separator)
+	if len(translatedParts) != len(originals) {
+		return nil, fmt.Errorf("translation mismatch: expected %d parts, got %d. AI failed to follow instructions", len(originals), len(translatedParts))
 	}
 
-	return strings.TrimSpace(translated), nil
+	translationMap := make(map[string]string)
+	for i, originalStr := range originals {
+		translationMap[originalStr] = strings.TrimSpace(translatedParts[i])
+	}
+
+	// === PASS 2: Replace strings in the original structure ===
+	translatedData := replaceStringsByKey(data, translationMap).(map[string]interface{})
+
+	return translatedData, nil
+}
+
+// collectStringsByKey recursively traverses the JSON, collecting strings from non-excluded keys.
+func collectStringsByKey(node interface{}, stringMap map[string]bool) {
+	switch v := node.(type) {
+	case map[string]interface{}:
+		for key, value := range v {
+			if nonTranslatableKeys[key] {
+				continue // Skip this entire branch
+			}
+			// For maps within maps (like 'steps'), we don't pass the parent key.
+			// The check is on the immediate parent key of the string value.
+			collectStringsByKey(value, stringMap)
+		}
+	case []interface{}:
+		for _, element := range v {
+			collectStringsByKey(element, stringMap)
+		}
+	case string:
+		trimmed := strings.TrimSpace(v)
+		if trimmed != "" {
+			stringMap[trimmed] = true
+		}
+	}
+}
+
+// replaceStringsByKey recursively traverses the JSON, replacing strings from non-excluded keys.
+func replaceStringsByKey(node interface{}, translationMap map[string]string) interface{} {
+	switch v := node.(type) {
+	case map[string]interface{}:
+		newMap := make(map[string]interface{}, len(v))
+		for key, value := range v {
+			if nonTranslatableKeys[key] {
+				newMap[key] = value // Keep original value and skip recursion
+				continue
+			}
+			newMap[key] = replaceStringsByKey(value, translationMap)
+		}
+		return newMap
+	case []interface{}:
+		newSlice := make([]interface{}, len(v))
+		for i, element := range v {
+			newSlice[i] = replaceStringsByKey(element, translationMap)
+		}
+		return newSlice
+	case string:
+		trimmed := strings.TrimSpace(v)
+		if translatedStr, ok := translationMap[trimmed]; ok {
+			return translatedStr // Return the translation
+		}
+		return v // Return original string if no translation is found (should be rare)
+	default:
+		return v // For numbers, booleans, null, etc.
+	}
 }

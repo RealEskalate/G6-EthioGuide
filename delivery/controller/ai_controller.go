@@ -29,7 +29,6 @@ func NewGeminiController(geminiUseCase domain.IGeminiUseCase) *GeminiController 
 // @Failure      404  {string}  Procedure not found
 // @Router       /ai/translate [post]
 func (gc *GeminiController) Translate(c *gin.Context) {
-
 	var request TranslateDTO
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
@@ -40,7 +39,7 @@ func (gc *GeminiController) Translate(c *gin.Context) {
 		preferredLang = "en"
 	}
 
-	translated, err := gc.geminiUseCase.TranslateContent(c.Request.Context(), request.Content, preferredLang)
+	translated, err := gc.geminiUseCase.TranslateJSON(c.Request.Context(), request.Content, preferredLang)
 
 	if err != nil {
 		HandleError(c, err)

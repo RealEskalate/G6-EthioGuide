@@ -32,17 +32,21 @@ type UserResponse struct {
 }
 
 func ToUserResponse(a *domain.Account) UserResponse {
-	return UserResponse{
-		ID:       a.ID,
-		Name:     a.Name,
-		Username: a.UserDetail.Username,
-		Email:    a.Email,
+	account := UserResponse{
+		ID:    a.ID,
+		Name:  a.Name,
+		Email: a.Email,
 
 		ProfilePicture: a.ProfilePicURL,
 		Role:           a.Role,
-		IsVerified:     a.UserDetail.IsVerified,
 		CreatedAt:      a.CreatedAt,
 	}
+	if a.Role == domain.RoleUser {
+		account.Username = a.UserDetail.Username
+		account.IsVerified = a.UserDetail.IsVerified
+	}
+
+	return account
 }
 
 type UpdateOrgRequest struct {
@@ -55,7 +59,7 @@ type UpdateOrgRequest struct {
 }
 
 type TranslateDTO struct {
-	Content string `json:"content" binding:"required"`
+	Content map[string]interface{} `json:"content" binding:"required"`
 }
 type ChatRequest struct {
 	Content string `json:"content" binding:"required"`
@@ -512,14 +516,9 @@ type OrganizationResponseDTO struct {
 }
 
 func ToOrganizationDTO(account *domain.Account) OrganizationResponseDTO {
-	return OrganizationResponseDTO{
-		ID:            account.ID,
-		Name:          account.Name,
-		Email:         account.Email,
-		ProfilePicURL: account.ProfilePicURL,
-		Role:          string(account.Role),
-		CreatedAt:     account.CreatedAt,
-		OrganizationDetail: OrganizationDetailDTO{
+	var temp OrganizationDetailDTO
+	if account.OrganizationDetail != nil {
+		temp = OrganizationDetailDTO{
 			Description: account.OrganizationDetail.Description,
 			Location:    account.OrganizationDetail.Location,
 			Type:        string(account.OrganizationDetail.Type),
@@ -528,7 +527,17 @@ func ToOrganizationDTO(account *domain.Account) OrganizationResponseDTO {
 				Website: account.OrganizationDetail.ContactInfo.Website,
 			},
 			PhoneNumbers: account.OrganizationDetail.PhoneNumbers,
-		},
+		}
+	}
+
+	return OrganizationResponseDTO{
+		ID:                 account.ID,
+		Name:               account.Name,
+		Email:              account.Email,
+		ProfilePicURL:      account.ProfilePicURL,
+		Role:               string(account.Role),
+		CreatedAt:          account.CreatedAt,
+		OrganizationDetail: temp,
 	}
 }
 

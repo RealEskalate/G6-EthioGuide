@@ -2032,7 +2032,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Organization created Successfully",
                         "schema": {
-                            "$ref": "#/definitions/controller.OrganizationDetailDTO"
+                            "$ref": "#/definitions/controller.OrganizationResponseDTO"
                         }
                     },
                     "400": {
