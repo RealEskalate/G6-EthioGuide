@@ -3,52 +3,57 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { IoMegaphoneOutline } from "react-icons/io5";
-import { MdOutlineFeedback } from "react-icons/md";
-import { FaUsers } from "react-icons/fa6";
+// import { MdOutlineFeedback } from "react-icons/md";
+// import { FaUsers } from "react-icons/fa6";
 import { Plus, Megaphone, FileText, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const stats = [
-  {
-    data: 127,
-    description: "Procedures Managed",
-    icon: (
-      <div className="bg-gray-100 p-3 rounded-2xl ">
-        <FileText className="w-6 h-6  text-[#3A6A8D] mb-2" />
-      </div>
-    ),
-  },
-  {
-    data: 8,
-    description: "Active Notices",
-    icon: (
-      <div className="bg-gray-100 p-3 rounded-2xl ">
-        <IoMegaphoneOutline className="w-6 h-6 text-[#5E9C8D] mb-2" />
-      </div>
-    ),
-  },
-  {
-    data: 23,
-    description: "Pending Feedback",
-    icon: (
-      <div className="bg-gray-100 p-3 rounded-2xl ">
-        <MdOutlineFeedback className="w-6 h-6 text-[#1C3B2E] mb-2" />
-      </div>
-    ),
-  },
-  {
-    data: 1284,
-    description: "User Interactions",
-    icon: (
-      <div className="bg-gray-100 p-3 rounded-2xl ">
-        <FaUsers className="w-6 h-6 text-[#1C3B2E] mb-2" />
-      </div>
-    ),
-  },
-];
-
-export default function AdminDashboard() {
+export default function AdminDashboard({
+  totalProcedures,
+  totalNotices,
+}: {
+  totalProcedures: number;
+  totalNotices: number;
+}) {
   const route = useRouter();
+  const stats = [
+    {
+      data: totalProcedures,
+      description: "Procedures Managed",
+      icon: (
+        <div className="bg-gray-100 p-3 rounded-2xl ">
+          <FileText className="w-6 h-6  text-[#3A6A8D] mb-2" />
+        </div>
+      ),
+    },
+    {
+      data: totalNotices,
+      description: "Active Notices",
+      icon: (
+        <div className="bg-gray-100 p-3 rounded-2xl ">
+          <IoMegaphoneOutline className="w-6 h-6 text-[#5E9C8D] mb-2" />
+        </div>
+      ),
+    },
+    // {
+    //   data: 23,
+    //   description: "Pending Feedback",
+    //   icon: (
+    //     <div className="bg-gray-100 p-3 rounded-2xl ">
+    //       <MdOutlineFeedback className="w-6 h-6 text-[#1C3B2E] mb-2" />
+    //     </div>
+    //   ),
+    // },
+    // {
+    //   data: 1284,
+    //   description: "User Interactions",
+    //   icon: (
+    //     <div className="bg-gray-100 p-3 rounded-2xl ">
+    //       <FaUsers className="w-6 h-6 text-[#1C3B2E] mb-2" />
+    //     </div>
+    //   ),
+    // },
+  ];
 
   return (
     <div className="p-6 space-y-6 w-full">
@@ -154,7 +159,7 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Quick Overview */}
-        <Card className="shadow-sm border-gray-50">
+        {/* <Card className="shadow-sm border-gray-50">
           <CardHeader>
             <CardTitle>Quick Overview</CardTitle>
           </CardHeader>
@@ -180,7 +185,7 @@ export default function AdminDashboard() {
               </ul>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );
