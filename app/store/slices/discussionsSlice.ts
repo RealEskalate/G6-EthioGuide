@@ -417,45 +417,68 @@ export const discussionsApi = apiSlice.injectEndpoints({
       },
     }),
     // added: delete discussion
-    deleteDiscussion: builder.mutation<{ success?: boolean } | unknown, string>(
-      {
-        query: (id) => ({
-          url: `discussions/${id}`,
+    deleteDiscussion: builder.mutation<
+      { success?: boolean } | unknown,
+      { id: string; procedureId?: string }
+    >({
+      query: (arg) => {
+        const { id, procedureId } = arg;
+        const qs = procedureId
+          ? `?procedureId=${encodeURIComponent(procedureId)}`
+          : "";
+        // reuse token readers already defined above
+        const lsToken =
+          typeof window !== "undefined"
+            ? localStorage.getItem("accessToken") ||
+              localStorage.getItem("token") ||
+              localStorage.getItem("authToken")
+            : null;
+        const envToken =
+          process.env.NEXT_PUBLIC_ACCESS_TOKEN ||
+          process.env.ACCESS_TOKEN ||
+          null;
+
+        return {
+          url: `discussions/${id}${qs}`,
           method: "DELETE",
-        }),
-        async onQueryStarted(id, { queryFulfilled }) {
-          try {
-            await queryFulfilled;
-            if (typeof window !== "undefined") {
-              const { toast } = await import("react-hot-toast");
-              toast.success("Discussion deleted.", {
-                icon: "🗑️",
-                style: {
-                  background: "#f0fdf4",
-                  color: "#065f46",
-                  border: "1px solid #86efac",
-                },
-              });
-            }
-          } catch (e) {
-            if (typeof window !== "undefined") {
-              const { toast } = await import("react-hot-toast");
-              toast.error(
-                extractErrorMessage(e, "Failed to delete discussion."),
-                {
-                  icon: "⚠️",
-                  style: {
-                    background: "#fef2f2",
-                    color: "#991b1b",
-                    border: "1px solid #fecaca",
-                  },
-                }
-              );
-            }
+          headers:
+            lsToken || envToken
+              ? { Authorization: `Bearer ${lsToken ?? envToken}` }
+              : undefined,
+        };
+      },
+      async onQueryStarted(idOrObj, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          if (typeof window !== "undefined") {
+            const { toast } = await import("react-hot-toast");
+            toast.success("Discussion deleted.", {
+              icon: "🗑️",
+              style: {
+                background: "#f0fdf4",
+                color: "#065f46",
+                border: "1px solid #86efac",
+              },
+            });
           }
-        },
-      }
-    ),
+        } catch (e) {
+          if (typeof window !== "undefined") {
+            const { toast } = await import("react-hot-toast");
+            toast.error(
+              extractErrorMessage(e, "Failed to delete discussion."),
+              {
+                icon: "⚠️",
+                style: {
+                  background: "#fef2f2",
+                  color: "#991b1b",
+                  border: "1px solid #fecaca",
+                },
+              }
+            );
+          }
+        }
+      },
+    }),
   }),
   overrideExisting: true,
 });

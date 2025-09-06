@@ -173,9 +173,8 @@ export default function MyDiscussionsPage() {
                             {!isEditing ? (
                               <>
                                 <Button
-                                  variant="outline"
                                   size="sm"
-                                  className="border-gray-300 w-full sm:w-auto"
+                                  className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white transition-all duration-200 hover:scale-105 w-full sm:w-auto"
                                   onClick={() => onEdit(p)}
                                 >
                                   Edit
@@ -211,3 +210,4 @@ export default function MyDiscussionsPage() {
     </div>
   )
 }
+                              
