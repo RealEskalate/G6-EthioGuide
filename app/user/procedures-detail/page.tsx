@@ -1,9 +1,10 @@
 "use client"
 
-import { Suspense, useState, useEffect } from "react"
+export const dynamic = 'force-dynamic'
+
+import { Suspense, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { useGetProcedureFlexibleQuery } from "@/app/store/slices/proceduresApi"
-import type { Procedure, ProcedureDocument, ProcedureFee, ProcedureStep } from "@/app/types/procedure"
 import {
   ArrowLeft,
   Calendar,
@@ -13,36 +14,25 @@ import {
   Download,
   Eye,
   FileText,
-  Globe,
+  Share2,
   ThumbsUp,
 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "sonner"
-import {
-  useGetProcedureFeedbackQuery,
-  useSubmitProcedureFeedbackMutation,
-  useUpdateFeedbackMutation,
-} from "@/app/store/slices/feedbackApi"
+import { useGetProcedureFeedbackQuery } from "@/app/store/slices/feedbackApi"
 import { useSession } from "next-auth/react"
 import { useListDiscussionsQuery } from "@/app/store/slices/discussionsApi"
 
-function ProcedureDetailContent() {
+function ProcedureDetailInner() {
   const search = useSearchParams()
   const id = search.get("id") || ""
-  const [feedbackContent, setFeedbackContent] = useState("")
-  const [feedbackType, setFeedbackType] = useState<'inaccuracy' | 'improvement' | 'feature_request' | 'general'>('inaccuracy')
-  const [feedbackTags, setFeedbackTags] = useState("")
   
   const { data: procedure, isLoading, isError } = useGetProcedureFlexibleQuery(id, { skip: !id })
   const { data: session } = useSession()
   const { data: feedbackData, isLoading: loadingFeedback } = useGetProcedureFeedbackQuery({ procedureId: id, page: 1, limit: 10, token: session?.accessToken || null }, { skip: !id })
-  const [submitFeedback, { isLoading: submittingFeedback, isSuccess: feedbackSubmitted }] = useSubmitProcedureFeedbackMutation()
-  const [updateFeedback] = useUpdateFeedbackMutation()
   
   const notFound = !isLoading && !isError && (!procedure || !procedure.id)
 
@@ -65,106 +55,16 @@ function ProcedureDetailContent() {
     })
   }, [id, loadingFeedback, feedbackData])
 
-  const handleSubmitFeedback = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!feedbackContent.trim() || !id) return
-    
-    const tags = feedbackTags.split(/[,#]/).map(t => t.trim()).filter(Boolean).slice(0, 5)
-    try {
-      await submitFeedback({ 
-        procedureId: id, 
-        content: feedbackContent.trim(), 
-        type: feedbackType, 
-        tags, 
-        token: session?.accessToken || null 
-      }).unwrap()
-      setFeedbackContent("")
-      setFeedbackTags("")
-    } catch (err) {
-      console.error('Failed to submit feedback:', err)
-    }
-  }
+  // Feedback submission is handled on /user/feedback; this page only lists feedback and links out.
 
-  const totalFees = Array.isArray(procedure?.fees) && (procedure!.fees as ProcedureFee[]).length > 0
+  const totalFees = Array.isArray(procedure?.fees) && (procedure!.fees?.length || 0) > 0
     ? (() => {
-        const feesArr = procedure!.fees as ProcedureFee[]
+        const feesArr = procedure!.fees!
         const total = feesArr.reduce((sum, f) => sum + (Number(f.amount) || 0), 0)
         const currency = feesArr[0]?.currency || "ETB"
         return `${total} ${currency}`.trim()
       })()
     : null
-
-  function slugify(input: string) {
-    return input
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)+/g, "")
-  }
-
-  // Share removed as requested
-
-  const handleDownloadGuide = async () => {
-    try {
-  const p = (procedure || {}) as Partial<Procedure> & { guideUrl?: string; pdfUrl?: string; fileUrl?: string; guide?: { url?: string } }
-  const guideUrl: string | undefined = p.guideUrl || p.pdfUrl || p.fileUrl || p.guide?.url
-      if (guideUrl) {
-        const a = document.createElement("a")
-        a.href = guideUrl
-        a.target = "_blank"
-        a.rel = "noopener noreferrer"
-        // Best effort download hint; may open in new tab if cross-origin
-        a.download = slugify((p.title || p.name || "procedure") + "-guide")
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        toast.success("Downloading guide…")
-        return
-      }
-
-      // Fallback: export a simple text guide from current data
-      const lines: string[] = []
-      lines.push(`# ${p.title || p.name || "Procedure"}`)
-      if (p.summary) lines.push("", p.summary)
-      if (p.processingTime) {
-        lines.push(
-          "",
-          `Processing Time: ${p.processingTime.minDays ?? "—"}-${p.processingTime.maxDays ?? "—"} days`
-        )
-      }
-      if (Array.isArray(p.fees) && p.fees.length) {
-        const total = p.fees.reduce((s: number, f: ProcedureFee) => s + (Number(f.amount) || 0), 0)
-        const currency = p.fees[0]?.currency || "ETB"
-        lines.push("", `Total Fees: ${total} ${currency}`)
-      }
-      if (Array.isArray(p.documentsRequired) && p.documentsRequired.length) {
-        lines.push("", "Required Documents:")
-        p.documentsRequired.forEach((d: ProcedureDocument | string, i: number) => {
-          lines.push(`  ${i + 1}. ${typeof d === "string" ? d : (d as ProcedureDocument)?.name || "Document"}`)
-        })
-      }
-      if (Array.isArray(p.steps) && p.steps.length) {
-        lines.push("", "Steps:")
-        ;[...p.steps]
-          .sort((a: ProcedureStep, b: ProcedureStep) => (a.order || 0) - (b.order || 0))
-          .forEach((s: ProcedureStep, i: number) => {
-            lines.push(`  ${s.order || i + 1}. ${s.title || s.text || "Step"}`)
-            if (s.text && s.title) lines.push(`     ${s.text}`)
-          })
-      }
-      const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `${slugify(p.title || p.name || "procedure")}-guide.txt`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      toast.success("Guide downloaded as text")
-    } catch {
-      toast.error("Failed to download guide")
-    }
-  }
 
   return (
     <div className="min-h-screen w-full bg-gray-50  relative overflow-hidden">
@@ -198,7 +98,7 @@ function ProcedureDetailContent() {
                       Verified
                     </Badge>
                   )}
-                  {(Array.isArray(procedure?.tags) ? procedure!.tags! : []).map((tag: string, index: number) => (
+                  {(procedure?.tags ?? []).map((tag, index) => (
                     <Badge key={index} variant="outline" className="text-[#3a6a8d] border-[#3a6a8d]/30 text-xs">
                       {tag}
                     </Badge>
@@ -213,9 +113,9 @@ function ProcedureDetailContent() {
                     : (procedure?.title || procedure?.name || "Procedure")}
                 </h1>
 
-                {!isError && !notFound && (
+                {!isError && !notFound && procedure?.summary && (
                   <p className="text-[#1c3b2e] text-sm sm:text-base md:text-lg leading-relaxed mb-4 md:mb-6">
-                    {procedure?.summary || "Procedure details"}
+                    {procedure.summary}
                   </p>
                 )}
                 {isError && (
@@ -223,33 +123,39 @@ function ProcedureDetailContent() {
                 )}
 
                 <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs sm:text-sm text-[#a7b3b9]">
-                  {typeof procedure?.views === "number" && (
+          {typeof procedure?.views === "number" && (
                     <span className="flex items-center gap-1.5">
                       <Eye className="w-4 h-4" />
-                      {procedure.views} views
+            {procedure.views} views
                     </span>
                   )}
-                  {typeof procedure?.likes === "number" && (
+          {typeof procedure?.likes === "number" && (
                     <span className="flex items-center gap-1.5">
                       <ThumbsUp className="w-4 h-4" />
-                      {procedure.likes} likes
+            {procedure.likes} likes
                     </span>
                   )}
-                  {procedure?.updatedAt && (
+          {procedure?.updatedAt && (
                     <span className="flex items-center gap-1.5">
                       <Calendar className="w-4 h-4" />
-                      Updated {new Date(procedure.updatedAt).toLocaleDateString()}
+            Updated {new Date(procedure.updatedAt).toLocaleDateString()}
                     </span>
                   )}
                 </div>
               </div>
 
               <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:w-48">
-                <Button onClick={handleDownloadGuide} className="bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] hover:from-[#2e4d57] hover:to-[#1c3b2e] text-white transition-all duration-300 hover:scale-105 rounded-xl py-2.5 sm:py-3 font-medium text-sm">
+                <Button className="bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] hover:from-[#2e4d57] hover:to-[#1c3b2e] text-white transition-all duration-300 hover:scale-105 rounded-xl py-2.5 sm:py-3 font-medium text-sm">
                   <Download className="w-4 h-4 mr-2" />
                   Download Guide
                 </Button>
-                {/* Share button removed */}
+                <Button
+                  variant="outline"
+                  className="border-[#3a6a8d]/30 text-[#3a6a8d] hover:bg-[#3a6a8d]/10 transition-all duration-300 rounded-xl py-2.5 sm:py-3 font-medium text-sm bg-transparent"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
               </div>
             </div>
           </div>
@@ -299,13 +205,15 @@ function ProcedureDetailContent() {
               </CardHeader>
               <CardContent className="space-y-4 md:space-y-6">
                 {Array.isArray(procedure?.steps) && procedure!.steps.length > 0 ? (
-                  [...(procedure!.steps as ProcedureStep[])].sort((a: ProcedureStep, b: ProcedureStep) => (a.order || 0) - (b.order || 0)).map((s: ProcedureStep, index: number) => (
+                  [...(procedure!.steps || [])]
+                    .sort((a, b) => ((a?.order ?? 0) - (b?.order ?? 0)))
+                    .map((s, index) => (
                     <div
                       key={index}
                       className="flex gap-3 md:gap-4 p-3 md:p-4 bg-gradient-to-r from-[#a7b3b9]/10 to-[#5e9c8d]/10 rounded-xl border border-[#a7b3b9]/20 hover:shadow-md transition-all duration-300"
                     >
                       <div className="flex-shrink-0 w-8 sm:w-10 h-8 sm:h-10 bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] text-white rounded-full flex items-center justify-center font-bold text-sm sm:text-base">
-                        {s.order || index + 1}
+                        {s.order ?? index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-[#2e4d57] mb-1 sm:mb-2 text-sm sm:text-base">{s.title || s.text?.slice(0, 80) || "Step"}</h3>
@@ -322,14 +230,6 @@ function ProcedureDetailContent() {
                 ) : (
                   <div className="text-sm text-[#6b7280] italic">No steps defined for this procedure.</div>
                 )}
-                <div className="pt-2">
-                  <Link href="/user/workspace">
-                    <Button className="bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] hover:from-[#2e4d57] hover:to-[#1c3b2e] text-white rounded-xl text-sm">
-                      <span className="mr-2">📋</span>
-                      Save Checklist
-                    </Button>
-                  </Link>
-                </div>
               </CardContent>
             </Card>
 
@@ -479,10 +379,10 @@ function ProcedureDetailContent() {
               <CardContent>
                 <ul className="space-y-2">
                   {Array.isArray(procedure?.documentsRequired) && procedure!.documentsRequired.length > 0 ? (
-                    procedure!.documentsRequired.map((doc: ProcedureDocument | string, index: number) => (
+                    procedure!.documentsRequired.map((doc, index) => (
                       <li key={index} className="flex items-center gap-2 text-[#1c3b2e] text-sm">
                         <CheckCircle className="w-4 h-4 text-[#5e9c8d] flex-shrink-0" />
-                        {typeof doc === "string" ? doc : (doc as ProcedureDocument).name || "Document"}
+                        {typeof doc === "string" ? doc : (doc?.name || "Document")}
                       </li>
                     ))
                   ) : (
@@ -498,10 +398,10 @@ function ProcedureDetailContent() {
   )
 }
 
-export default function ProcedureDetail() {
+export default function Page() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 p-8 text-center">Loading…</div>}>
-      <ProcedureDetailContent />
+    <Suspense fallback={<div className="p-4 text-center text-gray-500">Loading...</div>}>
+      <ProcedureDetailInner />
     </Suspense>
   )
 }

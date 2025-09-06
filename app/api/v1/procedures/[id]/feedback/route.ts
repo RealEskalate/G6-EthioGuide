@@ -8,8 +8,8 @@ function backendUrl(path: string) {
 	return HAS_API_SUFFIX ? `${BASE}${path}` : `${BASE}/api/v1${path}`
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-	const { id } = params
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+	const { id } = await context.params
 	const search = req.nextUrl.search || ""
 	const dest = backendUrl(`/procedures/${encodeURIComponent(id)}/feedback${search}`)
 	const headers: Record<string, string> = {
@@ -28,46 +28,57 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 	})
 }
 
-type FeedbackPayload = { Content: string; Type: string; Tags?: string[]; ProcedureID?: string }
+type FeedbackEnum = 'inaccuracy' | 'improvement' | 'other' | 'general' | 'feature_request' | string
+type IncomingPayload = {
+	content?: unknown
+	body?: unknown
+	message?: unknown
+	type?: unknown
+	feedbackType?: unknown
+	tags?: unknown
+	Tags?: unknown
+} | Record<string, unknown>
+type BackendPayload = { Content: string; Type: FeedbackEnum; ProcedureID?: string; Tags?: string[] }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-	const { id } = params
+export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+	const { id } = await context.params
 	const dest = backendUrl(`/procedures/${encodeURIComponent(id)}/feedback`)
 
 	// Accept incoming payload and convert to backend-required keys when needed.
-	let payload: FeedbackPayload | Record<string, unknown> | null = null
+		let payload: BackendPayload | null = null
 	try {
-		const json: unknown = await req.json()
-		const hasBackendKeys = !!(json && typeof json === 'object' && (Object.prototype.hasOwnProperty.call(json, 'Content') || Object.prototype.hasOwnProperty.call(json, 'Type')))
+			const json: IncomingPayload = await req.json()
+			const hasBackendKeys = json && (Object.prototype.hasOwnProperty.call(json as Record<string, unknown>, 'Content') || Object.prototype.hasOwnProperty.call(json as Record<string, unknown>, 'Type'))
 		if (hasBackendKeys) {
 			// Already in the expected format; normalize Type
-			const norm = (val: unknown) => String(val ?? '').toLowerCase().trim().replace(/\s+/g,'_')
-			const toEnum = (v: string) => {
+				const norm = (val: unknown) => String(val ?? '').toLowerCase().trim().replace(/\s+/g,'_')
+				const toEnum = (v: string): FeedbackEnum => {
 				const s = norm(v)
 				if (['inaccuracy','inacuuracy','inacuracy','incorrect','error','issue'].includes(s)) return 'inaccuracy'
 				if (['improvement','inmprovement','improvment','enhancement','suggestion'].includes(s)) return 'improvement'
 				return 'other'
 			}
-			payload = { ...(json as Record<string, unknown>), Type: toEnum((json as Record<string, unknown>).Type as string) }
+				const j = json as Record<string, unknown> & { Type?: unknown }
+				payload = { ...(j as BackendPayload), Type: toEnum(String(j.Type)) }
 		} else {
 			// Build { Content, Type, Tags? } from common lower-case inputs
-			const obj = (json && typeof json === 'object') ? (json as Record<string, unknown>) : {}
-			const contentStr = String((obj.content ?? obj.body ?? obj.message ?? '') as string).trim()
-			const rawType = String((obj.type ?? obj.feedbackType ?? 'inaccuracy') as string)
-			const mapToEnum = (v: string) => {
+				const anyJ = json as Record<string, unknown>
+				const contentStr = String((anyJ.content ?? anyJ.body ?? anyJ.message ?? '') as string).trim()
+				const rawType = String((anyJ.type ?? anyJ.feedbackType ?? 'inaccuracy') as string)
+				const mapToEnum = (v: string): FeedbackEnum => {
 				const s = String(v || '').toLowerCase().trim().replace(/\s+/g,'_')
 				if (['inaccuracy','inacuuracy','inacuracy','incorrect','error','issue'].includes(s)) return 'inaccuracy'
 				if (['improvement','inmprovement','improvment','enhancement','suggestion'].includes(s)) return 'improvement'
 				return 'other'
 			}
-			const maybeTags = Array.isArray(obj.tags) ? obj.tags : (Array.isArray(obj.Tags as unknown[]) ? (obj.Tags as string[]) : undefined)
-			const tags = Array.isArray(maybeTags)
-				? (maybeTags as unknown[]).filter((t) => typeof t === 'string' && String(t).trim()).slice(0, 5) as string[]
-				: undefined
-			payload = { Content: contentStr, Type: mapToEnum(rawType), ...(tags && tags.length ? { Tags: tags } : {}), ProcedureID: id }
+				const tagsSrc = (anyJ.tags ?? anyJ.Tags) as unknown
+				const tags = Array.isArray(tagsSrc)
+					? (tagsSrc as unknown[]).filter((t) => typeof t === 'string' && String(t).trim()).slice(0, 5) as string[]
+					: undefined
+				payload = { Content: contentStr, Type: mapToEnum(rawType), ...(tags && tags.length ? { Tags: tags } : {}), ProcedureID: id }
 		}
 	} catch {
-		payload = { Content: '', Type: 'GENERAL' }
+			payload = { Content: '', Type: 'GENERAL' as FeedbackEnum }
 	}
 
 	const headers: Record<string, string> = {
@@ -91,9 +102,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 		try { errorText = await res.clone().text() } catch {}
 		const mentionsOneOf = /oneof/i.test(errorText) && /Type/i.test(errorText)
 		if (mentionsOneOf) {
-			const p = payload as Record<string, unknown>
-			const contentValue = String((p.Content ?? (p as any).content ?? '') as string)
-			const tagsValue = Array.isArray((p as any).Tags) ? (p as any).Tags as string[] : (Array.isArray((p as any).tags) ? (p as any).tags as string[] : undefined)
+			const contentValue = String(payload.Content ?? '')
+			const tagsValue = Array.isArray(payload.Tags) ? payload.Tags : undefined
 			const extracted: string[] = []
 			// Try to extract allowed values from messages like: oneof=INACCURACY IMPROVEMENT GENERAL
 			const oneofMatch = errorText.match(/oneof[^A-Za-z0-9_\-]*([A-Za-z0-9_\- ,|/]+)/i)
@@ -115,7 +125,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 			const defaults = ['inaccuracy','improvement','other','general','feature_request']
 			const candidates = (extracted.length ? extracted : defaults)
 			const tried: string[] = []
-			for (const raw of candidates) {
+			  for (const raw of candidates) {
 				const lower = raw.toLowerCase()
 				const snake = lower.replace(/\s+/g,'_')
 				const upper = raw.toUpperCase()
@@ -127,7 +137,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 				let success = false
 				for (const cand of variants) {
 					tried.push(cand)
-					const attemptPayload: FeedbackPayload = { Content: contentValue, Type: cand, ProcedureID: id, ...(tagsValue && tagsValue.length ? { Tags: tagsValue } : {}) }
+				  const attemptPayload: BackendPayload = { Content: contentValue, Type: cand, ProcedureID: id, ...(tagsValue && tagsValue.length ? { Tags: tagsValue } : {}) }
 					const attempt = await fetch(dest, {
 						method: 'POST',
 						headers,
@@ -153,9 +163,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 			let errorMsg = 'Bad Request'
 			let details: unknown = undefined
 			try {
-				const parsed: unknown = text ? JSON.parse(text) : null
+				const parsed = text ? JSON.parse(text) : null
 				if (parsed && typeof parsed === 'object') {
-					errorMsg = ((parsed as Record<string, unknown>).error as string) || ((parsed as Record<string, unknown>).message as string) || errorMsg
+					errorMsg = (parsed.error || parsed.message || errorMsg)
 					details = parsed
 				} else if (typeof parsed === 'string' && parsed) {
 					errorMsg = parsed

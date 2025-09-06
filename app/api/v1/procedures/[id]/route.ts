@@ -4,8 +4,8 @@ const RAW = process.env.NEXT_PUBLIC_API_URL || "https://ethio-guide-backend.onre
 const BASE = RAW.replace(/\/$/, "")
 const HAS_API_SUFFIX = /\/api\/v1$/.test(BASE)
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-	const { id } = params
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+	const { id } = await context.params
 	const search = req.nextUrl.search || ""
 	const dest = HAS_API_SUFFIX
 		? `${BASE}/procedures/${encodeURIComponent(id)}${search}`

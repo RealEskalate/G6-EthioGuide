@@ -1,7 +1,9 @@
 "use client"
 
+export const dynamic = 'force-dynamic'
+
 import type React from "react"
-import { useEffect, useMemo, useState } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { ArrowLeft, Send } from "lucide-react"
@@ -15,7 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { useGetProcedureFeedbackQuery, useSubmitProcedureFeedbackMutation } from "@/app/store/slices/feedbackApi"
 import { toast } from "sonner"
 
-export default function FeedbackPage() {
+function FeedbackPageInner() {
   const search = useSearchParams()
   const procedureId = search.get("id") || ""
 
@@ -43,7 +45,7 @@ export default function FeedbackPage() {
     isError,
     refetch,
   } = useGetProcedureFeedbackQuery(
-    { procedureId, page, limit, token: (session as any)?.accessToken || token },
+    { procedureId, page, limit, token: (session as { accessToken?: string } | null | undefined)?.accessToken || token },
     { skip: !procedureId },
   )
   const [submitFeedback, { isLoading: isSubmitting }] = useSubmitProcedureFeedbackMutation()
@@ -59,7 +61,7 @@ export default function FeedbackPage() {
       toast.error("Open feedback from a procedure to submit.")
       return
     }
-    const authToken = (session as any)?.accessToken || token
+  const authToken = (session as { accessToken?: string } | null | undefined)?.accessToken || token
     if (!authToken) {
       toast.error("You must be logged in to submit feedback.")
       return
@@ -78,8 +80,9 @@ export default function FeedbackPage() {
       setTagsInput("")
       setPage(1)
       refetch()
-    } catch (err: any) {
-      const msg = err?.data?.error || err?.data?.message || err?.message || 'Failed to submit feedback'
+    } catch (err: unknown) {
+      const e = err as { data?: { error?: unknown; message?: unknown }; message?: unknown }
+      const msg = (e?.data?.error ?? e?.data?.message ?? e?.message ?? 'Failed to submit feedback')
       toast.error(String(msg))
     }
   }
@@ -291,5 +294,13 @@ export default function FeedbackPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="p-4 text-center text-gray-500">Loading...</div>}>
+      <FeedbackPageInner />
+    </Suspense>
   )
 }

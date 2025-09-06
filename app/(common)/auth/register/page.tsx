@@ -56,21 +56,15 @@ export default function RegisterPage() {
 
       const registerResult: unknown = await registerResponse.json().catch(() => ({}))
       if (!registerResponse.ok) {
-        // Try to read a message from the response if it is an object
-        let msg = t('register.error')
-        if (registerResult && typeof registerResult === 'object') {
-          const obj = registerResult as Record<string, unknown>
-          const m = obj.message
-          const e = obj.error
-          if (typeof m === 'string' && m) msg = m
-          else if (typeof e === 'string' && e) msg = e
-        }
+        const msg = (registerResult && typeof registerResult === 'object' && registerResult !== null && ('message' in registerResult || 'error' in registerResult))
+          ? (String((registerResult as { message?: string; error?: string }).message || (registerResult as { error?: string }).error))
+          : t('register.error')
         throw new Error(msg)
       }
 
       router.push('/auth/check-email')
-    } catch (err: unknown) {
-      const message = err instanceof Error && err.message ? err.message : t('register.error')
+    } catch (err) {
+      const message = (err instanceof Error && err.message) ? err.message : t('register.error')
       form.setError('root', { message })
     }
   }

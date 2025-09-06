@@ -59,37 +59,53 @@ export const feedbackApi = createApi({
 				}
 				return { url: `/procedures/${encodeURIComponent(procedureId)}/feedback?${params.toString()}`, headers }
 			},
-			transformResponse: (raw: any): FeedbackListResponse => {
+			transformResponse: (raw: unknown): FeedbackListResponse => {
 				// Expected shapes:
 				// 1) { feedbacks: [...], page, limit, total }
 				// 2) { data: [...], pagination: { page, limit, total } }
 				// 3) { feedbacks: { feedbacks: [...], page, limit, total } }
 				console.log('Feedback API raw response:', raw)
-				const container = (raw && !Array.isArray(raw.feedbacks) && raw.feedbacks && typeof raw.feedbacks === 'object') ? raw.feedbacks : raw
-				const arr = Array.isArray(container?.feedbacks)
-					? container.feedbacks
-					: Array.isArray(container?.data)
-						? container.data
-						: Array.isArray(raw?.feedbacks)
-							? raw.feedbacks
+				const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
+				const get = <T = unknown>(o: unknown, key: string): T | undefined => (isObject(o) ? (o[key] as T) : undefined)
+				const containerCandidate = (isObject(raw) && !Array.isArray(get(raw, 'feedbacks')) && isObject(get(raw, 'feedbacks')))
+					? (get<Record<string, unknown>>(raw, 'feedbacks') as unknown)
+					: raw
+				const containerObj = isObject(containerCandidate) ? containerCandidate : {}
+				const fbField = get<unknown[]>(containerObj, 'feedbacks')
+				const dataField = get<unknown[]>(containerObj, 'data')
+				const rawFbField = get<unknown[]>(raw, 'feedbacks')
+				const arr: Array<Record<string, unknown>> = Array.isArray(fbField)
+					? (fbField as Array<Record<string, unknown>>)
+					: Array.isArray(dataField)
+						? (dataField as Array<Record<string, unknown>>)
+						: Array.isArray(rawFbField)
+							? (rawFbField as Array<Record<string, unknown>>)
 							: []
-				const page = container?.page ?? container?.pagination?.page ?? raw?.page ?? raw?.pagination?.page ?? 1
-				const limit = container?.limit ?? container?.pagination?.limit ?? raw?.limit ?? raw?.pagination?.limit ?? (arr.length || 5)
-				const total = container?.total ?? container?.pagination?.total ?? raw?.total ?? raw?.pagination?.total ?? arr.length
-				const feedbacks: FeedbackItem[] = arr.map((f: any) => ({
-					id: f.id || f._id || f.feedback_id || crypto.randomUUID(),
-					content: f.content || f.body || f.message || '',
-					type: f.type || 'general',
-					status: f.status || 'new',
-					likeCount: f.like_count ?? f.likeCount ?? 0,
-					dislikeCount: f.dislike_count ?? f.dislikeCount ?? 0,
-					procedureID: f.procedure_id || f.procedureID || f.procedureId || '',
-					createdAT: f.created_at || f.createdAt || f.createdAT,
-					updatedAT: f.updated_at || f.updatedAt || f.updatedAT,
-					userID: f.user_id || f.userID,
-					tags: Array.isArray(f.tags) ? f.tags : undefined,
-					adminResponse: f.admin_response || f.adminResponse,
-					viewCount: f.view_count ?? f.viewCount
+				const containerPage = get<number>(containerObj, 'page') ?? get<number>(get(containerObj, 'pagination'), 'page')
+				const rawPage = get<number>(raw, 'page') ?? get<number>(get(raw, 'pagination'), 'page')
+				const page = containerPage ?? rawPage ?? 1
+				const containerLimit = get<number>(containerObj, 'limit') ?? get<number>(get(containerObj, 'pagination'), 'limit')
+				const rawLimit = get<number>(raw, 'limit') ?? get<number>(get(raw, 'pagination'), 'limit')
+				const limit = containerLimit ?? rawLimit ?? (arr.length || 5)
+				const containerTotal = get<number>(containerObj, 'total') ?? get<number>(get(containerObj, 'pagination'), 'total')
+				const rawTotal = get<number>(raw, 'total') ?? get<number>(get(raw, 'pagination'), 'total')
+				const total = containerTotal ?? rawTotal ?? arr.length
+				const asString = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : v == null ? fallback : String(v))
+				const toNum = (v: unknown, fallback = 0): number => (typeof v === 'number' ? v : typeof v === 'string' && v !== '' ? Number(v) : fallback)
+				const feedbacks: FeedbackItem[] = arr.map((f) => ({
+					id: asString(f.id ?? f._id ?? (f as Record<string, unknown>)['feedback_id'] ?? crypto.randomUUID()),
+					content: asString(f.content ?? (f as Record<string, unknown>)['body'] ?? (f as Record<string, unknown>)['message'] ?? ''),
+					type: asString(f.type ?? 'general'),
+					status: asString(f.status ?? 'new'),
+					likeCount: toNum((f as Record<string, unknown>)['like_count'] ?? f['likeCount'] ?? 0),
+					dislikeCount: toNum((f as Record<string, unknown>)['dislike_count'] ?? f['dislikeCount'] ?? 0),
+					procedureID: asString((f as Record<string, unknown>)['procedure_id'] ?? f['procedureID'] ?? f['procedureId'] ?? ''),
+					createdAT: asString((f as Record<string, unknown>)['created_at'] ?? f['createdAt'] ?? f['createdAT'] ?? ''),
+					updatedAT: asString((f as Record<string, unknown>)['updated_at'] ?? f['updatedAt'] ?? f['updatedAT'] ?? ''),
+					userID: asString((f as Record<string, unknown>)['user_id'] ?? f['userID'] ?? ''),
+					tags: Array.isArray((f as Record<string, unknown>)['tags']) ? ((f as Record<string, unknown>)['tags'] as string[]) : undefined,
+					adminResponse: asString((f as Record<string, unknown>)['admin_response'] ?? f['adminResponse'] ?? ''),
+					viewCount: toNum((f as Record<string, unknown>)['view_count'] ?? f['viewCount'] ?? undefined, undefined as unknown as number)
 				}))
 				const result = { feedbacks, page, limit, total }
 				console.log('Feedback API transformed result:', result)
@@ -116,7 +132,7 @@ export const feedbackApi = createApi({
 						return 'other'
 					}
 					const payload: Record<string, unknown> = { Content: content, Type: mapToEnum(type), ProcedureID: procedureId }
-					if (cleanedTags && cleanedTags.length) (payload as any).Tags = cleanedTags
+					if (cleanedTags && cleanedTags.length) payload['Tags'] = cleanedTags
 					return {
 						url: `/procedures/${encodeURIComponent(procedureId)}/feedback`,
 						method: 'POST',
