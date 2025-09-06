@@ -412,6 +412,18 @@ func (ctrl *UserController) HandleVerify(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User Activated Successfully"})
 }
 
+// @Summary      Create an Organization Account
+// @Description  Creates a new organization account with the provided details. Must be an admin.
+// @Tags         Organization
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        request body OrgCreateRequest true "Organization details"
+// @Success      201 {string}  "Organization created Successfully"
+// @Failure      400 {string}  "invalid
+// @Failure      409 {string}  "invalid"
+// @Failure      500 {string}  "invalid"
+// @Router       /orgs [post]
 func (ctrl *UserController) HandleCreateOrg(c *gin.Context) {
 	var req OrgCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -425,9 +437,23 @@ func (ctrl *UserController) HandleCreateOrg(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Organization created Successsfully"})
+	c.JSON(http.StatusCreated, gin.H{"message": "Organization created Successfully"})
 }
 
+// @Summary      Get List of Organizations
+// @Description  Get list of organizations.
+// @Tags         Organization
+// @Accept       json
+// @Produce      json
+// @Param        page              query     int     false  "Page number (default 1)"
+// @Param        pageSize          query     int     false  "Results per page (default 10)"
+// @Param        type              query     string  false  "Filter by organization ID"
+// @Param        q                 query     string  false  "Sort by field (e.g. createdAt, fee, processingTime)"
+// @Success      201 {object} OrgsListPaginated "Organization created Successfully"
+// @Failure      400 {string}  "invalid
+// @Failure      409 {string}  "invalid"
+// @Failure      500 {string}  "invalid"
+// @Router       /orgs [get]
 func (ctrl *UserController) HandleGetOrgs(c *gin.Context) {
 	var filter domain.GetOrgsFilter
 	filter.Type = c.Query("type")
@@ -450,15 +476,26 @@ func (ctrl *UserController) HandleGetOrgs(c *gin.Context) {
 		orgsResponse[i] = ToOrganizationDTO(acc)
 	}
 
-	pagination := &PaginatedOrgsResponse{
-		Total:    total,
-		Page:     page,
-		PageSize: pageSize,
-	}
+	// pagination := &PaginatedOrgsResponse{
+	// 	Total:    total,
+	// 	Page:     page,
+	// 	PageSize: pageSize,
+	// }
 
-	c.JSON(http.StatusOK, gin.H{"data": orgsResponse, "pagination": pagination})
+	c.JSON(http.StatusOK, gin.H{"data": toOrgsListPaginated(orgsResponse, total, page, pageSize)})
 }
 
+// @Summary      Get an Organization Account
+// @Description  Get an organization's details.
+// @Tags         Organization
+// @Accept       json
+// @Produce      json
+// @Param        id path string true "Organization Account ID"
+// @Success      201 {object} OrganizationDetailDTO "Organization created Successfully"
+// @Failure      400 {string}  "invalid
+// @Failure      409 {string}  "invalid"
+// @Failure      500 {string}  "invalid"
+// @Router       /orgs/{id} [get]
 func (ctrl *UserController) HandleGetOrgById(c *gin.Context) {
 	orgId := c.Param("id")
 	account, err := ctrl.userUsecase.GetOrgById(c.Request.Context(), orgId)
@@ -470,6 +507,19 @@ func (ctrl *UserController) HandleGetOrgById(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": ToOrganizationDetailDTO(account)})
 }
 
+// @Summary      Update an Organization Account Detail
+// @Description  Update an organization's details. Must be an owner of the account.
+// @Tags         Organization
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        id path string true "Organization Account ID"
+// @Param        request body UpdateOrgRequest true "Updated Details of Organization."
+// @Success      201 {string}  "organization updated successfully"
+// @Failure      400 {string}  "invalid
+// @Failure      409 {string}  "invalid"
+// @Failure      500 {string}  "invalid"
+// @Router       /orgs/{id} [patch]
 func (ctrl *UserController) HandleUpdateOrgs(c *gin.Context) {
 	orgId := c.Param("id")
 	var req UpdateOrgRequest
@@ -522,6 +572,20 @@ func (ctrl *UserController) HandleUpdateOrgs(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "organization updated successfully"})
 }
 
+
+// @Summary      Search
+// @Description  Application wide search. 
+// @Tags         Search
+// @Accept       json
+// @Produce      json
+// @Param        q                 query     string  false  "Search term"
+// @Param        page              query     int     false  "Page number (default 1)"
+// @Param        limit             query     int     false  "Results per page (default 10)"
+// @Success      200 {object} SearchResultResponse "Search Results"
+// @Failure      400 {string}  "invalid
+// @Failure      409 {string}  "invalid"
+// @Failure      500 {string}  "invalid"
+// @Router       /search [get]
 func (ctrl *UserController) HandleSearch(c *gin.Context) {
 	query := c.Param("q")
 	page, err := strconv.ParseInt(c.Param("page"), 10, 64)
@@ -551,6 +615,18 @@ func (ctrl *UserController) HandleSearch(c *gin.Context) {
 	c.JSON(http.StatusOK, ToSearchJSON(searchResult))
 }
 
+// @Summary      Create Checklist
+// @Description  Create new checklist.
+// @Tags         Checklist
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        request body CreateChecklistRequest true "Procedure ID"
+// @Success      200 {object} UserProcedureResponse "Checklist added"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /checklists [post]
 func (ctrl *UserController) HandleCreateChecklist(c *gin.Context) {
 	var req CreateChecklistRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -573,6 +649,17 @@ func (ctrl *UserController) HandleCreateChecklist(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": ToControllerUserProcedure(userProcedure)})
 }
 
+// @Summary      Get User's Procedures
+// @Description  Get User's ongoing procedures list
+// @Tags         Checklist
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Success      200 {array} UserProcedureResponse "Checklist added"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /checklists/myProcedures [get]
 func (ctrl *UserController) HandleGetProcedures(c *gin.Context) {
 	user_id, err := c.Get("user_id")
 	if !err {
@@ -594,14 +681,22 @@ func (ctrl *UserController) HandleGetProcedures(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": ProcdeureResponses})
 }
 
+// @Summary      Get User's Ongoing Procedures by ID
+// @Description  Get Checklist by ID
+// @Tags         Checklist
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        userProcedureId path string true "UserProcedureId"
+// @Success      200 {array} ChecklistResponse "Checklist added"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /checklists/{userProcedureId} [get]
 func (ctrl *UserController) HandleGetChecklistById(c *gin.Context) {
-	var req GetChecklistByID
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
-		return
-	}
+	userProcedureId := c.Param("userProcedureId")
 
-	checklists, err := ctrl.checklistUsecase.GetChecklistByUserProcedureID(c.Request.Context(), req.UserProcedureID)
+	checklists, err := ctrl.checklistUsecase.GetChecklistByUserProcedureID(c.Request.Context(), userProcedureId)
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -615,14 +710,22 @@ func (ctrl *UserController) HandleGetChecklistById(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": checklistResponses})
 }
 
+// @Summary      Update Checklist by ID
+// @Description  Update Checklist by ID
+// @Tags         Checklist
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        checklistID path string true "the id of the checklist to be marked done or undone"
+// @Success      200 {array} UserProcedureResponse "Checklist added"
+// @Failure      400 {string}  "Invalid request"
+// @Failure      401 {string}  "Unauthorized"
+// @Failure      500 {string}  "Server error"
+// @Router       /checklists/{checklistID} [patch]
 func (ctrl *UserController) HandleUpdateChecklist(c *gin.Context) {
-	var req UpdateChecklistRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
-		return
-	}
+	ChecklistID := c.Param("checklistID")
 
-	checklist, err := ctrl.checklistUsecase.UpdateChecklist(c.Request.Context(), req.ChecklistID)
+	checklist, err := ctrl.checklistUsecase.UpdateChecklist(c.Request.Context(), ChecklistID)
 	if err != nil {
 		HandleError(c, err)
 		return

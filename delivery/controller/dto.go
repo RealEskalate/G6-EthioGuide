@@ -737,3 +737,19 @@ func toPaginatedAIHisory(aiHistory []*domain.AIChat, total, page, limit int64) *
 		},
 	}
 }
+
+type OrgsListPaginated struct {
+	Orgs   []OrganizationResponseDTO  `json:"orgs"`
+	Total  int64                      `json:"total"`
+	Page   int64                      `json:"page"`
+	PageSize int64                    `json:"pageSize"`
+}
+
+func toOrgsListPaginated (orgs []OrganizationResponseDTO, total, page, pageSize int64) *OrgsListPaginated {
+	return &OrgsListPaginated{
+		Orgs: orgs,
+		Total: total,
+		Page: page,
+		PageSize: pageSize,
+	}
+}

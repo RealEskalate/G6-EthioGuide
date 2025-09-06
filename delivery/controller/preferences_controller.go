@@ -17,7 +17,16 @@ func NewPreferencesController(prefUsecase domain.IPreferencesUsecase) *Preferenc
 	}
 }
 
-
+// @Summary      Get Preferences
+// @Description  Get user preferences
+// @Tags         User
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Success      200  {object}  PreferencesDTO "Detail of user preferences"
+// @Failure      400  {string}   "Bad Request"
+// @Failure      500  {string}   "Server error"
+// @Router       /auth/me/preferences [get]
 func (P *PreferencesController) GetUserPreferences(c *gin.Context) {
     // Assume userID is extracted from context/session/JWT
     userID, exists := c.Get("userID")
@@ -38,6 +47,17 @@ func (P *PreferencesController) GetUserPreferences(c *gin.Context) {
     c.JSON(http.StatusOK, dto)
 }
 
+// @Summary      Update Preferences
+// @Description  Update user preferences
+// @Tags         User
+// @Accept       json
+// @Produce      json
+// @Param        request body PreferencesDTO true "update user preferences detail."
+// @Param        Authorization header string true "Bearer token"
+// @Success      200  {object}  PreferencesDTO "Detail of user preferences"
+// @Failure      400  {string}   "Bad Request"
+// @Failure      500  {string}   "Server error"
+// @Router       /auth/me/preferences [patch]
 func (P *PreferencesController) UpdateUserPreferences(c *gin.Context) {
     userID, exists := c.Get("userID")
     if !exists {
