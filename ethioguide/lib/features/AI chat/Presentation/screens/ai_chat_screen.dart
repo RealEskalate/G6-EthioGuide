@@ -125,7 +125,11 @@ class _ChatPageState extends State<ChatPage> {
                     itemCount: _history.length,
                     itemBuilder: (context, index) {
                       final conv = _history[index];
-                      return conv.source != 'error' ? buildMessage(conv: conv, context: context): errorCard(conv.response);
+                      return conv.source != 'error'
+                          ? conv.source != 'loading' ? buildMessage(conv: conv, context: context) : loadingCard()
+                          : errorCard(
+                              conv.response,
+                            ); // Determine whether the response is error or response
                     },
                   );
                 },
