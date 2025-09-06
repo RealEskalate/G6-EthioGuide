@@ -7,7 +7,7 @@ export interface CreateDiscussionPayload {
   attachments?: string[];
   procedureId?: string;
   userProcedureId?: string;
-  procedures?: string[]; // optional in type
+  // removed: procedures?: string[];
 }
 
 // add: GET types
@@ -165,10 +165,7 @@ export const discussionsApi = apiSlice.injectEndpoints({
         return {
           url: "discussions",
           method: "POST",
-          body: {
-            ...body,
-            procedures: body.procedures ?? [], // ensure [] is posted
-          },
+          body: { ...body },
           headers:
             lsToken || envToken
               ? { Authorization: `Bearer ${lsToken ?? envToken}` }
