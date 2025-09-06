@@ -3,6 +3,18 @@ import { configureStore } from "@reduxjs/toolkit";
 import { apiSlice } from "./slices/workspaceSlice";
 import { historyApi } from "./slices/historySlice";
 import { discussionsListApi } from "./slices/discussionsGetSlice"; // added
+// i18n bootstrap (prevents "NO_I18NEXT_INSTANCE" warnings app-wide)
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+
+if (!i18n.isInitialized) {
+  i18n.use(initReactI18next).init({
+    resources: {},
+    lng: "en",
+    fallbackLng: "en",
+    interpolation: { escapeValue: false },
+  });
+}
 
 export const store = configureStore({
   reducer: {

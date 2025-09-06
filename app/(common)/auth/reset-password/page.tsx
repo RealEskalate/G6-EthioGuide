@@ -14,7 +14,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useTranslation } from "react-i18next";
+import { useTranslation, initReactI18next } from "react-i18next";
+import i18n from "i18next";
 import Link from "next/link";
 import {
   resetPasswordSchema,
@@ -22,8 +23,18 @@ import {
 } from "@/lib/validation/reset-password";
 import Image from "next/image";
 
+// init a minimal i18n instance to avoid react-i18next warning
+if (!i18n.isInitialized) {
+  i18n.use(initReactI18next).init({
+    resources: {},
+    lng: "en",
+    fallbackLng: "en",
+    interpolation: { escapeValue: false },
+  });
+}
+
 function ResetPasswordContent() {
-  const { t, i18n } = useTranslation("auth");
+  const { t } = useTranslation("auth");
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
@@ -59,8 +70,8 @@ function ResetPasswordContent() {
           alt="EthioGuide Symbol"
           width={50}
           height={50}
-          // className="h-10 w-10"
           priority
+          style={{ width: "auto", height: "auto" }}
         />
         <span className="text-gray-800 font-semibold text-3xl">EthioGuide</span>
       </div>
@@ -133,5 +144,5 @@ export default function ResetPasswordPage() {
     </Suspense>
   );
 }
-     
+
 
