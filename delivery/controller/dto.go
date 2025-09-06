@@ -33,10 +33,10 @@ type UserResponse struct {
 
 func ToUserResponse(a *domain.Account) UserResponse {
 	account := UserResponse{
-		ID:       a.ID,
-		Name:     a.Name,
-		Email:    a.Email,
-		
+		ID:    a.ID,
+		Name:  a.Name,
+		Email: a.Email,
+
 		ProfilePicture: a.ProfilePicURL,
 		Role:           a.Role,
 		CreatedAt:      a.CreatedAt,
@@ -45,7 +45,7 @@ func ToUserResponse(a *domain.Account) UserResponse {
 		account.Username = a.UserDetail.Username
 		account.IsVerified = a.UserDetail.IsVerified
 	}
-	
+
 	return account
 }
 
@@ -59,7 +59,7 @@ type UpdateOrgRequest struct {
 }
 
 type TranslateDTO struct {
-	Content string `json:"content" binding:"required"`
+	Content map[string]interface{} `json:"content" binding:"required"`
 }
 type ChatRequest struct {
 	Content string `json:"content" binding:"required"`
@@ -531,12 +531,12 @@ func ToOrganizationDTO(account *domain.Account) OrganizationResponseDTO {
 	}
 
 	return OrganizationResponseDTO{
-		ID:            account.ID,
-		Name:          account.Name,
-		Email:         account.Email,
-		ProfilePicURL: account.ProfilePicURL,
-		Role:          string(account.Role),
-		CreatedAt:     account.CreatedAt,
+		ID:                 account.ID,
+		Name:               account.Name,
+		Email:              account.Email,
+		ProfilePicURL:      account.ProfilePicURL,
+		Role:               string(account.Role),
+		CreatedAt:          account.CreatedAt,
 		OrganizationDetail: temp,
 	}
 }
