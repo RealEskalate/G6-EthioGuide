@@ -1,77 +1,96 @@
 "use client";
 
-import { useState } from "react";
-import {
-  ArrowLeft,
-  Upload,
-  Eye,
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { ArrowLeft, Upload, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import Notice from "@/types/notice";
 
-export default function CreateOfficialNotice() {
-  // Frontend state
-  // const now = new Date().toISOString();
+export default function EditNoticePage() {
+  const { id } = useParams(); // notice ID from URL
+  const router = useRouter();
+  const { data: session } = useSession();
+  const token = session?.accessToken;
+  // const userId = session?.user?.id;
+
+  // State
+  const [notice, setNotice] = useState<Notice | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
-  const [department, setDepartment] = useState("");
-  const [status, setStatus] = useState("active");
-  const [priority, setPriority] = useState("medium");
-  // const [publicationDate, setPublicationDate] = useState("");
-  // const [publicationTime, setPublicationTime] = useState("");
-  
-  const { data: session } = useSession();
-  const token = session?.accessToken;
-  
-  // Handle submit
-  const handleSubmit = async () => {
-  const now = new Date().toISOString(); // current timestamp
 
-  const payload = {
-    organization_id: "YOUR_ORG_ID", // replace dynamically
-    title,
-    content,
-    tags,
-    department,
-    status,
-    priority,
-    created_at: now, 
-    updated_at: now,   
-  };
-
-  console.log("Submitting payload:", payload);
-
-  try {
-    const res = await fetch(
-      "https://ethio-guide-backend.onrender.com/api/v1/notices",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+  // Fetch notice data
+  useEffect(() => {
+    if (!id) return;
+    const fetchNotice = async () => {
+      try {
+        const res = await fetch(
+          `https://ethio-guide-backend.onrender.com/api/v1/notices`,
+          {
+            headers: {
+              // Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!res.ok) throw new Error("Failed to fetch notice");
+        const data = await res.json();
+        console.log("Fetched notice:", data);
+        const found = data.data.find((n: Notice) => n.id === id);
+        setNotice(found || null);
+      } catch (err) {
+        console.error(err);
       }
-    );
+    };
+    fetchNotice();
+  }, [id, token]);
 
-    if (!res.ok) throw new Error("Failed to create notice");
+  // Populate form fields
+  useEffect(() => {
+    if (notice) {
+      setTitle(notice.title);
+      setContent(notice.content);
+      setTags(notice.tags || []);
+    }
+  }, [notice]);
 
-    const data = await res.json();
-    console.log("Notice created:", data);
-    alert("Notice created successfully!");
-  } catch (err) {
-    console.error(err);
-    alert("Error creating notice.");
-  }
-};
+  // Handle update
+  const handleUpdate = async () => {
+    if (!id) return;
+    const payload = {
+      id,
+      title,
+      content,
+      tags,
+      updated_at: new Date().toISOString(),
+    };
 
+    try {
+      const res = await fetch(
+        `https://ethio-guide-backend.onrender.com/api/v1/notices/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to update notice");
+
+      // alert("Notice updated successfully!");
+      router.replace("/admin/notices"); // go back to list
+    } catch (err) {
+      console.error(err);
+      alert("Error updating notice.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -87,7 +106,7 @@ export default function CreateOfficialNotice() {
             </Button>
           </Link>
           <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
-            Create Official Notice
+            Edit Official Notice
           </h1>
         </div>
 
@@ -122,14 +141,14 @@ export default function CreateOfficialNotice() {
               </CardContent>
             </Card>
 
-            {/* Publish button */}
+            {/* Update button */}
             <div className="flex flex-wrap gap-4 pt-2">
               <Button
-                onClick={handleSubmit}
+                onClick={handleUpdate}
                 className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white shadow-lg h-12 px-6 font-semibold tracking-wide"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Publish Notice
+                Update Notice
               </Button>
               <Button
                 variant="outline"
