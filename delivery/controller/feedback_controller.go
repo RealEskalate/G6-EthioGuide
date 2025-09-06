@@ -153,6 +153,7 @@ func (ctrl *FeedbackController) UpdateFeedbackStatus(c *gin.Context) {
 // @Tags         Feedback
 // @Accept       json
 // @Produce      json
+// @Param        Authorization header string true "Bearer token"
 // @Param        page query string false "page"
 // @Param        limit query string false "limit"
 // @Param        status query string false "status"
