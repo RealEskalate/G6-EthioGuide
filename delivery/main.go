@@ -106,13 +106,13 @@ func main() {
 		emailservice,
 		cfg.UsecaseTimeout,
 	)
-	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, cfg.UsecaseTimeout)
+	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, embeddingService, cfg.UsecaseTimeout)
 	catagoryUsecase := usecase.NewCategoryUsecase(catagoryRepo, cfg.UsecaseTimeout)
-	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
+	geminiUsecase := usecase.NewGeminiUsecase(aiService, 10*cfg.UsecaseTimeout)
 	feedbackUsecase := usecase.NewFeedbackUsecase(feedbackRepo, procedureRepo, cfg.UsecaseTimeout)
 	noticeUsecase := usecase.NewNoticeUsecase(noticeRepo)
 	preferencesUsecase := usecase.NewPreferencesUsecase(preferencesRepo)
-	aiChatUsecase := usecase.NewChatUsecase(embeddingService, procedureRepo, aiChatRepo, aiService)
+	aiChatUsecase := usecase.NewChatUsecase(embeddingService, procedureRepo, aiChatRepo, aiService, 10*cfg.UsecaseTimeout)
 
 	postUsecase := usecase.NewPostUseCase(postRepo, cfg.UsecaseTimeout)
 	searchUsecase := usecase.NewSearchUsecase(searchRepo, cfg.UsecaseTimeout)

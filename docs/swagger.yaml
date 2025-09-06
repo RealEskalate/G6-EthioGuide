@@ -7,9 +7,30 @@ definitions:
     required:
     - query
     type: object
-  controller.AIChatResponse:
+  controller.AIConversationResponse:
     properties:
-      answer:
+      id:
+        type: string
+      procedures:
+        items:
+          $ref: '#/definitions/controller.AIProcedureResponse'
+        type: array
+      request:
+        type: string
+      response:
+        type: string
+      source:
+        type: string
+      timestamp:
+        type: string
+      user_id:
+        type: string
+    type: object
+  controller.AIProcedureResponse:
+    properties:
+      id:
+        type: string
+      name:
         type: string
     type: object
   controller.AccountOrgSearchResponse:
@@ -29,7 +50,7 @@ definitions:
     type: object
   controller.ActivateDTO:
     properties:
-      activatationToken:
+      activationToken:
         type: string
     type: object
   controller.CategoryResponse:
@@ -52,13 +73,6 @@ definitions:
     required:
     - new_password
     - old_password
-    type: object
-  controller.ChatRequest:
-    properties:
-      content:
-        type: string
-    required:
-    - content
     type: object
   controller.ChecklistResponse:
     properties:
@@ -359,6 +373,15 @@ definitions:
         type: integer
       total:
         type: integer
+    type: object
+  controller.PaginatedAIHisoryResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/controller.AIConversationResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/controller.Pagination'
     type: object
   controller.PaginatedCategoryResponse:
     properties:
@@ -801,6 +824,11 @@ definitions:
         $ref: '#/definitions/domain.ProcedureContent'
       createdAt:
         type: string
+      embedding:
+        items:
+          format: float64
+          type: number
+        type: array
       fees:
         $ref: '#/definitions/domain.ProcedureFee'
       groupID:
@@ -907,14 +935,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/controller.ChatRequest'
+          $ref: '#/definitions/controller.AIChatRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Response
           schema:
-            type: string
+            $ref: '#/definitions/controller.AIConversationResponse'
         "400":
           description: Invalid request
           schema:
@@ -928,6 +956,47 @@ paths:
           schema:
             type: string
       summary: AI Chat
+      tags:
+      - AI
+  /ai/history:
+    get:
+      consumes:
+      - application/json
+      description: Get Paginated ai chat history
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Results per page (default 10)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.PaginatedAIHisoryResponse'
+        "400":
+          description: Invalid parameter
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get Paginated ai chat history
       tags:
       - AI
   /ai/translate:
@@ -2180,7 +2249,7 @@ paths:
         "201":
           description: Organization created Successfully
           schema:
-            $ref: '#/definitions/controller.OrganizationDetailDTO'
+            $ref: '#/definitions/controller.OrganizationResponseDTO'
         "400":
           description: invalid
           schema:

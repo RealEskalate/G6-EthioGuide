@@ -51,7 +51,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.ChatRequest"
+                            "$ref": "#/definitions/controller.AIChatRequest"
                         }
                     }
                 ],
@@ -59,7 +59,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Response",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/controller.AIConversationResponse"
                         }
                     },
                     "400": {
@@ -78,6 +78,68 @@ const docTemplate = `{
                         "description": "Server error",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/ai/history": {
+            "get": {
+                "description": "Get Paginated ai chat history",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI"
+                ],
+                "summary": "Get Paginated ai chat history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Results per page (default 10)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.PaginatedAIHisoryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid parameter",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -1970,7 +2032,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Organization created Successfully",
                         "schema": {
-                            "$ref": "#/definitions/controller.OrganizationDetailDTO"
+                            "$ref": "#/definitions/controller.OrganizationResponseDTO"
                         }
                     },
                     "400": {
@@ -2563,10 +2625,42 @@ const docTemplate = `{
                 }
             }
         },
-        "controller.AIChatResponse": {
+        "controller.AIConversationResponse": {
             "type": "object",
             "properties": {
-                "answer": {
+                "id": {
+                    "type": "string"
+                },
+                "procedures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.AIProcedureResponse"
+                    }
+                },
+                "request": {
+                    "type": "string"
+                },
+                "response": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.AIProcedureResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -2597,7 +2691,7 @@ const docTemplate = `{
         "controller.ActivateDTO": {
             "type": "object",
             "properties": {
-                "activatationToken": {
+                "activationToken": {
                     "type": "string"
                 }
             }
@@ -2630,17 +2724,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "old_password": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.ChatRequest": {
-            "type": "object",
-            "required": [
-                "content"
-            ],
-            "properties": {
-                "content": {
                     "type": "string"
                 }
             }
@@ -3095,6 +3178,20 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "controller.PaginatedAIHisoryResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.AIConversationResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/controller.Pagination"
                 }
             }
         },
@@ -3761,6 +3858,13 @@ const docTemplate = `{
                 },
                 "createdAt": {
                     "type": "string"
+                },
+                "embedding": {
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                        "format": "float64"
+                    }
                 },
                 "fees": {
                     "$ref": "#/definitions/domain.ProcedureFee"

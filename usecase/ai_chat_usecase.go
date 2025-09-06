@@ -6,20 +6,31 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 )
 
 type AIChatUsecase struct {
-	EmbedService  domain.IEmbeddingService
-	ProcedureRepo domain.IProcedureRepository // abstracts Mongo / vector DB
-	AiChatRepo    domain.IAIChatRepository
-	LLMService    domain.IAIService // abstracts Gemini / OpenAI
+	EmbedService   domain.IEmbeddingService
+	ProcedureRepo  domain.IProcedureRepository // abstracts Mongo / vector DB
+	AiChatRepo     domain.IAIChatRepository
+	LLMService     domain.IAIService // abstracts Gemini / OpenAI
+	contextTimeout time.Duration
 }
 
-func NewChatUsecase(e domain.IEmbeddingService, s domain.IProcedureRepository, aiChatRepo domain.IAIChatRepository, l domain.IAIService) domain.IAIChatUsecase {
-	return &AIChatUsecase{EmbedService: e, ProcedureRepo: s, AiChatRepo: aiChatRepo, LLMService: l}
+func NewChatUsecase(e domain.IEmbeddingService, s domain.IProcedureRepository, aiChatRepo domain.IAIChatRepository, l domain.IAIService, timeOut time.Duration) domain.IAIChatUsecase {
+	return &AIChatUsecase{
+		EmbedService:   e,
+		ProcedureRepo:  s,
+		AiChatRepo:     aiChatRepo,
+		LLMService:     l,
+		contextTimeout: timeOut,
+	}
 }
 
 func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*domain.AIChat, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
 	classifierPrompt := fmt.Sprintf(`
 	Classify the following user query into one of these categories:
 	- procedure   (government services, documents, licenses, permits, taxes, etc.)
@@ -33,20 +44,21 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 	if err != nil {
 		return &domain.AIChat{}, err
 	}
-	if category == "offensive" {
+	switch category {
+	case "offensive":
 		return &domain.AIChat{}, errors.New("your query contains offensive content and cannot be processed")
 
-	} else if category == "irrelevant" {
+	case "irrelevant":
 		return &domain.AIChat{}, nil
 	}
 
 	// detect the language
-	prompt := fmt.Sprintf("I want you to identify the language of this promt %s and i want to give me the only the language in small later like if it is Amharic give me amharic. and if you do not know the language just give me only  a word 'unkown'.", query)
+	prompt := fmt.Sprintf("I want you to identify the language of this promt %s and i want to give me the only the language in small later like if it is Amharic give me amharic. and if you do not know the language just give me only  a word 'unknown'.", query)
 	orglang, err := u.LLMService.GenerateCompletion(ctx, prompt)
 	if err != nil {
 		return &domain.AIChat{}, err
 	}
-	if orglang != "unkown" {
+	if orglang == "unknown" {
 		return &domain.AIChat{}, domain.ErrUnsupportedLanguage
 	} else if orglang != "english" {
 		prompt := fmt.Sprintf("translate this query %s in to English lanuage. And i do not want you to add another thing by yourself", query)
@@ -108,12 +120,21 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 		}
 	}
 
+	related_procedures := make([]*domain.AIProcedure, len(docs))
+	for i, proc := range docs {
+		related_procedures[i] = &domain.AIProcedure{
+			Id:   proc.ID,
+			Name: proc.Name,
+		}
+	}
+
 	// Example: Save chat history (pseudo, adjust as needed)
 	chat := &domain.AIChat{
-		UserID:   userId,
-		Source:   source,
-		Request:  query,
-		Response: answer,
+		UserID:            userId,
+		Source:            source,
+		Request:           query,
+		Response:          answer,
+		RelatedProcedures: related_procedures,
 	}
 
 	err = u.AiChatRepo.Save(ctx, chat)
@@ -126,5 +147,8 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 }
 
 func (u *AIChatUsecase) AIHistory(ctx context.Context, userId string, page, limit int64) ([]*domain.AIChat, int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
 	return u.AiChatRepo.GetByUser(ctx, userId, page, limit)
 }

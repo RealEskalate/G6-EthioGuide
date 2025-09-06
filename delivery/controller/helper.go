@@ -10,6 +10,7 @@ import (
 )
 
 func HandleError(c *gin.Context, err error) {
+	log.Panicf("Error %v\n", err)
 	switch {
 	// --- 400 Bad Request ---
 	// Catch specific validation errors first
@@ -55,7 +56,7 @@ func HandleError(c *gin.Context, err error) {
 
 	// --- 500 Internal Server Error (Default) ---
 	default:
-		log.Printf("Internal Server Error: %v", err)
+		log.Printf("Internal Server Error: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "An unexpected internal error occurred. Please try again later."})
 	}
 }

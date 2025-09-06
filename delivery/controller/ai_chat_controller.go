@@ -23,7 +23,7 @@ func NewAIChatController(usecase domain.IAIChatUsecase) *AIChatController {
 // @Produce      json
 // @Param        Authorization header string true "Bearer token"
 // @Param        request body AIChatRequest  true "Prompt"
-// @Success      200 {object} AIChatResponse  "Response"
+// @Success      200 {object} AIConversationResponse  "Response"
 // @Failure      400 {string}  "Invalid request"
 // @Failure      401 {string}  "Unauthorized"
 // @Failure      500 {string}  "Server error"
@@ -50,6 +50,18 @@ func (c *AIChatController) AIChatController(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, ToAIChatResponse(answer))
 }
 
+// @Summary      Get Paginated ai chat history
+// @Description  Get Paginated ai chat history
+// @Tags         AI
+// @Accept       json
+// @Produce      json
+// @Param        Authorization header string true "Bearer token"
+// @Param        page  query     int     false  "Page number (default 1)"
+// @Param        limit query     int     false  "Results per page (default 10)"
+// @Success      200   {object}  PaginatedAIHisoryResponse
+// @Failure      400   {object}  map[string]string "Invalid parameter"
+// @Failure      500   {object}  map[string]string "Server error"
+// @Router       /ai/history [get]
 func (c *AIChatController) AIChatHistoryController(ctx *gin.Context) {
 	userID, exists := ctx.Get("userID")
 	if !exists {

@@ -45,8 +45,8 @@ type Config struct {
 
 	VerificationFrontendUrl  string
 	ResetPasswordFrontendUrl string
-	EmbeddingUrl string
-	EmbeddingApiKey string
+	EmbeddingUrl             string
+	EmbeddingApiKey          string
 }
 
 // Load loads the configuration from .env files and environment variables.
@@ -64,6 +64,7 @@ func Load() *Config {
 	utilityTTL, _ := strconv.Atoi(getEnv("JWT_UTILITY_TTL_HR", "72"))
 	redisDB, _ := strconv.Atoi(getEnv("REDIS_DB", "0"))
 	smtpPort, _ := strconv.Atoi(getEnv("SMTP_PORT", "2525"))
+	frontendBaseUrl := getEnv("FRONTEND_BASE_URL", "http://localhost:3000")
 
 	return &Config{
 		AppEnv:         getEnv("APP_ENV", "development"),
@@ -89,7 +90,7 @@ func Load() *Config {
 
 		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
-		GoogleRedirectURI:  getEnv("GOOGLE_REDIRECT_URI", ""),
+		GoogleRedirectURI:  frontendBaseUrl + getEnv("GOOGLE_REDIRECT_URI", ""),
 
 		SMTPHost: getEnv("SMTP_HOST", "smtp.mailtrap.io"),
 		SMTPPort: smtpPort,
@@ -97,11 +98,11 @@ func Load() *Config {
 		SMTPPass: getEnv("SMTP_PASSWORD", ""),
 		SMTPFrom: getEnv("SMTP_FROM_EMAIL", "no-reply@example.com"),
 
-		VerificationFrontendUrl:  getEnv("VERIFICATION_FRONTEND_URL", "http://localhost:8080/api/v1/auth/verify"),
-		ResetPasswordFrontendUrl: getEnv("RESET_PASSWORD_FRONTEND_URL", "http://localhost:8080/api/v1/password/reset"),
-		EmbeddingUrl: getEnv("EMBEDDING_URL","https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"),
-		EmbeddingApiKey: getEnv("HF_EMBEDDING_API_KEY", ""),
-	} 
+		VerificationFrontendUrl:  frontendBaseUrl + getEnv("VERIFICATION_FRONTEND_URL", "/api/auth/verify"),
+		ResetPasswordFrontendUrl: frontendBaseUrl + getEnv("RESET_PASSWORD_FRONTEND_URL", "/api/auth/forgot-password"),
+		EmbeddingUrl:             getEnv("EMBEDDING_URL", "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"),
+		EmbeddingApiKey:          getEnv("HF_EMBEDDING_API_KEY", ""),
+	}
 }
 
 // getEnv is a helper to read an environment variable or return a fallback.
