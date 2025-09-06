@@ -453,7 +453,7 @@ func (ctrl *UserController) HandleCreateOrg(c *gin.Context) {
 // @Failure      400 {string}  "invalid
 // @Failure      409 {string}  "invalid"
 // @Failure      500 {string}  "invalid"
-// @Router       /orgs [post]
+// @Router       /orgs [get]
 func (ctrl *UserController) HandleGetOrgs(c *gin.Context) {
 	var filter domain.GetOrgsFilter
 	filter.Type = c.Query("type")
@@ -581,7 +581,7 @@ func (ctrl *UserController) HandleUpdateOrgs(c *gin.Context) {
 // @Param        q                 query     string  false  "Search term"
 // @Param        page              query     int     false  "Page number (default 1)"
 // @Param        limit             query     int     false  "Results per page (default 10)"
-// @Success      200 {object} ToSearchJSON "Search Results"
+// @Success      200 {object} SearchResultResponse "Search Results"
 // @Failure      400 {string}  "invalid
 // @Failure      409 {string}  "invalid"
 // @Failure      500 {string}  "invalid"
