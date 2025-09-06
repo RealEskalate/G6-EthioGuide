@@ -10,7 +10,7 @@ export default function Pagination({ page, totalPages, onPageChange }: Paginatio
 
   return (
     <div className="flex items-center justify-between p-4 text-sm text-neutral">
-      <span>Pages {page}-{totalPages}</span>
+      <span>Page {page} of {totalPages}</span>
       <div className="flex gap-2">
         <Button 
           variant="outline" 
