@@ -23,7 +23,7 @@ func NewAIChatController(usecase domain.IAIChatUsecase) *AIChatController {
 // @Produce      json
 // @Param        Authorization header string true "Bearer token"
 // @Param        request body AIChatRequest  true "Prompt"
-// @Success      200 {object} AIChatResponse  "Response"
+// @Success      200 {object} AIConversationResponse  "Response"
 // @Failure      400 {string}  "Invalid request"
 // @Failure      401 {string}  "Unauthorized"
 // @Failure      500 {string}  "Server error"
