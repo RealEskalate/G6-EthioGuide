@@ -1,5 +1,32 @@
 basePath: /api/v1
 definitions:
+  controller.AIChatRequest:
+    properties:
+      query:
+        type: string
+    required:
+    - query
+    type: object
+  controller.AIChatResponse:
+    properties:
+      answer:
+        type: string
+    type: object
+  controller.AccountOrgSearchResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      organization_detail:
+        $ref: '#/definitions/controller.OrganizationDetailResponse'
+      profile_pic_url:
+        type: string
+      role:
+        $ref: '#/definitions/domain.Role'
+    type: object
   controller.ActivateDTO:
     properties:
       activatationToken:
@@ -26,6 +53,47 @@ definitions:
     - new_password
     - old_password
     type: object
+  controller.ChatRequest:
+    properties:
+      content:
+        type: string
+    required:
+    - content
+    type: object
+  controller.ChecklistResponse:
+    properties:
+      content:
+        description: The actual checklist item
+        type: string
+      id:
+        type: string
+      is_checked:
+        description: Whether the item is completed
+        type: boolean
+      type:
+        description: '"Requirement" or "Step"'
+        type: string
+      user_procedure_id:
+        type: string
+    type: object
+  controller.ContactInfoDTO:
+    properties:
+      socials:
+        additionalProperties:
+          type: string
+        type: object
+      website:
+        type: string
+    type: object
+  controller.ContactInfoResponse:
+    properties:
+      socials:
+        additionalProperties:
+          type: string
+        type: object
+      website:
+        type: string
+    type: object
   controller.ContactInfoUpdate:
     properties:
       socials:
@@ -48,6 +116,11 @@ definitions:
         type: string
     required:
     - title
+    type: object
+  controller.CreateChecklistRequest:
+    properties:
+      procedure_id:
+        type: string
     type: object
   controller.CreatePostDTO:
     properties:
@@ -168,6 +241,78 @@ definitions:
       user:
         $ref: '#/definitions/controller.UserResponse'
     type: object
+  controller.NoticeDTO:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      organization_id:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  controller.NoticeListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/controller.NoticeDTO'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  controller.OrgCreateRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  controller.OrganizationDetailDTO:
+    properties:
+      contact_info:
+        $ref: '#/definitions/controller.ContactInfoDTO'
+      description:
+        type: string
+      location:
+        type: string
+      phone_numbers:
+        items:
+          type: string
+        type: array
+      type:
+        description: assuming OrganizationType is a custom enum
+        type: string
+    type: object
+  controller.OrganizationDetailResponse:
+    properties:
+      contact_info:
+        $ref: '#/definitions/controller.ContactInfoResponse'
+      description:
+        type: string
+      location:
+        type: string
+      phone_numbers:
+        items:
+          type: string
+        type: array
+      type:
+        $ref: '#/definitions/domain.OrganizationType'
+    type: object
   controller.OrganizationDetailUpdate:
     properties:
       contactInfo:
@@ -183,6 +328,37 @@ definitions:
       type:
         description: '"gov" | "private"'
         type: string
+    type: object
+  controller.OrganizationResponseDTO:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      organization_detail:
+        $ref: '#/definitions/controller.OrganizationDetailDTO'
+      profile_pic_url:
+        type: string
+      role:
+        description: assuming domain.Role is a string or enum
+        type: string
+    type: object
+  controller.OrgsListPaginated:
+    properties:
+      orgs:
+        items:
+          $ref: '#/definitions/controller.OrganizationResponseDTO'
+        type: array
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
     type: object
   controller.PaginatedCategoryResponse:
     properties:
@@ -227,6 +403,15 @@ definitions:
         type: integer
       total:
         type: integer
+    type: object
+  controller.PreferencesDTO:
+    properties:
+      emailNotification:
+        type: boolean
+      preferredLang:
+        type: string
+      pushNotification:
+        type: boolean
     type: object
   controller.ProcedureContentResponse:
     properties:
@@ -339,6 +524,17 @@ definitions:
       resetToken:
         type: string
     type: object
+  controller.SearchResultResponse:
+    properties:
+      organizations:
+        items:
+          $ref: '#/definitions/controller.AccountOrgSearchResponse'
+        type: array
+      procedures:
+        items:
+          $ref: '#/definitions/domain.Procedure'
+        type: array
+    type: object
   controller.SocialLoginRequest:
     properties:
       code:
@@ -355,6 +551,23 @@ definitions:
         type: string
     required:
     - content
+    type: object
+  controller.UpdateOrgRequest:
+    properties:
+      contact_info:
+        $ref: '#/definitions/controller.ContactInfoUpdate'
+      description:
+        type: string
+      location:
+        type: string
+      name:
+        type: string
+      phone_numbers:
+        items:
+          type: string
+        type: array
+      profile_pic_url:
+        type: string
     type: object
   controller.UpdatePostDTO:
     properties:
@@ -374,6 +587,22 @@ definitions:
   controller.UserDetailUpdate:
     properties:
       username:
+        type: string
+    type: object
+  controller.UserProcedureResponse:
+    properties:
+      id:
+        type: string
+      percent:
+        type: integer
+      procedure_id:
+        type: string
+      status:
+        description: e.g., "Not Started", "In Progress", "Completed"
+        type: string
+      updated_at:
+        type: string
+      user_id:
         type: string
     type: object
   controller.UserResponse:
@@ -648,7 +877,7 @@ definitions:
       username:
         type: string
     type: object
-host: ethio-guide-backend.onrender.com
+host: localhost:8080
 info:
   contact:
     email: support@swagger.io
@@ -662,6 +891,45 @@ info:
   title: EthioGuide API
   version: "1.0"
 paths:
+  /ai/guide:
+    post:
+      consumes:
+      - application/json
+      description: Interact with the chatbot.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Prompt
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ChatRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Response
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: AI Chat
+      tags:
+      - AI
   /ai/translate:
     post:
       description: Get translation of content in different languages.
@@ -905,6 +1173,69 @@ paths:
       summary: Update password
       tags:
       - Authentication
+  /auth/me/preferences:
+    get:
+      consumes:
+      - application/json
+      description: Get user preferences
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Detail of user preferences
+          schema:
+            $ref: '#/definitions/controller.PreferencesDTO'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get Preferences
+      tags:
+      - User
+    patch:
+      consumes:
+      - application/json
+      description: Update user preferences
+      parameters:
+      - description: update user preferences detail.
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.PreferencesDTO'
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Detail of user preferences
+          schema:
+            $ref: '#/definitions/controller.PreferencesDTO'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Update Preferences
+      tags:
+      - User
   /auth/refresh:
     post:
       consumes:
@@ -1144,6 +1475,160 @@ paths:
       summary: Create Category
       tags:
       - Category
+  /checklists:
+    post:
+      consumes:
+      - application/json
+      description: Create new checklist.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Procedure ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CreateChecklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Checklist added
+          schema:
+            $ref: '#/definitions/controller.UserProcedureResponse'
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Create Checklist
+      tags:
+      - Checklist
+  /checklists/{checklistID}:
+    patch:
+      consumes:
+      - application/json
+      description: Update Checklist by ID
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: the id of the checklist to be marked done or undone
+        in: path
+        name: checklistID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Checklist added
+          schema:
+            items:
+              $ref: '#/definitions/controller.UserProcedureResponse'
+            type: array
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Update Checklist by ID
+      tags:
+      - Checklist
+  /checklists/{userProcedureId}:
+    get:
+      consumes:
+      - application/json
+      description: Get Checklist by ID
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: UserProcedureId
+        in: path
+        name: userProcedureId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Checklist added
+          schema:
+            items:
+              $ref: '#/definitions/controller.ChecklistResponse'
+            type: array
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get User's Ongoing Procedures by ID
+      tags:
+      - Checklist
+  /checklists/myProcedures:
+    get:
+      consumes:
+      - application/json
+      description: Get User's ongoing procedures list
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Checklist added
+          schema:
+            items:
+              $ref: '#/definitions/controller.UserProcedureResponse'
+            type: array
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get User's Procedures
+      tags:
+      - Checklist
   /discussions:
     get:
       consumes:
@@ -1349,6 +1834,46 @@ paths:
       summary: Update Post
       tags:
       - Post
+  /feedback:
+    get:
+      consumes:
+      - application/json
+      description: Fetch list of feedbacks for admin
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: string
+      - description: status
+        in: query
+        name: status
+        type: string
+      - description: Procedure ID
+        in: query
+        name: procedure_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Feedbacks
+          schema:
+            $ref: '#/definitions/controller.FeedbackListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal
+          schema:
+            type: string
+      summary: Fetch Feedbacks
+      tags:
+      - Feedback
   /feedback/{id}:
     patch:
       consumes:
@@ -1397,6 +1922,323 @@ paths:
       summary: Update Feedback
       tags:
       - Feedback
+  /notices:
+    get:
+      consumes:
+      - application/json
+      description: Search and filter Notices with pagination, sorting, and various
+        filters.
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Results per page (default 10)
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by organization ID
+        in: query
+        name: organizationId
+        type: string
+      - description: Sort by field (e.g. createdAt, fee, processingTime)
+        in: query
+        name: sortBy
+        type: string
+      - description: 'Sort order: ASC or DESC (default DESC)'
+        in: query
+        name: sortOrder
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of Notices
+          schema:
+            $ref: '#/definitions/controller.NoticeListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get List of Notices
+      tags:
+      - Notice
+    post:
+      consumes:
+      - application/json
+      description: Create new notice.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Procedure Detail
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.NoticeDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notice Created successfully.
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Create Notice
+      tags:
+      - Notice
+  /notices/{id}:
+    delete:
+      description: Deletes an existing Notice. Requires admin or organization ownership.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Notice ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Notice Deleted successfully.
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Delete Notice
+      tags:
+      - Notice
+    patch:
+      consumes:
+      - application/json
+      description: Update a notice.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Notice ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Details of updated notice
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.NoticeDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notice Updated successfully.
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Update Notice
+      tags:
+      - Notice
+  /orgs:
+    get:
+      consumes:
+      - application/json
+      description: Get list of organizations.
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Results per page (default 10)
+        in: query
+        name: pageSize
+        type: integer
+      - description: Filter by organization ID
+        in: query
+        name: type
+        type: string
+      - description: Sort by field (e.g. createdAt, fee, processingTime)
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Organization created Successfully
+          schema:
+            $ref: '#/definitions/controller.OrgsListPaginated'
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "409":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Get List of Organizations
+      tags:
+      - Organization
+    post:
+      consumes:
+      - application/json
+      description: Creates a new organization account with the provided details. Must
+        be an admin.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Organization details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.OrgCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Organization created Successfully
+          schema:
+            type: string
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "409":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Create an Organization Account
+      tags:
+      - Organization
+  /orgs/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get an organization's details.
+      parameters:
+      - description: Organization Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Organization created Successfully
+          schema:
+            $ref: '#/definitions/controller.OrganizationDetailDTO'
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "409":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Get an Organization Account
+      tags:
+      - Organization
+    patch:
+      consumes:
+      - application/json
+      description: Update an organization's details. Must be an owner of the account.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Organization Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated Details of Organization.
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.UpdateOrgRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: organization updated successfully
+          schema:
+            type: string
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "409":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Update an Organization Account Detail
+      tags:
+      - Organization
   /procedures:
     get:
       consumes:
@@ -1685,6 +2527,46 @@ paths:
       summary: Submit Feedback
       tags:
       - Feedback
+  /search:
+    get:
+      consumes:
+      - application/json
+      description: Application wide search.
+      parameters:
+      - description: Search term
+        in: query
+        name: q
+        type: string
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Results per page (default 10)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search Results
+          schema:
+            $ref: '#/definitions/controller.SearchResultResponse'
+        "400":
+          description: invalid
+          schema:
+            type: string
+        "409":
+          description: invalid
+          schema:
+            type: string
+        "500":
+          description: invalid
+          schema:
+            type: string
+      summary: Search
+      tags:
+      - Search
 securityDefinitions:
   BearerAuth:
     description: '"Type ''Bearer'' followed by a space and a JWT token."'
