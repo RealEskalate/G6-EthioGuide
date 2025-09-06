@@ -108,6 +108,18 @@ export default function ChatPage() {
     }
   };
 
+  // show intro until user interacts (no messages yet)
+  const isEmpty = messages.length === 0;
+
+  // quick suggestions for first-time users
+  const suggestions = [
+    "What documents do I need for a business license?",
+    "Help me start the tourist visa application.",
+    "Show me the steps to renew a residence permit.",
+    "Translate the requirements into Amharic.",
+  ];
+  const handleUseSuggestion = (text: string) => setInputMessage(text);
+
   if (status === "loading") {
     return <div>Loading...</div>;
   }
@@ -170,13 +182,44 @@ export default function ChatPage() {
         </div>
         {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* {chatStatus === 'loading' && <p className="text-gray-500">Loading messages...</p>}
-          {error && (
-            <p className="text-red-500">
-              {error}
-              <Button variant="ghost" onClick={() => dispatch(clearError())} className="ml-2 text-sm">Clear</Button>
-            </p>
-          )} */}
+          {/* Intro section (only before first interaction) */}
+          {isEmpty && (
+            <Card className="border border-gray-200 shadow-sm bg-gradient-to-br from-white via-blue-50/40 to-indigo-50/40">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#3A6A8D] flex items-center justify-center shadow-sm">
+                    <Bot className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-semibold text-gray-900 mb-1">Welcome to your AI Guide</h2>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Ask questions about government procedures, get step-by-step guidance, and turn answers into checklists you can save to your workspace. You can also translate responses when needed.
+                    </p>
+                    <ul className="text-sm text-gray-700 list-disc ml-5 mb-4 space-y-1">
+                      <li>Understand requirements and documents for applications</li>
+                      <li>Receive clear, actionable steps tailored to your goal</li>
+                      <li>Save checklists to track progress in your workspace</li>
+                      <li>Translate answers for better understanding</li>
+                    </ul>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestions.map((s, i) => (
+                        <Button
+                          key={i}
+                          variant="outline"
+                          size="sm"
+                          className="border-gray-300 hover:bg-blue-50 hover:border-blue-300 text-gray-700"
+                          onClick={() => handleUseSuggestion(s)}
+                        >
+                          {s}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {successMessage && <p className="text-green-500">{successMessage}</p>}
           {messages.map((message) => (
             <div key={message.id} className="animate-fade-in">
