@@ -42,60 +42,95 @@ class HomeView extends StatelessWidget {
                   padding: const EdgeInsets.all(8.0),
                   child: CircleAvatar(
                     backgroundColor: Colors.white,
-                    child: Icon(Icons.home_outlined, color: AppColors.darkGreenColor),
+                    child: Icon(
+                      Icons.home_outlined,
+                      color: AppColors.darkGreenColor,
+                    ),
                   ),
                 ),
                 title: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Image.asset('assets/images/light_logo.jpg', height: 20), 
-                    const Text("Welcome back!", style: TextStyle(fontSize: 14, color: Colors.grey)),
+                    Image.asset('assets/images/light_logo.jpg', height: 20),
+                    const Text(
+                      "Welcome back!",
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
                   ],
                 ),
                 actions: [
                   Stack(
                     alignment: Alignment.topRight,
                     children: [
-                      IconButton(onPressed: () {}, icon: const Icon(Icons.notifications_outlined, color: Colors.black54)),
+                      IconButton(
+                        onPressed: () {},
+                        icon: const Icon(
+                          Icons.notifications_outlined,
+                          color: Colors.black54,
+                        ),
+                      ),
                       Container(
                         margin: const EdgeInsets.only(top: 8, right: 8),
                         padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                        child: const Text('5', style: TextStyle(color: Colors.white, fontSize: 10)),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Text(
+                          '5',
+                          style: TextStyle(color: Colors.white, fontSize: 10),
+                        ),
                       ),
                     ],
                   ),
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.person_outline, color: Colors.black54)),
+                  IconButton(
+                    onPressed: () {
+                      // Use go_router to navigate to the profile page
+                      context.go('/profile');
+                    },
+                    icon: const Icon(
+                      Icons.person_outline,
+                      color: Colors.black54,
+                    ),
+                  ),
                 ],
                 bottom: PreferredSize(
                   preferredSize: const Size.fromHeight(60.0),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
                     child: TextField(
                       decoration: InputDecoration(
                         hintText: 'Search for government services...',
                         prefixIcon: const Icon(Icons.search),
                         filled: true,
                         fillColor: Colors.white,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-              
+
               // --- MAIN CONTENT LIST ---
               SliverList(
-                delegate: SliverChildListDelegate(
-                  [
-                    _SectionHeader(title: "Quick Actions"),
-                    _QuickActionsGrid(actions: state.quickActions),
-                    ...state.contentCards.map((card) => _ContentCardWidget(card: card)).toList(),
-                    _SectionHeader(title: "Popular Services"),
-                    ...state.popularServices.map((service) => _PopularServiceCard(service: service)).toList(),
-                    const SizedBox(height: 40),
-                  ],
-                ),
+                delegate: SliverChildListDelegate([
+                  _SectionHeader(title: "Quick Actions"),
+                  _QuickActionsGrid(actions: state.quickActions),
+                  ...state.contentCards
+                      .map((card) => _ContentCardWidget(card: card))
+                      .toList(),
+                  _SectionHeader(title: "Popular Services"),
+                  ...state.popularServices
+                      .map((service) => _PopularServiceCard(service: service))
+                      .toList(),
+                  const SizedBox(height: 40),
+                ]),
               ),
             ],
           );
@@ -114,7 +149,10 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-      child: Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+      child: Text(
+        title,
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }
@@ -166,7 +204,10 @@ class _ContentCardWidget extends StatelessWidget {
             onTap: () => context.go(card.routeName),
             child: Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Row(
                 children: [
                   Icon(card.icon, size: 32, color: AppColors.darkGreenColor),
@@ -175,11 +216,20 @@ class _ContentCardWidget extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(card.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        Text(card.subtitle, style: const TextStyle(color: Colors.grey)),
+                        Text(
+                          card.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          card.subtitle,
+                          style: const TextStyle(color: Colors.grey),
+                        ),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -202,7 +252,10 @@ class _PopularServiceCard extends StatelessWidget {
         onTap: () => context.go(service.routeName),
         child: Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Row(
             children: [
               CircleAvatar(child: Icon(service.icon)),
@@ -211,14 +264,30 @@ class _PopularServiceCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(service.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    Text(service.category, style: const TextStyle(color: Colors.grey)),
+                    Text(
+                      service.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      service.category,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.timer_outlined, size: 16, color: Colors.grey),
+                        const Icon(
+                          Icons.timer_outlined,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 4),
-                        Text(service.timeEstimate, style: const TextStyle(color: Colors.grey)),
+                        Text(
+                          service.timeEstimate,
+                          style: const TextStyle(color: Colors.grey),
+                        ),
                       ],
                     ),
                   ],

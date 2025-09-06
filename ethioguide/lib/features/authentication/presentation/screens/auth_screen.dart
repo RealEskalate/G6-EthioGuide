@@ -69,7 +69,6 @@ class AuthScreenView extends StatelessWidget {
         return const SignUpView();
       case AuthView.forgotPassword:
         return const ForgotPasswordView();
-      // TODO: Add the ResetPasswordView case here later
       default:
         return const LoginView();
     }

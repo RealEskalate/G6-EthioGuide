@@ -82,15 +82,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, void>> resetPassword({
-    required String email,
-    required String token,
+    required String resetToken,
     required String newPassword,
   }) async {
     if (await networkInfo.isConnected) {
       try {
         await remoteDataSource.resetPassword(
-          email: email,
-          token: token,
+          resetToken: resetToken, 
           newPassword: newPassword,
         );
         return const Right(null);

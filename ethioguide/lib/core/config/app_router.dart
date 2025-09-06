@@ -1,5 +1,7 @@
 import 'package:ethioguide/features/authentication/presentation/screens/auth_screen.dart';
 import 'package:ethioguide/core/config/route_names.dart';
+import 'package:ethioguide/features/authentication/presentation/widgets/forgot_password_view.dart';
+import 'package:ethioguide/features/authentication/presentation/widgets/reset_password_view.dart';
 import 'package:ethioguide/features/procedure/presentation/pages/procedure_detail_page.dart';
 import 'package:ethioguide/features/procedure/presentation/pages/procedure_page.dart';
 
@@ -83,6 +85,22 @@ final GoRouter router = GoRouter(
       path: '/auth',
       name: RouteNames.auth, 
       builder: (context, state) => const AuthScreen(),
+      routes: [
+        GoRoute(
+          path: 'forgot-password',
+          name: 'forgot_password',
+          builder: (context, state) => const ForgotPasswordView (),
+    ),
+      GoRoute(
+          path: 'reset-password',
+          name: 'reset_password',
+          builder: (context, state) {
+            // Example: /auth/reset-password?token=12345
+            final token = state.uri.queryParameters['token'] ?? '';
+            return ResetPasswordView(resetToken: token);
+          },
+        ),
+      ]
     ),
 
     GoRoute(

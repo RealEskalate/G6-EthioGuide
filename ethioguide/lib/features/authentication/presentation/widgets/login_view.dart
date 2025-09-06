@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'auth_toggle_buttons.dart';
+// import 'package:ethioguide/core/utils/validators.dart';
 
 class LoginView extends StatelessWidget {
   const LoginView({super.key});
@@ -49,8 +50,18 @@ class LoginView extends StatelessWidget {
                   return customTextField(
                     hintText: "Enter your password",
                     controller: passwordController,
-                    obscureText: !state.isPasswordVisible,
                     prefixIcon: Icons.lock_outline,
+                    obscureText: !state.isPasswordVisible, 
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        state.isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        // Dispatch the event to toggle the state in the BLoC
+                        context.read<AuthBloc>().add(PasswordVisibilityToggled());
+                      },
+                    ),
                   );
                 },
               ),

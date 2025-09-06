@@ -5,19 +5,19 @@ import 'package:flutter/material.dart';
 class HomeRepositoryImpl implements HomeRepository {
   @override
   List<QuickAction> getQuickActions() {
-    // Mocked data based on your UI and instructions
+    
     return const [
       QuickAction(
         icon: Icons.add,
         title: 'Start New Process',
         subtitle: 'Begin a new government service',
-        routeName: '/placeholder', // All will go to placeholder for now
+        routeName: '/Procedure', 
       ),
       QuickAction(
         icon: Icons.work_outline,
         title: 'My Workspace',
         subtitle: 'Manage your ongoing procedures',
-        routeName: '/placeholder',
+        routeName: '/workspace',
       ),
     ];
   }
@@ -40,7 +40,7 @@ class HomeRepositoryImpl implements HomeRepository {
         title: 'Legal Assistant Chat',
         subtitle: 'Get instant AI-powered guidance for Ethiopian government processes and legal requirements',
         details: ['Instant responses', 'Step-by-step guides'],
-        routeName: '/ai_chat', // This one goes to a specific route
+        routeName: '/aiChat', // This one goes to a specific route
       ),
       ContentCard(
         sectionTitle: 'Community & Support',
@@ -48,7 +48,7 @@ class HomeRepositoryImpl implements HomeRepository {
         title: 'Community Discussions',
         subtitle: 'Ask questions, share experiences, and help others navigate government processes',
         details: ['1.2k members', '42 active discussions'],
-        routeName: '/placeholder',
+        routeName: '/discussion',
       ),
     ];
   }

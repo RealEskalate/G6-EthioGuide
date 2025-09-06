@@ -22,6 +22,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LoginSubmitted>(_onLoginSubmitted);
     on<SignUpSubmitted>(_onSignUpSubmitted);
     on<GoogleSignInSubmitted>(_onGoogleSignInSubmitted);
+    on<ForgotPasswordSubmitted>(_onForgotPasswordSubmitted);
+    on<ResetPasswordSubmitted>(_onResetPasswordSubmitted);
   }
 
   void _onAuthViewSwitched(AuthViewSwitched event, Emitter<AuthState> emit) {
@@ -62,4 +64,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (user) => emit(state.copyWith(status: AuthStatus.success)),
     );
 }
+  // Handler for the forgot password event
+  Future<void> _onForgotPasswordSubmitted(ForgotPasswordSubmitted event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(status: AuthStatus.loading));
+    final result = await forgotPassword(event.email);
+    result.fold(
+      (failure) => emit(state.copyWith(status: AuthStatus.failure, errorMessage: failure.message)),
+      (_) => emit(state.copyWith(status: AuthStatus.resetLinkSent)),
+    );
+  }
+
+  // Handler for the reset password event
+  Future<void> _onResetPasswordSubmitted(ResetPasswordSubmitted event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(status: AuthStatus.loading));
+    final result = await resetPassword(ResetPasswordParams(
+      resetToken: event.resetToken,
+      newPassword: event.newPassword,
+    ));
+    result.fold(
+      (failure) => emit(state.copyWith(status: AuthStatus.failure, errorMessage: failure.message)),
+      // On success, switch the view back to the login page.
+      (_) => emit(state.copyWith(status: AuthStatus.initial, authView: AuthView.login)),
+    );
+  }
 }
