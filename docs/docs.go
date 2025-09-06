@@ -3483,7 +3483,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "content": {
-                    "type": "string"
+                    "type": "object",
+                    "additionalProperties": true
                 }
             }
         },

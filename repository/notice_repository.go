@@ -72,6 +72,7 @@ func NewNoticeRepository(db *mongo.Database) *NoticeRepository {
 func (nr *NoticeRepository) Create(ctx context.Context, notice *domain.Notice) error {
 	model := FromDomain(notice)
 	model.CreatedAt = time.Now()
+	model.UpdatedAt = time.Now()
 	model.ID = primitive.NewObjectID()
 
 	_, err := nr.collection.InsertOne(ctx, model)
@@ -157,7 +158,15 @@ func (nr *NoticeRepository) Update(ctx context.Context, id string, notice *domai
 		return err
 	}
 
+	var old NoticeModel
+	err = nr.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&old)
+	if err != nil {
+		return domain.ErrNotFound
+	}
+
 	model := FromDomain(notice)
+	model.CreatedAt = old.CreatedAt
+	model.UpdatedAt = time.Now()
 	_, err = nr.collection.UpdateOne(ctx, bson.M{"_id": objectID}, bson.M{"$set": model})
 	return err
 }

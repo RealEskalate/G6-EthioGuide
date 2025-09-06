@@ -33,6 +33,7 @@ func NewNoticeController(noticeUsecase domain.INoticeUseCase) *NoticeController 
 // @Failure      500 {string}  "Server error"
 // @Router       /notices [post]
 func (nc *NoticeController) CreateNotice(ctx *gin.Context) {
+	userID := ctx.GetString("userID")
 	var noticeDTO NoticeDTO
 	if err := ctx.ShouldBindJSON(&noticeDTO); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -40,6 +41,7 @@ func (nc *NoticeController) CreateNotice(ctx *gin.Context) {
 	}
 
 	notice := noticeDTO.ToDomainNotice()
+	notice.OrganizationID = userID
 	if err := nc.noticeUsecase.CreateNotice(ctx, notice); err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
