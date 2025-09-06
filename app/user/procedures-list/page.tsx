@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 import Link from "next/link"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { useListCategoriesQuery } from '@/app/store/slices/categoriesApi'
 import { useListProceduresQuery } from '@/app/store/slices/proceduresApi'
+import type { Procedure } from '@/app/types/procedure'
 
 function badgeColorFromIndex(i: number) {
   const palette = [
@@ -24,14 +26,30 @@ function badgeColorFromIndex(i: number) {
 }
 
 export default function ProceduresPage() {
-
+  const searchParams = useSearchParams()
+  
   // Pagination state (simple)
   const [page, setPage] = useState(1)
   const limit = 10
-  const { data: procData, isLoading: loadingProcedures, isError: procsError } = useListProceduresQuery({ page, limit, q: undefined })
-
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+  
+  // Initialize from URL params
+  useEffect(() => {
+    const q = searchParams.get('q')
+    const cat = searchParams.get('category')
+    if (q) setSearch(q)
+    if (cat) setCategory(cat)
+  }, [searchParams])
+  
+  // API calls
+  const { data: procData, isLoading: loadingProcedures, isError: procsError } = useListProceduresQuery({ 
+    page, 
+    limit, 
+    name: search || undefined,
+    sortBy: 'createdAt',
+    sortOrder: 'DESC'
+  })
   const { data: catData, isLoading: loadingCats, isError: catsError } = useListCategoriesQuery();
 
   const categories = useMemo(() => {
@@ -39,10 +57,10 @@ export default function ProceduresPage() {
     return list.map((c, idx) => ({ id: c.id, title: c.title, badge: badgeColorFromIndex(idx) }))
   }, [catData])
 
-  const backendProcedures = useMemo(() => (procData?.list || []).map((p, idx) => {
+  const backendProcedures = useMemo(() => (procData?.list || []).map((p: Procedure, idx) => {
     // Derive fields to fit existing UI expectations
-    const title = (p as any).title || (p as any).name || 'Untitled Procedure'
-    const description = (p as any).summary || (p as any).content?.result || ''
+    const title = p.title || p.name || 'Untitled Procedure'
+    const description = p.summary || ''
     const updated = p.updatedAt ? new Date(p.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
     // Use first tag as category if available
     const tag = (p.tags && p.tags.length > 0) ? p.tags[0] : 'General'
@@ -60,13 +78,10 @@ export default function ProceduresPage() {
     }
   }), [procData])
 
+  // Since search is now handled by the API, we only need to filter by category
   const filteredProcedures = backendProcedures.filter((procedure) => {
-    const matchesSearch = procedure.name.toLowerCase().includes(search.toLowerCase()) || procedure.description.toLowerCase().includes(search.toLowerCase())
-    let matchesCategory = true
-    if (category !== 'all') {
-      matchesCategory = procedure.category === category
-    }
-    return matchesSearch && matchesCategory
+    if (category === 'all') return true
+    return procedure.category === category
   })
 
   const updates = [

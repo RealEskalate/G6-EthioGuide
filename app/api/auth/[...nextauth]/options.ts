@@ -34,14 +34,7 @@ export const options: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-          redirect_uri: "http://localhost:3000/api/social/google-callback",
-        },
-      },
+      checks: ["state"],
     }),
 
     CredentialsProvider({
@@ -51,33 +44,84 @@ export const options: NextAuthOptions = {
         code: { label: "Auth Code", type: "text" },
         identifier: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
+        accessToken: { label: "Access Token", type: "text", optional: true },
+        role: { label: "Role", type: "text", optional: true },
+        id: { label: "ID", type: "text", optional: true },
+        name: { label: "Name", type: "text", optional: true },
+        email: { label: "Email", type: "text", optional: true },
       },
-      async authorize(credentials) {
-        if (!credentials?.identifier || !credentials?.password)
-          throw new Error("Email/Username and password are required");
-
-        const res = await fetch(`${API_URL}/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            identifier: credentials.identifier,
-            password: credentials.password,
-          }),
-        });
-
-        const result = await res.json();
-        if (res.ok && result.user && result.access_token) {
+      async authorize(
+        credentials: Record<
+          "id" | "name" | "email" | "provider" | "code" | "identifier" | "password" | "accessToken" | "role",
+          string
+        > | undefined
+      ) {
+        // Case 1: Social login (already verified by backend)
+        if (credentials?.accessToken && credentials?.role) {
           return {
-            id: result.user.id,
-            name: result.user.name,
-            email: result.user.email,
-            role: result.user.role,
-            accessToken: result.access_token,
+            id: credentials.id ?? "social-user",
+            name: credentials.name ?? "",
+            email: credentials.email ?? "",
+            role: credentials.role,
+            accessToken: credentials.accessToken,
           };
         }
 
-        throw new Error(result.message || "Login failed");
+        // Case 2: Standard email/password login
+        if (credentials?.identifier && credentials?.password) {
+          const res = await fetch(`${API_URL}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              identifier: credentials.identifier,
+              password: credentials.password,
+            }),
+          });
+
+          const result = await res.json();
+          if (res.ok && result.user && result.access_token) {
+            return {
+              id: result.user.id,
+              name: result.user.name,
+              email: result.user.email,
+              role: result.user.role,
+              accessToken: result.access_token,
+            };
+          }
+
+          throw new Error(result.message || "Login failed");
+        }
+
+        // If neither case applies → invalid request
+        throw new Error("Invalid credentials");
       },
+
+      // async authorize(credentials) {
+      //   if (!credentials?.identifier || !credentials?.password)
+      //     throw new Error("Email/Username and password are required");
+
+      //   const res = await fetch(`${API_URL}/auth/login`, {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({
+      //       identifier: credentials.identifier,
+      //       password: credentials.password,
+      //     }),
+      //   });
+
+      //   const result = await res.json();
+      //   if (res.ok && result.user && result.access_token) {
+      //     return {
+      //       id: result.user.id,
+      //       name: result.user.name,
+      //       email: result.user.email,
+      //       role: result.user.role,
+      //       accessToken: result.access_token,
+      //     };
+      //   }
+
+      //   throw new Error(result.message || "Login failed");
+      // },
     }),
   ],
   pages: {

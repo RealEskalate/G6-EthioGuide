@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AlertTriangle, Info, MessageCircle, Calendar, FileX } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -66,6 +66,19 @@ const notifications = [
 
 export function NotificationDropdown() {
   const [unreadCount] = useState(12)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="sm" className="relative p-2 rounded-full" aria-hidden>
+        <Image src="/icons/notifications.svg" alt="Notifications" width={20} height={20} className="w-5 h-5" />
+        {unreadCount > 0 && (
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+        )}
+      </Button>
+    )
+  }
 
   return (
     <DropdownMenu>
@@ -77,7 +90,7 @@ export function NotificationDropdown() {
           )}
         </Button>
       </DropdownMenuTrigger>
-  <DropdownMenuContent align="end" className="w-80 p-0 max-h-96 overflow-hidden bg-white !bg-white bg-opacity-100">
+  <DropdownMenuContent align="end" className="w-80 p-0 max-h-96 overflow-hidden bg-white bg-opacity-100">
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-gray-900">Notifications</h3>
