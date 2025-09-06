@@ -1,5 +1,7 @@
 import EditProcedurePage from "../../(adminRelatedPages)/editProcedure/page";
 import ProcedureProp from "@/types/procedure";
+import { getServerSession } from "next-auth/next";
+import { options } from "@/app/api/auth/[...nextauth]/options";
 
 interface Props {
   params: { id: string };
@@ -7,10 +9,18 @@ interface Props {
 
 export default async function EditProcedure({ params }: Props) {
   const { id } = await params;
-
+  const session = await getServerSession(options);
+  const token = session?.accessToken;
+  
   const res = await fetch(
-    `https://ethio-guide-backend.onrender.com/api/v1/procedures/68bad97d299bfa90117809e`,
-    { cache: "no-store" } // optional: ensures fresh data
+    `https://ethio-guide-backend.onrender.com/api/v1/procedures/${id}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // Authorization: `Bearer ${token}`,
+      },
+    }
   );
 
   if (!res.ok) {
@@ -18,6 +28,7 @@ export default async function EditProcedure({ params }: Props) {
   }
 
   const procedure: ProcedureProp = await res.json();
+  console.log("get",procedure)
 
   return <EditProcedurePage procedure={procedure} />;
 }

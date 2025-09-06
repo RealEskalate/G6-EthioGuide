@@ -62,7 +62,7 @@ export default interface ProcedureProp {
   organizationId: string;
   noticeIds: string[];
   content: {prerequisites: string[];
-  steps: { [key: number]: string }; // numeric keys as object
+  steps: { [key: number]: string };
   result: string;}
   fees: {
     label: string;
@@ -73,5 +73,5 @@ export default interface ProcedureProp {
     minDays: number;
     maxDays: number;
   };
-  createdAt: string; // ISO date
+  createdAt: string;
 }
