@@ -1,73 +1,72 @@
 "use client";
 
-import {  Calendar, CheckCircle, Clock, FileText } from "lucide-react"
+import { Calendar, CheckCircle, Clock, FileText, PauseCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CardContent, Card } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
-import { useMemo, useEffect } from "react"; // added useEffect
-import { useGetMyProceduresQuery } from "@/app/store/slices/workspaceSlice"; // added
+import { useMemo } from "react";
 
 export default function WorkspacePage() {
   const router = useRouter();
 
-  // log token once on mount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const lsToken =
-      localStorage.getItem("accessToken") ||
-      localStorage.getItem("token") ||
-      localStorage.getItem("authToken") ||
-      localStorage.getItem("access_token");
-    const cookieMatch = document.cookie.match(/(?:^|; )accessToken=([^;]+)/);
-    const cookieToken = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
-    const envToken = process.env.NEXT_PUBLIC_ACCESS_TOKEN || process.env.ACCESS_TOKEN || null;
-    const token = lsToken || cookieToken || envToken || null;
-    console.log("Workspace token:", token);
-  }, []);
+  // Your mock procedures data
+  const procedures = [
+    {
+      id: 1,
+      title: "New Passport Application",
+      department: "Immigration Department",
+      status: "In Progress",
+      progress: 60,
+      startDate: "Dec 15, 2024",
+      estimatedCompletion: "Jan 30, 2025",
+      documentsUploaded: "4/6 documents uploaded",
+      statusColor: "bg-orange-100 text-orange-800",
+      buttonText: "Continue",
+      buttonVariant: "default" as const,
+    },
+    {
+      id: 2,
+      title: "Driver's License Renewal",
+      department: "Road Authority",
+      status: "Completed",
+      progress: 100,
+      completedDate: "Dec 10, 2024",
+      requirements: "All requirements met",
+      statusColor: "bg-green-100 text-green-800",
+      buttonText: "View Details",
+      buttonVariant: "outline" as const,
+    },
+    {
+      id: 3,
+      title: "Business License Application",
+      department: "National Bank",
+      status: "Not Started",
+      progress: 0,
+      addedDate: "Dec 20, 2024",
+      readyToStart: "Ready to start",
+      documentsRequired: "0/5 documents uploaded",
+      statusColor: "bg-gray-100 text-gray-800",
+      buttonText: "Start Now",
+      buttonVariant: "default" as const,
+    },
+  ]
 
-  // fetch user procedures
-  const { data, isLoading, isError } = useGetMyProceduresQuery({ page: 1, limit: 20 }); // added
-  const items = data?.data ?? []; // added
-
-  // derive stats from API
+  // Calculate stats from mock procedures
   const stats = useMemo(() => {
-    const total = items.length || Number(data?.total ?? 0);
-    const inProgress = items.filter(p => p.status === "IN_PROGRESS").length;
-    const completed = items.filter(p => p.status === "COMPLETED").length;
+    const total = procedures.length;
+    const inProgress = procedures.filter(p => p.status === "In Progress").length;
+    const completed = procedures.filter(p => p.status === "Completed").length;
+    const notStarted = procedures.filter(p => p.status === "Not Started").length;
+
     return [
       { title: "Total Procedures", value: String(total), icon: FileText, color: "text-blue-600", bgColor: "bg-blue-50" },
       { title: "In Progress", value: String(inProgress), icon: Clock, color: "text-orange-600", bgColor: "bg-orange-50" },
       { title: "Completed", value: String(completed), icon: CheckCircle, color: "text-green-600", bgColor: "bg-green-50" },
-      { title: "Documents", value: "—", icon: FileText, color: "text-purple-600", bgColor: "bg-purple-50" }, // unknown from API
+      { title: "Not Started", value: String(notStarted), icon: PauseCircle, color: "text-gray-600", bgColor: "bg-gray-50" },
     ];
-  }, [items, data]); // added
-
-  // map API items to card-friendly shape
-  const cards = useMemo(() => {
-    const toBadge = (s: string) =>
-      s === "COMPLETED"
-        ? "bg-green-100 text-green-800"
-        : s === "IN_PROGRESS"
-          ? "bg-orange-100 text-orange-800"
-          : "bg-gray-100 text-gray-800";
-    const toLabel = (s: string) =>
-      s === "COMPLETED" ? "Completed" : s === "IN_PROGRESS" ? "In Progress" : "Not Started";
-    const toButton = (s: string) =>
-      s === "COMPLETED" ? { text: "View Details", variant: "outline" as const } : { text: "Continue", variant: "default" as const };
-
-    return items.map((p) => ({
-      id: p.userProcedureId,
-      title: p.procedureTitle,
-      department: "", // not provided by API
-      status: toLabel(p.status),
-      statusRaw: p.status,
-      progress: Math.max(0, Math.min(100, Number(p.percent ?? 0))),
-      statusColor: toBadge(p.status),
-      ...toButton(p.status),
-    }));
-  }, [items]); // added
+  }, []);
 
   return (
     <main className="min-h-screen bg-gray-50 p-6">
@@ -91,7 +90,9 @@ export default function WorkspacePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-neutral mb-1">{stat.title}</p>
-                    <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      {stat.value}
+                    </p>
                   </div>
                   <div className={`p-3 rounded-lg ${stat.bgColor} transition-transform duration-200 hover:scale-110`}>
                     <stat.icon className={`w-6 h-6 ${stat.color}`} />
@@ -134,13 +135,9 @@ export default function WorkspacePage() {
           </div>
         </div>
 
-        {/* Status messages */}
-        {isLoading && <div className="text-sm text-gray-600 mb-4">Loading your procedures...</div>}
-        {!isLoading && isError && <div className="text-sm text-red-600 mb-4">Failed to load procedures.</div>}
-
         {/* Procedure Cards */}
         <div className="space-y-4">
-          {!isLoading && !isError && cards.map((procedure, index) => (
+          {procedures.map((procedure, index) => (
             <Card
               key={procedure.id}
               className="border-0 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 bg-white"
@@ -156,7 +153,7 @@ export default function WorkspacePage() {
                       <h3 className="font-semibold text-lg text-gray-900 mb-1 hover:text-[#3A6A8D] transition-colors duration-200">
                         {procedure.title}
                       </h3>
-                      {procedure.department && <p className="text-gray-600 text-sm">{procedure.department}</p>}
+                      <p className="text-gray-600 text-sm">{procedure.department}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -164,14 +161,16 @@ export default function WorkspacePage() {
                       {procedure.status}
                     </Badge>
                     <Button
-                      variant={procedure.variant}
+                      variant={procedure.buttonVariant}
                       size="sm"
-                      className={procedure.variant === "default"
-                        ? "bg-[#3A6A8D] hover:bg-[#2d5470] text-white transition-all duration-200 hover:scale-105"
-                        : "transition-all duration-200"}
+                      className={
+                        procedure.buttonVariant === "default"
+                          ? "bg-[#3A6A8D] hover:bg-[#2d5470] text-white transition-all duration-200 hover:scale-105"
+                          : "transition-all duration-200"
+                      }
                       onClick={() => router.push("/user/checklist")}
                     >
-                      {procedure.text}
+                      {procedure.buttonText}
                     </Button>
                   </div>
                 </div>
@@ -184,27 +183,74 @@ export default function WorkspacePage() {
                   <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                     <div
                       className={`h-2 rounded-full transition-all duration-1000 ease-out ${
-                        procedure.statusRaw === "COMPLETED"
+                        procedure.status === "Completed"
                           ? "bg-[#5E9C8D]"
-                          : procedure.statusRaw === "IN_PROGRESS"
+                          : procedure.status === "In Progress"
                             ? "bg-[#FEF9C3]"
                             : "bg-gray-300"
                       }`}
-                      style={{ width: `${procedure.progress}%`, animationDelay: `${index * 200 + 500}ms` }}
+                      style={{
+                        width: `${procedure.progress}%`,
+                        animationDelay: `${index * 200 + 500}ms`,
+                      }}
                     />
                   </div>
                 </div>
 
-                {/* Procedure Details (placeholder fields not in API kept guarded) */}
+                {/* Procedure Details */}
                 <div className="flex items-center gap-6 text-sm text-gray-600">
-                  {/* ...existing optional meta fields if available... */}
+                  {procedure.startDate && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      <span>Started: {procedure.startDate}</span>
+                    </div>
+                  )}
+                  {procedure.completedDate && (
+                    <div className="flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Completed: {procedure.completedDate}</span>
+                    </div>
+                  )}
+                  {procedure.addedDate && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      <span>Added: {procedure.addedDate}</span>
+                    </div>
+                  )}
+                  {procedure.estimatedCompletion && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      <span>Est. completion: {procedure.estimatedCompletion}</span>
+                    </div>
+                  )}
+                  {procedure.documentsUploaded && (
+                    <div className="flex items-center gap-1">
+                      <FileText className="w-4 h-4" />
+                      <span>{procedure.documentsUploaded}</span>
+                    </div>
+                  )}
+                  {procedure.requirements && (
+                    <div className="flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>{procedure.requirements}</span>
+                    </div>
+                  )}
+                  {procedure.readyToStart && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{procedure.readyToStart}</span>
+                    </div>
+                  )}
+                  {procedure.documentsRequired && (
+                    <div className="flex items-center gap-1">
+                      <FileText className="w-4 h-4" />
+                      <span>{procedure.documentsRequired}</span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           ))}
-          {!isLoading && !isError && cards.length === 0 && (
-            <div className="text-sm text-gray-600">No procedures yet.</div>
-          )}
         </div>
       </div>
     </main>

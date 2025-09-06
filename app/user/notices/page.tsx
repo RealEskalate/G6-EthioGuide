@@ -4,10 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, FileText, Search } from "lucide-react";
 import { useGetNoticesQuery } from "@/app/store/slices/noticesSlice";
-import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 
 type Notice = {
@@ -20,12 +18,9 @@ type Notice = {
 };
 
 export default function NoticesPage() {
-  const [organization, setOrganization] = useState("all");
   const [expandedMap, setExpandedMap] = useState<Record<string | number, boolean>>({});
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-
-  const router = useRouter();
 
   const { data: apiNotices, isLoading: noticesLoading, isError: noticesError } =
     useGetNoticesQuery({ page: 1, limit: 10 });
@@ -36,20 +31,8 @@ export default function NoticesPage() {
 
   const notices = apiNotices?.data ?? [];
 
-  const organizations = useMemo(() => {
-    const set = new Set<string>();
-    notices.forEach((n: Notice) => {
-      if (n.organization_id) set.add(n.organization_id);
-    });
-    return Array.from(set);
-  }, [notices]);
-
   const filteredNotices = useMemo(() => {
-    const base =
-      organization === "all"
-        ? notices
-        : notices.filter((n: Notice) => n.organization_id === organization);
-
+    const base = notices;
     const q = searchQuery.trim().toLowerCase();
     if (!q) return base;
 
@@ -60,14 +43,13 @@ export default function NoticesPage() {
       const haystack = [
         n.title,
         n.content,
-        n.organization_id ?? "",
         ...(Array.isArray(n.tags) ? n.tags : []),
       ]
         .join(" ")
         .toLowerCase();
       return terms.every((t) => haystack.includes(t));
     });
-  }, [organization, notices, searchQuery]);
+  }, [notices, searchQuery]);
 
   const prefersReducedMotion = useReducedMotion();
 
@@ -155,21 +137,6 @@ export default function NoticesPage() {
               Search
             </Button>
           </div>
-          <div className="flex gap-2 flex-none w-full sm:w-64">
-            <Select value={organization} onValueChange={setOrganization}>
-              <SelectTrigger className="w-full border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent">
-                <SelectValue placeholder="All Organizations" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Organizations</SelectItem>
-                {organizations.map((org) => (
-                  <SelectItem key={org} value={org}>
-                    {org}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
       </Card>
 
@@ -207,12 +174,6 @@ export default function NoticesPage() {
                         <Calendar className="w-4 h-4" />
                         <span>Published on {formatPublished(notice.created_at)}</span>
                       </div>
-                      {notice.organization_id && (
-                        <span>
-                          Organization:{" "}
-                          <span className="font-semibold text-gray-700">{notice.organization_id}</span>
-                        </span>
-                      )}
                     </div>
 
                     <div className="flex justify-end pt-2">
@@ -247,5 +208,3 @@ export default function NoticesPage() {
     </motion.div>
   );
 }
-
-

@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { Suspense, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { useGetProcedureFlexibleQuery } from "@/app/store/slices/proceduresApi"
 import {
   ArrowLeft,
@@ -28,6 +28,7 @@ import { useListDiscussionsQuery } from "@/app/store/slices/discussionsApi"
 
 function ProcedureDetailInner() {
   const search = useSearchParams()
+  const router = useRouter()
   const id = search.get("id") || ""
   
   const { data: procedure, isLoading, isError } = useGetProcedureFlexibleQuery(id, { skip: !id })
@@ -155,6 +156,9 @@ function ProcedureDetailInner() {
                 >
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
+                </Button>
+                <Button className="bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] hover:from-[#2e4d57] hover:to-[#1c3b2e] text-white transition-all duration-300 hover:scale-105 rounded-xl py-2.5 sm:py-3 font-medium text-sm" onClick={() => router.push("/user/workspace")}>
+                  Save to my workspace
                 </Button>
               </div>
             </div>

@@ -27,17 +27,17 @@ const stats = [
       </div>
     ),
   },
+  // {
+  //   data: 23,
+  //   description: "Pending Feedback",
+  //   icon: (
+  //     <div className="bg-gray-100 p-3 rounded-2xl ">
+  //       <MdOutlineFeedback className="w-6 h-6 text-[#1C3B2E] mb-2" />
+  //     </div>
+  //   ),
+  // },
   {
-    data: 23,
-    description: "Pending Feedback",
-    icon: (
-      <div className="bg-gray-100 p-3 rounded-2xl ">
-        <MdOutlineFeedback className="w-6 h-6 text-[#1C3B2E] mb-2" />
-      </div>
-    ),
-  },
-  {
-    data: 1284,
+    data: 44,
     description: "User Interactions",
     icon: (
       <div className="bg-gray-100 p-3 rounded-2xl ">

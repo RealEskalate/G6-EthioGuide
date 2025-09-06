@@ -37,6 +37,14 @@ export const postChatApi = apiSlice.injectEndpoints({
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         };
       },
+      async onQueryStarted(_arg, { queryFulfilled }) {
+        try {
+          const res = await queryFulfilled;
+          console.log("postChat response:", res.data);
+        } catch (err) {
+          console.error("postChat error:", err);
+        }
+      },
     }),
   }),
   overrideExisting: false,
