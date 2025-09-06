@@ -46,7 +46,7 @@ void main() {
   const tTokensModel = TokensModel(accessToken: 'abc', refreshToken: 'xyz');
   const tLoginIdentifier = 'test@test.com';
   const tLoginPassword = 'password';
-  const tGoogleIdToken = 'google_id_token_string';
+  const tGoogleIdToken = 'google_auth_code_string';
 
   // Helper function to keep tests DRY (Don't Repeat Yourself)
   void runTestsOnline(Function body) {
@@ -69,7 +69,7 @@ void main() {
       test('should return user and save tokens on successful Google sign-in', () async {
         // Arrange
         // 1. Mock the local data source to return a fake Google token
-        when(mockLocalDataSource.getGoogleAuthToken()).thenAnswer((_) async => tGoogleIdToken);
+        when(mockLocalDataSource.getGoogleServerAuthCode()).thenAnswer((_) async => tGoogleIdToken);
         // 2. Mock the remote data source to return a user and app tokens
         when(mockRemoteDataSource.signInWithGoogle(any))
             .thenAnswer((_) async => (tUserModel, tTokensModel));
@@ -79,7 +79,7 @@ void main() {
         
         // Assert
         expect(result, equals(const Right(tUserModel)));
-        verify(mockLocalDataSource.getGoogleAuthToken());
+        verify(mockLocalDataSource.getGoogleServerAuthCode());
         verify(mockRemoteDataSource.signInWithGoogle(tGoogleIdToken));
         verify(mockSecureStorage.write(key: anyNamed('key'), value: tTokensModel.accessToken));
         verify(mockSecureStorage.write(key: anyNamed('key'), value: tTokensModel.refreshToken));
@@ -87,7 +87,7 @@ void main() {
 
       test('should return CacheFailure when local data source throws CacheException', () async {
         // Arrange
-        when(mockLocalDataSource.getGoogleAuthToken()).thenThrow(CacheException(message: 'Cancelled'));
+        when(mockLocalDataSource.getGoogleServerAuthCode()).thenThrow(CacheException(message: 'Cancelled'));
         
         // Act
         final result = await repository.signInWithGoogle();

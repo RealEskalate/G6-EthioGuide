@@ -326,7 +326,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.0"
-
   flutter_localization:
     dependency: "direct main"
     description:
@@ -340,7 +339,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-
   flutter_secure_storage:
     dependency: "direct main"
     description:
@@ -389,7 +387,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
-
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -521,7 +518,7 @@ packages:
     source: hosted
     version: "3.0.1"
   intl:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: intl
       sha256: "3df61194eb431efc39c4ceba583b95633a403f46c9fd341e550ce0bfa50e9aa5"
@@ -680,7 +677,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.1"
-
   path_provider:
     dependency: transitive
     description:
@@ -705,7 +701,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.2"
-
   path_provider_linux:
     dependency: transitive
     description:
@@ -1055,7 +1050,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.1"
-
   win32:
     dependency: transitive
     description:
@@ -1064,7 +1058,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.14.0"
-
   xdg_directories:
     dependency: transitive
     description:
