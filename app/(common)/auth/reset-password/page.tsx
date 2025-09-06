@@ -23,7 +23,7 @@ import Image from "next/image";
 
 export default function ResetPasswordPage() {
   const { t, i18n } = useTranslation("auth");
-
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
@@ -34,7 +34,7 @@ export default function ResetPasswordPage() {
   const onSubmit = async (data: ResetPasswordFormData) => {
     try {
       // Placeholder: Replace with your backend API call
-      const response = await fetch("/api/auth/reset-password", {
+      const response = await fetch(`${API_URL}/auth/forgot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
