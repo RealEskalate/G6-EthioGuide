@@ -42,42 +42,82 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 
 	category, err := u.LLMService.GenerateCompletion(ctx, classifierPrompt)
 	if err != nil {
-		return &domain.AIChat{}, err
+		return &domain.AIChat{
+			UserID:   userId,
+			Source:   "unofficial",
+			Request:  query,
+			Response: err.Error(),
+		}, err
 	}
 	switch category {
 	case "offensive":
-		return &domain.AIChat{}, errors.New("your query contains offensive content and cannot be processed")
+		return &domain.AIChat{
+			UserID:   userId,
+			Source:   "unofficial",
+			Request:  query,
+			Response: "The request is offensive!!",
+		}, errors.New("your query contains offensive content and cannot be processed")
 
 	case "irrelevant":
-		return &domain.AIChat{}, nil
+		return &domain.AIChat{
+			UserID:   userId,
+			Source:   "unofficial",
+			Request:  query,
+			Response: "The request is irrelevant to this application!!",
+		}, nil
 	}
 
 	// detect the language
 	prompt := fmt.Sprintf("I want you to identify the language of this promt %s and i want to give me the only the language in small later like if it is Amharic give me amharic. and if you do not know the language just give me only  a word 'unknown'.", query)
 	orglang, err := u.LLMService.GenerateCompletion(ctx, prompt)
 	if err != nil {
-		return &domain.AIChat{}, err
+		return &domain.AIChat{
+			UserID:   userId,
+			Source:   "unofficial",
+			Request:  query,
+			Response: err.Error(),
+		}, err
 	}
 	if orglang == "unknown" {
-		return &domain.AIChat{}, domain.ErrUnsupportedLanguage
+		return &domain.AIChat{
+			UserID:   userId,
+			Source:   "unofficial",
+			Request:  query,
+			Response: "This is unknown language",
+		}, domain.ErrUnsupportedLanguage
 	} else if orglang != "english" {
 		prompt := fmt.Sprintf("translate this query %s in to English lanuage. And i do not want you to add another thing by yourself", query)
 		query, err = u.LLMService.GenerateCompletion(ctx, prompt)
 		if err != nil {
-			return &domain.AIChat{}, domain.ErrUnsupportedLanguage
+			return &domain.AIChat{
+				UserID:   userId,
+				Source:   "Couldn't translate the request",
+				Request:  query,
+				Response: err.Error(),
+			}, domain.ErrUnsupportedLanguage
 		}
 	}
 
 	// 1. embed query
 	vec, err := u.EmbedService.GenerateEmbedding(ctx, query)
 	if err != nil {
-		return &domain.AIChat{}, err
+		return &domain.AIChat{
+			UserID:   userId,
+			Source:   "unofficial",
+			Request:  query,
+			Response: err.Error(),
+		}, err
 	}
 
 	// 2. vector search
 	docs, err := u.ProcedureRepo.SearchByEmbedding(ctx, vec, 3)
 	if err != nil {
-		return &domain.AIChat{}, err
+		return &domain.AIChat{
+			UserID:   userId,
+			Source:   "unofficial",
+			Request:  query,
+			Response: err.Error(),
+		}, err
 	}
 
 	// 3. call LLM
@@ -101,7 +141,12 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 
 	answer, err := u.LLMService.GenerateCompletion(ctx, prompt)
 	if err != nil {
-		return &domain.AIChat{}, err
+		return &domain.AIChat{
+			UserID:   userId,
+			Source:   "unofficial",
+			Request:  query,
+			Response: err.Error(),
+		}, err
 	}
 	source := "unofficial"
 	if len(docs) > 0 {
@@ -116,7 +161,12 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 		`, orglang, answer)
 		answer, err = u.LLMService.GenerateCompletion(ctx, prompt)
 		if err != nil {
-			return &domain.AIChat{}, err
+			return &domain.AIChat{
+				UserID:   userId,
+				Source:   "unofficial",
+				Request:  query,
+				Response: err.Error(),
+			}, err
 		}
 	}
 
