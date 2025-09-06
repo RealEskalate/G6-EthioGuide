@@ -41,7 +41,7 @@ func SetupRouter(
 			"https://your-production-site.com",
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Client-Type"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Client-Type", "lang"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
