@@ -3,8 +3,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import { apiSlice } from "./slices/workspaceSlice";
 import userReducer from './slices/userSlice';
 import { historyApi } from "./slices/historySlice";
-import { discussionsListApi } from "./slices/discussionsGetSlice"; // added
-// i18n bootstrap (prevents "NO_I18NEXT_INSTANCE" warnings app-wide)
+import { discussionsListApi } from "./slices/discussionsGetSlice"; 
+import aiChatReducer from './slices/aiChatSlice';
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
@@ -20,6 +20,7 @@ if (!i18n.isInitialized) {
 export const store = configureStore({
   reducer: {
     user: userReducer,
+    aiChat: aiChatReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
     [historyApi.reducerPath]: historyApi.reducer,
     [discussionsListApi.reducerPath]: discussionsListApi.reducer, // added
