@@ -22,6 +22,7 @@ func NewAIChatController(usecase domain.IAIChatUsecase) *AIChatController {
 // @Accept       json
 // @Produce      json
 // @Param        Authorization header string true "Bearer token"
+// @Param        Authorization header string true "Bearer token"
 // @Param        request body AIChatRequest  true "Prompt"
 // @Success      200 {object} AIConversationResponse  "Response"
 // @Failure      400 {string}  "Invalid request"
@@ -55,6 +56,7 @@ func (c *AIChatController) AIChatController(ctx *gin.Context) {
 // @Tags         AI
 // @Accept       json
 // @Produce      json
+// @Param        Authorization header string true "Bearer token"
 // @Param        page  query     int     false  "Page number (default 1)"
 // @Param        limit query     int     false  "Results per page (default 10)"
 // @Success      200   {object}  PaginatedAIHisoryResponse

@@ -46,6 +46,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Prompt",
                         "name": "request",
                         "in": "body",
@@ -97,6 +104,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get Paginated ai chat history",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "Page number (default 1)",

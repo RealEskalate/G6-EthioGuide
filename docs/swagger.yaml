@@ -914,6 +914,11 @@ paths:
         name: Authorization
         required: true
         type: string
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Prompt
         in: body
         name: request
@@ -948,6 +953,11 @@ paths:
       - application/json
       description: Get Paginated ai chat history
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: Page number (default 1)
         in: query
         name: page
