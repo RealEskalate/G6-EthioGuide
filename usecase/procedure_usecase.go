@@ -7,14 +7,16 @@ import (
 )
 
 type ProcedureUsecase struct {
-	procedureRepo  domain.IProcedureRepository
-	contextTimeout time.Duration
+	procedureRepo    domain.IProcedureRepository
+	embeddingService domain.IEmbeddingService
+	contextTimeout   time.Duration
 }
 
-func NewProcedureUsecase(pr domain.IProcedureRepository, timeout time.Duration) domain.IProcedureUsecase {
+func NewProcedureUsecase(pr domain.IProcedureRepository, es domain.IEmbeddingService, timeout time.Duration) domain.IProcedureUsecase {
 	return &ProcedureUsecase{
-		procedureRepo:  pr,
-		contextTimeout: timeout,
+		procedureRepo:    pr,
+		embeddingService: es,
+		contextTimeout:   timeout,
 	}
 }
 
@@ -23,6 +25,11 @@ func (pu *ProcedureUsecase) CreateProcedure(c context.Context, procedure *domain
 	defer cancel()
 
 	procedure.OrganizationID = userId
+	embedding, err := pu.embeddingService.GenerateEmbedding(c, procedure.ToString())
+	if err != nil {
+		return err
+	}
+	procedure.Embedding = embedding
 	return pu.procedureRepo.Create(ctx, procedure)
 }
 
@@ -51,6 +58,12 @@ func (pu *ProcedureUsecase) UpdateProcedure(ctx context.Context, id string, proc
 	default:
 		return domain.ErrPermissionDenied
 	}
+
+	embedding, err := pu.embeddingService.GenerateEmbedding(ctx, procedure.ToString())
+	if err != nil {
+		return err
+	}
+	procedure.Embedding = embedding
 
 	// 3. Update the procedure.
 	err = pu.procedureRepo.Update(ctx, id, procedure)

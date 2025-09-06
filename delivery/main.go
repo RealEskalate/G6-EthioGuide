@@ -106,7 +106,7 @@ func main() {
 		emailservice,
 		cfg.UsecaseTimeout,
 	)
-	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, cfg.UsecaseTimeout)
+	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, embeddingService, cfg.UsecaseTimeout)
 	catagoryUsecase := usecase.NewCategoryUsecase(catagoryRepo, cfg.UsecaseTimeout)
 	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
 	feedbackUsecase := usecase.NewFeedbackUsecase(feedbackRepo, procedureRepo, cfg.UsecaseTimeout)

@@ -78,6 +78,7 @@ func (pm *ProcedureModel) ToDomain() *domain.Procedure {
 			MaxDays: pm.ProcessingTime.MaxDays,
 		},
 		CreatedAt: pm.CreatedAt,
+		Embedding: pm.Embedding,
 		NoticeIDs: noticeIDs,
 	}
 }
@@ -122,6 +123,7 @@ func ToDTO(proc *domain.Procedure) *ProcedureModel {
 			MaxDays: proc.ProcessingTime.MaxDays,
 		},
 		CreatedAt: proc.CreatedAt,
+		Embedding: proc.Embedding,
 		NoticeIDs: noticeIDs,
 	}
 }
@@ -143,6 +145,7 @@ func ToUpdateBSON(proc *domain.Procedure) bson.M {
 			MinDays: proc.ProcessingTime.MinDays,
 			MaxDays: proc.ProcessingTime.MaxDays,
 		},
+		"embedding": proc.Embedding,
 	}
 
 	// Handle optional GroupID
