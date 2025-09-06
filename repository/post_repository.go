@@ -62,6 +62,7 @@ func (r *IPostRepository) CreatePost(ctx context.Context, post *domain.Post) (*d
 	var pm PostModel
 	_ = r.collection.FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&pm)
 	Newpost := &domain.Post{
+		ID:         pm.ID.Hex(),
 		UserID:     pm.UserID.Hex(),
 		Title:      pm.Title,
 		Content:    pm.Content,

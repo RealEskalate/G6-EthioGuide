@@ -99,6 +99,7 @@ func main() {
 	// FIX 2: Pass all the required dependencies to the NewUserUsecase constructor.
 	userUsecase := usecase.NewUserUsecase(
 		userRepo,
+		preferencesRepo,
 		tokenRepo, // Added the missing token repository
 		passwordService,
 		jwtService,

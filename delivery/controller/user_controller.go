@@ -571,9 +571,8 @@ func (ctrl *UserController) HandleUpdateOrgs(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "organization updated successfully"})
 }
 
-
 // @Summary      Search
-// @Description  Application wide search. 
+// @Description  Application wide search.
 // @Tags         Search
 // @Accept       json
 // @Produce      json
@@ -633,7 +632,7 @@ func (ctrl *UserController) HandleCreateChecklist(c *gin.Context) {
 		return
 	}
 
-	user_id, err := c.Get("user_id")
+	user_id, err := c.Get("userId")
 	if !err {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "you are logged out, try to log in again"})
 		return
@@ -660,7 +659,7 @@ func (ctrl *UserController) HandleCreateChecklist(c *gin.Context) {
 // @Failure      500 {string}  "Server error"
 // @Router       /checklists/myProcedures [get]
 func (ctrl *UserController) HandleGetProcedures(c *gin.Context) {
-	user_id, err := c.Get("user_id")
+	user_id, err := c.Get("userId")
 	if !err {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "you are logged out, try to log in again"})
 		return
