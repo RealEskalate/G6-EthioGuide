@@ -1,22 +1,14 @@
-// store/store.ts
 import { configureStore } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/query";
 import { apiSlice } from "./slices/workspaceSlice";
 import userReducer from "./slices/userSlice";
 import { historyApi } from "./slices/historySlice";
-import { discussionsListApi } from "./slices/discussionsGetSlice"; 
-import aiChatReducer from './slices/aiChatSlice';
-import i18n from "i18next";
-import { initReactI18next } from "react-i18next";
-import { noticesApi } from "./slices/noticesSlice"; // added
-
-if (!i18n.isInitialized) {
-  i18n.use(initReactI18next).init({
-    resources: {},
-    lng: "en",
-    fallbackLng: "en",
-    interpolation: { escapeValue: false },
-  });
-}
+import { discussionsListApi } from "./slices/discussionsGetSlice";
+import aiChatReducer from "./slices/aiChatSlice";
+import { noticesApi } from "./slices/noticesSlice";
+import { feedbackApi } from "./slices/feedbackApi";
+import { proceduresApi } from "./slices/proceduresApi";
+import { discussionsApi } from "./slices/discussionsApi";
 
 export const store = configureStore({
   reducer: {
@@ -25,17 +17,25 @@ export const store = configureStore({
     [apiSlice.reducerPath]: apiSlice.reducer,
     [historyApi.reducerPath]: historyApi.reducer,
     [discussionsListApi.reducerPath]: discussionsListApi.reducer,
-    [noticesApi.reducerPath]: noticesApi.reducer, // added
+    [noticesApi.reducerPath]: noticesApi.reducer,
+    [feedbackApi.reducerPath]: feedbackApi.reducer,
+    [proceduresApi.reducerPath]: proceduresApi.reducer,
+    [discussionsApi.reducerPath]: discussionsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
       apiSlice.middleware,
       historyApi.middleware,
       discussionsListApi.middleware,
-      noticesApi.middleware // added
+      noticesApi.middleware,
+      feedbackApi.middleware,
+      proceduresApi.middleware,
+      discussionsApi.middleware
     ),
   devTools: true,
 });
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+
+setupListeners(store.dispatch);

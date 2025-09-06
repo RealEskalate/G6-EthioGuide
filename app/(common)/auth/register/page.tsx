@@ -41,47 +41,33 @@ export default function RegisterPage() {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    console.log("Form submitted:", data);
     try {
-      // Step 1: Register with backend
-      const registerResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: data.fullName,
-            username: data.username,
-            email: data.email,
-            password: data.password,
-          }),
-        }
-      );
+      const base = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
+      const registerResponse = await fetch(`${base}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.fullName,
+          username: data.username,
+          email: data.email,
+          password: data.password,
+        }),
+      })
 
-      const registerResult = await registerResponse.json();
-      console.log("Register response:", {
-        status: registerResponse.status,
-        result: registerResult,
-      });
-
+      const registerResult: unknown = await registerResponse.json().catch(() => ({}))
       if (!registerResponse.ok) {
-        throw new Error(registerResult.message || t("register.error"));
+        const msg = (registerResult && typeof registerResult === 'object' && registerResult !== null && ('message' in registerResult || 'error' in registerResult))
+          ? (String((registerResult as { message?: string; error?: string }).message || (registerResult as { error?: string }).error))
+          : t('register.error')
+        throw new Error(msg)
       }
 
-      // --- NEW: Redirect on successful registration ---
-      router.push("/auth/check-email"); // Redirect to the new page
-      // --- END NEW ---
-
+      router.push('/auth/check-email')
     } catch (err) {
-      console.error("Registration error:", err);
-      form.setError("root", {
-        message:
-          typeof err === "object" && err !== null && "message" in err
-            ? (err as { message?: string }).message || t("register.error")
-            : t("register.error"),
-      });
+      const message = (err instanceof Error && err.message) ? err.message : t('register.error')
+      form.setError('root', { message })
     }
-  };
+  }
 
   return (
     <div className="bg-neutral-light text-foreground flex flex-col items-center p-4 font-sans min-h-full">
@@ -99,34 +85,34 @@ export default function RegisterPage() {
         <CardHeader>
           <div className="flex flex-col items-center space-y-4">
             <div className="flex justify-center items-center w-full">
-              <CardTitle className="text-2xl font-bold text-center font-amharic">
+              <CardTitle className="text-2xl sm:text-3xl font-bold text-center font-amharic bg-gradient-to-r from-[#2e4d57] to-[#1c3b2e] bg-clip-text text-transparent">
                 {t("register.title")}
               </CardTitle>
             </div>
           </div>
-          <p className="text-sm text-center text-neutral-dark ">
+          <p className="text-sm text-center text-[#2e4d57]/80 font-medium">
             {t("register.sub_title")}
           </p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 pb-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-amharic">
+                    <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
                       {t("register.full_name")}
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder={t("register.full_name_placeholder")}
-                        className="border-neutral focus:border-primary"
+                        className="border-2 border-[#a7b3b9]/50 focus:border-[#3a6a8d] focus:ring-2 focus:ring-[#3a6a8d]/20 rounded-xl h-12 bg-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-white/90"
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className="text-error" />
+                    <FormMessage className="text-red-500 text-xs" />
                   </FormItem>
                 )}
               />
@@ -135,17 +121,17 @@ export default function RegisterPage() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-amharic">
+                    <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
                       {t("register.username")}
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder={t("register.username_placeholder")}
-                        className="border-neutral focus:border-primary"
+                        className="border-2 border-[#a7b3b9]/50 focus:border-[#3a6a8d] focus:ring-2 focus:ring-[#3a6a8d]/20 rounded-xl h-12 bg-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-white/90"
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className="text-error" />
+                    <FormMessage className="text-red-500 text-xs" />
                   </FormItem>
                 )}
               />
@@ -154,18 +140,18 @@ export default function RegisterPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-amharic">
+                    <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
                       {t("register.email")}
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         placeholder={t("register.email_placeholder")}
-                        className="border-neutral focus:border-primary"
+                        className="border-2 border-[#a7b3b9]/50 focus:border-[#3a6a8d] focus:ring-2 focus:ring-[#3a6a8d]/20 rounded-xl h-12 bg-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-white/90"
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className="text-error" />
+                    <FormMessage className="text-red-500 text-xs" />
                   </FormItem>
                 )}
               />
@@ -174,17 +160,17 @@ export default function RegisterPage() {
                 name="phoneNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-amharic">
+                    <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
                       {t("register.phone_number")}
                     </FormLabel>
                     <FormControl>
                       <div className="flex">
-                        <span className="inline-flex items-center px-3 text-sm text-foreground bg-neutral/20 border border-r-0 border-neutral rounded-l-md">
+                        <span className="inline-flex items-center px-3 text-sm text-foreground bg-white/80 backdrop-blur-sm border-2 border-r-0 border-[#a7b3b9]/50 rounded-l-xl h-12">
                           +251
                         </span>
                         <Input
                           placeholder={t("register.phone_number_placeholder")}
-                          className="border-neutral focus:border-primary rounded-l-none"
+                          className="border-2 border-[#a7b3b9]/50 focus:border-[#3a6a8d] focus:ring-2 focus:ring-[#3a6a8d]/20 rounded-l-none rounded-r-xl h-12 bg-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-white/90"
                           {...field}
                           value={field.value?.replace(/^\+251/, "") || ""}
                           onChange={(e) =>
@@ -195,7 +181,7 @@ export default function RegisterPage() {
                         />
                       </div>
                     </FormControl>
-                    <FormMessage className="text-error" />
+                    <FormMessage className="text-red-500 text-xs" />
                   </FormItem>
                 )}
               />
@@ -204,7 +190,7 @@ export default function RegisterPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-amharic">
+                    <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
                       {t("register.password")}
                     </FormLabel>
                     <FormControl>
@@ -212,13 +198,13 @@ export default function RegisterPage() {
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder={t("register.password_placeholder")}
-                          className="border-neutral focus:border-primary pr-10"
+                          className="border-2 border-[#a7b3b9]/50 focus:border-[#3a6a8d] focus:ring-2 focus:ring-[#3a6a8d]/20 rounded-xl h-12 bg-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-white/90 pr-12"
                           {...field}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral hover:text-primary"
+                          className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#2e4d57] hover:text-[#3a6a8d] transition-colors duration-200"
                           aria-label={
                             showPassword ? "Hide password" : "Show password"
                           }
@@ -231,7 +217,7 @@ export default function RegisterPage() {
                         </button>
                       </div>
                     </FormControl>
-                    <FormMessage className="text-error" />
+                    <FormMessage className="text-red-500 text-xs" />
                   </FormItem>
                 )}
               />
@@ -240,25 +226,21 @@ export default function RegisterPage() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-amharic">
+                    <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
                       {t("register.confirm_password")}
                     </FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
-                          placeholder={t(
-                            "register.confirm_password_placeholder"
-                          )}
-                          className="border-neutral focus:border-primary pr-10"
+                          placeholder={t("register.confirm_password_placeholder")}
+                          className="border-2 border-[#a7b3b9]/50 focus:border-[#3a6a8d] focus:ring-2 focus:ring-[#3a6a8d]/20 rounded-xl h-12 bg-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-white/90 pr-12"
                           {...field}
                         />
                         <button
                           type="button"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral hover:text-primary"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#2e4d57] hover:text-[#3a6a8d] transition-colors duration-200"
                           aria-label={
                             showConfirmPassword
                               ? "Hide confirm password"
@@ -273,20 +255,21 @@ export default function RegisterPage() {
                         </button>
                       </div>
                     </FormControl>
-                    <FormMessage className="text-error" />
+                    <FormMessage className="text-red-500 text-xs" />
                   </FormItem>
                 )}
               />
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-primary to-primary-dark text-white hover:from-primary/90 hover:to-primary-dark/90 focus:ring-4 focus:ring-primary/50 rounded-md"
+                className="w-full h-12 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:ring-4 focus:ring-[#3a6a8d]/30"
+                style={{ background: `linear-gradient(135deg, #3a6a8d 0%, #2e4d57 50%, #1c3b2e 100%)` }}
               >
                 {t("register.create_account")}
               </Button>
               <div className="flex items-center justify-center my-4">
-                <div className="border-t border-neutral flex-grow"></div>
-                <span className="px-4 text-neutral-dark text-sm">or</span>
-                <div className="border-t border-neutral flex-grow"></div>
+                <div className="border-t border-[#a7b3b9] flex-grow"></div>
+                <span className="px-4 text-[#2e4d57]/80 text-sm">or</span>
+                <div className="border-t border-[#a7b3b9] flex-grow"></div>
               </div>
               <Button
                 variant="outline"
@@ -300,9 +283,9 @@ export default function RegisterPage() {
               </Button>
             </form>
           </Form>
-          <p className="mt-4 text-sm text-center text-neutral-dark">
+          <p className="mt-6 text-sm text-center text-[#2e4d57]/80">
             {t("register.have_account")}{" "}
-            <Link href="/auth/login" className="text-primary hover:underline">
+            <Link href="/auth/login" className="text-[#3a6a8d] hover:text-[#2e4d57] font-semibold transition-colors duration-200 hover:underline">
               {t("register.login_link")}
             </Link>
           </p>

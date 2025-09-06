@@ -6,8 +6,7 @@ import i18next from '@/lib/i18n/i18n';
 import { store } from '@/app/store/store';
 import { Provider } from "react-redux";
 import { ReactNode } from 'react';
-import { Toaster } from "react-hot-toast"; // added
-
+import { Toaster } from "@/components/ui/sonner";
 
 interface ProvidersProps {
   children: ReactNode;
@@ -18,11 +17,7 @@ export function Providers({ children }: ProvidersProps) {
 
     <SessionProvider>
       <I18nextProvider i18n={i18next}>
-        <Provider store={store}>
-          {children}
-          {/* global toaster */}
-          <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
-        </Provider>
+  <Provider store={store}>{children}<Toaster /></Provider>
       </I18nextProvider>
     </SessionProvider>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,8 @@ import { usePathname } from "next/navigation";
 
 export function Header() {
   const [language, setLanguage] = useState("EN");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const pathname = usePathname();
   const isAdmin = pathname.startsWith(`/admin`);
   const isOrg = pathname.startsWith(`/organization`);
@@ -39,35 +41,46 @@ export function Header() {
         {/* Right Section */}
         <div className="flex items-center gap-4">
           {/* Language Toggle */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              >
-                {language}
-                <ChevronDown className="w-4 h-4 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                className="hover:bg-gray-100 hover:text-gray-900"
-                onClick={() => setLanguage("EN")}
-              >
-                English
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="hover:bg-gray-100 hover:text-gray-900"
-                onClick={() => setLanguage("አማ")}
-              >
-                አማርኛ (Amharic)
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {mounted ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                >
+                  {language}
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  className="hover:bg-gray-100 hover:text-gray-900"
+                  onClick={() => setLanguage("EN")}
+                >
+                  English
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="hover:bg-gray-100 hover:text-gray-900"
+                  onClick={() => setLanguage("አማ")}
+                >
+                  አማርኛ (Amharic)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="ghost" size="sm" className="text-gray-600" aria-hidden>
+              {language}
+              <ChevronDown className="w-4 h-4 ml-1" />
+            </Button>
+          )}
 
           {/* Notifications */}
-          <NotificationDropdown />
+          {mounted ? <NotificationDropdown /> : (
+            <Button variant="ghost" size="sm" className="relative p-2 rounded-full" aria-hidden>
+              <Image src="/icons/notifications.svg" alt="Notifications" width={20} height={20} className="w-5 h-5" />
+            </Button>
+          )}
 
           {/* Profile */}
           <Button
