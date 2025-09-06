@@ -1,28 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-
-type Requirement = { text: string; optional?: boolean };
-type Step = { order: number; text: string };
-type Fee = { label: string; amount: number; currency: string };
-type ProcessingTime = { minDays?: number; maxDays?: number };
-
-type Procedure = {
-  title: string;
-  requirements: Requirement[];
-  steps: Step[];
-  fees: Fee[];
-  processingTime?: ProcessingTime;
-  // id?: string; // if you need it for API updates
-};
+import ProcedureProp, {
+  ProcessingTime,
+  Requirement,
+  Step,
+  Fee,
+} from "@/types/procedure";
 
 export default function EditProcedurePage({
   procedure,
 }: {
-  procedure: Procedure;
+  procedure: ProcedureProp;
 }) {
   const [title, setTitle] = useState<string>(procedure?.title ?? "");
   const [requirements, setRequirements] = useState<Requirement[]>(
@@ -31,8 +23,18 @@ export default function EditProcedurePage({
   const [steps, setSteps] = useState<Step[]>(procedure?.steps ?? []);
   const [fees, setFees] = useState<Fee[]>(procedure?.fees ?? []);
   const [processingTime, setProcessingTime] = useState<ProcessingTime>(
-    procedure?.processingTime ?? {}
+    procedure?.processingTime ?? { minDays: 0, maxDays: 0 }
   );
+
+  useEffect(() => {
+    if (procedure) {
+      setTitle(procedure.title ?? "");
+      setRequirements(procedure.requirements ?? []);
+      setSteps(procedure.steps ?? []);
+      setFees(procedure.fees ?? []);
+      setProcessingTime(procedure.processingTime ?? { minDays: 0, maxDays: 0 });
+    }
+  }, [procedure]);
 
   // -------- Requirements --------
   const addRequirement = () => {
@@ -101,7 +103,7 @@ export default function EditProcedurePage({
 
   // -------- Submit --------
   const handleSubmit = () => {
-    const payload: Procedure = {
+    const payload: ProcedureProp = {
       title,
       requirements,
       steps,
@@ -137,13 +139,13 @@ export default function EditProcedurePage({
               onChange={(e) => updateRequirement(i, "text", e.target.value)}
             />
             <label className="flex items-center gap-1 text-sm">
-              <input
+              {/* <input
                 type="checkbox"
                 checked={!!req.optional}
                 onChange={(e) =>
                   updateRequirement(i, "optional", e.target.checked)
                 }
-              />
+              /> */}
               Optional
             </label>
           </div>
@@ -210,22 +212,23 @@ export default function EditProcedurePage({
             type="number"
             min={0}
             placeholder="Min Days"
-            value={processingTime?.minDays ?? ""}
+            value={processingTime?.minDays ?? 0}
             onChange={(e) =>
               setProcessingTime((prev) => ({
-                ...(prev ?? {}),
                 minDays: Number(e.target.value),
+                maxDays: prev?.maxDays ?? 0,
               }))
             }
           />
+
           <Input
             type="number"
             min={0}
             placeholder="Max Days"
-            value={processingTime?.maxDays ?? ""}
+            value={processingTime?.maxDays ?? 0}
             onChange={(e) =>
               setProcessingTime((prev) => ({
-                ...(prev ?? {}),
+                minDays: prev?.minDays ?? 0,
                 maxDays: Number(e.target.value),
               }))
             }
