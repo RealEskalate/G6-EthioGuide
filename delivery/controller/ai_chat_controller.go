@@ -3,6 +3,7 @@ package controller
 import (
 	"EthioGuide/domain"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,5 +29,33 @@ func (c *AIChatController) AIChatController(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, AIChatResponse{Answer: answer})
+	ctx.JSON(http.StatusOK, ToAIChatResponse(answer))
+}
+
+func (c *AIChatController) AIChatHistoryController(ctx *gin.Context) {
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+
+	page, err := strconv.ParseInt(ctx.DefaultQuery("page", "1"), 10, 64)
+	if err != nil || page < 1 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid 'page' parameter"})
+		return
+	}
+
+	limit, err := strconv.ParseInt(ctx.DefaultQuery("limit", "10"), 10, 64)
+	if err != nil || limit < 1 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid 'limit' parameter"})
+		return
+	}
+
+	conversations, total, err := c.usecase.AIHistory(userID, page, limit)
+	if err != nil {
+		HandleError(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, toPaginatedAIHisory(conversations, total, page, limit))
 }
