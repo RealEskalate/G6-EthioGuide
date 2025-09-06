@@ -26,6 +26,7 @@ func SetupRouter(
 	PreferencesController *controller.PreferencesController,
 	aiChatController *controller.AIChatController,
 	authMiddleware gin.HandlerFunc,
+	translationMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
 	requireAdminRole gin.HandlerFunc,
 	requireAdminOrOrgRole gin.HandlerFunc,
@@ -46,6 +47,7 @@ func SetupRouter(
 		MaxAge:           12 * time.Hour,
 	}
 	router.Use(cors.New(config))
+	router.Use(translationMiddleware)
 
 	// Health check endpoint - always public
 	router.GET("/health", func(c *gin.Context) {
