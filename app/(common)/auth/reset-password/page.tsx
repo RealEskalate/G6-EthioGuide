@@ -58,22 +58,22 @@ export default function ResetPasswordPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 text-foreground flex flex-col items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-neutral-light text-foreground flex flex-col items-center justify-center px-4 py-8">
+      <div className="flex items-center justify-center gap-3 mb-2">
+        <Image
+          src="/images/ethioguide-symbol.png"
+          alt="EthioGuide Symbol"
+          width={70}
+          height={70}
+          priority
+        />
+        <span className="text-gray-900 font-semibold text-2xl">EthioGuide</span>
+      </div>
       <Card className="w-full max-w-md bg-white border border-gray-200 shadow-lg rounded-2xl overflow-hidden">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <Image
-              src="/images/ethioguide-symbol.png"
-              alt="EthioGuide Symbol"
-              width={40}
-              height={40}
-              priority
-            />
-            <span className="text-gray-900 font-semibold text-2xl">EthioGuide</span>
-          </div>
           <div className="flex flex-col items-center space-y-4">
             <div className="flex justify-center items-center w-full">
-              <CardTitle className="text-2xl sm:text-3xl font-bold text-center font-amharic bg-gradient-to-r from-[#2e4d57] to-[#1c3b2e] bg-clip-text text-transparent">
+              <CardTitle className="text-2xl sm:text-2xl font-bold text-center font-amharic bg-gradient-to-r from-[#2e4d57] to-[#1c3b2e] bg-clip-text text-transparent">
                 {t("reset_password.title")}
               </CardTitle>
             </div>
@@ -106,14 +106,16 @@ export default function ResetPasswordPage() {
                 )}
               />
               {form.formState.errors.root && (
-                <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
+                <p className="text-green-500 text-sm bg-green-50 p-3 rounded-lg border border-green-200">
                   {form.formState.errors.root.message}
                 </p>
               )}
               <Button
                 type="submit"
                 className="w-full h-12 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:ring-4 focus:ring-[#3a6a8d]/30"
-                style={{ background: `linear-gradient(135deg, #3a6a8d 0%, #2e4d57 50%, #1c3b2e 100%)` }}
+                style={{
+                  background: `linear-gradient(135deg, #3a6a8d 0%, #2e4d57 50%, #1c3b2e 100%)`,
+                }}
               >
                 {t("reset_password.submit")}
               </Button>
@@ -121,7 +123,10 @@ export default function ResetPasswordPage() {
           </Form>
           <p className="mt-6 text-sm text-center text-[#2e4d57]/80">
             {t("reset_password.back_to_login")}{" "}
-            <Link href="/auth/login" className="text-[#3a6a8d] hover:text-[#2e4d57] font-semibold transition-colors duration-200 hover:underline">
+            <Link
+              href="/auth/login"
+              className="text-[#3a6a8d] hover:text-[#2e4d57] font-semibold transition-colors duration-200 hover:underline"
+            >
               {t("reset_password.login_link")}
             </Link>
           </p>

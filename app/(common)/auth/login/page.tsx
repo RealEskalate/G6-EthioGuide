@@ -1,22 +1,29 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { useTranslation } from "react-i18next"
-import Link from "next/link"
-import { signIn } from "next-auth/react"
-import { FaEye, FaEyeSlash } from "react-icons/fa"
-import { loginSchema, type LoginFormData } from "@/lib/validation/login"
-import { useState } from "react"
-import Image from "next/image"
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useTranslation } from "react-i18next";
+import Link from "next/link";
+import { signIn } from "next-auth/react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { loginSchema, type LoginFormData } from "@/lib/validation/login";
+import { useState } from "react";
+import Image from "next/image";
 
 export default function LoginPage() {
-  const { t } = useTranslation("auth")
-  const [showPassword, setShowPassword] = useState(false)
+  const { t } = useTranslation("auth");
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -24,7 +31,7 @@ export default function LoginPage() {
       identifier: "",
       password: "",
     },
-  })
+  });
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -33,31 +40,31 @@ export default function LoginPage() {
         identifier: data.identifier,
         password: data.password,
         callbackUrl: "/",
-      })
+      });
       if (result?.error) {
-        form.setError("root", { message: t("login.error") })
+        form.setError("root", { message: t("login.error") });
       } else if (result?.url) {
-        window.location.href = result.url
+        window.location.href = result.url;
       }
     } catch {
-      form.setError("root", { message: t("new_password.error") })
+      form.setError("root", { message: t("new_password.error") });
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-8">
+    <div className="bg-neutral-light text-foreground flex flex-col items-center p-5 font-sans min-h-full">
+      <div className="flex items-center gap-3">
+        <Image
+          src="/images/ethioguide-symbol.png"
+          alt="EthioGuide Symbol"
+          width={50}
+          height={50}
+          priority
+        />
+        <span className="text-gray-800 font-semibold text-3xl">EthioGuide</span>
+      </div>
       <Card className="w-full max-w-md bg-white border border-gray-200 shadow-lg rounded-2xl overflow-hidden">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <Image
-              src="/images/ethioguide-symbol.png"
-              alt="EthioGuide Symbol"
-              width={40}
-              height={40}
-              priority
-            />
-            <span className="text-gray-900 font-semibold text-2xl">EthioGuide</span>
-          </div>
           <div className="flex flex-col items-center space-y-3">
             <div className="flex justify-center items-center w-full">
               <CardTitle className="text-2xl sm:text-3xl font-bold text-center font-amharic bg-gradient-to-r from-[#2e4d57] to-[#1c3b2e] bg-clip-text text-transparent">
@@ -65,7 +72,9 @@ export default function LoginPage() {
               </CardTitle>
             </div>
           </div>
-          <p className="text-sm text-center text-[#2e4d57]/80 font-medium">{t("register.sub_title")}</p>
+          <p className="text-sm text-center text-[#2e4d57]/80 font-medium">
+            {t("register.sub_title")}
+          </p>
         </CardHeader>
 
         <CardContent className="px-6 pb-6">
@@ -76,7 +85,9 @@ export default function LoginPage() {
                 name="identifier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-amharic text-[#2e4d57] font-semibold">{t("login.identifier")}</FormLabel>
+                    <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
+                      {t("login.identifier")}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder={t("login.identifier_placeholder")}
@@ -94,7 +105,9 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-amharic text-[#2e4d57] font-semibold">{t("login.password")}</FormLabel>
+                    <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
+                      {t("login.password")}
+                    </FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
@@ -107,9 +120,15 @@ export default function LoginPage() {
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#2e4d57] hover:text-[#3a6a8d] transition-colors duration-200"
-                          aria-label={showPassword ? "Hide password" : "Show password"}
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
                         >
-                          {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                          {showPassword ? (
+                            <FaEyeSlash className="h-5 w-5" />
+                          ) : (
+                            <FaEye className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
                     </FormControl>
@@ -126,7 +145,10 @@ export default function LoginPage() {
                     className="h-4 w-4 rounded border-2 border-[#a7b3b9] text-[#3a6a8d] focus:ring-[#3a6a8d]/20 focus:ring-2"
                     style={{ accentColor: "#3a6a8d" }}
                   />
-                  <label htmlFor="remember-me" className="text-sm text-[#2e4d57] font-medium">
+                  <label
+                    htmlFor="remember-me"
+                    className="text-sm text-[#2e4d57] font-medium"
+                  >
                     {t("login.remember_me")}
                   </label>
                 </div>
@@ -159,7 +181,7 @@ export default function LoginPage() {
           </Form>
 
           <p className="mt-6 text-sm text-center text-[#2e4d57]/80">
-            {t("login.new_to_ethioguide")} {" "}
+            {t("login.new_to_ethioguide")}{" "}
             <Link
               href="/auth/register"
               className="text-[#3a6a8d] hover:text-[#2e4d57] font-semibold transition-colors duration-200 hover:underline"
@@ -170,5 +192,5 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
