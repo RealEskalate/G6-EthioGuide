@@ -11,17 +11,19 @@ import (
 )
 
 type UserUsecase struct {
-	userRepo        domain.IAccountRepository
-	tokenRepo       domain.ITokenRepository
-	passwordService domain.IPasswordService
-	jwtService      domain.IJWTService
-	googleService   domain.IGoogleOAuthService
-	emailService    domain.IEmailService
-	contextTimeout  time.Duration
+	userRepo           domain.IAccountRepository
+	userPreferenceRepo domain.IPreferencesRepository
+	tokenRepo          domain.ITokenRepository
+	passwordService    domain.IPasswordService
+	jwtService         domain.IJWTService
+	googleService      domain.IGoogleOAuthService
+	emailService       domain.IEmailService
+	contextTimeout     time.Duration
 }
 
 func NewUserUsecase(
 	ur domain.IAccountRepository,
+	up domain.IPreferencesRepository,
 	tr domain.ITokenRepository,
 	ps domain.IPasswordService,
 	js domain.IJWTService,
@@ -30,13 +32,14 @@ func NewUserUsecase(
 	timeout time.Duration,
 ) domain.IUserUsecase {
 	return &UserUsecase{
-		userRepo:        ur,
-		tokenRepo:       tr,
-		passwordService: ps,
-		jwtService:      js,
-		googleService:   gs,
-		emailService:    es,
-		contextTimeout:  timeout,
+		userRepo:           ur,
+		userPreferenceRepo: up,
+		tokenRepo:          tr,
+		passwordService:    ps,
+		jwtService:         js,
+		googleService:      gs,
+		emailService:       es,
+		contextTimeout:     timeout,
 	}
 }
 
@@ -81,6 +84,17 @@ func (uc *UserUsecase) Register(c context.Context, user *domain.Account) error {
 
 	if err := uc.userRepo.Create(ctx, user); err != nil {
 		return fmt.Errorf("failed to create user in repository: %w", err)
+	}
+
+	preference := &domain.Preferences{
+		UserID:            user.ID,
+		PreferredLang:     domain.English,
+		PushNotification:  false,
+		EmailNotification: false,
+	}
+
+	if err = uc.userPreferenceRepo.Create(ctx, preference); err != nil {
+		return err
 	}
 
 	if err = uc.sendVerificationEmail(ctx, user); err != nil {
@@ -174,11 +188,13 @@ func (uc *UserUsecase) Login(c context.Context, identifier, password string) (*d
 		return nil, "", "", fmt.Errorf("repository error during login: %w", err)
 	}
 
-	if !account.UserDetail.IsVerified {
-		if err = uc.sendVerificationEmail(ctx, account); err != nil {
-			return nil, "", "", err
+	if account.Role == domain.RoleUser {
+		if !account.UserDetail.IsVerified {
+			if err = uc.sendVerificationEmail(ctx, account); err != nil {
+				return nil, "", "", err
+			}
+			return nil, "", "", domain.ErrAccountNotActive
 		}
-		return nil, "", "", domain.ErrAccountNotActive
 	}
 
 	err = uc.passwordService.ComparePassword(account.PasswordHash, password)
@@ -540,10 +556,15 @@ func (uc *UserUsecase) RegisterOrg(ctx context.Context, Name, Email, OrgType str
 	if !errors.Is(err, domain.ErrNotFound) {
 		return fmt.Errorf("error checking email existence: %w", err)
 	}
-
+	hashedPassword, err := uc.passwordService.HashPassword("defaultPassword123")
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
 	orgAccount := domain.Account{
-		Name:  Name,
-		Email: Email,
+		Name:         Name,
+		Email:        Email,
+		Role:         domain.RoleOrg,
+		PasswordHash: hashedPassword,
 		OrganizationDetail: &domain.OrganizationDetail{
 			Type: domain.OrganizationType(OrgType),
 		},

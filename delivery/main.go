@@ -89,7 +89,7 @@ func main() {
 	}
 	var apiKeys []string
 	apiKeys = append(apiKeys, cfg.EmbeddingApiKey)
-	embeddingService, err := infrastructure.NewEmbeddingService(apiKeys, cfg.EmbeddingUrl)
+	embeddingService, err := infrastructure.NewCohereEmbedding(apiKeys, cfg.EmbeddingUrl)
 	if err != nil {
 		log.Printf("WARN: Failed to initialize the Embedding service: %v. Embedding service will be unavailable.", err)
 	}
@@ -99,6 +99,7 @@ func main() {
 	// FIX 2: Pass all the required dependencies to the NewUserUsecase constructor.
 	userUsecase := usecase.NewUserUsecase(
 		userRepo,
+		preferencesRepo,
 		tokenRepo, // Added the missing token repository
 		passwordService,
 		jwtService,
@@ -106,17 +107,19 @@ func main() {
 		emailservice,
 		cfg.UsecaseTimeout,
 	)
-	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, cfg.UsecaseTimeout)
+	procedureUsecase := usecase.NewProcedureUsecase(procedureRepo, embeddingService, cfg.UsecaseTimeout)
 	catagoryUsecase := usecase.NewCategoryUsecase(catagoryRepo, cfg.UsecaseTimeout)
-	geminiUsecase := usecase.NewGeminiUsecase(aiService, cfg.UsecaseTimeout) // Reduced timeout for consistency
+	geminiUsecase := usecase.NewGeminiUsecase(aiService, 10*cfg.UsecaseTimeout)
 	feedbackUsecase := usecase.NewFeedbackUsecase(feedbackRepo, procedureRepo, cfg.UsecaseTimeout)
 	noticeUsecase := usecase.NewNoticeUsecase(noticeRepo)
 	preferencesUsecase := usecase.NewPreferencesUsecase(preferencesRepo)
-	aiChatUsecase := usecase.NewChatUsecase(embeddingService, procedureRepo, aiChatRepo, aiService)
+	aiChatUsecase := usecase.NewChatUsecase(embeddingService, procedureRepo, aiChatRepo, aiService, 10*cfg.UsecaseTimeout)
 
 	postUsecase := usecase.NewPostUseCase(postRepo, cfg.UsecaseTimeout)
 	searchUsecase := usecase.NewSearchUsecase(searchRepo, cfg.UsecaseTimeout)
 	checklistUsecase := usecase.NewChecklistUsecase(checklistRepo)
+
+	translationMiddleware := infrastructure.NewTranslationMiddleware(geminiUsecase)
 	// --- Controllers ---
 	// Controllers handle the HTTP layer, delegating logic to use cases.
 	userController := controller.NewUserController(userUsecase, searchUsecase, checklistUsecase, cfg.JWTRefreshTTL)
@@ -149,6 +152,7 @@ func main() {
 		preferencesController,
 		aiChatController,
 		authMiddleware,
+		translationMiddleware,
 		proOnlyMiddleware,
 		requireAdminRole,
 		requireAdminOrOrgRole,

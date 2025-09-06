@@ -32,7 +32,7 @@ type IUserUsecase interface {
 }
 
 type IGeminiUseCase interface {
-	TranslateContent(ctx context.Context, content, targetLang string) (string, error)
+	TranslateJSON(ctx context.Context, data map[string]interface{}, targetLang string) (map[string]interface{}, error)
 }
 
 type ICategoryUsecase interface {

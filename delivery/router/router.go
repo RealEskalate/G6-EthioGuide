@@ -26,6 +26,7 @@ func SetupRouter(
 	PreferencesController *controller.PreferencesController,
 	aiChatController *controller.AIChatController,
 	authMiddleware gin.HandlerFunc,
+	translationMiddleware gin.HandlerFunc,
 	proOnlyMiddleware gin.HandlerFunc,
 	requireAdminRole gin.HandlerFunc,
 	requireAdminOrOrgRole gin.HandlerFunc,
@@ -46,6 +47,7 @@ func SetupRouter(
 		MaxAge:           12 * time.Hour,
 	}
 	router.Use(cors.New(config))
+	router.Use(translationMiddleware)
 
 	// Health check endpoint - always public
 	router.GET("/health", func(c *gin.Context) {
@@ -84,7 +86,7 @@ func SetupRouter(
 			{
 				aiGroup.POST("/translate", geminiController.Translate)
 				aiGroup.POST("/guide", aiChatController.AIChatController)
-				// aiGroup.GET("/history")
+				aiGroup.GET("/history", aiChatController.AIChatHistoryController)
 			}
 
 			// --- PRO Subscription Routes ---
@@ -135,7 +137,7 @@ func SetupRouter(
 				orgs.POST("", authMiddleware, requireAdminRole, userController.HandleCreateOrg)
 				orgs.GET("", userController.HandleGetOrgs)
 				orgs.GET("/:id", userController.HandleGetOrgById)
-				orgs.PATCH("/:id", authMiddleware, requireAdminRole, userController.HandleUpdateOrgs)
+				orgs.PATCH("/:id", authMiddleware, requireAdminOrOrgRole, userController.HandleUpdateOrgs)
 			}
 
 			procedures := v1.Group("/procedures")
@@ -261,7 +263,6 @@ func SetupRouter(
 		// 13) AI Guidance (Gemini)
 		ai := v1.Group("/ai")
 		{
-			ai.GET("/history", handleAIGetHistory)
 			ai.POST("/mark-not-verified", handleAIMarkNotVerified)
 			ai.POST("/speech-to-text", handleAISpeechToText)
 		}
@@ -593,38 +594,7 @@ func handleGetNotice(c *gin.Context) {
 	})
 }
 
-// 13) AI Guidance
-// func handleAIGuide(c *gin.Context) {
-// 	c.JSON(http.StatusOK, gin.H{
-// 		"response":  "Here are the verified steps...",
-// 		"source":    "official",
-// 		"citations": []gin.H{{"type": "procedure", "id": "prc_123"}},
-// 		"verified":  true,
-// 	})
-// }
-
-func handleAIGetHistory(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"history": []gin.H{
-			{
-				"id":       "id",
-				"request":  "How to renew passport?",
-				"response": "Here are the verified steps...",
-				"source":   "official",
-				"procedures": []gin.H{
-					{
-						"id":   "id",
-						"name": "name",
-					},
-					{
-						"id":   "id2",
-						"name": "name2",
-					},
-				},
-			},
-		},
-	})
-}
+// 13) AI Guidance}
 
 func handleAIMarkNotVerified(c *gin.Context) {
 	c.Status(http.StatusAccepted)

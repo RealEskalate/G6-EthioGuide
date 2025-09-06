@@ -32,17 +32,21 @@ type UserResponse struct {
 }
 
 func ToUserResponse(a *domain.Account) UserResponse {
-	return UserResponse{
-		ID:       a.ID,
-		Name:     a.Name,
-		Username: a.UserDetail.Username,
-		Email:    a.Email,
+	account := UserResponse{
+		ID:    a.ID,
+		Name:  a.Name,
+		Email: a.Email,
 
 		ProfilePicture: a.ProfilePicURL,
 		Role:           a.Role,
-		IsVerified:     a.UserDetail.IsVerified,
 		CreatedAt:      a.CreatedAt,
 	}
+	if a.Role == domain.RoleUser {
+		account.Username = a.UserDetail.Username
+		account.IsVerified = a.UserDetail.IsVerified
+	}
+
+	return account
 }
 
 type UpdateOrgRequest struct {
@@ -55,7 +59,7 @@ type UpdateOrgRequest struct {
 }
 
 type TranslateDTO struct {
-	Content string `json:"content" binding:"required"`
+	Content map[string]interface{} `json:"content" binding:"required"`
 }
 type ChatRequest struct {
 	Content string `json:"content" binding:"required"`
@@ -346,7 +350,7 @@ type ResetDTO struct {
 }
 
 type ActivateDTO struct {
-	ActivateToken string `json:"activatationToken"`
+	ActivateToken string `json:"activationToken"`
 }
 
 // //////////////////////////// procedure////
@@ -512,14 +516,9 @@ type OrganizationResponseDTO struct {
 }
 
 func ToOrganizationDTO(account *domain.Account) OrganizationResponseDTO {
-	return OrganizationResponseDTO{
-		ID:            account.ID,
-		Name:          account.Name,
-		Email:         account.Email,
-		ProfilePicURL: account.ProfilePicURL,
-		Role:          string(account.Role),
-		CreatedAt:     account.CreatedAt,
-		OrganizationDetail: OrganizationDetailDTO{
+	var temp OrganizationDetailDTO
+	if account.OrganizationDetail != nil {
+		temp = OrganizationDetailDTO{
 			Description: account.OrganizationDetail.Description,
 			Location:    account.OrganizationDetail.Location,
 			Type:        string(account.OrganizationDetail.Type),
@@ -528,7 +527,17 @@ func ToOrganizationDTO(account *domain.Account) OrganizationResponseDTO {
 				Website: account.OrganizationDetail.ContactInfo.Website,
 			},
 			PhoneNumbers: account.OrganizationDetail.PhoneNumbers,
-		},
+		}
+	}
+
+	return OrganizationResponseDTO{
+		ID:                 account.ID,
+		Name:               account.Name,
+		Email:              account.Email,
+		ProfilePicURL:      account.ProfilePicURL,
+		Role:               string(account.Role),
+		CreatedAt:          account.CreatedAt,
+		OrganizationDetail: temp,
 	}
 }
 
@@ -698,22 +707,40 @@ type AIChatRequest struct {
 }
 
 type AIConversationResponse struct {
-	ID        string    `bson:"_id,omitempty"`
-	UserID    string    `bson:"user_id"`
-	Source    string    `bson:"source,omitempty"`
-	Request   string    `bson:"request"`
-	Response  string    `bson:"response"`
-	Timestamp time.Time `bson:"timestamp"`
+	ID                string                 `json:"id,omitempty"`
+	UserID            string                 `json:"user_id"`
+	Source            string                 `json:"source,omitempty"`
+	Request           string                 `json:"request"`
+	Response          string                 `json:"response"`
+	Timestamp         time.Time              `json:"timestamp"`
+	RelatedProcedures []*AIProcedureResponse `json:"procedures"`
+}
+
+type AIProcedureResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func ToAIProcedureResponse(procedures *domain.AIProcedure) *AIProcedureResponse {
+	return &AIProcedureResponse{
+		ID:   procedures.Id,
+		Name: procedures.Name,
+	}
 }
 
 func ToAIChatResponse(answer *domain.AIChat) *AIConversationResponse {
+	procedures := make([]*AIProcedureResponse, len(answer.RelatedProcedures))
+	for i, proc := range answer.RelatedProcedures {
+		procedures[i] = ToAIProcedureResponse(proc)
+	}
 	return &AIConversationResponse{
-		ID:        answer.ID,
-		UserID:    answer.UserID,
-		Source:    answer.Source,
-		Request:   answer.Request,
-		Response:  answer.Response,
-		Timestamp: answer.Timestamp,
+		ID:                answer.ID,
+		UserID:            answer.UserID,
+		Source:            answer.Source,
+		Request:           answer.Request,
+		Response:          answer.Response,
+		Timestamp:         answer.Timestamp,
+		RelatedProcedures: procedures,
 	}
 }
 
@@ -739,17 +766,17 @@ func toPaginatedAIHisory(aiHistory []*domain.AIChat, total, page, limit int64) *
 }
 
 type OrgsListPaginated struct {
-	Orgs   []OrganizationResponseDTO  `json:"orgs"`
-	Total  int64                      `json:"total"`
-	Page   int64                      `json:"page"`
-	PageSize int64                    `json:"pageSize"`
+	Orgs     []OrganizationResponseDTO `json:"orgs"`
+	Total    int64                     `json:"total"`
+	Page     int64                     `json:"page"`
+	PageSize int64                     `json:"pageSize"`
 }
 
-func toOrgsListPaginated (orgs []OrganizationResponseDTO, total, page, pageSize int64) *OrgsListPaginated {
+func toOrgsListPaginated(orgs []OrganizationResponseDTO, total, page, pageSize int64) *OrgsListPaginated {
 	return &OrgsListPaginated{
-		Orgs: orgs,
-		Total: total,
-		Page: page,
+		Orgs:     orgs,
+		Total:    total,
+		Page:     page,
 		PageSize: pageSize,
 	}
 }

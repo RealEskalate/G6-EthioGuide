@@ -15,7 +15,7 @@
         },
         "version": "1.0"
     },
-    "host": "ethio-guide-backend.onrender.com",
+    "host": "localhost:8080",
     "basePath": "/api/v1",
     "paths": {
         "/ai/guide": {
@@ -32,13 +32,6 @@
                 ],
                 "summary": "AI Chat",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "Bearer token",
@@ -2033,7 +2026,7 @@
                     "201": {
                         "description": "Organization created Successfully",
                         "schema": {
-                            "$ref": "#/definitions/controller.OrganizationDetailDTO"
+                            "$ref": "#/definitions/controller.OrganizationResponseDTO"
                         }
                     },
                     "400": {
@@ -2632,6 +2625,12 @@
                 "id": {
                     "type": "string"
                 },
+                "procedures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.AIProcedureResponse"
+                    }
+                },
                 "request": {
                     "type": "string"
                 },
@@ -2644,7 +2643,18 @@
                 "timestamp": {
                     "type": "string"
                 },
-                "userID": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.AIProcedureResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -2675,7 +2685,7 @@
         "controller.ActivateDTO": {
             "type": "object",
             "properties": {
-                "activatationToken": {
+                "activationToken": {
                     "type": "string"
                 }
             }
@@ -3842,6 +3852,13 @@
                 },
                 "createdAt": {
                     "type": "string"
+                },
+                "embedding": {
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                        "format": "float64"
+                    }
                 },
                 "fees": {
                     "$ref": "#/definitions/domain.ProcedureFee"

@@ -46,13 +46,6 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "description": "Prompt",
                         "name": "request",
                         "in": "body",
@@ -2039,7 +2032,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Organization created Successfully",
                         "schema": {
-                            "$ref": "#/definitions/controller.OrganizationDetailDTO"
+                            "$ref": "#/definitions/controller.OrganizationResponseDTO"
                         }
                     },
                     "400": {
@@ -2638,6 +2631,12 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "procedures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.AIProcedureResponse"
+                    }
+                },
                 "request": {
                     "type": "string"
                 },
@@ -2650,7 +2649,18 @@ const docTemplate = `{
                 "timestamp": {
                     "type": "string"
                 },
-                "userID": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.AIProcedureResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -2681,7 +2691,7 @@ const docTemplate = `{
         "controller.ActivateDTO": {
             "type": "object",
             "properties": {
-                "activatationToken": {
+                "activationToken": {
                     "type": "string"
                 }
             }
@@ -3849,6 +3859,13 @@ const docTemplate = `{
                 "createdAt": {
                     "type": "string"
                 },
+                "embedding": {
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                        "format": "float64"
+                    }
+                },
                 "fees": {
                     "$ref": "#/definitions/domain.ProcedureFee"
                 },
@@ -3976,7 +3993,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "ethio-guide-backend.onrender.com",
+	Host:             "localhost:8080",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "EthioGuide API",
