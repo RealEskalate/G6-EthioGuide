@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CustomIcon } from "./CustomIcon"
 import { cn } from "@/lib/utils"
+import { Toaster } from "react-hot-toast"
 
 interface MenuItem {
   iconSrc: string
@@ -142,6 +143,9 @@ export function UserSidebar({
           </div>
         </div>
       </div>
+
+      {/* Global toaster so edit success/error notifications show everywhere */}
+      <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
     </aside>
   )
 }

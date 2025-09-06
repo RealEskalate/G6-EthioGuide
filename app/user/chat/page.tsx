@@ -155,6 +155,23 @@ export default function ChatPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex relative">
+      {/* animations (scoped) */}
+      <style jsx>{`
+        .fade-in { animation: fadeIn 360ms ease-out both; }
+        .fade-in-up { animation: fadeInUp 520ms ease-out both; }
+        .slide-left { animation: slideLeft 360ms ease-out both; }
+        .pop-in { animation: popIn 340ms ease-out both; }
+        .btn-pop { transition: transform .2s ease; }
+        .btn-pop:hover { transform: translateY(-1px) scale(1.01); }
+        .btn-pop:active { transform: scale(0.98); }
+        .ring-hover { transition: box-shadow .25s ease; }
+        .ring-hover:hover { box-shadow: 0 0 0 6px rgba(58,106,141,.15); }
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } }
+        @keyframes slideLeft { from { opacity: 0; transform: translateX(-16px) } to { opacity: 1; transform: translateX(0) } }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(.98) } 100% { opacity: 1; transform: scale(1) } }
+      `}</style>
+
       {/* Mobile overlay (only when open on small screens) */}
       {showHistory && (
         <div
@@ -166,7 +183,7 @@ export default function ChatPage() {
       {/* Sidebar / History Panel */}
       <div
         className={`bg-white border-r border-gray-200 transition-all duration-300 ease-in-out
-        ${showHistory ? "w-72 sm:w-80" : "w-0"} overflow-hidden
+        ${showHistory ? "w-72 sm:w-80 slide-left" : "w-0"} overflow-hidden
         fixed sm:relative top-0 bottom-0 left-0 z-50 flex flex-col`}
         aria-hidden={!showHistory}
       >
@@ -206,7 +223,7 @@ export default function ChatPage() {
       {/* Main Chat Area */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${showHistory ? "sm:ml-0" : ""}`}>
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 p-4 sm:p-6 sticky top-0 z-30 flex items-center justify-between">
+        <div className="bg-white border-b border-gray-200 p-4 sm:p-6 sticky top-0 z-30 flex items-center justify-between fade-in-up" style={{ animationDelay: "40ms" }}>
           <div>
             <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mb-1">Chat with Your AI Guide</h1>
             <p className="text-gray-600 text-xs sm:text-sm">Your Guide, Your Chat</p>
@@ -215,7 +232,7 @@ export default function ChatPage() {
             variant="outline"
             aria-expanded={showHistory}
             onClick={() => setShowHistory((p) => !p)}
-            className="border-gray-300 text-white bg-[#3A6A8D] hover:bg-[#2d5470] px-3 py-2 h-auto text-xs sm:text-sm"
+            className="border-gray-300 text-white bg-[#3A6A8D] hover:bg-[#2d5470] px-3 py-2 h-auto text-xs sm:text-sm btn-pop"
           >
             <History className="w-4 h-4 mr-1" />
             {showHistory ? "Hide" : "History"}
@@ -224,8 +241,8 @@ export default function ChatPage() {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-          {messages.map((message) => (
-            <div key={message.id} className="animate-fade-in">
+          {messages.map((message, idx) => (
+            <div key={message.id} className="fade-in-up" style={{ animationDelay: `${idx * 70 + 80}ms` }}>
               {message.type === "assistant" ? (
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0">
@@ -234,7 +251,7 @@ export default function ChatPage() {
                     </div>
                   </div>
                   <div className="flex-1 space-y-4">
-                    <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                    <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 pop-in">
                       <p className="text-gray-800">{message.content}</p>
                       <div className="flex items-center justify-between mt-3">
                         <span className="text-xs text-gray-500">{message.timestamp}</span>
@@ -290,7 +307,7 @@ export default function ChatPage() {
                 </div>
               ) : (
                 <div className="flex items-start space-x-3 justify-end">
-                  <div className="bg-[#3A6A8D] text-white rounded-lg p-4 max-w-md shadow-sm">
+                  <div className="bg-[#3A6A8D] text-white rounded-lg p-4 max-w-md shadow-sm pop-in">
                     <p>{message.content}</p>
                     <span className="text-xs text-gray-200 mt-2 block">{message.timestamp}</span>
                   </div>
@@ -308,7 +325,7 @@ export default function ChatPage() {
         {/* Input Area */}
         <div className="bg-gray-50 p-3 sm:p-4">
           <div className="flex items-center gap-2 sm:gap-3 max-w-4xl mx-auto">
-            <Button variant="ghost" size="sm" className="p-2 h-10 w-10 rounded-full hover:bg-gray-200">
+            <Button variant="ghost" size="sm" className="p-2 h-10 w-10 rounded-full hover:bg-gray-200 ring-hover">
               <Mic className="w-5 h-5 text-gray-500" />
             </Button>
 
@@ -325,7 +342,7 @@ export default function ChatPage() {
 
             <Button
               onClick={handleSendMessage}
-              className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white rounded-full p-2 h-10 w-10 flex items-center justify-center"
+              className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white rounded-full p-2 h-10 w-10 flex items-center justify-center btn-pop"
             >
               <Send className="w-4 h-4" />
             </Button>

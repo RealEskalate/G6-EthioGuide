@@ -75,10 +75,30 @@ function CreatePostContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      {/* animations (scoped) */}
+      <style jsx>{`
+        .fade-in { animation: fadeIn 380ms ease-out both; }
+        .fade-in-up { animation: fadeInUp 520ms ease-out both; }
+        .pop-in { animation: popIn 360ms ease-out both; }
+        .card-float { transition: transform .25s ease, box-shadow .25s ease; }
+        .card-float:hover { transform: translateY(-3px); box-shadow: 0 12px 26px rgba(0,0,0,.06); }
+        .btn-pop { transition: transform .2s ease; }
+        .btn-pop:hover { transform: translateY(-1px) scale(1.01); }
+        .btn-pop:active { transform: scale(0.98); }
+        .focus-glow { transition: box-shadow .25s ease; }
+        .focus-glow:focus { box-shadow: 0 0 0 4px rgba(58,106,141,.15); }
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(.98) } 100% { opacity: 1; transform: scale(1) } }
+      `}</style>
+
       <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       <div className="max-w-2xl mx-auto">
         {/* Header surface */}
-        <div className="bg-white/90 border border-gray-100 rounded-xl p-4 sm:p-5 mb-6 shadow-sm">
+        <div
+          className="bg-white/90 border border-gray-100 rounded-xl p-4 sm:p-5 mb-6 shadow-sm fade-in-up"
+          style={{ animationDelay: "40ms" }}
+        >
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -94,7 +114,10 @@ function CreatePostContent() {
         </div>
 
         {/* Post Type Card */}
-        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-gray-100">
+        <div
+          className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-gray-100 fade-in-up card-float"
+          style={{ animationDelay: "90ms" }}
+        >
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Post Type</h2>
           <div className="mb-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
@@ -120,7 +143,7 @@ function CreatePostContent() {
                 value={procedureId}
                 onChange={(e) => setProcedureId(e.target.value)}
                 placeholder="Enter related procedure ID (if any)"
-                className="border-gray-200"
+                className="border-gray-200 focus-glow"
                 maxLength={80}
               />
             <p className="text-xs text-gray-400 mt-1">
@@ -130,7 +153,10 @@ function CreatePostContent() {
         </div>
 
         {/* Title & Content Card */}
-        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-gray-100">
+        <div
+          className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-gray-100 fade-in-up card-float"
+          style={{ animationDelay: "140ms" }}
+        >
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Title / Headline <span className="text-red-500">*</span>
@@ -140,7 +166,7 @@ function CreatePostContent() {
               onChange={e => setTitle(e.target.value)}
               placeholder="Enter a clear, descriptive title..."
               maxLength={100}
-              className="mb-2"
+              className="mb-2 focus-glow"
             />
             {/* visual progress for title */}
             <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
@@ -165,7 +191,7 @@ function CreatePostContent() {
               onChange={e => setContent(e.target.value)}
               placeholder="Write your post content here..."
               maxLength={2000}
-              className="mb-2"
+              className="mb-2 focus-glow"
               rows={6}
             />
             {/* visual progress for content */}
@@ -180,9 +206,9 @@ function CreatePostContent() {
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 fade-in" style={{ animationDelay: "180ms" }}>
           <Button
-            className="flex items-center gap-2 px-6 py-2 bg-[#3A6A8D] hover:bg-[#2d5470] text-white shadow-sm w-full sm:w-auto"
+            className="flex items-center gap-2 px-6 py-2 bg-[#3A6A8D] hover:bg-[#2d5470] text-white shadow-sm w-full sm:w-auto btn-pop"
             disabled={isLoading || title.trim() === "" || content.trim() === ""}
             onClick={handlePublish}
           >
@@ -190,7 +216,7 @@ function CreatePostContent() {
           </Button>
           <Button
             variant="outline"
-            className="border-gray-300 hover:bg-gray-50 w-full sm:w-auto"
+            className="border-gray-300 hover:bg-gray-50 w-full sm:w-auto btn-pop"
             type="button"
             onClick={() => {
               // lightweight UX: allow user to clear quickly
@@ -204,4 +230,5 @@ function CreatePostContent() {
     </div>
   );
 }
+
 
