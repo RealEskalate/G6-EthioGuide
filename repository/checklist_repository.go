@@ -36,7 +36,7 @@ func TodomainChecklist(check *ChecklistItemModel) *domain.Checklist {
 
 func NewChecklistRepository(db *mongo.Database) *ChecklistRepository {
 	collcheck := db.Collection("checklist")
-	collprocedure := db.Collection("procedure")
+	collprocedure := db.Collection("procedures")
 	colluserprocdr := db.Collection("user_procedure")
 	return &ChecklistRepository{
 		collectionChecklist:     collcheck,
