@@ -632,7 +632,7 @@ func (ctrl *UserController) HandleCreateChecklist(c *gin.Context) {
 		return
 	}
 
-	user_id, err := c.Get("userId")
+	user_id, err := c.Get("userID")
 	if !err {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "you are logged out, try to log in again"})
 		return
@@ -659,7 +659,7 @@ func (ctrl *UserController) HandleCreateChecklist(c *gin.Context) {
 // @Failure      500 {string}  "Server error"
 // @Router       /checklists/myProcedures [get]
 func (ctrl *UserController) HandleGetProcedures(c *gin.Context) {
-	user_id, err := c.Get("userId")
+	user_id, err := c.Get("userID")
 	if !err {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "you are logged out, try to log in again"})
 		return
