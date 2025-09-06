@@ -16,32 +16,35 @@ export default function NoticesPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-3 sm:gap-0">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <FileText className="h-8 w-8 text-[#3A6A8D]" />
-              <h1 className="text-3xl font-bold text-gray-900">Official Notices</h1>
+              <FileText className="h-7 w-7 sm:h-8 sm:w-8 text-[#3A6A8D]" />
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Official Notices</h1>
             </div>
-            <p className="text-gray-600">Get notices of different organizations</p>
+            <p className="text-gray-600 text-sm">Get notices of different organizations</p>
           </div>
+          {/* ...optional right-side actions... */}
         </div>
 
         {/* Search and Filters */}
         <Card className="p-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4 w-full">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
             <div className="relative flex-1">
               <input
                 type="text"
                 placeholder="Search notices..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent"
               />
+              {/* optional search icon slot */}
+              {/* ...existing icon if any... */}
             </div>
             <div className="flex gap-2 flex-1">
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="w-full bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent transition-all">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg border border-gray-200 shadow-md bg-white">
@@ -52,7 +55,7 @@ export default function NoticesPage() {
                 </SelectContent>
               </Select>
               <Select value={department} onValueChange={setDepartment}>
-                <SelectTrigger className="w-full bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent transition-all">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="All Departments" />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg border border-gray-200 shadow-md bg-white">
@@ -66,22 +69,21 @@ export default function NoticesPage() {
         </Card>
 
         {/* Notices List */}
-        <div className="space-y-6">
-          {notices.map((notice, index) => (
+        <div className="space-y-4 sm:space-y-6">
+          {notices.map((notice) => (
             <Card
               key={notice.id}
-              className={`bg-white p-6 animate-in fade-in slide-in-from-bottom-4 hover:shadow-lg transition-all duration-300`}
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="bg-white p-4 sm:p-6 hover:shadow-lg transition-all duration-300"
             >
               <CardContent className="p-0">
                 <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-lg font-semibold text-gray-900 mr-2">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 mr-2">
                     {notice.title}
                   </h2>
                   <Badge className={notice.statusColor}>{notice.status}</Badge>
                 </div>
-                <p className="text-gray-600 mb-2">{notice.description}</p>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-2">
+                <p className="text-gray-600 text-sm sm:text-base mb-2">{notice.description}</p>
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500 mb-2">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     <span>Published: {notice.published}</span>
@@ -93,7 +95,7 @@ export default function NoticesPage() {
                     Organization: <span className="font-semibold text-gray-700">{notice.organization}</span>
                   </span>
                 </div>
-                <div className="flex items-center gap-6 pt-2 text-sm text-gray-500">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-6 pt-2 text-xs sm:text-sm text-gray-500">
                   <button
                     className="hover:underline flex items-center gap-1 text-blue-700"
                     onClick={() => router.push(`/user/notices/${notice.id}`)}

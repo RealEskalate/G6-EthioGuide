@@ -1,5 +1,6 @@
 "use client";
 
+import React, { Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useTranslation } from "react-i18next";
+import { useTranslation, initReactI18next } from "react-i18next";
+import i18n from "i18next";
 import Link from "next/link";
 import {
   resetPasswordSchema,
@@ -21,7 +23,7 @@ import {
 } from "@/lib/validation/reset-password";
 import Image from "next/image";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const { t, i18n } = useTranslation("auth");
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const form = useForm<ResetPasswordFormData>({
@@ -50,13 +52,6 @@ export default function ResetPasswordPage() {
     }
   };
 
-  // Debug translation loading
-  console.log("Current language:", i18n.language);
-  console.log(
-    "Auth translations:",
-    i18n.getResourceBundle(i18n.language, "auth")
-  );
-
   return (
     <div className="bg-neutral-light text-foreground min-h-[73dvh] flex flex-col flex-1 items-center p-4 sm:pt-6 space-y-2">
       <div className="flex items-center gap-3 p-5">
@@ -65,8 +60,8 @@ export default function ResetPasswordPage() {
           alt="EthioGuide Symbol"
           width={50}
           height={50}
-          // className="h-10 w-10"
           priority
+          style={{ width: "auto", height: "auto" }}
         />
         <span className="text-gray-800 font-semibold text-3xl">EthioGuide</span>
       </div>
@@ -131,3 +126,13 @@ export default function ResetPasswordPage() {
     </div>
   );
 }
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-gray-600">Loading...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
+  );
+}
+
+
