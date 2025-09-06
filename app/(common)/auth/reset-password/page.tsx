@@ -58,71 +58,70 @@ export default function ResetPasswordPage() {
   );
 
   return (
-    <div className="bg-neutral-light text-foreground min-h-[73dvh] flex flex-col flex-1 items-center p-4 sm:pt-6 space-y-2">
-      <div className="flex items-center gap-3 p-5">
-        <Image
-          src="/images/ethioguide-symbol.png"
-          alt="EthioGuide Symbol"
-          width={50}
-          height={50}
-          // className="h-10 w-10"
-          priority
-        />
-        <span className="text-gray-800 font-semibold text-3xl">EthioGuide</span>
-      </div>
-      <Card className="bg-background-light w-full max-w-md border-neutral">
-        <CardHeader>
+    <div className="min-h-screen bg-gray-50 text-foreground flex flex-col items-center justify-center px-4 py-8">
+      <Card className="w-full max-w-md bg-white border border-gray-200 shadow-lg rounded-2xl overflow-hidden">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <Image
+              src="/images/ethioguide-symbol.png"
+              alt="EthioGuide Symbol"
+              width={40}
+              height={40}
+              priority
+            />
+            <span className="text-gray-900 font-semibold text-2xl">EthioGuide</span>
+          </div>
           <div className="flex flex-col items-center space-y-4">
             <div className="flex justify-center items-center w-full">
-              <CardTitle className="text-2xl font-bold text-center">
+              <CardTitle className="text-2xl sm:text-3xl font-bold text-center font-amharic bg-gradient-to-r from-[#2e4d57] to-[#1c3b2e] bg-clip-text text-transparent">
                 {t("reset_password.title")}
               </CardTitle>
-              {/* <LanguageSwitcher /> */}
             </div>
           </div>
-          <p className="text-sm text-center text-neutral-dark ">
+          <p className="text-sm text-center text-[#2e4d57]/80 ">
             {t("reset_password.sub_title")}
           </p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 pb-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-amharic">
+                    <FormLabel className="font-amharic text-[#2e4d57] font-semibold">
                       {t("reset_password.email")}
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         placeholder={t("reset_password.email_placeholder")}
-                        className="border-neutral focus:border-primary"
+                        className="border-2 border-[#a7b3b9]/50 focus:border-[#3a6a8d] focus:ring-2 focus:ring-[#3a6a8d]/20 rounded-xl h-12 bg-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-white/90"
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className="text-error" />
+                    <FormMessage className="text-red-500 text-xs" />
                   </FormItem>
                 )}
               />
               {form.formState.errors.root && (
-                <p className="text-error text-sm">
+                <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
                   {form.formState.errors.root.message}
                 </p>
               )}
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-primary to-primary-dark text-white hover:from-primary/90 hover:to-primary-dark/90 focus:ring-4 focus:ring-primary/50 rounded-md"
+                className="w-full h-12 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:ring-4 focus:ring-[#3a6a8d]/30"
+                style={{ background: `linear-gradient(135deg, #3a6a8d 0%, #2e4d57 50%, #1c3b2e 100%)` }}
               >
                 {t("reset_password.submit")}
               </Button>
             </form>
           </Form>
-          <p className="mt-2 text-sm text-center text-neutral-dark">
+          <p className="mt-6 text-sm text-center text-[#2e4d57]/80">
             {t("reset_password.back_to_login")}{" "}
-            <Link href="/auth/login" className="text-primary hover:underline">
+            <Link href="/auth/login" className="text-[#3a6a8d] hover:text-[#2e4d57] font-semibold transition-colors duration-200 hover:underline">
               {t("reset_password.login_link")}
             </Link>
           </p>
