@@ -175,7 +175,7 @@ type ProcedureRepository struct {
 	col *mongo.Collection
 }
 
-func NewProcedureRepository(db *mongo.Database) *ProcedureRepository {
+func NewProcedureRepository(db *mongo.Database) domain.IProcedureRepository {
 	return &ProcedureRepository{
 		col: db.Collection("procedures"),
 	}
