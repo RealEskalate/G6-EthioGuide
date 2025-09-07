@@ -17,9 +17,9 @@ import 'package:ethioguide/features/procedure/presentation/pages/workspace_proce
 import 'package:ethioguide/features/workspace_discussion/presentation/pages/workspace_discussion_page.dart';
 import 'package:ethioguide/features/splashscreen/presentation/screens/placeholder_screen.dart';
 
-
 final GoRouter router = GoRouter(
   initialLocation: '/',
+
   routes: [
     // --- STANDALONE ROUTES (No persistent UI like a back button to a shell) ---
     GoRoute(
@@ -35,7 +35,8 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/auth',
       name: RouteNames.auth,
-      builder: (context, state) => AuthScreen(verificationToken: state.uri.queryParameters['token']),
+      builder: (context, state) =>
+          AuthScreen(verificationToken: state.uri.queryParameters['token']),
     ),
     // This deep link for password reset is a special case and should be top-level.
     GoRoute(
@@ -46,7 +47,6 @@ final GoRouter router = GoRouter(
         return ResetPasswordView(resetToken: token);
       },
     ),
-
 
     // --- MAIN APPLICATION SHELL ---
     // All routes nested here will have a consistent back stack leading to the home screen.
