@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
+import 'package:ethioguide/core/config/end_points.dart';
 import '../models/discussion_model.dart';
 import '../models/comment_model.dart';
 import '../models/community_stats_model.dart';
@@ -15,7 +18,8 @@ abstract class WorkspaceDiscussionRemoteDataSource {
     required String title,
     required String content,
     required List<String> tags,
-    required String category,
+    required List<String> procedure,
+    // required String category,
   });
   Future<bool> likeDiscussion(String discussionId);
   Future<bool> reportDiscussion(String discussionId);
@@ -28,23 +32,22 @@ abstract class WorkspaceDiscussionRemoteDataSource {
   Future<bool> reportComment(String commentId);
 }
 
-class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemoteDataSource {
+class WorkspaceDiscussionRemoteDataSourceImpl
+    implements WorkspaceDiscussionRemoteDataSource {
   final Dio dio;
-  final String baseUrl;
 
-  WorkspaceDiscussionRemoteDataSourceImpl({
-    required this.dio,
-    this.baseUrl = 'https://api.ethioguide.com',
-  });
+  WorkspaceDiscussionRemoteDataSourceImpl({required this.dio});
 
   @override
   Future<CommunityStatsModel> getCommunityStats() async {
-    final response = await dio.get('$baseUrl/workspace/community/stats');
+    final response = await dio.get('workspace/community/stats');
     if (response.statusCode == 200) {
-      return CommunityStatsModel.fromJson(response.data as Map<String, dynamic>);
+      return CommunityStatsModel.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     }
     throw DioException(
-      requestOptions: RequestOptions(path: '$baseUrl/workspace/community/stats'),
+      requestOptions: RequestOptions(path: 'workspace/community/stats'),
       response: response,
       error: 'Failed to fetch community stats',
     );
@@ -57,19 +60,23 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
     String? filterType,
   }) async {
     final response = await dio.get(
-      '$baseUrl/workspace/discussions',
+      'discussions',
       queryParameters: {
-        if (tag != null) 'tag': tag,
+        if (tag != null) 'tags': tag,
         if (category != null) 'category': category,
-        if (filterType != null) 'filterType': filterType,
+        if (filterType != null) 'title': filterType,
       },
     );
     if (response.statusCode == 200) {
-      final data = response.data as List<dynamic>;
-      return data.map((e) => DiscussionModel.fromJson(e as Map<String, dynamic>)).toList();
+      final decoded = response.data as Map<String, dynamic>;
+      final discussions = DiscussionModel.listFromJson(decoded);
+
+      // final data = response.data as List<dynamic>;
+      return discussions;
+      // data.map((e) => DiscussionModel.fromJson(e as Map<String, dynamic>)).toList();
     }
     throw DioException(
-      requestOptions: RequestOptions(path: '$baseUrl/workspace/discussions'),
+      requestOptions: RequestOptions(path: 'workspace/discussions'),
       response: response,
       error: 'Failed to fetch discussions',
     );
@@ -80,22 +87,28 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
     required String title,
     required String content,
     required List<String> tags,
-    required String category,
+    required List<String> procedure,
+    // required String category,
   }) async {
     final response = await dio.post(
-      '$baseUrl/workspace/discussions',
+      EndPoints.createDiscussionEndPoint,
       data: {
         'title': title,
         'content': content,
         'tags': tags,
-        'category': category,
+        'procedures': procedure,
+        // 'category': category,
       },
     );
-    if (response.statusCode == 200 || response.statusCode == 201) {
+   print('data');
+    print(response.data);
+    print(response.statusCode);
+    if (response.statusCode == 201) {
       return DiscussionModel.fromJson(response.data as Map<String, dynamic>);
     }
+
     throw DioException(
-      requestOptions: RequestOptions(path: '$baseUrl/workspace/discussions'),
+      requestOptions: RequestOptions(path: 'discussions'),
       response: response,
       error: 'Failed to create discussion',
     );
@@ -103,25 +116,33 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
 
   @override
   Future<bool> likeDiscussion(String discussionId) async {
-    final response = await dio.post('$baseUrl/workspace/discussions/$discussionId/like');
+    final response = await dio.post('workspace/discussions/$discussionId/like');
     return (response.statusCode == 200 || response.statusCode == 204);
   }
 
   @override
   Future<bool> reportDiscussion(String discussionId) async {
-    final response = await dio.post('$baseUrl/workspace/discussions/$discussionId/report');
+    final response = await dio.post(
+      'workspace/discussions/$discussionId/report',
+    );
     return (response.statusCode == 200 || response.statusCode == 204);
   }
 
   @override
   Future<List<CommentModel>> getComments(String discussionId) async {
-    final response = await dio.get('$baseUrl/workspace/discussions/$discussionId/comments');
+    final response = await dio.get(
+      'workspace/discussions/$discussionId/comments',
+    );
     if (response.statusCode == 200) {
       final data = response.data as List<dynamic>;
-      return data.map((e) => CommentModel.fromJson(e as Map<String, dynamic>)).toList();
+      return data
+          .map((e) => CommentModel.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
     throw DioException(
-      requestOptions: RequestOptions(path: '$baseUrl/workspace/discussions/$discussionId/comments'),
+      requestOptions: RequestOptions(
+        path: 'workspace/discussions/$discussionId/comments',
+      ),
       response: response,
       error: 'Failed to fetch comments',
     );
@@ -133,14 +154,16 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
     required String content,
   }) async {
     final response = await dio.post(
-      '$baseUrl/workspace/discussions/$discussionId/comments',
+      'workspace/discussions/$discussionId/comments',
       data: {'content': content},
     );
     if (response.statusCode == 200 || response.statusCode == 201) {
       return CommentModel.fromJson(response.data as Map<String, dynamic>);
     }
     throw DioException(
-      requestOptions: RequestOptions(path: '$baseUrl/workspace/discussions/$discussionId/comments'),
+      requestOptions: RequestOptions(
+        path: 'workspace/discussions/$discussionId/comments',
+      ),
       response: response,
       error: 'Failed to add comment',
     );
@@ -148,13 +171,13 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
 
   @override
   Future<bool> likeComment(String commentId) async {
-    final response = await dio.post('$baseUrl/workspace/comments/$commentId/like');
+    final response = await dio.post('workspace/comments/$commentId/like');
     return (response.statusCode == 200 || response.statusCode == 204);
   }
 
   @override
   Future<bool> reportComment(String commentId) async {
-    final response = await dio.post('$baseUrl/workspace/comments/$commentId/report');
+    final response = await dio.post('workspace/comments/$commentId/report');
     return (response.statusCode == 200 || response.statusCode == 204);
   }
 }

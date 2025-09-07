@@ -31,7 +31,7 @@ class RequiredDocumentsList extends StatelessWidget {
             const SizedBox(height: 16),
             
             // Documents list
-            ...procedureDetail.requiredDocuments.map((document) => Padding(
+            ...procedureDetail.procedure.requiredDocuments.map((document) => Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,

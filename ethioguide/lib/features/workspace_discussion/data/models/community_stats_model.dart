@@ -35,3 +35,5 @@ class CommunityStatsModel extends CommunityStats {
     };
   }
 }
+
+

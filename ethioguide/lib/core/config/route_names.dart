@@ -1,15 +1,23 @@
 class RouteNames {
+  // Top-level
   static const String splash = 'splash';
   static const String onboarding = 'onboarding';
   static const String auth = 'auth';
   static const String home = 'home';
   static const String profile = 'profile';
 
-  // These are now simple names, not paths
+  // Procedure (child of home)
   static const String procedure = 'procedure';
-  static const String procedure_detail = 'procedure_detail';
+  static const String procedureDetail = 'proceduredetail';
+
+  // Workspace (child of home)
   static const String workspace = 'workspace';
-  static const String workspace_detail = 'workspace_detail';
-  static const String workspacediscussion = 'discussion';
-  static const String aiChat = 'aiChat';
+  static const String workspaceDetail = 'workspace_detail';
+  static const String workspaceDiscussion = 'workspace_discussion';
+
+  // AI chat (child of home)
+  static const String aiChat = 'ai_chat';
+
+  // Reset password
+  static const String resetPassword = 'reset_password';
 }

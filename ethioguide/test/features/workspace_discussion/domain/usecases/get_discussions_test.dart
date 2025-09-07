@@ -3,10 +3,12 @@ import 'package:ethioguide/features/workspace_discussion/domain/entities/discuss
 import 'package:ethioguide/features/workspace_discussion/domain/repositories/workspace_discussion_repository.dart';
 import 'package:ethioguide/features/workspace_discussion/domain/usecases/get_discussions.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-class MockRepo extends Mock implements WorkspaceDiscussionRepository {}
 
+
+@GenerateMocks([WorkspaceDiscussionRepository])
 void main() {
   late MockRepo repo;
   late GetDiscussions usecase;

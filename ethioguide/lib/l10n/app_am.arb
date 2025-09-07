@@ -1,5 +1,11 @@
 {
   "hello": "Hello",
+
+  "languageToggle": "Switch to Amharic"
+
+
+
+
   "languageToggle": "Switch to Amharic",
   "ai": "EthiGuide Ai Assistant",
   "text hint": "Type your question here",
@@ -11,3 +17,4 @@
   "change language": "Change Language",
   "log out": "Log Out"
 }
+

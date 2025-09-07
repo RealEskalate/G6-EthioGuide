@@ -19,6 +19,7 @@ class ProcedureCard extends StatelessWidget {
 
   Widget _buildGridCard(ThemeData theme) {
     return Container(
+      height: 10,
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -52,17 +53,28 @@ class ProcedureCard extends StatelessWidget {
               children: [
                 Text(procedure.title, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 6),
-                Text(procedure.category, style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                Row(
+                // Text(procedure.category, style: theme.textTheme.labelLarge),
+                // const SizedBox(height: 8),
+                Column(
                   children: [
-                    const Icon(Icons.access_time, size: 14, color: Colors.black45),
-                    const SizedBox(width: 4),
-                    Text(procedure.duration, style: theme.textTheme.labelLarge),
-                    const SizedBox(width: 12),
-                    const Icon(Icons.payments_outlined, size: 14, color: Colors.black45),
-                    const SizedBox(width: 4),
-                    Text(procedure.cost, style: theme.textTheme.labelLarge),
+                    Row(
+                      children: [
+                        const Icon(Icons.access_time, size: 14, color: Colors.black45),
+                        const SizedBox(width: 4),
+                    
+                        Text("${procedure.duration.minday} - ${procedure.duration.maxday} days", style: theme.textTheme.labelLarge),
+                       
+                      ],
+                    ),
+                        const SizedBox(height: 4),
+                    Row(
+                      children: [
+                
+                        const Icon(Icons.payments_outlined, size: 14, color: Colors.black45),
+                        const SizedBox(width: 4),
+                        Text(procedure.cost, style: theme.textTheme.labelLarge),
+                      ],
+                    ),
                   ],
                 ),
               ],
@@ -111,8 +123,8 @@ class ProcedureCard extends StatelessWidget {
                   spacing: 8,
                   runSpacing: -8,
                   children: [
-                    _Chip(label: procedure.category),
-                    _Chip(label: procedure.duration, icon: Icons.access_time),
+                    // _Chip(label: procedure.category),
+                    _Chip(label: "${procedure.duration.minday} - ${procedure.duration.maxday}", icon: Icons.access_time),
                     _Chip(label: procedure.cost, icon: Icons.payments_outlined),
                   ],
                 ),

@@ -23,7 +23,9 @@ class WorkspaceProcedureRepositoryImpl implements ProcedureDetailRepository {
     if (await networkInfo.isConnected) {
       try {
         final details = await remoteDataSource.getMyProcedures();
+        print(details);
         return Right(details);
+
       } catch (e) {
         return Left(ServerFailure());
       }
@@ -79,7 +81,7 @@ class WorkspaceProcedureRepositoryImpl implements ProcedureDetailRepository {
   }
 
   @override
-  Future<Either<String, ProcedureDetail>> getProcedureDetail(String id) async {
+  Future<Either<String,List<MyProcedureStep>>> getProcedureDetail(String id) async {
     if (await networkInfo.isConnected) {
       try {
         final detail = await remoteDataSource.getProcedureDetail(id);
@@ -94,15 +96,12 @@ class WorkspaceProcedureRepositoryImpl implements ProcedureDetailRepository {
   @override
   Future<Either<String, bool>> updateStepStatus(
     String procedureId,
-    String stepId,
-    bool isCompleted,
   ) async {
     if (await networkInfo.isConnected) {
       try {
         final result = await remoteDataSource.updateStepStatus(
           procedureId,
-          stepId,
-          isCompleted,
+       
         );
         return Right(result);
       } catch (e) {

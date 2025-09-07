@@ -3,36 +3,42 @@ import 'package:equatable/equatable.dart';
 import 'package:ethioguide/features/procedure/domain/entities/procedure_detail.dart';
 import 'package:ethioguide/features/procedure/domain/entities/workspace_procedure.dart';
 import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
+import 'package:ethioguide/features/procedure/domain/repositories/workspace_procedure_repository.dart';
 
 // Import use cases (alias only for those that clash with event names)
-import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_detail.dart' as usecase_detail;
-import 'package:ethioguide/features/procedure/domain/usecases/update_step_status.dart' as usecase_update;
-import 'package:ethioguide/features/procedure/domain/usecases/save_progress.dart' as usecase_save;
-import 'package:ethioguide/features/procedure/domain/usecases/get_my_procedure.dart' as usecase_my;
-import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_bystattus.dart' as usecase_by_status;
-import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_by_organization.dart' as usecase_by_org;
-import 'package:ethioguide/features/procedure/domain/usecases/get_workspace_summary.dart' as usecase_summary;
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_detail.dart'
+    as usecase_detail;
+import 'package:ethioguide/features/procedure/domain/usecases/update_step_status.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/save_progress.dart'
+    as usecase_save;
+import 'package:ethioguide/features/procedure/domain/usecases/get_my_procedure.dart'
+    as usecase_my;
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_bystattus.dart'
+    as usecase_by_status;
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_by_organization.dart'
+    as usecase_by_org;
+import 'package:ethioguide/features/procedure/domain/usecases/get_workspace_summary.dart'
+    as usecase_summary;
 
 part 'workspace_procedure_detail_event.dart';
 part 'workspace_procedure_detail_state.dart';
 
-class WorkspaceProcedureDetailBloc extends Bloc<WorkspaceProcedureDetailEvent, WorkspaceProcedureDetailState> {
+
+
+
+class WorkspaceProcedureDetailBloc
+    extends Bloc<WorkspaceProcedureDetailEvent, WorkspaceProcedureDetailState> {
+
+      final ProcedureDetailRepository procedureDetailRepository;
   final usecase_detail.GetProcedureDetail getProcedureDetail;
-  final usecase_update.UpdateStepStatus updateStepStatusUseCase;
-  final usecase_save.SaveProgress saveProgressUseCase;
   final usecase_my.GetProcedureDetails getMyProcedureDetails;
-  final usecase_by_status.GetProceduresByStatus getProceduresByStatus;
-  final usecase_by_org.GetProceduresByOrganization getProceduresByOrganization;
-  final usecase_summary.GetWorkspaceSummary getWorkspaceSummary;
+
 
   WorkspaceProcedureDetailBloc({
+    required this.procedureDetailRepository,
     required this.getProcedureDetail,
-    required this.updateStepStatusUseCase,
-    required this.saveProgressUseCase,
     required this.getMyProcedureDetails,
-    required this.getProceduresByStatus,
-    required this.getProceduresByOrganization,
-    required this.getWorkspaceSummary,
+
   }) : super(ProcedureInitial()) {
     on<FetchProcedureDetail>((event, emit) async {
       emit(ProcedureLoading());
@@ -43,7 +49,26 @@ class WorkspaceProcedureDetailBloc extends Bloc<WorkspaceProcedureDetailEvent, W
       );
     });
 
-    on<UpdateStepStatus>((event, emit) async {
+    on<FetchMyProcedures>((event, emit) async {
+      emit(ProcedureLoading());
+      final result = await getMyProcedureDetails();
+      result.fold(
+        (failure) => emit(ProcedureError(failure.message)),
+        (procedures) => emit(ProceduresListLoaded(procedures)),
+      );
+    });
+
+    on<UpdateStepStatusevent>((event, emit) async {
+      // Keep last loaded detail, show loading only for update if needed
+      emit(ProcedureLoading());
+      final result = await procedureDetailRepository.updateStepStatus(event.procedureId);
+      result.fold(
+        (error) => emit(ProcedureError(error)),
+        (success) => emit(Stepupdate(success)),
+      );
+    });
+
+    /*  on<UpdateStepStatus>((event, emit) async {
       // Keep last loaded detail, show loading only for update if needed
       final current = state;
       final result = await updateStepStatusUseCase(event.procedureId, event.stepId, event.isCompleted);
@@ -72,14 +97,7 @@ class WorkspaceProcedureDetailBloc extends Bloc<WorkspaceProcedureDetailEvent, W
       );
     });
 
-    on<FetchMyProcedures>((event, emit) async {
-      emit(ProcedureLoading());
-      final result = await getMyProcedureDetails();
-      result.fold(
-        (failure) => emit(ProcedureError(failure.message)),
-        (procedures) => emit(ProceduresListLoaded(procedures)),
-      );
-    });
+ 
 
     on<FetchProceduresByStatus>((event, emit) async {
       emit(ProcedureLoading());
@@ -90,14 +108,7 @@ class WorkspaceProcedureDetailBloc extends Bloc<WorkspaceProcedureDetailEvent, W
       );
     });
 
-    on<FetchProceduresByOrganization>((event, emit) async {
-      emit(ProcedureLoading());
-      final result = await getProceduresByOrganization(event.organization);
-      result.fold(
-        (failure) => emit(ProcedureError(failure.message)),
-        (procedures) => emit(ProceduresListLoaded(procedures)),
-      );
-    });
+
 
     on<FetchWorkspaceSummary>((event, emit) async {
       emit(ProcedureLoading());
@@ -107,7 +118,6 @@ class WorkspaceProcedureDetailBloc extends Bloc<WorkspaceProcedureDetailEvent, W
         (summary) => emit(WorkspaceSummaryLoaded(summary)),
       );
     });
+  } */
   }
 }
-
-

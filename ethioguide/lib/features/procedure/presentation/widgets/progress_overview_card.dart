@@ -1,4 +1,5 @@
 import 'package:ethioguide/core/config/app_color.dart';
+import 'package:ethioguide/features/procedure/domain/entities/procedure.dart';
 import 'package:flutter/material.dart';
 import '../../domain/entities/procedure_detail.dart';
 
@@ -13,8 +14,8 @@ class ProgressOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final completedSteps = procedureDetail.steps.where((step) => step.isCompleted).length;
-    final totalSteps = procedureDetail.steps.length;
+    // final completedSteps = procedureDetail..steps.where((step) => step.isCompleted).length;
+    // final totalSteps = procedureDetail.steps.length;
 
     return Card(
       elevation: 2,
@@ -37,12 +38,12 @@ class ProgressOverviewCard extends StatelessWidget {
             // Progress status
             Row(
               children: [
-                Text(
+                /* Text(
                   '$completedSteps of $totalSteps steps completed',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
-                ),
+                ), */
                 const Spacer(),
                 Text(
                   '${procedureDetail.progressPercentage}%',
@@ -65,7 +66,7 @@ class ProgressOverviewCard extends StatelessWidget {
             const SizedBox(height: 16),
             
             // Info grid
-            Row(
+           /*  Row(
               children: [
                 Expanded(
                   child: _InfoItem(
@@ -92,7 +93,7 @@ class ProgressOverviewCard extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
+            ), */
           ],
         ),
       ),

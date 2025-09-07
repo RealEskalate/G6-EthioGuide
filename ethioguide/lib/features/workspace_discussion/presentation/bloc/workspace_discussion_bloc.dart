@@ -39,13 +39,15 @@ class CreateDiscussionEvent extends WorkspaceDiscussionEvent {
   final String title;
   final String content;
   final List<String> tags;
-  final String category;
+  final List<String> procedure;
+  
 
   const CreateDiscussionEvent({
     required this.title,
     required this.content,
     required this.tags,
-    required this.category,
+    required this.procedure
+    
   });
 }
 
@@ -137,8 +139,12 @@ class WorkspaceDiscussionBloc
         title: event.title,
         content: event.content,
         tags: event.tags,
-        category: event.category,
+        procedure: event.procedure
       );
+
+      print(result);
+
+
       result.fold(
         (failure) => emit(ActionFailure(failure)),
         (_) => emit(const ActionSuccess('Discussion created successfully!')),

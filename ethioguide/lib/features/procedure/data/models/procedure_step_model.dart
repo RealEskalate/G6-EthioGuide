@@ -1,35 +1,34 @@
-import '../../domain/entities/procedure_step.dart';
 
-/// Data model for procedure steps
-class ProcedureStepModel extends MyProcedureStep {
-  const ProcedureStepModel({
+import 'package:equatable/equatable.dart';
+import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
+
+class MyProcedureStepModel extends MyProcedureStep {
+  const MyProcedureStepModel({
     required super.id,
     required super.title,
-    required super.description,
-    required super.isCompleted,
-    super.completionStatus,
-    required super.order,
+    required super.isChecked,
   });
 
-  factory ProcedureStepModel.fromJson(Map<String, dynamic> json) {
-    return ProcedureStepModel(
+  // From JSON
+  factory MyProcedureStepModel.fromJson(Map<String, dynamic> json) {
+    return MyProcedureStepModel(
       id: json['id'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      isCompleted: json['isCompleted'] as bool,
-      completionStatus: json['completionStatus'] as String?,
-      order: json['order'] as int,
+      title: json['content'] as String,
+      isChecked: json['is_checked'] as bool,
     );
   }
 
+  // To JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'title': title,
-      'description': description,
-      'isCompleted': isCompleted,
-      'completionStatus': completionStatus,
-      'order': order,
+      'content': title,
+      'is_checked': isChecked,
     };
   }
+
+  @override
+  List<Object?> get props => [id, title, isChecked];
 }
+
+// accrmony

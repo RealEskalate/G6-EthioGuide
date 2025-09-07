@@ -1,3 +1,5 @@
+import 'package:ethioguide/features/workspace_discussion/domain/entities/user.dart';
+
 import '../../domain/entities/discussion.dart';
 import 'user_model.dart';
 
@@ -8,6 +10,7 @@ class DiscussionModel extends Discussion {
     required super.title,
     required super.content,
     required super.tags,
+    required super.procedure,
     required super.category,
     required super.createdAt,
     required super.createdBy,
@@ -17,22 +20,36 @@ class DiscussionModel extends Discussion {
     super.isPinned = false,
   });
 
-  factory DiscussionModel.fromJson(Map<String, dynamic> json) {
-    return DiscussionModel(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      content: json['content'] as String,
-      tags: (json['tags'] as List<dynamic>).cast<String>(),
-      category: json['category'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      createdBy: UserModel.fromJson(json['createdBy'] as Map<String, dynamic>),
-      likeCount: json['likeCount'] as int,
-      reportCount: json['reportCount'] as int,
-      commentsCount: json['commentsCount'] as int,
-      isPinned: json['isPinned'] as bool? ?? false,
-    );
+factory DiscussionModel.fromJson(Map<String, dynamic> json) {
+  final data = json['post'] ?? json; // handle wrapped vs unwrapped
+
+  return DiscussionModel(
+    id: data["ID"] as String,
+    title: data['Title'] as String,
+    content: data['Content'] as String,
+    tags: (data["Tags"] != null)
+        ? (data["Tags"] as List<dynamic>).cast<String>()
+        : [],
+    procedure: (data["Procedures"] != null)
+        ? (data["Procedures"] as List<dynamic>).cast<String>()
+        : [],
+    category: '', // backend doesn’t send yet
+    createdAt: DateTime.parse(data['CreatedAt'] as String),
+    createdBy: User(id: data["UserID"] ?? '', name: ''), // fix user fallback
+    likeCount: 0,
+    reportCount: 0,
+    commentsCount: 0,
+    isPinned: false,
+  );
+}
+
+
+  static List<DiscussionModel> listFromJson(Map<String, dynamic> json) {
+    final postsJson = json["Posts"]?["posts"] as List<dynamic>? ?? [];
+    return postsJson.map((post) => DiscussionModel.fromJson(post)).toList();
   }
 
+  
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -48,4 +65,5 @@ class DiscussionModel extends Discussion {
       'isPinned': isPinned,
     };
   }
+
 }

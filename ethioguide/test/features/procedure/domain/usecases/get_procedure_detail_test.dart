@@ -5,10 +5,17 @@ import 'package:ethioguide/features/procedure/domain/entities/workspace_procedur
 import 'package:ethioguide/features/procedure/domain/repositories/workspace_procedure_repository.dart';
 import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_detail.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-class MockProcedureDetailRepository extends Mock implements ProcedureDetailRepository {}
+import 'get_procedure_detail_test.mocks.dart';
 
+
+
+
+
+
+@GenerateMocks([ProcedureDetailRepository])
 void main() {
   late MockProcedureDetailRepository mockRepository;
   late GetProcedureDetail usecase;

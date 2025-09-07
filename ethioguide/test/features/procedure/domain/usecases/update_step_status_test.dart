@@ -2,10 +2,17 @@ import 'package:dartz/dartz.dart';
 import 'package:ethioguide/features/procedure/domain/repositories/workspace_procedure_repository.dart';
 import 'package:ethioguide/features/procedure/domain/usecases/update_step_status.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
-class MockProcedureDetailRepository extends Mock implements ProcedureDetailRepository {}
+import 'update_step_status_test.mocks.dart';
 
+
+
+
+
+
+@GenerateMocks([ProcedureDetailRepository])
 void main() {
   late MockProcedureDetailRepository mockRepository;
   late UpdateStepStatus usecase;

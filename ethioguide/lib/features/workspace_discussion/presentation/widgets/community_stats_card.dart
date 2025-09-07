@@ -11,25 +11,30 @@ class CommunityStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        InfoCard(
-          title: 'Members',
-          value: communityStats.totalMembers.toString(),
-          icon: Icons.people,
+    return 
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            InfoCard(
+              title: 'Members',
+              value: communityStats.totalMembers.toString(),
+              icon: Icons.people,
+            ),
+            InfoCard(
+              title: 'Discussions',
+              value: communityStats.totalDiscussions.toString(),
+              icon: Icons.schedule,
+            ),
+            InfoCard(
+              title: 'Active Today',
+              value: communityStats.activeToday.toString(),
+              icon: Icons.check_circle,
+            ),
+          ],
         ),
-        InfoCard(
-          title: 'Discussions',
-          value: communityStats.totalDiscussions.toString(),
-          icon: Icons.schedule,
-        ),
-        InfoCard(
-          title: 'Active Today',
-          value: communityStats.activeToday.toString(),
-          icon: Icons.check_circle,
-        ),
-      ],
-    );
+      );
+    
   }
 }

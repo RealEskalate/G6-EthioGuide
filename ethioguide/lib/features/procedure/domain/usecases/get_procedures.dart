@@ -8,8 +8,8 @@ class GetProcedures {
 
   GetProcedures(this.repository);
 
-  Future<Either<Failure, List<Procedure>>> call() {
-    return repository.getProcedures();
+  Future<Either<Failure, List<Procedure>>> call(String? name ) {
+    return repository.getProcedures(name );
   }
 }
 

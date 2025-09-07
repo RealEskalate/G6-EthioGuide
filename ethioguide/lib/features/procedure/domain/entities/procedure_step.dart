@@ -6,28 +6,20 @@ import '../../presentation/bloc/procedure_bloc.dart';
 class MyProcedureStep extends Equatable {
   final String id;
   final String title;
-  final String description;
-  final bool isCompleted;
-  final String? completionStatus;
-  final int order;
+  final bool isChecked;
+
 
   const MyProcedureStep({
     required this.id,
     required this.title,
-    required this.description,
-    required this.isCompleted,
-    this.completionStatus,
-    required this.order,
+    required this.isChecked,
   });
 
   @override
   List<Object?> get props => [
         id,
         title,
-        description,
-        isCompleted,
-        completionStatus,
-        order,
+        isChecked,
       ];
 }
 
