@@ -1,13 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { ProceduresResponse } from "@/app/types/myprocedures";
 
-// Read token from env (name: ACCESS_TOKEN or NEXT_PUBLIC_ACCESS_TOKEN)
-function readEnvToken(): string | null {
-  return (
-    process.env.NEXT_PUBLIC_ACCESS_TOKEN || process.env.ACCESS_TOKEN || null
-  );
-}
-
 // Read token from localStorage/sessionStorage/cookie/env
 function readToken(): string | null {
   if (typeof window !== "undefined") {

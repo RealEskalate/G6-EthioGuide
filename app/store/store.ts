@@ -9,6 +9,7 @@ import { noticesApi } from "./slices/noticesSlice";
 import { feedbackApi } from "./slices/feedbackApi";
 import { proceduresApi } from "./slices/proceduresApi";
 import { discussionsApi } from "./slices/discussionsApi";
+import { checklistsApi } from "./slices/checklistsApi";
 
 export const store = configureStore({
   reducer: {
@@ -21,6 +22,7 @@ export const store = configureStore({
     [feedbackApi.reducerPath]: feedbackApi.reducer,
     [proceduresApi.reducerPath]: proceduresApi.reducer,
     [discussionsApi.reducerPath]: discussionsApi.reducer,
+    [checklistsApi.reducerPath]: checklistsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -30,7 +32,8 @@ export const store = configureStore({
       noticesApi.middleware,
       feedbackApi.middleware,
       proceduresApi.middleware,
-      discussionsApi.middleware
+      discussionsApi.middleware,
+      checklistsApi.middleware
     ),
   devTools: true,
 });
