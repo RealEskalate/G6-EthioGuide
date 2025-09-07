@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Image from "next/image"
 import { Search, Plus, MessageSquare, Filter, X, ChevronRight, ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -158,29 +157,29 @@ export default function CommunityPage() {
 
       <div className="max-w-7xl mx-auto w-full flex-1">
         {/* Header */}
-        <div className="bg-white/90 border border-gray-100 rounded-xl p-4 sm:p-5 mb-4 sm:mb-6 shadow-sm fade-in-up">
+        <div className="bg-white border border-gray-100 rounded-xl p-4 sm:p-5 mb-4 sm:mb-6 shadow-sm fade-in-up">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="w-full">
               <div className="flex items-center gap-3 mb-1">
-                <MessageSquare className="h-7 w-7 text-[#3A6A8D]" />
-                <h1 className="text-xl leading-snug sm:text-3xl font-bold text-gray-900">
+                <MessageSquare className="h-7 w-7" style={{ color: '#3a6a8d' }} />
+                <h1 className="text-xl leading-snug sm:text-3xl font-bold text-[#111827]">
                   Community Discussions
                 </h1>
               </div>
-              <p className="text-gray-600 text-xs sm:text-sm md:text-base">
+              <p className="text-[#4b5563] text-xs sm:text-sm md:text-base">
                 Join the conversation. Share, ask, and collaborate.
               </p>
             </div>
             <div className="hidden sm:flex gap-2">
               <Button
                 variant="outline"
-                className="border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5"
+                className="border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/10"
                 onClick={() => router.push("/user/my-discussions")}
               >
                 My Discussions
               </Button>
               <Button
-                className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
+                className="bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] hover:from-[#2e4d57] hover:to-[#1c3b2e] text-white"
                 onClick={() => router.push("/user/create-post")}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -191,7 +190,7 @@ export default function CommunityPage() {
             <div className="w-full sm:hidden flex gap-2">
               <Button
                 variant="outline"
-                className="flex-1 border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5"
+                className="flex-1 border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/10"
                 onClick={() => setMobilePanelOpen(true)}
               >
                 <Filter className="h-4 w-4 mr-2" />
@@ -202,8 +201,7 @@ export default function CommunityPage() {
         </div>
 
         {/* Search & Filters (desktop / tablet) */}
-        <Card className="p-4 mb-4 sm:mb-6 hidden sm:block fade-in-up" style={{ animationDelay: "80ms" }}>
-          {/* ...existing search/filter block unchanged... */}
+        <Card className="bg-white border border-gray-100 rounded-xl p-4 mb-4 sm:mb-6 hidden sm:block shadow-sm fade-in-up" style={{ animationDelay: "80ms" }}>
           <div className="flex flex-col gap-4 w-full mb-2 sm:flex-row">
             <div className="relative flex-1 flex">
               {/* ...existing code... */}
@@ -218,7 +216,7 @@ export default function CommunityPage() {
               />
               <Button
                 type="button"
-                className="ml-2 px-4 py-2 bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
+                className="ml-2 px-4 py-2 bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] hover:from-[#2e4d57] hover:to-[#1c3b2e] text-white"
                 onClick={() => setSearchQuery(searchInput)}
               >
                 Search
@@ -227,7 +225,7 @@ export default function CommunityPage() {
             {/* Categories only (backend tags); fixed width so search expands */}
             <div className="flex gap-2 flex-none w-56">
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-full border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent">
+                <SelectTrigger className="w-full border-[#3A6A8D] text-[#3A6A8D] focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -243,7 +241,7 @@ export default function CommunityPage() {
             </div>
           </div>
           {searchTags.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
+            <div className="relative z-10 flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
               {searchTags.map((tag, i) => (
                 <Badge key={tag} variant="outline" className={`${tagPillClasses(i)} flex-shrink-0`}>
                   {tag}
@@ -380,23 +378,23 @@ export default function CommunityPage() {
                       viewport={{ once: true, amount: 0.2 }}
                       custom={index}
                     >
-                      <Card
-                        className="p-3 sm:p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all card-tilt"
-                      >
-                        <CardContent className="p-0">
+                      <Card className="group bg-white rounded-2xl border border-[#e5e7eb] shadow-xl relative overflow-hidden ring-1 ring-transparent hover:ring-[#3a6a8d]/20 transition-all duration-300 transform-gpu hover:-translate-y-0.5 hover:shadow-2xl p-3 sm:p-6">
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#3a6a8d]/10 via-transparent to-[#5e9c8d]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <CardContent className="relative z-10 p-0">
                           <div className="flex gap-3 sm:gap-4 flex-col sm:flex-row">
-                            <Image
-                              src={discussion.avatar || "/placeholder.svg"}
-                              alt={discussion.title}
-                              width={44}
-                              height={44}
-                              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover mx-auto sm:mx-0 ring-2 ring-white shadow"
-                            />
+                            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#f3f4f6] flex items-center justify-center mx-auto sm:mx-0 ring-2 ring-white shadow">
+                              <MessageSquare className="w-5 h-5" style={{ color: '#3a6a8d' }} />
+                            </div>
                             <div className="flex-1">
-                              <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-2">
-                                {discussion.title}
-                              </h3>
-                              <p className={`text-gray-700 text-sm sm:text-[15px] mb-3 ${isExpanded ? "" : "line-clamp-2"}`}>
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="text-sm sm:text-base font-semibold text-[#111827]">
+                                  {discussion.title}
+                                </h3>
+                                <Badge variant="secondary" className="text-[10px] sm:text-xs bg-gray-100 text-gray-700 border border-gray-200">
+                                  Anonymous
+                                </Badge>
+                              </div>
+                              <p className={`text-[#374151] text-sm sm:text-[15px] mb-3 ${isExpanded ? "" : "line-clamp-2"}`}>
                                 {discussion.content}
                               </p>
                               <div className="flex flex-wrap gap-2">
@@ -470,7 +468,9 @@ export default function CommunityPage() {
 
           {/* Sidebar (desktop only) */}
           <div className="lg:col-span-3 space-y-6 hidden lg:block fade-in-up" style={{ animationDelay: "100ms" }}>
-            <Card className="p-4 bg-white hover:shadow-xl transform transition duration-300 hover:scale-[1.02]">
+            <Card className="group relative overflow-hidden p-4 bg-white border border-[#e5e7eb] rounded-2xl shadow-xl hover:shadow-2xl transform transition duration-300 hover:-translate-y-0.5">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#3a6a8d]/10 via-transparent to-[#5e9c8d]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative z-10">
               <h3 className="font-semibold text-gray-900 mb-4 text-sm sm:text-base">Popular Tags</h3>
               <div className="space-y-2">
                 {popularTags.map((tag, i) => (
@@ -481,6 +481,7 @@ export default function CommunityPage() {
                     <span className="text-xs text-gray-500">{tag.count}</span>
                   </div>
                 ))}
+              </div>
               </div>
             </Card>
           </div>

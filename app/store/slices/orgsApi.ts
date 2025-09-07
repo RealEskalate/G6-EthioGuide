@@ -23,10 +23,15 @@ export const orgsApi = createApi({
   endpoints: (builder) => ({
     getOrg: builder.query<Org, string>({
       query: (id) => `/orgs/${id}`,
-      transformResponse: (raw: unknown): Org => {
+      transformResponse: (raw: unknown, _meta, id): Org => {
         // support { data: {...} } or direct object
         const data = (raw as { data?: unknown })?.data ?? raw;
-        return normalizeOrg(data);
+        const normalized = normalizeOrg(data);
+        if (typeof window !== "undefined") {
+          // Centralized log for org/{id} responses
+          console.log("org/" + id + " response", { raw, normalized });
+        }
+        return normalized;
       },
     }),
   }),

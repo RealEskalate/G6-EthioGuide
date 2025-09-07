@@ -131,26 +131,26 @@ export default function NoticesPage() {
         <div className="absolute -top-24 -right-24 w-56 h-56 rounded-full blur-3xl" style={{ background: 'radial-gradient(closest-side, rgba(167,179,185,0.10), rgba(167,179,185,0))' }} />
         <div className="absolute -bottom-28 -left-28 w-64 h-64 rounded-full blur-3xl" style={{ background: 'radial-gradient(closest-side, rgba(94,156,141,0.10), rgba(94,156,141,0))' }} />
       </div>
+      <div className="relative z-10 max-w-7xl w-full mx-auto px-4 sm:px-6 md:px-8">
       {/* Header */}
       <motion.div
-        className="flex items-center justify-between mb-8"
+        className="bg-white border border-gray-100 rounded-xl p-4 sm:p-5 mb-4 sm:mb-6 shadow-sm"
         variants={headerVariants}
         initial="hidden"
         animate="visible"
       >
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <FileText className="h-8 w-8 text-[#3A6A8D]" />
-            <h1 className="text-3xl font-bold text-gray-900">Official Notices</h1>
+          <div className="flex items-center gap-3 mb-1">
+            <FileText className="h-7 w-7" style={{ color: '#3a6a8d' }} />
+            <h1 className="text-xl leading-snug sm:text-2xl font-bold text-[#111827]">Official Notices</h1>
           </div>
-          <p className="text-gray-600">Get notices of different organizations</p>
+          <p className="text-[#4b5563] text-sm">Get notices of different organizations</p>
         </div>
       </motion.div>
 
       {/* Search and Filters */}
-      <Card className="bg-white/80 backdrop-blur-md rounded-2xl border border-[#e5e7eb] shadow-xl relative overflow-hidden p-4 mb-6">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#3a6a8d]/10 via-transparent to-[#5e9c8d]/10" />
-        <div className="relative z-10 flex flex-col gap-4 w-full mb-2 sm:flex-row">
+  <Card className="bg-white border border-gray-100 rounded-xl p-4 mb-4 sm:mb-6 shadow-sm">
+        <div className="flex flex-col gap-4 w-full mb-2 sm:flex-row">
           <div className="relative flex-1 flex">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
@@ -169,9 +169,9 @@ export default function NoticesPage() {
             </Button>
           </div>
           {/* Org filter */}
-      <div className="w-full sm:w-64">
+          <div className="w-full sm:w-64">
             <Select value={orgFilter} onValueChange={setOrgFilter}>
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full border-[#3A6A8D] text-[#3A6A8D] focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent">
                 <SelectValue placeholder="All Organizations" />
               </SelectTrigger>
               <SelectContent>
@@ -195,7 +195,7 @@ export default function NoticesPage() {
       </Card>
 
       {/* Notices List */}
-      <div className="space-y-6">
+      <div className="space-y-5 pb-8">
         {noticesLoading && <div className="text-gray-600">Loading notices...</div>}
         {noticesError && <div className="text-red-600">Failed to load notices.</div>}
         {!noticesLoading &&
@@ -212,11 +212,9 @@ export default function NoticesPage() {
                 animate="visible"
                 transition={{ delay: index * 0.05 + 0.06 }}
               >
-                <Card className="group bg-white/80 backdrop-blur-md rounded-2xl border border-[#e5e7eb] shadow-xl relative overflow-hidden ring-1 ring-transparent hover:ring-[#3a6a8d]/15 transition-all duration-300 transform-gpu hover:-translate-y-0.5 hover:shadow-2xl">
-                  <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#3a6a8d]/5 via-transparent to-[#5e9c8d]/5" />
-                  </div>
-                  <CardContent className="relative z-10 p-6">
+                <Card className="group bg-white rounded-2xl border border-[#e5e7eb] shadow-xl relative overflow-hidden ring-1 ring-transparent hover:ring-[#3a6a8d]/20 transition-all duration-300 transform-gpu hover:-translate-y-0.5 hover:shadow-2xl p-3 sm:p-6">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#3a6a8d]/10 via-transparent to-[#5e9c8d]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <CardContent className="relative z-10 p-0">
                     <div className="mb-3 flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#e6f0f5' }}>
                         <FileText className="w-5 h-5" style={{ color: '#3a6a8d' }} />
@@ -268,6 +266,7 @@ export default function NoticesPage() {
           </motion.div>
         )}
       </div>
+  </div>
     </motion.div>
   );
 
