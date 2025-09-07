@@ -36,6 +36,8 @@ export default function CommunityPage() {
     }
   }, [data])
 
+  // no saved cards count here; show discussions API total instead
+
   const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({})
 
   // reset expanded per page
@@ -88,6 +90,15 @@ export default function CommunityPage() {
 
   // helper to normalize tags for comparison
   const normalizeTag = (s: string) => String(s || "").replace(/^#/, "").trim().toLowerCase()
+
+  // Map backend tag values to display labels to match create-post options
+  const displayTag = (raw: string) => {
+    const clean = String(raw || "").replace(/^#/, "").trim().toLowerCase()
+    if (clean === "business") return "National Id"
+    if (clean === "passport") return "passport"
+    if (clean === "tax") return "tax"
+    return String(raw || "").replace(/^#/, "").trim()
+  }
 
   const popularTags = (() => {
     const counts = new Map<string, number>()
@@ -232,7 +243,7 @@ export default function CommunityPage() {
                   <SelectItem value="all">All Categories</SelectItem>
                   {searchTags.map((tag) => (
                     <SelectItem key={tag} value={tag}>
-                      {tag}
+                      {displayTag(tag)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -244,7 +255,7 @@ export default function CommunityPage() {
             <div className="relative z-10 flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
               {searchTags.map((tag, i) => (
                 <Badge key={tag} variant="outline" className={`${tagPillClasses(i)} flex-shrink-0`}>
-                  {tag}
+                  {displayTag(tag)}
                 </Badge>
               ))}
             </div>
@@ -301,7 +312,7 @@ export default function CommunityPage() {
                       <SelectItem value="all">All Categories</SelectItem>
                       {searchTags.map((tag) => (
                         <SelectItem key={tag} value={tag}>
-                          {tag}
+                          {displayTag(tag)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -314,13 +325,13 @@ export default function CommunityPage() {
                       Popular Tags
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {searchTags.map((tag, i) => (
+            {searchTags.map((tag, i) => (
                         <Badge
                           key={tag}
                           variant="outline"
                           className={`${tagPillClasses(i)} px-3 py-1`}
                         >
-                          {tag}
+              {displayTag(tag)}
                         </Badge>
                       ))}
                     </div>
@@ -406,7 +417,7 @@ export default function CommunityPage() {
                                       variant="outline"
                                       className={`text-[10px] sm:text-xs ${tagPillClasses(i)}`}
                                     >
-                                      {clean}
+                                      {displayTag(tag)}
                                     </Badge>
                                   )
                                 })}
@@ -476,7 +487,7 @@ export default function CommunityPage() {
                 {popularTags.map((tag, i) => (
                   <div key={tag.name} className="flex items-center justify-between text-sm">
                     <Badge variant="outline" className={tagPillClasses(i)}>
-                      {tag.name}
+                      {displayTag(tag.name)}
                     </Badge>
                     <span className="text-xs text-gray-500">{tag.count}</span>
                   </div>
@@ -492,9 +503,7 @@ export default function CommunityPage() {
           {isLoading && <div className="text-sm text-gray-500">Loading...</div>}
           {isError && <div className="text-sm text-red-600">Failed to load discussions.</div>}
           {!isLoading && !isError && data && (
-            <div className="text-xs sm:text-sm text-gray-600">
-              Total: {data.total} • Page: {data.page} • Limit: {data.limit}
-            </div>
+            <div className="text-xs sm:text-sm text-gray-600">Total: {data.total}</div>
           )}
         </div>
       </div>
