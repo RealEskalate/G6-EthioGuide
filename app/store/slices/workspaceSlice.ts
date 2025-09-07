@@ -27,11 +27,29 @@ function readToken(): string | null {
   );
 }
 
+// Read token from localStorage or cookie (adjust key names if different)
+function readAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  const fromLocalStorage =
+    localStorage.getItem("accessToken") ||
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken");
+  if (fromLocalStorage) return fromLocalStorage;
+  const m = document.cookie.match(/(?:^|; )accessToken=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+const RAW_BACKEND = (
+  process.env.NEXT_PUBLIC_API_URL || "https://ethio-guide-backend.onrender.com"
+).replace(/\/$/, "");
+const API_BASE = /\/api\/v1$/.test(RAW_BACKEND)
+  ? RAW_BACKEND
+  : `${RAW_BACKEND}/api/v1/`;
+
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
-    baseUrl: "https://ethio-guide-backend.onrender.com/api/v1/",
-    credentials: "include",
+    baseUrl: API_BASE,
     prepareHeaders: (headers) => {
       const token = readToken();
       if (token) {

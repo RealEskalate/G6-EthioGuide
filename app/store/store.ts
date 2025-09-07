@@ -8,8 +8,8 @@ import aiChatReducer from "./slices/aiChatSlice";
 import { noticesApi } from "./slices/noticesSlice";
 import { feedbackApi } from "./slices/feedbackApi";
 import { proceduresApi } from "./slices/proceduresApi";
-import { discussionsApi } from "./slices/discussionsApi";
 import { checklistsApi } from "./slices/checklistsApi";
+import { discussionsApi } from "./slices/discussionsApi";
 
 export const store = configureStore({
   reducer: {
@@ -21,8 +21,9 @@ export const store = configureStore({
     [noticesApi.reducerPath]: noticesApi.reducer,
     [feedbackApi.reducerPath]: feedbackApi.reducer,
     [proceduresApi.reducerPath]: proceduresApi.reducer,
-    [discussionsApi.reducerPath]: discussionsApi.reducer,
     [checklistsApi.reducerPath]: checklistsApi.reducer,
+    [discussionsApi.reducerPath]: discussionsApi.reducer,
+    // [checklistsApi.reducerPath]: checklistsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(

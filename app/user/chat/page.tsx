@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import { useSession } from "next-auth/react";
+import { useCreateChecklistMutation } from '@/app/store/slices/checklistsApi'
 import { RootState, AppDispatch } from '@/app/store/store';
 import { fetchChatHistory, sendMessage, addUserMessage, clearError, fetchChatById } from '@/app/store/slices/aiChatSlice';
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ export default function ChatPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const router = useRouter();
+  const [createChecklist] = useCreateChecklistMutation();
 
   useEffect(() => {
     const token = session?.accessToken;

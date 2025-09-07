@@ -91,7 +91,7 @@ export const ProceduresAPI = {
   get: (id: string) => apiRequest<unknown>(`/procedures/${id}`),
   // authToken optional now; backend mock expected to accept unauthenticated creation
   createChecklist: (procedureId: string, authToken?: string) =>
-    apiRequest<unknown>("/checklists", { method: "POST", authToken, body: { procedureId } }),
+    apiRequest<unknown>("/checklists", { method: "POST", authToken, body: { procedure_id: procedureId } }),
   // list feedback entries for a procedure (pageable)
   listFeedback: (procedureId: string, params?: { page?: number; limit?: number }, authToken?: string) =>
     apiRequest<{ data: unknown[]; total: number; page: number; limit: number; hasNext?: boolean }>(
@@ -103,7 +103,7 @@ export const ProceduresAPI = {
 };
 
 export const ChecklistsAPI = {
-  getMine: (authToken?: string) => apiRequest<unknown>("/myProcedures", { authToken }),
+  getMine: (authToken?: string) => apiRequest<unknown>("/checklists/myProcedures", { authToken }),
   getOne: (userProcedureId: string, authToken?: string) => apiRequest<unknown>(`/checklists/${userProcedureId}`, { authToken }),
   patchItem: (checklistID: string, body: Record<string, unknown>, authToken?: string) =>
     apiRequest<unknown>(`/checklists/${checklistID}`, { method: "PATCH", authToken, body }),
