@@ -285,6 +285,7 @@ Future<void> init() async {
 
         connectTimeout: const Duration(seconds: 111), // Waits 60s to connect
         receiveTimeout: const Duration(seconds: 111),
+
       ),
     );
     dio.interceptors.add(AuthInterceptor(sl<CoreAuthRepository>(), dio));

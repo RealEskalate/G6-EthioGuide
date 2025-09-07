@@ -112,6 +112,7 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
         throw throwsException(statusCode);
       }
 
+      debugPrint('${response.data}');
       return ConversationModel.fromJson(response.data);
     } on DioException catch (e) {
       // TODO: remove debug print
