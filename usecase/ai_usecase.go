@@ -122,7 +122,7 @@ Your Response for target language 'fr': "Bonjour le monde|||Comment ça va?"
 
 Now, perform the translation for the following text:
 %s
-`, separator, targetLang, separator, separator, contentToTranslate)
+`, separator, targetLang, separator, contentToTranslate)
 
 	translatedBlock, err := g.geminiServices.GenerateCompletion(ctx, prompt)
 	if err != nil {
