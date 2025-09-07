@@ -89,19 +89,21 @@ class _ChatPageState extends State<ChatPage> {
     _scrollToBottom();
   }
 
-  void _removeLoadingMessage() {
+  void _removeLoadingMessage({required bool queryFailed}) {
     setState(() {
       final conv = _history.removeLast();
       // Add Just the query to display as failed
-      _history.add(
-        Conversation(
-          id: conv.id,
-          request: conv.request,
-          response: '',
-          source: 'failed',
-          procedures: [],
-        ),
-      );
+      if (queryFailed) {
+        _history.add(
+          Conversation(
+            id: conv.id,
+            request: conv.request,
+            response: '',
+            source: 'failed',
+            procedures: [],
+          ),
+        );
+      }
     });
   }
 
@@ -130,10 +132,10 @@ class _ChatPageState extends State<ChatPage> {
           });
           _scrollToBottom();
         } else if (state is AiQuerySuccess) {
-          _removeLoadingMessage();
+          _removeLoadingMessage(queryFailed: false);
           _addMessage(conversation: state.conversation);
         } else if (state is AiError) {
-          _removeLoadingMessage();
+          _removeLoadingMessage(queryFailed: true);
           _addMessage(
             conversation: Conversation(
               id: 'error-${DateTime.now().millisecondsSinceEpoch}',
@@ -160,9 +162,6 @@ class _ChatPageState extends State<ChatPage> {
               break;
             }
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Translated: ${newConv}')),
-          );
         }
       },
       child: Scaffold(
