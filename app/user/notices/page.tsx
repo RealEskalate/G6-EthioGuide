@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, FileText, Search } from "lucide-react";
 import { useGetNoticesQuery } from "@/app/store/slices/noticesSlice";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 
 type Notice = {
