@@ -214,12 +214,21 @@ func (cr *ChecklistRepository) ToggleCheck(ctx context.Context, checklistID stri
 		// --- Step 3: Calculate the new percentage ---
 		// Use float64 for division to get an accurate ratio.
 		percentage := int((float64(checkedCount) / float64(totalCount)) * 100.0)
+		var status string
+		if percentage == 100 {
+			status = "Completed"
+		} else if percentage > 0 {
+			status = "In Progress"
+		} else {
+			status = "Not Started"
+		}
 
 		// --- Step 4: Update the parent UserProcedure document ---
 		parentUpdateFilter := bson.M{"_id": userProcedureID}
 		parentUpdate := bson.M{
 			"$set": bson.M{
 				"percent":    percentage,
+				"status":     status,
 				"updated_at": time.Now(),
 			},
 		}
