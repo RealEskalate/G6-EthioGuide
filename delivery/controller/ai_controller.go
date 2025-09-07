@@ -2,6 +2,7 @@ package controller
 
 import (
 	"EthioGuide/domain"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -38,6 +39,9 @@ func (gc *GeminiController) Translate(c *gin.Context) {
 	if preferredLang == "" {
 		preferredLang = "en"
 	}
+	log.Println("/ai/translate called with the following body and header")
+	log.Println("request", request)
+	log.Println("lang", preferredLang)
 
 	translated, err := gc.geminiUseCase.TranslateJSON(c.Request.Context(), request.Content, preferredLang)
 
