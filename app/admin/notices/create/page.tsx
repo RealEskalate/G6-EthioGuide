@@ -23,13 +23,14 @@ export default function CreateOfficialNotice() {
   
   const { data: session } = useSession();
   const token = session?.accessToken;
+  const userId = session?.user?.id;
   
   // Handle submit
   const handleSubmit = async () => {
-  const now = new Date().toISOString(); // current timestamp
+  const now = new Date().toISOString(); 
 
   const payload = {
-    organization_id: "YOUR_ORG_ID", // replace dynamically
+    organization_id: userId,
     title,
     content,
     created_at: now,
