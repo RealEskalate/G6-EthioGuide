@@ -3,7 +3,8 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, FileText, User } from "lucide-react";
+import { Calendar, FileText, Building2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { notices } from "@/lib/noticesData";
 
@@ -25,46 +26,53 @@ export default function NoticeDetailPage({ params }: { params: { id: string } })
     );
   }
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-3xl mx-auto space-y-6">
-        {/* Back Arrow and Title */}
-        <div className="flex items-center gap-2 mb-2">
-          <button
-            className="flex items-center gap-2 text-[#3A6A8D] hover:text-[#2d5470] font-medium"
-            onClick={() => router.back()}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+    <main className="min-h-screen w-full bg-gray-50 relative overflow-hidden p-4 sm:p-6 md:p-8">
+      {/* subtle brand orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-24 -right-24 w-56 h-56 rounded-full blur-3xl" style={{ background: 'radial-gradient(closest-side, rgba(167,179,185,0.10), rgba(167,179,185,0))' }} />
+        <div className="absolute -bottom-28 -left-28 w-64 h-64 rounded-full blur-3xl" style={{ background: 'radial-gradient(closest-side, rgba(94,156,141,0.10), rgba(94,156,141,0))' }} />
+      </div>
+
+      <div className="relative z-10 max-w-3xl mx-auto space-y-6">
+        {/* Back button */}
+        <div className="flex items-center">
+          <Button variant="outline" onClick={() => router.back()} className="border-[#3a6a8d] text-[#3a6a8d] hover:bg-[#3a6a8d]/10">
             Back to Notices
-          </button>
+          </Button>
         </div>
-        <h1 className="text-xl font-semibold text-gray-900 mb-2">{notice.title}</h1>
-        {/* Card 1: Organization Info */}
-        <Card className="bg-white p-4">
-          <CardContent className="p-0">
-            <div className="flex flex-wrap items-center gap-6">
-              <span className="flex items-center gap-1 text-gray-500">
-                <FileText className="w-4 h-4" />
-                Organization: <span className="font-semibold text-gray-900">{notice.organization}</span>
+
+        <h1 className="text-2xl font-semibold text-[#111827]">{notice.title}</h1>
+
+        {/* Meta Card: Published + Organization */}
+        <Card className="bg-white/80 backdrop-blur-md rounded-2xl border border-[#e5e7eb] shadow-xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#3a6a8d]/10 via-transparent to-[#5e9c8d]/10" />
+          <CardContent className="relative z-10 p-4">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+              <span className="flex items-center gap-2 text-[#4b5563]">
+                <Calendar className="w-4 h-4" />
+                <span className="hidden sm:inline">Published:</span>
+                <span className="font-medium text-[#111827]">{notice.published}</span>
               </span>
-              <span className="flex items-center gap-1 text-gray-500">
-                <Calendar className="w-4 h-4" /> Posted: <span className="font-semibold text-gray-900">{notice.published}</span>
+              <span className="flex items-center gap-2 text-[#4b5563]">
+                <Building2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Organization:</span>
+                <span className="font-semibold text-[#111827]">{notice.organization}</span>
               </span>
-              <span className="flex items-center gap-1 text-gray-500">
-                <User className="w-4 h-4" /> Author: <span className="font-semibold text-gray-900">{notice.author}</span>
-              </span>
+              {/* No department/category chip per request */}
             </div>
           </CardContent>
         </Card>
 
-        {/* Card 2: Main Notice Content */}
-        <Card className="bg-white p-6">
-          <CardContent className="p-0">
-            <p className="text-gray-700 mb-4">Dear Team Members,</p>
-            <p className="text-gray-700 mb-4">{notice.description}</p>
+        {/* Main Notice Content */}
+        <Card className="bg-white/80 backdrop-blur-md rounded-2xl border border-[#e5e7eb] shadow-xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#3a6a8d]/5 via-transparent to-[#5e9c8d]/5" />
+          <CardContent className="relative z-10 p-6">
+            <p className="text-[#374151] mb-4">Dear Team Members,</p>
+            <p className="text-[#374151] mb-4">{notice.description}</p>
             {Array.isArray(notice.keyChanges) && notice.keyChanges.length > 0 && (
               <>
-                <h2 className="font-semibold text-gray-900 mb-2">Key Policy Changes:</h2>
-                <ul className="list-disc ml-6 mb-4 text-gray-700">
+                <h2 className="font-semibold text-[#111827] mb-2">Key Policy Changes:</h2>
+                <ul className="list-disc ml-6 mb-4 text-[#374151]">
                   {notice.keyChanges.map((change, idx) => (
                     <li key={idx}>{change}</li>
                   ))}
@@ -73,35 +81,36 @@ export default function NoticeDetailPage({ params }: { params: { id: string } })
             )}
             {Array.isArray(notice.securityUpdates) && notice.securityUpdates?.length > 0 && (
               <>
-                <h2 className="font-semibold text-gray-900 mb-2">Security Protocol Updates:</h2>
-                <ul className="list-disc ml-6 mb-4 text-gray-700">
+                <h2 className="font-semibold text-[#111827] mb-2">Security Protocol Updates:</h2>
+                <ul className="list-disc ml-6 mb-4 text-[#374151]">
                   {notice.securityUpdates?.map((update, idx) => (
                     <li key={idx}>{update}</li>
                   ))}
                 </ul>
               </>
             )}
-            <p className="text-gray-700 mt-4">For questions regarding these policy changes, please contact the HR department or attend one of our information sessions scheduled for next week. Your cooperation in implementing these changes is greatly appreciated.</p>
-            <p className="text-gray-700 mt-4">Best regards, <span className="font-semibold">Sarah Johnson</span> HR Director,<br />TechCorp Solutions</p>
+            <p className="text-[#374151] mt-4">For questions regarding these policy changes, please contact the HR department or attend one of our information sessions scheduled for next week. Your cooperation in implementing these changes is greatly appreciated.</p>
+            <p className="text-[#374151] mt-4">Best regards, <span className="font-semibold">Sarah Johnson</span> HR Director,<br />TechCorp Solutions</p>
           </CardContent>
         </Card>
 
-        {/* Card 3: Attachments */}
+        {/* Attachments */}
         {Array.isArray(notice.attachments) && notice.attachments?.length > 0 && (
-          <Card className="bg-white p-6">
-            <CardContent className="p-0">
-              <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[#3A6A8D]" /> Attachments
+          <Card className="bg-white/80 backdrop-blur-md rounded-2xl border border-[#e5e7eb] shadow-xl relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#3a6a8d]/5 via-transparent to-[#5e9c8d]/5" />
+            <CardContent className="relative z-10 p-6">
+              <h2 className="font-semibold text-[#111827] mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5" style={{ color: '#3a6a8d' }} /> Attachments
               </h2>
               <div className="space-y-4">
                 {notice.attachments?.map((file, idx) => (
-                  <div key={idx} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div key={idx} className="flex items-center gap-4 p-4 bg-white/70 rounded-xl border border-[#e5e7eb]">
                     <FileText className={`w-6 h-6 ${file.name.endsWith('.pdf') ? 'text-red-500' : 'text-blue-500'}`} />
                     <div className="flex-1">
-                      <span className="font-medium text-gray-900">{file.name}</span>
-                      <div className="text-xs text-gray-500">{file.size}</div>
+                      <span className="font-medium text-[#111827]">{file.name}</span>
+                      <div className="text-xs text-[#6b7280]">{file.size}</div>
                     </div>
-                    <button className="text-[#3A6A8D] hover:underline">
+                    <button className="text-[#3a6a8d] hover:underline">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" /></svg>
                     </button>
                   </div>
@@ -111,6 +120,6 @@ export default function NoticeDetailPage({ params }: { params: { id: string } })
           </Card>
         )}
       </div>
-    </div>
+    </main>
   );
 }

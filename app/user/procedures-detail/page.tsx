@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { Suspense, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { useGetProcedureFlexibleQuery } from "@/app/store/slices/proceduresApi"
 import {
   ArrowLeft,
@@ -24,7 +24,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useGetProcedureFeedbackQuery } from "@/app/store/slices/feedbackApi"
 import { useCreateChecklistMutation } from "@/app/store/slices/checklistsApi"
-import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useListDiscussionsQuery } from "@/app/store/slices/discussionsApi"
 

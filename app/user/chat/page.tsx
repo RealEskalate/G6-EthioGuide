@@ -449,9 +449,14 @@ export default function ChatPage() {
       dispatch(addUserMessage(newMessage));
       if (token) {
         dispatch(sendMessage({ query: inputMessage, token })).then((result) => {
-          if (result.meta.requestStatus === "fulfilled") {
+          // log the raw thunk result and payload
+          console.log("Chat sendMessage result:", result);
+          if (result?.meta?.requestStatus === "fulfilled") {
+            console.log("Chat API payload:", result.payload);
             setSuccessMessage("Message sent successfully!");
             setTimeout(() => setSuccessMessage(""), 3000);
+          } else {
+            console.error("Chat API error result:", result);
           }
         });
       }
@@ -542,6 +547,67 @@ export default function ChatPage() {
         }
       });
     }
+  };
+
+  // show intro until user interacts (no messages yet)
+  const isEmpty = messages.length === 0;
+
+  // quick suggestions for first-time users
+  const suggestions = [
+    "What documents do I need for a business license?",
+    "Help me start the tourist visa application.",
+    "Show me the steps to renew a residence permit.",
+    "Translate the requirements into Amharic.",
+  ];
+  const handleUseSuggestion = (text: string) => setInputMessage(text);
+
+  // parser: extract Procedure, Required Documents, Steps from assistant text
+  const parseGuide = (text: string) => {
+    const lines = (text || "").split(/\r?\n/).map(l => l.trim());
+    let procedure = "";
+    const documents: string[] = [];
+    const steps: string[] = [];
+    let inDocs = false;
+    let inSteps = false;
+
+    for (const raw of lines) {
+      const line = raw.replace(/\s+$/g, "");
+      if (!line) continue;
+
+      if (/^procedure\s*:/i.test(line)) {
+        procedure = line.split(/:/, 2)[1]?.trim() || "";
+        inDocs = false; inSteps = false;
+        continue;
+      }
+      if (/^required documents\s*:?/i.test(line)) {
+        inDocs = true; inSteps = false;
+        continue;
+      }
+      if (/^steps\s*:?/i.test(line)) {
+        inSteps = true; inDocs = false;
+        continue;
+      }
+
+      // bullets and numbered lines
+      const isBullet = /^[-•]\s+/.test(line);
+      const isNum = /^\d+[\.\)]\s+/.test(line);
+
+      if (inDocs && (isBullet || isNum)) {
+        documents.push(line.replace(/^[-•]\s+/, "").replace(/^\d+[\.\)]\s+/, "").trim());
+        continue;
+      }
+      if (inSteps && (isBullet || isNum)) {
+        steps.push(line.replace(/^[-•]\s+/, "").replace(/^\d+[\.\)]\s+/, "").trim());
+        continue;
+      }
+    }
+
+    return {
+      hasStructured: Boolean(procedure || documents.length || steps.length),
+      procedure,
+      documents,
+      steps,
+    };
   };
 
   if (status === "loading") {

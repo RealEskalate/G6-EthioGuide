@@ -122,10 +122,9 @@ export default function MyDiscussionsPage() {
                   viewport={{ once: true, amount: 0.2 }}
                   custom={index}
                 >
-                  <Card
-                    className="p-4 sm:p-6 bg-white hover:shadow-lg transition-all duration-300 card-tilt"
-                  >
-                    <CardContent className="p-0 overflow-hidden">
+                  <Card className="group p-4 sm:p-6 bg-white rounded-2xl border border-[#e5e7eb] shadow-xl relative overflow-hidden ring-1 ring-transparent hover:ring-[#3a6a8d]/20 transition-all duration-300 transform-gpu hover:-translate-y-0.5 hover:shadow-2xl">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#3a6a8d]/10 via-transparent to-[#5e9c8d]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <CardContent className="relative z-10 p-0 overflow-hidden">
                       <div className="flex gap-4 flex-col sm:flex-row">
                         <Image
                           src={"/images/profile-photo.jpg"}
@@ -137,8 +136,8 @@ export default function MyDiscussionsPage() {
                         <div className="flex-1 min-w-0">
                           {!isEditing ? (
                             <>
-                              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 break-words">{p.Title}</h3>
-                              <p className="text-gray-700 mb-4 line-clamp-2 break-words">{p.Content}</p>
+                              <h3 className="text-base sm:text-lg font-semibold text-[#111827] mb-2 break-words">{p.Title}</h3>
+                              <p className="text-[#374151] mb-4 line-clamp-2 break-words">{p.Content}</p>
                             </>
                           ) : (
                             <div className="space-y-2 mb-3">
@@ -174,7 +173,7 @@ export default function MyDiscussionsPage() {
                               <>
                                 <Button
                                   size="sm"
-                                  className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white transition-all duration-200 hover:scale-105 w-full sm:w-auto"
+                                  className="bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] hover:from-[#2e4d57] hover:to-[#1c3b2e] text-white transition-all duration-200 hover:scale-105 w-full sm:w-auto"
                                   onClick={() => onEdit(p)}
                                 >
                                   Edit
@@ -184,7 +183,7 @@ export default function MyDiscussionsPage() {
                               <>
                                 <Button
                                   size="sm"
-                                  className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white w-full sm:w-auto"
+                                  className="bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] hover:from-[#2e4d57] hover:to-[#1c3b2e] text-white w-full sm:w-auto"
                                   disabled={isUpdating || !editTitle.trim() || !editContent.trim()}
                                   onClick={() => onSave(p.ID)}
                                 >

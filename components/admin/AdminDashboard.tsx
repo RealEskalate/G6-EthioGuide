@@ -97,8 +97,7 @@ export default function AdminDashboard({
           </Card>
         ))}
       </div>
-
-      {/* Recent Activity and Quick Overview */}
+       {/* Recent Activity and Quick Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
         {/* Recent Activity */}
         <Card className="md:col-span-2 shadow-sm border-gray-50">
