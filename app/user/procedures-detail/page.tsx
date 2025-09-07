@@ -23,15 +23,19 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useGetProcedureFeedbackQuery } from "@/app/store/slices/feedbackApi"
+import { useCreateChecklistMutation } from "@/app/store/slices/checklistsApi"
+import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useListDiscussionsQuery } from "@/app/store/slices/discussionsApi"
 
 function ProcedureDetailInner() {
   const search = useSearchParams()
   const id = search.get("id") || ""
+  const router = useRouter()
   
   const { data: procedure, isLoading, isError } = useGetProcedureFlexibleQuery(id, { skip: !id })
   const { data: session } = useSession()
+  const [createChecklist, { isLoading: savingChecklist }] = useCreateChecklistMutation()
   const { data: feedbackData, isLoading: loadingFeedback } = useGetProcedureFeedbackQuery({ procedureId: id, page: 1, limit: 10, token: session?.accessToken || null }, { skip: !id })
   
   const notFound = !isLoading && !isError && (!procedure || !procedure.id)
@@ -155,6 +159,24 @@ function ProcedureDetailInner() {
                 >
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
+                </Button>
+                <Button
+                  disabled={!id || savingChecklist}
+                  onClick={async () => {
+                    if (!id) return
+                    try {
+                      const result = await createChecklist({ procedureId: id, token: session?.accessToken || undefined }).unwrap()
+                      console.log('Checklist created successfully:', result)
+                    } catch (error) {
+                      console.error('Failed to create checklist:', error)
+                      // Still navigate to workspace so user can see current state
+                    } finally {
+                      router.push('/user/workspace')
+                    }
+                  }}
+                  className="bg-[#3a6a8d] hover:bg-[#2e4d57] text-white transition-all duration-300 rounded-xl py-2.5 sm:py-3 font-medium text-sm"
+                >
+                  {savingChecklist ? 'Saving…' : 'Save Checklist'}
                 </Button>
               </div>
             </div>
@@ -398,10 +420,11 @@ function ProcedureDetailInner() {
   )
 }
 
-export default function Page() {
+export default function ProcedureDetailPage() {
   return (
-    <Suspense fallback={<div className="p-4 text-center text-gray-500">Loading...</div>}>
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
       <ProcedureDetailInner />
     </Suspense>
   )
 }
+

@@ -6,80 +6,101 @@ import { CardContent, Card } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { useGetMyChecklistsQuery } from "@/app/store/slices/checklistsApi"
+import { useListProceduresQuery } from "@/app/store/slices/proceduresApi"
+import { useMemo } from "react"
 
 export default function WorkspacePage() {
   const router = useRouter();
-  const stats = [
-    {
-      title: "Total Procedures",
-      value: "12",
-      icon: FileText,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-    },
-    {
-      title: "In Progress",
-      value: "5",
-      icon: Clock,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-    },
-    {
-      title: "Completed",
-      value: "7",
-      icon: CheckCircle,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-    },
-    {
-      title: "Documents",
-      value: "24",
-      icon: FileText,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-    },
-  ]
+  const { data: session } = useSession();
+  const { data: myChecklists, isLoading: loadingChecklists, error: checklistsError } = useGetMyChecklistsQuery(
+    { token: session?.accessToken || undefined },
+    { skip: !session?.accessToken }
+  );
+  const { data: proceduresData } = useListProceduresQuery({ page: 1, limit: 100 });
 
-  const procedures = [
-    {
-      id: 1,
-      title: "New Passport Application",
-      department: "Immigration Department",
-      status: "In Progress",
-      progress: 60,
-      startDate: "Dec 15, 2024",
-      estimatedCompletion: "Jan 30, 2025",
-      documentsUploaded: "4/6 documents uploaded",
-      statusColor: "bg-orange-100 text-orange-800",
-      buttonText: "Continue",
-      buttonVariant: "default" as const,
-    },
-    {
-      id: 2,
-      title: "Driver's License Renewal",
-      department: "Road Authority",
-      status: "Completed",
-      progress: 100,
-      completedDate: "Dec 10, 2024",
-      requirements: "All requirements met",
-      statusColor: "bg-green-100 text-green-800",
-      buttonText: "View Details",
-      buttonVariant: "outline" as const,
-    },
-    {
-      id: 3,
-      title: "Bank Account Opening",
-      department: "National Bank",
-      status: "Not Started",
-      progress: 0,
-      addedDate: "Dec 20, 2024",
-      readyToStart: "Ready to start",
-      documentsRequired: "0/5 documents uploaded",
-      statusColor: "bg-gray-100 text-gray-800",
-      buttonText: "Start Now",
-      buttonVariant: "default" as const,
-    },
-  ]
+  // Calculate stats from real data
+  const stats = useMemo(() => {
+    const total = myChecklists?.length || 0;
+    const inProgress = myChecklists?.filter(c => c.status === 'IN_PROGRESS').length || 0;
+    const completed = myChecklists?.filter(c => c.status === 'COMPLETED').length || 0;
+    
+    return [
+      {
+        title: "Total Procedures",
+        value: total.toString(),
+        icon: FileText,
+        color: "text-blue-600",
+        bgColor: "bg-blue-50",
+      },
+      {
+        title: "In Progress",
+        value: inProgress.toString(),
+        icon: Clock,
+        color: "text-orange-600",
+        bgColor: "bg-orange-50",
+      },
+      {
+        title: "Completed",
+        value: completed.toString(),
+        icon: CheckCircle,
+        color: "text-green-600",
+        bgColor: "bg-green-50",
+      },
+      {
+        title: "Available Procedures",
+        value: (proceduresData?.list?.length || 0).toString(),
+        icon: FileText,
+        color: "text-purple-600",
+        bgColor: "bg-purple-50",
+      },
+    ];
+  }, [myChecklists, proceduresData]);
+
+  // Transform real checklist data into UI format
+  const procedures = useMemo(() => {
+    if (!myChecklists) return [];
+    
+    return myChecklists.map((checklist) => {
+      const procedure = proceduresData?.list?.find(p => p.id === checklist.procedureId);
+      const progress = checklist.progress || 0;
+      
+      let status = "Not Started";
+      let statusColor = "bg-gray-100 text-gray-800";
+      let buttonText = "Start Now";
+      let buttonVariant: "default" | "outline" = "default";
+      
+      if (checklist.status === 'COMPLETED') {
+        status = "Completed";
+        statusColor = "bg-green-100 text-green-800";
+        buttonText = "View Details";
+        buttonVariant = "outline";
+      } else if (checklist.status === 'IN_PROGRESS') {
+        status = "In Progress";
+        statusColor = "bg-orange-100 text-orange-800";
+        buttonText = "Continue";
+        buttonVariant = "default";
+      }
+      
+      const completedItems = checklist.items?.filter(item => item.is_checked).length || 0;
+      const totalItems = checklist.items?.length || 0;
+      
+      return {
+        id: checklist.id,
+        title: procedure?.title || procedure?.name || `Procedure ${checklist.procedureId}`,
+        department: "Immigration Department",
+        status,
+        progress,
+        startDate: checklist.createdAt ? new Date(checklist.createdAt).toLocaleDateString() : "Recently",
+        estimatedCompletion: checklist.status === 'COMPLETED' ? "Completed" : "Ongoing",
+        documentsUploaded: `${completedItems}/${totalItems} documents uploaded`,
+        statusColor,
+        buttonText,
+        buttonVariant,
+      };
+    });
+  }, [myChecklists, proceduresData]);
 
   return (
     <main className="min-h-screen bg-gray-50 p-6">
@@ -149,7 +170,26 @@ export default function WorkspacePage() {
 
             {/* Procedure Cards */}
             <div className="space-y-4">
-              {procedures.map((procedure, index) => (
+              {loadingChecklists ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-600">Loading your procedures...</div>
+                </div>
+              ) : checklistsError ? (
+                <div className="text-center py-8">
+                  <div className="text-red-600">Failed to load procedures. Please try again.</div>
+                </div>
+              ) : procedures.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-600">No procedures found. Start by creating a checklist from the procedures list.</div>
+                  <Button 
+                    className="mt-4 bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
+                    onClick={() => router.push('/user/procedures-list')}
+                  >
+                    Browse Procedures
+                  </Button>
+                </div>
+              ) : (
+                procedures.map((procedure, index) => (
                 <Card
                   key={procedure.id}
                   className="border-0 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 bg-white"
@@ -180,7 +220,7 @@ export default function WorkspacePage() {
                               ? "bg-[#3A6A8D] hover:bg-[#2d5470] text-white transition-all duration-200 hover:scale-105"
                               : "transition-all duration-200"
                           }
-                          onClick={() => router.push("/user/checklist")}
+                          onClick={() => router.push(`/user/checklist/${encodeURIComponent(procedure.id)}`)}
                         >
                           {procedure.buttonText}
                         </Button>
@@ -217,18 +257,7 @@ export default function WorkspacePage() {
                           <span>Started: {procedure.startDate}</span>
                         </div>
                       )}
-                      {procedure.completedDate && (
-                        <div className="flex items-center gap-1">
-                          <CheckCircle className="w-4 h-4" />
-                          <span>Completed: {procedure.completedDate}</span>
-                        </div>
-                      )}
-                      {procedure.addedDate && (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>Added: {procedure.addedDate}</span>
-                        </div>
-                      )}
+                      {/* removed unsupported fields: completedDate, addedDate */}
                       {procedure.estimatedCompletion && (
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
@@ -241,28 +270,12 @@ export default function WorkspacePage() {
                           <span>{procedure.documentsUploaded}</span>
                         </div>
                       )}
-                      {procedure.requirements && (
-                        <div className="flex items-center gap-1">
-                          <CheckCircle className="w-4 h-4" />
-                          <span>{procedure.requirements}</span>
-                        </div>
-                      )}
-                      {procedure.readyToStart && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{procedure.readyToStart}</span>
-                        </div>
-                      )}
-                      {procedure.documentsRequired && (
-                        <div className="flex items-center gap-1">
-                          <FileText className="w-4 h-4" />
-                          <span>{procedure.documentsRequired}</span>
-                        </div>
-                      )}
+                      {/* removed unsupported fields: requirements, readyToStart, documentsRequired */}
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </main>

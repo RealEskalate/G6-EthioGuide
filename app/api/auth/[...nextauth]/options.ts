@@ -69,6 +69,9 @@ export const options: NextAuthOptions = {
 
         // Case 2: Standard email/password login
         if (credentials?.identifier && credentials?.password) {
+          if (!API_URL) {
+            throw new Error("Missing NEXT_PUBLIC_API_URL for login");
+          }
           const res = await fetch(`${API_URL}/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -167,8 +170,8 @@ export const options: NextAuthOptions = {
       }
       // Refresh access token if expired or on demand
       if (
-        trigger === "update" ||
-        (token.exp && Date.now() > Number(token.exp) * 1000)
+        (trigger === "update" || (token.exp && Date.now() > Number(token.exp) * 1000)) &&
+        API_URL && typeof token.accessToken === 'string' && token.accessToken
       ) {
         console.log("Token expired or update triggered, refreshing:", {
           trigger,
@@ -180,7 +183,7 @@ export const options: NextAuthOptions = {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              // Authorization: `Bearer ${token.accessToken}`, // Use current accessToken
+              Authorization: `Bearer ${token.accessToken}`,
             },
             body: "", // No body needed
           });
