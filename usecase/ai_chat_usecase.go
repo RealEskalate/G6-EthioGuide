@@ -44,27 +44,33 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 	category, err := u.LLMService.GenerateCompletion(ctx, classifierPrompt)
 	if err != nil {
 		return &domain.AIChat{
-			UserID:   userId,
-			Source:   "unofficial",
-			Request:  orgQuery,
-			Response: err.Error(),
+			ID:        time.Now().String(),
+			Timestamp: time.Now(),
+			UserID:    userId,
+			Source:    "unofficial",
+			Request:   orgQuery,
+			Response:  err.Error(),
 		}, err
 	}
 	switch category {
 	case "offensive":
 		return &domain.AIChat{
-			UserID:   userId,
-			Source:   "unofficial",
-			Request:  orgQuery,
-			Response: "The request is offensive!!",
+			ID:        time.Now().String(),
+			Timestamp: time.Now(),
+			UserID:    userId,
+			Source:    "unofficial",
+			Request:   orgQuery,
+			Response:  "The request is offensive!!",
 		}, errors.New("your query contains offensive content and cannot be processed")
 
 	case "irrelevant":
 		return &domain.AIChat{
-			UserID:   userId,
-			Source:   "unofficial",
-			Request:  orgQuery,
-			Response: "The request is irrelevant to this application!!",
+			ID:        time.Now().String(),
+			Timestamp: time.Now(),
+			UserID:    userId,
+			Source:    "unofficial",
+			Request:   orgQuery,
+			Response:  "The request is irrelevant to this application!!",
 		}, nil
 	}
 
@@ -73,28 +79,34 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 	orglang, err := u.LLMService.GenerateCompletion(ctx, prompt)
 	if err != nil {
 		return &domain.AIChat{
-			UserID:   userId,
-			Source:   "unofficial",
-			Request:  orgQuery,
-			Response: err.Error(),
+			ID:        time.Now().String(),
+			Timestamp: time.Now(),
+			UserID:    userId,
+			Source:    "unofficial",
+			Request:   orgQuery,
+			Response:  err.Error(),
 		}, err
 	}
 	if orglang == "unknown" {
 		return &domain.AIChat{
-			UserID:   userId,
-			Source:   "unofficial",
-			Request:  orgQuery,
-			Response: "This is unknown language",
+			ID:        time.Now().String(),
+			Timestamp: time.Now(),
+			UserID:    userId,
+			Source:    "unofficial",
+			Request:   orgQuery,
+			Response:  "This is unknown language",
 		}, domain.ErrUnsupportedLanguage
 	} else if orglang != "english" {
 		prompt := fmt.Sprintf("translate this query %s in to English lanuage. And i do not want you to add another thing by yourself", query)
 		query, err = u.LLMService.GenerateCompletion(ctx, prompt)
 		if err != nil {
 			return &domain.AIChat{
-				UserID:   userId,
-				Source:   "Couldn't translate the request",
-				Request:  orgQuery,
-				Response: err.Error(),
+				ID:        time.Now().String(),
+				Timestamp: time.Now(),
+				UserID:    userId,
+				Source:    "Couldn't translate the request",
+				Request:   orgQuery,
+				Response:  err.Error(),
 			}, domain.ErrUnsupportedLanguage
 		}
 	}
@@ -103,10 +115,12 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 	vec, err := u.EmbedService.GenerateEmbedding(ctx, query)
 	if err != nil {
 		return &domain.AIChat{
-			UserID:   userId,
-			Source:   "unofficial",
-			Request:  orgQuery,
-			Response: err.Error(),
+			ID:        time.Now().String(),
+			Timestamp: time.Now(),
+			UserID:    userId,
+			Source:    "unofficial",
+			Request:   orgQuery,
+			Response:  err.Error(),
 		}, err
 	}
 
@@ -114,10 +128,12 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 	docs, err := u.ProcedureRepo.SearchByEmbedding(ctx, vec, 3)
 	if err != nil {
 		return &domain.AIChat{
-			UserID:   userId,
-			Source:   "unofficial",
-			Request:  orgQuery,
-			Response: err.Error(),
+			ID:        time.Now().String(),
+			Timestamp: time.Now(),
+			UserID:    userId,
+			Source:    "unofficial",
+			Request:   orgQuery,
+			Response:  err.Error(),
 		}, err
 	}
 
@@ -143,10 +159,12 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 	answer, err := u.LLMService.GenerateCompletion(ctx, prompt)
 	if err != nil {
 		return &domain.AIChat{
-			UserID:   userId,
-			Source:   "unofficial",
-			Request:  orgQuery,
-			Response: err.Error(),
+			ID:        time.Now().String(),
+			Timestamp: time.Now(),
+			UserID:    userId,
+			Source:    "unofficial",
+			Request:   orgQuery,
+			Response:  err.Error(),
 		}, err
 	}
 	source := "unofficial"
@@ -163,10 +181,12 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 		answer, err = u.LLMService.GenerateCompletion(ctx, prompt)
 		if err != nil {
 			return &domain.AIChat{
-				UserID:   userId,
-				Source:   "unofficial",
-				Request:  orgQuery,
-				Response: err.Error(),
+				ID:        time.Now().String(),
+				Timestamp: time.Now(),
+				UserID:    userId,
+				Source:    "unofficial",
+				Request:   orgQuery,
+				Response:  err.Error(),
 			}, err
 		}
 	}
