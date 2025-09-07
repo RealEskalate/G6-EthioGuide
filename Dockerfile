@@ -40,6 +40,9 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 # Copy the compiled binary from the 'builder' stage.
 COPY --from=builder /app/server .
 
+# Copy the 'templates' directory from the 'builder' stage into the final image.
+COPY --from=builder /app/templates ./templates/
+
 # Expose the port the application will run on.
 # This should match the PORT in your .env file or config.
 EXPOSE 8080

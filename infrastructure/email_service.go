@@ -2,7 +2,9 @@ package infrastructure
 
 import (
 	"EthioGuide/domain"
+	"bytes"
 	"fmt"
+	"html/template"
 
 	"gopkg.in/gomail.v2"
 )
@@ -23,6 +25,12 @@ type SmtpEmailService struct {
 	resetPasswordUrl string
 }
 
+// emailData is a struct to hold the dynamic data for our HTML templates.
+type emailData struct {
+	Username  string
+	ActionURL string
+}
+
 func NewSMTPEmailService(host string, port int, username, password, from, verificationUrl, resetPasswordUrl string) domain.IEmailService {
 	d := gomail.NewDialer(host, port, username, password)
 
@@ -39,49 +47,66 @@ func NewSMTPEmailService(host string, port int, username, password, from, verifi
 }
 
 func (s *SmtpEmailService) SendPasswordResetEmail(toEmail, username, resetToken string) error {
-	subject := "Reset Your Password"
-	body := fmt.Sprintf(`
-	Hi %s,
+	subject := "Reset Your EthioGuide Password"
+	actionURL := fmt.Sprintf("%s?token=%s", s.resetPasswordUrl, resetToken)
 
-	You requested to reset your password.
+	data := emailData{
+		Username:  username,
+		ActionURL: actionURL,
+	}
 
-	Use the following token to reset your password:
-	%s
+	// Specify the template file to use
+	templateFile := "templates/password_reset.html"
 
-	Or click the link below:
-	%s?token=%s
-
-	If you did not request this, please ignore this email.
-	`, username, resetToken, s.resetPasswordUrl, resetToken)
-
-	return s.send(toEmail, subject, body)
+	return s.send(toEmail, subject, templateFile, data)
 }
 
 func (s *SmtpEmailService) SendVerificationEmail(toEmail, username, activationToken string) error {
-	subject := "Activate Your Account"
-	body := fmt.Sprintf(`
-	Hi %s,
+	subject := "Welcome to EthioGuide! Please Verify Your Account"
+	actionURL := fmt.Sprintf("%s?token=%s", s.verificationUrl, activationToken)
 
-	Welcome to our app!
+	data := emailData{
+		Username:  username,
+		ActionURL: actionURL,
+	}
 
-	Activate your account using the token below:
-	%s
+	// Specify the template file to use
+	templateFile := "templates/verification.html"
 
-	Or click this link:
-	%s?token=%s
-	If you did not create an account, ignore this email.
-	`, username, activationToken, s.verificationUrl, activationToken)
-
-	return s.send(toEmail, subject, body)
+	return s.send(toEmail, subject, templateFile, data)
 }
 
-func (s *SmtpEmailService) send(to, subject, body string) error {
+// send now parses an HTML template and executes it with the provided data.
+func (s *SmtpEmailService) send(to, subject, templateFile string, data interface{}) error {
 	m := gomail.NewMessage()
 
+	// Parse the HTML template
+	t, err := template.ParseFiles(templateFile)
+	if err != nil {
+		return fmt.Errorf("could not parse email template %s: %w", templateFile, err)
+	}
+
+	// Execute the template with the data and write to a buffer
+	var body bytes.Buffer
+	if err := t.Execute(&body, data); err != nil {
+		return fmt.Errorf("could not execute email template %s: %w", templateFile, err)
+	}
+
+	// Set headers and HTML body
 	m.SetHeader("From", s.from)
 	m.SetHeader("To", to)
 	m.SetHeader("Subject", subject)
-	m.SetBody("text/plain", body)
+	m.SetBody("text/html", body.String())
+
+	// Best Practice: Add a plain text alternative for clients that don't render HTML
+	if d, ok := data.(emailData); ok {
+		plainTextBody := fmt.Sprintf(
+			"Hi %s,\n\nPlease use the following link to complete the action: %s\n\nThank you,\nThe EthioGuide Team",
+			d.Username,
+			d.ActionURL,
+		)
+		m.AddAlternative("text/plain", plainTextBody)
+	}
 
 	return s.dialer.DialAndSend(m)
 }
