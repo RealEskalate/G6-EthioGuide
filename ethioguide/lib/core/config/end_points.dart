@@ -3,7 +3,6 @@ class EndPoints {
   static final refreshTokenEndPoint = '/auth/refresh';
   static final sendQueryEndPoint = '/ai/guide';
   static final getHistoryEndPoint = '/ai/history';
-  static final translateContentEndPoint = '/translate';
   static final registerEndPoint = '/auth/register';
   static final loginEndPoint = '/auth/login';
   static const String verifyAccount = '/auth/verify';
@@ -14,6 +13,6 @@ class EndPoints {
   static const String getProfile = '/auth/me';
   static const String updateProfile = '/auth/me';
   static const String updatePassword = '/auth/me/password';
-  
 
+  static final translateContentEndPoint = 'ai/translate';
 }

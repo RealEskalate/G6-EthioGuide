@@ -1,5 +1,6 @@
 import 'package:ethioguide/features/AI%20chat/Domain/entities/conversation.dart';
 import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
+import 'package:ethioguide/features/AI%20chat/data/models/translated_conversation_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -102,7 +103,10 @@ Widget buildMessage({
                 if (hasFailed) ...[
                   const SizedBox(width: 8),
                   const SizedBox(
-                    child: Icon(Icons.error, color: Color.fromARGB(255, 245, 102, 91),),
+                    child: Icon(
+                      Icons.error,
+                      color: Color.fromARGB(255, 245, 102, 91),
+                    ),
                   ),
                 ],
               ],
@@ -140,7 +144,7 @@ Widget buildMessage({
                   content: conv.response,
                 ),
                 if (!isLoading && conv.id != 'initial')
-                  _buildChecklistButton(context: context),
+                  _buildChecklistButton(context: context, conv: conv),
                 if (conv.procedures.isNotEmpty && !isLoading)
                   _buildRelatedProcedures(
                     procedures: conv.procedures,
@@ -327,7 +331,14 @@ Widget _buildCompactButton({
 //?#                                                                                          #
 //?############################################################################################
 
-Widget _buildChecklistButton({required BuildContext context}) {
+Widget _buildChecklistButton({
+  required BuildContext context,
+  required Conversation conv,
+}) {
+  TranslatedConversationModel conversation = TranslatedConversationModel(
+    response: conv.response,
+    procedures: conv.procedures,
+  );
   return Card(
     color: Colors.teal[100],
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -353,7 +364,9 @@ Widget _buildChecklistButton({required BuildContext context}) {
           leading: const Icon(Icons.translate),
           title: const Text('Translate'),
           onTap: () {
-            SnackBar(content: Text('Translating response'));
+            context.read<AiBloc>().add(
+              TranslateContentEvent(conversation: conversation, id: conv.id),
+            );
           },
         ),
       ],

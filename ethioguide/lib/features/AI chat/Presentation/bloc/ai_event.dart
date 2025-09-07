@@ -21,11 +21,8 @@ class CancleQueryEvent extends AiEvent {}
 class GetHistoryEvent extends AiEvent {}
 
 class TranslateContentEvent extends AiEvent {
-  final String content;
-  final String lang;
+  final TranslatedConversationModel conversation;
+  final id;
 
-  const TranslateContentEvent({required this.content, required this.lang});
-
-  @override
-  List<Object> get props => [content, lang];
+  const TranslateContentEvent({required this.conversation, required this.id});
 }

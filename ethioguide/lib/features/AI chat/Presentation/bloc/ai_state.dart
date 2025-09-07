@@ -30,9 +30,10 @@ class AiHistorySuccess extends AiState {
 }
 
 class AiTranslateSuccess extends AiState {
-  final String translated;
+  final TranslatedConversation translated;
+  final id;
 
-  const AiTranslateSuccess({required this.translated});
+  const AiTranslateSuccess({required this.translated, required this.id});
 
   @override
   List<Object> get props => [translated];

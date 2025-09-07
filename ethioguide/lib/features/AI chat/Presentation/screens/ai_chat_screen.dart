@@ -144,8 +144,24 @@ class _ChatPageState extends State<ChatPage> {
             ),
           );
         } else if (state is AiTranslateSuccess) {
+          final newConv = state.translated;
+          for (int i = 0; i < _history.length; i++) {
+            if (_history[i].id == state.id) {
+              setState(() {
+                final curConv = _history[i];
+                _history[i] = Conversation(
+                  id: curConv.id,
+                  request: curConv.request,
+                  response: newConv.response,
+                  source: curConv.source,
+                  procedures: newConv.procedures,
+                );
+              });
+              break;
+            }
+          }
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Translated: ${state.translated}')),
+            SnackBar(content: Text('Translated: ${newConv}')),
           );
         }
       },
@@ -207,7 +223,9 @@ class _ChatPageState extends State<ChatPage> {
                           hintText: 'Type your question here...',
                           prefixIcon: IconButton(
                             onPressed: _listen,
-                            icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+                            icon: Icon(
+                              _isListening ? Icons.mic : Icons.mic_none,
+                            ),
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(18),
