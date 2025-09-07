@@ -80,6 +80,13 @@ func buildPostFilter(opts domain.PostFilters) (bson.M, error) {
 		filter["title"] = bson.M{"$regex": *opts.Title, "$options": "i"}
 	}
 
+	if opts.UserId != nil && *opts.UserId != "" {
+		userIdObj, err := primitive.ObjectIDFromHex(*opts.UserId)
+		if err == nil {
+			filter["user_id"] = userIdObj
+		}
+	}
+
 	if len(opts.ProcedureID) > 0 {
 		procedureIDs, err := mapHexToObjectID(opts.ProcedureID)
 		if err != nil {

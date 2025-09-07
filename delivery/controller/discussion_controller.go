@@ -8,10 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
-
 type PostController struct {
-    useCase domain.IPostUseCase  
+	useCase domain.IPostUseCase
 }
 
 func NewPostController(uc domain.IPostUseCase) *PostController {
@@ -44,11 +42,11 @@ func (dc *PostController) CreatePost(c *gin.Context) {
 		return
 	}
 	Post := &domain.Post{
-		UserID:   userID.(string),
-		Title:    dto.Title,
-		Content:  dto.Content,
+		UserID:     userID.(string),
+		Title:      dto.Title,
+		Content:    dto.Content,
 		Procedures: dto.Procedures,
-		Tags: dto.Tags,
+		Tags:       dto.Tags,
 	}
 	res, err := dc.useCase.CreatePost(c.Request.Context(), Post)
 	if err != nil {
@@ -63,7 +61,8 @@ func (dc *PostController) CreatePost(c *gin.Context) {
 // @Tags         Post
 // @Accept       json
 // @Produce      json
-// @Param        title query string false "procedure ids"
+// @Param        title query string false "title"
+// @Param        userId query string fase "user id"
 // @Param        procedure_ids query array false "procedure ids"
 // @Param        tags query array false "tags"
 // @Param        page query string false "page"
@@ -75,40 +74,40 @@ func (dc *PostController) CreatePost(c *gin.Context) {
 // @Failure      500 {string}  "Internal"
 // @Router       /discussions [get]
 func (dc *PostController) GetPosts(c *gin.Context) {
-    title := c.Query("title")
-	
-    procedureIDs := c.QueryArray("procedure_ids")
-    tags := c.QueryArray("tags")
-    page, _ := strconv.ParseInt(c.DefaultQuery("page", "0"), 10, 64)
-    limit, _ := strconv.ParseInt(c.DefaultQuery("limit", "10"), 10, 64)
-    sortBy := c.DefaultQuery("sort_by", "created_at")
-    sortOrder := c.DefaultQuery("sort_order", "desc")
-	
+	title := c.Query("title")
+	userId := c.Query("userId")
+	procedureIDs := c.QueryArray("procedure_ids")
+	tags := c.QueryArray("tags")
+	page, _ := strconv.ParseInt(c.DefaultQuery("page", "0"), 10, 64)
+	limit, _ := strconv.ParseInt(c.DefaultQuery("limit", "10"), 10, 64)
+	sortBy := c.DefaultQuery("sort_by", "created_at")
+	sortOrder := c.DefaultQuery("sort_order", "desc")
+
 	opts := domain.PostFilters{
-		Title: &title,
+		Title:       &title,
+		UserId:      &userId,
 		ProcedureID: procedureIDs,
-		Tags: tags,
-		Page:  page,
-		Limit: limit,
-		SortBy: sortBy,
-		SortOrder: domain.SortOrder(sortOrder),
-    }
-    
+		Tags:        tags,
+		Page:        page,
+		Limit:       limit,
+		SortBy:      sortBy,
+		SortOrder:   domain.SortOrder(sortOrder),
+	}
 
-    posts, total, err := dc.useCase.GetPosts(c, opts)
-    if err != nil {
+	posts, total, err := dc.useCase.GetPosts(c, opts)
+	if err != nil {
 		HandleError(c, err)
-        return
-    }
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{
-        "Posts": PaginatedPostsResponse{
+	c.JSON(http.StatusOK, gin.H{
+		"Posts": PaginatedPostsResponse{
 			Posts: posts,
 			Total: total,
-			Page: page,
+			Page:  page,
 			Limit: limit,
 		},
-    })
+	})
 }
 
 // @Summary      Fetch Post
@@ -121,13 +120,13 @@ func (dc *PostController) GetPosts(c *gin.Context) {
 // @Failure      400 {string}  "Bad Request"
 // @Failure      500 {string}  "Internal"
 // @Router       /discussions/{id} [get]
-func (dc *PostController) GetPostByID(c *gin.Context){
+func (dc *PostController) GetPostByID(c *gin.Context) {
 	id := c.Param("id")
-	if id == ""{
+	if id == "" {
 		HandleError(c, domain.ErrEmptyParamField)
 		return
 	}
-	res , err := dc.useCase.GetPostByID(c, id)
+	res, err := dc.useCase.GetPostByID(c, id)
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -149,33 +148,33 @@ func (dc *PostController) GetPostByID(c *gin.Context){
 // @Failure      403 {string}  "Forbidden"
 // @Failure      500 {string}  "Internal"
 // @Router       /discussions/{id} [patch]
-func (dc *PostController) UpdatePost(c *gin.Context){
+func (dc *PostController) UpdatePost(c *gin.Context) {
 	id := c.Param("id")
 	userID, exists := c.Get("userID")
-	if !exists{
+	if !exists {
 		HandleError(c, domain.ErrAuthenticationFailed)
 		return
 	}
-	if id == ""{
+	if id == "" {
 		HandleError(c, domain.ErrEmptyParamField)
 		return
 	}
 	var dto UpdatePostDTO
-	if err := c.ShouldBindJSON(&dto); err != nil{
+	if err := c.ShouldBindJSON(&dto); err != nil {
 		HandleError(c, domain.ErrInvalidBody)
 		return
 	}
 	Post := &domain.Post{
-		ID:			id,
-		UserID:   userID.(string),
-		Title:    dto.Title,
-		Content:  dto.Content,
+		ID:         id,
+		UserID:     userID.(string),
+		Title:      dto.Title,
+		Content:    dto.Content,
 		Procedures: dto.Procedures,
-		Tags: dto.Tags,
+		Tags:       dto.Tags,
 	}
 	res, err := dc.useCase.UpdatePost(c, Post)
 
-	if err != nil{
+	if err != nil {
 		HandleError(c, err)
 	}
 
@@ -196,24 +195,24 @@ func (dc *PostController) UpdatePost(c *gin.Context){
 // @Failure      403 {string}  "Forbidden"
 // @Failure      500 {string}  "Internal"
 // @Router       /discussions/{id} [delete]
-func (dc *PostController) DeletePost(c *gin.Context){
+func (dc *PostController) DeletePost(c *gin.Context) {
 	id := c.Param("id")
 	userID, exists := c.Get("userID")
-	if !exists{
+	if !exists {
 		HandleError(c, domain.ErrAuthenticationFailed)
 		return
 	}
 	userRole, exists := c.Get("userRole")
-	if !exists{
+	if !exists {
 		HandleError(c, domain.ErrAuthenticationFailed)
 		return
 	}
-	if id == ""{
+	if id == "" {
 		HandleError(c, domain.ErrEmptyParamField)
 		return
 	}
-	err := dc.useCase.DeletePost(c, id, userID.(string),string(userRole.(domain.Role))) 
-	if err != nil{
+	err := dc.useCase.DeletePost(c, id, userID.(string), string(userRole.(domain.Role)))
+	if err != nil {
 		HandleError(c, err)
 		return
 	}

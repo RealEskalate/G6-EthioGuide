@@ -17,7 +17,8 @@ type Post struct {
 // type ActionType string
 
 type PostFilters struct {
-	Title *string
+	Title  *string
+	UserId *string
 
 	// List of tags
 	ProcedureID []string
