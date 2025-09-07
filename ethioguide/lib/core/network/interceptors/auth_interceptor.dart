@@ -19,6 +19,7 @@ class AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     if (await _authRepository.isAuthenticated()) {
+
       final accessToken =
           // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjhiN2YyZmE1Mzc2MjI3YTc4ZmYxZTJiIiwicm9sZSI6InVzZXIiLCJzdWJzY3JpcHRpb24iOiIiLCJpc3MiOiJldGhpby1ndWlkZS1hcGkiLCJleHAiOjE3NTczMTk2MzcsImlhdCI6MTc1NzEwMzYzNywianRpIjoiZDgyNTFkYjYtNDdkZC00YTNjLWFjYmItMTg0YjE2M2ZmNGFjIn0.S0GJap96N1jBiHIrof-_64HYcfWvXFf5LrgmqCYh7y8';
           await _authRepository.getAccessToken();
@@ -29,7 +30,9 @@ class AuthInterceptor extends Interceptor {
       );
 
       //  'Bearer $accessToken';
+
     }
+     
     return handler.next(options);
   }
 

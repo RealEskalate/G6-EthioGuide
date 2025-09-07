@@ -2,9 +2,11 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:ethioguide/core/error/failures.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/entities/conversation.dart';
+import 'package:ethioguide/features/AI%20chat/Domain/entities/translated_conversation.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/usecases/get_history.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/usecases/send_query.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/usecases/translate_content.dart';
+import 'package:ethioguide/features/AI%20chat/data/models/translated_conversation_model.dart';
 
 part 'ai_event.dart';
 part 'ai_state.dart';
@@ -22,6 +24,7 @@ class AiBloc extends Bloc<AiEvent, AiState> {
     on<SendQueryEvent>(_onSendQuery);
     on<GetHistoryEvent>(_onGetHistory);
     on<TranslateContentEvent>(_onTranslateContent);
+    on<CancleQueryEvent>(_onCancleQuery);
   }
 
   Future<void> _onSendQuery(SendQueryEvent event, Emitter<AiState> emit) async {
@@ -33,6 +36,10 @@ class AiBloc extends Bloc<AiEvent, AiState> {
         (conversation) => AiQuerySuccess(conversation: conversation),
       )),
     );
+  }
+
+  Future<void> _onCancleQuery(CancleQueryEvent event, Emitter<AiState> emit) async {
+    emit(AiInitial());
   }
 
   Future<void> _onGetHistory(
@@ -55,13 +62,12 @@ class AiBloc extends Bloc<AiEvent, AiState> {
   ) async {
     emit(AiLoading());
     final result = await translateContentUseCase(
-      content: event.content,
-      lang: event.lang,
+      response: event.conversation.response, procedures: event.conversation.procedures
     );
     emit(
       result.fold(
         (failure) => AiError(_mapFailureToMessage(failure)),
-        (translated) => AiTranslateSuccess(translated: translated),
+        (translated) => AiTranslateSuccess(translated: translated, id: event.id),
       ),
     );
   }

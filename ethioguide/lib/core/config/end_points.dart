@@ -7,4 +7,18 @@ class EndPoints {
   static final createDiscussionEndPoint = 'discussions';
   static final getDiscussionsEndPoint = 'discussions';
 
+
+  static final registerEndPoint = '/auth/register';
+  static final loginEndPoint = '/auth/login';
+  static const String verifyAccount = '/auth/verify';
+  static const String forgotPassword = '/auth/forgot';
+  static const String resetPassword = '/auth/reset';
+  static const String refreshToken = '/auth/refresh';
+  static const String socialLogin = '/auth/social';
+  static const String getProfile = '/auth/me';
+  static const String updateProfile = '/auth/me';
+  static const String updatePassword = '/auth/me/password';
+
+  static final translateContentEndPoint = 'ai/translate';
+
 }

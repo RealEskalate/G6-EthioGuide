@@ -1,4 +1,5 @@
 import 'package:ethioguide/core/config/app_theme.dart';
+import 'package:ethioguide/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:ethioguide/features/AI%20chat/Presentation/bloc/ai_bloc.dart';
 import 'package:ethioguide/features/procedure/presentation/bloc/procedure_bloc.dart';
 import 'package:ethioguide/features/procedure/presentation/bloc/workspace_procedure_detail_bloc.dart';
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => di.sl<AiBloc>()),
+
         BlocProvider(
           create: (context) =>
               di.sl<WorkspaceDiscussionBloc>()..add(const FetchDiscussions()),
@@ -46,6 +48,10 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               di.sl<WorkspaceProcedureDetailBloc>()..add(FetchMyProcedures()),
         ), 
+
+
+        BlocProvider(create: (context) => di.sl<AuthBloc>()),
+
       ],
       child: MaterialApp.router(
         themeMode: _themeMode,

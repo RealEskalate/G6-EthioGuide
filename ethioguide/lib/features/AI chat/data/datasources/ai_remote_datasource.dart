@@ -2,13 +2,17 @@ import 'package:dio/dio.dart';
 import 'package:ethioguide/core/config/end_points.dart';
 import 'package:ethioguide/core/error/exception.dart';
 import 'package:ethioguide/core/network/network_info.dart';
+import 'package:ethioguide/features/AI%20chat/Domain/entities/translated_conversation.dart';
 import 'package:ethioguide/features/AI%20chat/data/models/conversation_model.dart';
+import 'package:ethioguide/features/AI%20chat/data/models/translated_conversation_model.dart';
 import 'package:flutter/widgets.dart';
 
 abstract class AiRemoteDatasource {
   Future<ConversationModel> sendQuery(String query);
   Future<List<ConversationModel>> getHistory();
-  Future<String> translateContent(String content, String lang);
+  Future<TranslatedConversation> translateContent(
+    TranslatedConversationModel conversation,
+  );
 }
 
 class AiRemoteDataSourceImpl implements AiRemoteDatasource {
@@ -158,7 +162,10 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
       }
 
       final List<dynamic> jsonList = response.data['history'];
-      return jsonList.map((json) => ConversationModel.fromJson(json)).toList();
+      final result = jsonList
+          .map((json) => ConversationModel.fromJson(json))
+          .toList();
+      return result;
     } on DioException catch (e) {
       // TODO: remove debug print
       debugPrint('##################################################');
@@ -185,7 +192,9 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
   }
 
   @override
-  Future<String> translateContent(String content, String lang) async {
+  Future<TranslatedConversation> translateContent(
+    TranslatedConversationModel conversation,
+  ) async {
     /// Check network connectivity
     if (!(await networkInfo.isConnected)) {
       throw ServerException(
@@ -194,11 +203,24 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
       );
     }
 
-    /// if device is online
     try {
+      // dio.options.headers['lang'] = 'en';
+      final data = {'content': conversation.toJson()};
+
+      debugPrint("#####################################################");
+      debugPrint('$data');
+      debugPrint('${dio.options.headers['lang']}');
+      debugPrint('procedures ${data['procedures']}');
+      // After the response:
+
       final response = await dio.post(
         EndPoints.translateContentEndPoint,
-        data: {'content': content, 'lang': lang},
+        data: data,
+        options: Options(headers: {'lang': 'am'}),
+      );
+
+      debugPrint(
+        'access token: ${response.requestOptions.headers['Authorization']}',
       );
 
       final statusCode = response.statusCode;
@@ -209,7 +231,9 @@ class AiRemoteDataSourceImpl implements AiRemoteDatasource {
         debugPrint('##################################################');
         throw throwsException(statusCode);
       }
-      return response.data['translated'] as String;
+      return TranslatedConversationModel.fromJson(
+        json: response.data['content'],
+      );
     } on DioException catch (e) {
       // TODO: remove debug print
       debugPrint('##################################################');

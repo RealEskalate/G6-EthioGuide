@@ -181,13 +181,13 @@ class MockAuthLocalDataSource extends _i1.Mock
   }
 
   @override
-  _i6.Future<String> getGoogleAuthToken() =>
+  _i6.Future<String> getGoogleServerAuthCode() =>
       (super.noSuchMethod(
-            Invocation.method(#getGoogleAuthToken, []),
+            Invocation.method(#getGoogleServerAuthCode, []),
             returnValue: _i6.Future<String>.value(
               _i8.dummyValue<String>(
                 this,
-                Invocation.method(#getGoogleAuthToken, []),
+                Invocation.method(#getGoogleServerAuthCode, []),
               ),
             ),
           )

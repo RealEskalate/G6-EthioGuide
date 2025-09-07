@@ -1,6 +1,20 @@
 {
   "hello": "Hello",
-  "languageToggle": "Switch to Amharic"
-}
 
+  "languageToggle": "Switch to Amharic"
+
+
+
+
+  "languageToggle": "Switch to Amharic",
+  "ai": "EthiGuide Ai Assistant",
+  "text hint": "Type your question here",
+  "ai response": "AI Response",
+  "save checklist": "Save Checklist",
+  "related procedures": "Related Procedures",
+  "start procedure": "Start Procedure",
+  "translate": "Translate",
+  "change language": "Change Language",
+  "log out": "Log Out"
+}
 

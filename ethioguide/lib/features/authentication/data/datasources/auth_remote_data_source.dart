@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:ethioguide/core/error/exception.dart';
 import '../models/tokens_model.dart';
 import '../models/user_model.dart';
+import 'package:ethioguide/core/config/end_points.dart';
 
 abstract class AuthRemoteDataSource {
   Future<(UserModel, TokensModel)> login(String identifier, String password);
@@ -15,11 +16,11 @@ abstract class AuthRemoteDataSource {
 
   Future<void> forgotPassword(String email);
   Future<void> resetPassword({
-    required String email,
-    required String token,
+     required String resetToken,
     required String newPassword,
   });
   Future<(UserModel, TokensModel)> signInWithGoogle(String idToken);
+  Future<(UserModel, TokensModel)> verifyAccount(String activationToken);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -28,29 +29,45 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl({required this.dio});
 
   @override
-  Future<(UserModel, TokensModel)> login(String identifier, String password) async {
-    // --- MOCKED RESPONSE FOR DEVELOPMENT ---
-    await Future.delayed(const Duration(seconds: 1)); 
+  Future<(UserModel, TokensModel)> login(
+    String identifier,
+    String password,
+  ) async {
+    try {
+      // Make the real network request to the login endpoint.
+      final response = await dio.post(
+        EndPoints.loginEndPoint, // Using the constant from your EndPoints class
+        data: {'identifier': identifier, 'password': password},
+      );
 
-    if (identifier == "test@test.com" && password == "password") {
-      final mockJsonResponse = {
-        "token": "mock_access_token_12345",
-        "refreshToken": "mock_refresh_token_67890",
-        "user": {
-          "id": "123",
-          "email": "test@test.com",
-          "name": "Lidiya Test",
-          "username": "lidiyatest"
-        }
-      };
-      final user = UserModel.fromJson(mockJsonResponse['user'] as Map<String, dynamic>);
-      final tokens = TokensModel.fromJson(mockJsonResponse);
-      return (user, tokens);
-    } else {
-      // CORRECTED: Provide a message and status code when throwing the exception.
-      throw ServerException(message: 'Invalid credentials', statusCode: 401);
+      // Check for a successful response code (e.g., 200 OK).
+      if (response.statusCode == 200 && response.data != null) {
+        // Parse the JSON response into our data models.
+        final user = UserModel.fromJson(response.data['user']);
+        final tokens = TokensModel.fromJson(response.data);
+        return (user, tokens);
+      } else {
+       
+        throw ServerException(
+          message:
+              'Login failed with an unexpected status code: ${response.statusCode}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+       print("----------- DIO REGISTER ERROR -----------");
+  print("STATUS CODE: ${e.response?.statusCode}");
+  print("RESPONSE DATA: ${e.response?.data}");
+  print("--------------------------------------");
+    
+final errorMessage = e.response?.data?['message'] ?? e.response?.data?['error'] ?? 'An unknown server error occurred';
+      throw ServerException(
+        message: errorMessage,
+        statusCode: e.response?.statusCode,
+      );
     }
   }
+
 
   @override
   Future<void> register({
@@ -60,18 +77,44 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String name,
     String? phone,
   }) async {
-    // --- MOCKED RESPONSE FOR DEVELOPMENT ---
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // You could add logic here to simulate errors, for example:
-    if (email == "exists@test.com") {
-      // CORRECTED: Provide a message for this specific error case.
-      throw ServerException(message: 'Email already exists', statusCode: 409);
-    }
+    try {
+      // Make the real network request to the register endpoint.
+      final response = await dio.post(
+        EndPoints.registerEndPoint, // Use the constant
+        data: {
+          'username': username,
+          'email': email,
+          'password': password,
+          'name': name,
+          'phone': phone, // Will be null if not provided
+        },
+      );
 
-    // Simulate a successful registration.
-    return;
+      // According to your API docs, a successful registration is 201 Created.
+      if (response.statusCode != 201) {
+        throw ServerException(
+          message:
+              'Registration failed with an unexpected status code: ${response.statusCode}',
+          statusCode: response.statusCode,
+        );
+      }
+      // If the status code is 201, the method completes successfully.
+    } on DioException catch (e) {
+      print("----------- DIO ERROR -----------");
+      print("ERROR TYPE: ${e.type}");
+      print("ERROR MESSAGE: ${e.message}");
+      print("SERVER RESPONSE: ${e.response}");
+      print("---------------------------------");
+      final errorMessage =
+          e.response?.data?['message'] ?? 'An unknown server error occurred';
+      throw ServerException(
+        message: errorMessage,
+        statusCode: e.response?.statusCode,
+      );
+    }
   }
+
+
 
   @override
   Future<void> forgotPassword(String email) async {
@@ -80,74 +123,107 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     // if (response.statusCode != 204) { // As per your API doc
     //   throw ServerException(message: 'Failed to send reset link');
     // }
-
-    // --- MOCKED RESPONSE ---
-    await Future.delayed(const Duration(seconds: 1));
-    if (email == 'notfound@test.com') {
-      throw ServerException(message: 'Email not found', statusCode: 404);
+    try {
+      final response = await dio.post(
+        EndPoints.forgotPassword,
+        data: {'email': email},
+      );
+      // The API doc says 200 is success for this endpoint.
+      if (response.statusCode != 200) {
+        throw ServerException(message: 'Failed to send reset email.', statusCode: response.statusCode);
+      }
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.response?.data?['error'] ?? 'An unknown server error occurred';
+      throw ServerException(message: errorMessage, statusCode: e.response?.statusCode);
     }
-    // Simulate success
-    return;
   }
 
+  
   @override
   Future<void> resetPassword({
-    required String email,
-    required String token,
+    required String resetToken,
     required String newPassword,
   }) async {
-    // --- REAL API CALL (commented out) ---
-    // final response = await dio.post('/auth/reset', data: {
-    //   'email': email,
-    //   'reset token': token, // Key from your API doc
-    //   'newPassword': newPassword,
-    // });
-    // if (response.statusCode != 204) {
-    //   throw ServerException(message: 'Failed to reset password');
-    // }
-
-    // --- MOCKED RESPONSE ---
-    await Future.delayed(const Duration(seconds: 1));
-    if (token == 'invalid_token') {
-      throw ServerException(message: 'Invalid or expired token', statusCode: 400);
+   
+    try {
+      // IMPORTANT: Based on your API docs, the /auth/reset endpoint only takes 'resetToken' and 'new_password'.
+      // Please confirm with your backend team if 'email' is also needed.
+      final response = await dio.post(
+        EndPoints.resetPassword,
+        data: {
+          'resetToken': resetToken,
+          'new_password': newPassword,
+        },
+      );
+      
+      if (response.statusCode != 200) {
+        throw ServerException(message: 'Failed to reset password.', statusCode: response.statusCode);
+      }
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.response?.data?['error'] ?? 'An unknown server error occurred';
+      throw ServerException(message: errorMessage, statusCode: e.response?.statusCode);
     }
-    // Simulate success
-    return;
   }
+  
 
-   // ... inside class AuthRemoteDataSourceImpl ...
+@override
+Future<(UserModel, TokensModel)> signInWithGoogle(String authCode) async {
+// According to your backend team's new spec, we will call a new endpoint
+// and send the 'code' in the body. We will use Dio, not http.
+// final response = await dio.post(
+//   '/auth/google', // The endpoint your backend team provided
+//   data: {'code': authCode},
+// );
+//
+// if (response.statusCode == 200) {
+//   final user = UserModel.fromJson(response.data['user']);
+//   final tokens = TokensModel.fromJson(response.data); // Or however they return tokens
+//   return (user, tokens);
+// } else {
+//   throw ServerException(message: 'Backend Google authentication failed');
+// }
 
+// --- MOCKED RESPONSE FOR DEVELOPMENT ---
+await Future.delayed(const Duration(seconds: 1));
+final mockJsonResponse = {
+  "token": "backend_access_token_google",
+  "refreshToken": "backend_refresh_token_google",
+  "user": {
+    "id": "google_user_123",
+    "email": "google@test.com",
+    "name": "Google User",
+    "username": "googleuser",
+  },
+};
+final user = UserModel.fromJson(
+  mockJsonResponse['user'] as Map<String, dynamic>,
+);
+final tokens = TokensModel.fromJson(mockJsonResponse);
+return (user, tokens);
+
+    
+  }
   @override
-  Future<(UserModel, TokensModel)> signInWithGoogle(String authCode) async {
-    // According to your backend team's new spec, we will call a new endpoint
-    // and send the 'code' in the body. We will use Dio, not http.
-    // final response = await dio.post(
-    //   '/auth/google', // The endpoint your backend team provided
-    //   data: {'code': authCode},
-    // );
-    //
-    // if (response.statusCode == 200) {
-    //   final user = UserModel.fromJson(response.data['user']);
-    //   final tokens = TokensModel.fromJson(response.data); // Or however they return tokens
-    //   return (user, tokens);
-    // } else {
-    //   throw ServerException(message: 'Backend Google authentication failed');
-    // }
-
-    // --- MOCKED RESPONSE FOR DEVELOPMENT ---
-    await Future.delayed(const Duration(seconds: 1));
-    final mockJsonResponse = {
-        "token": "backend_access_token_google",
-        "refreshToken": "backend_refresh_token_google",
-        "user": {
-          "id": "google_user_123",
-          "email": "google@test.com",
-          "name": "Google User",
-          "username": "googleuser"
-        }
-      };
-    final user = UserModel.fromJson(mockJsonResponse['user'] as Map<String, dynamic>);
-    final tokens = TokensModel.fromJson(mockJsonResponse);
-    return (user, tokens);
+  Future<(UserModel, TokensModel)> verifyAccount(String activationToken) async {
+    try {
+      final response = await dio.post(
+        EndPoints.verifyAccount, // Add this to your EndPoints.dart
+        data: {'activatationToken': activationToken}, // Matches the API doc
+      );
+      
+      // I am assuming a 200 OK response with user and tokens, similar to login.
+      // Please confirm this with your backend team.
+      if (response.statusCode == 200 && response.data != null) {
+        final user = UserModel.fromJson(response.data['user']);
+        final tokens = TokensModel.fromJson(response.data);
+        return (user, tokens);
+      } else {
+        throw ServerException(message: 'Account verification failed', statusCode: response.statusCode);
+      }
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.response?.data?['error'] ?? 'Verification failed.';
+      throw ServerException(message: errorMessage, statusCode: e.response?.statusCode);
+    }
   }
 }
+

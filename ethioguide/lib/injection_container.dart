@@ -9,7 +9,9 @@ import 'package:ethioguide/features/authentication/domain/usecases/login_user.da
 import 'package:ethioguide/features/authentication/domain/usecases/register_user.dart';
 import 'package:ethioguide/features/authentication/domain/usecases/reset_password.dart';
 import 'package:ethioguide/features/authentication/domain/usecases/sign_in_with_google.dart';
+import 'package:ethioguide/features/authentication/domain/usecases/verify_account.dart';
 import 'package:ethioguide/features/authentication/presentation/bloc/auth_bloc.dart';
+
 import 'package:ethioguide/features/procedure/data/datasources/procedure_remote_data_source.dart';
 import 'package:ethioguide/features/procedure/data/datasources/workspace_procedure_remote_data_source.dart';
 import 'package:ethioguide/features/procedure/data/repositories/procedure_repository_impl.dart';
@@ -41,6 +43,15 @@ import 'package:ethioguide/features/workspace_discussion/domain/usecases/like_di
 import 'package:ethioguide/features/workspace_discussion/domain/usecases/report_comment.dart';
 import 'package:ethioguide/features/workspace_discussion/domain/usecases/report_discussion.dart';
 import 'package:ethioguide/features/workspace_discussion/presentation/bloc/workspace_discussion_bloc.dart';
+
+import 'package:ethioguide/features/home_screen/presentaion/bloc/home_bloc.dart';
+import 'package:ethioguide/features/profile/data/datasources/profile_remote_data_source.dart';
+import 'package:ethioguide/features/profile/data/repositories/profile_repository_impl.dart';
+import 'package:ethioguide/features/profile/domain/repositories/profile_repository.dart';
+import 'package:ethioguide/features/profile/domain/usecases/get_user_profile.dart';
+import 'package:ethioguide/features/profile/domain/usecases/logout_user.dart';
+import 'package:ethioguide/features/profile/presentation/bloc/profile_bloc.dart';
+
 // REMOVED: No longer need to import google_sign_in here.
 
 import 'core/network/interceptors/auth_interceptor.dart';
@@ -62,10 +73,18 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 
+import 'package:ethioguide/features/home_screen/data/repositories/home_repository_impl.dart';
+import 'package:ethioguide/features/home_screen/domain/repositories/home_repository.dart';
+import 'package:ethioguide/features/home_screen/domain/usecases/get_home_data.dart';
+
+
+
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
   //* Features - Authentication
+
   sl.registerFactory(
     () => AuthBloc(
       loginUser: sl(),
@@ -75,6 +94,9 @@ Future<void> init() async {
       signInWithGoogle: sl(),
     ),
   );
+
+  sl.registerFactory(() => AuthBloc(loginUser: sl(), registerUser: sl(), forgotPassword: sl(), resetPassword: sl(), signInWithGoogle: sl(), verifyAccount: sl(),));
+
   sl.registerLazySingleton(() => LoginUser(sl()));
   sl.registerLazySingleton(() => RegisterUser(sl()));
   sl.registerLazySingleton(() => ForgotPassword(sl()));
@@ -106,6 +128,7 @@ Future<void> init() async {
       translateContentUseCase: sl(),
     ),
   );
+
   sl.registerFactory<WorkspaceDiscussionBloc>(
     () => WorkspaceDiscussionBloc(
       getCommunityStats: sl(),
@@ -127,6 +150,15 @@ Future<void> init() async {
       getProceduresbyid: sl(),
       getFeedbacks: sl(),
       saveFeedback: sl(),
+
+  
+  sl.registerFactory(() => HomeBloc(getHomeData: sl()));
+
+   sl.registerFactory(
+    () => ProfileBloc(
+      getUserProfile: sl(),
+      logoutUser: sl(),
+
     ),
   );
 
@@ -136,6 +168,7 @@ Future<void> init() async {
   sl.registerLazySingleton<TranslateContent>(
     () => TranslateContent(repository: sl()),
   );
+
   sl.registerLazySingleton<AddComment>(() => AddComment(sl()));
   sl.registerLazySingleton<GetComments>(() => GetComments(sl()));
   sl.registerLazySingleton<CreateDiscussion>(() => CreateDiscussion(sl()));
@@ -155,6 +188,12 @@ Future<void> init() async {
 
   // Bloc
 
+  sl.registerLazySingleton(() => GetHomeData(sl()));
+   sl.registerLazySingleton(() => GetUserProfile(sl()));
+  sl.registerLazySingleton(() => LogoutUser(sl()));
+   sl.registerLazySingleton(() => VerifyAccount(sl()));
+
+
   // Repositories
   sl.registerLazySingleton<AiRepository>(
     () => AiRepositoryImpl(
@@ -163,12 +202,25 @@ Future<void> init() async {
       networkInfo: sl(),
     ),
   );
+
   sl.registerLazySingleton<WorkspaceDiscussionRepository>(
     () => WorkspaceDiscussionRepositoryImpl(sl()),
   );
   sl.registerLazySingleton<ProcedureRepository>(
     () => ProcedureRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
   );
+
+  
+  sl.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
+  sl.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(
+      remoteDataSource: sl(),
+      coreAuthRepository: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
+
 
   // Datasources
   sl.registerLazySingleton<AiRemoteDatasource>(
@@ -177,6 +229,7 @@ Future<void> init() async {
   sl.registerLazySingleton<AiLocalDatasource>(
     () => AiLocalDataSourceImpl(secureStorage: sl()),
   );
+
   sl.registerLazySingleton<WorkspaceDiscussionRemoteDataSource>(
     () => WorkspaceDiscussionRemoteDataSourceImpl(dio: sl()),
   );
@@ -217,6 +270,10 @@ Future<void> init() async {
       // getProceduresByOrganization: sl(),
       // getWorkspaceSummary: sl(),
     ),
+
+  sl.registerLazySingleton<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSourceImpl(dio: sl()),
+
   );
 
   //! Core
@@ -237,6 +294,9 @@ Future<void> init() async {
       BaseOptions(
         baseUrl: EndPoints.baseUrl,
         headers: {'X-Client-Type': 'mobile'},
+
+      connectTimeout: const Duration(seconds: 111), // Waits 60s to connect
+      receiveTimeout: const Duration(seconds: 111), 
       ),
     );
     dio.interceptors.add(AuthInterceptor(sl<CoreAuthRepository>(), dio));
