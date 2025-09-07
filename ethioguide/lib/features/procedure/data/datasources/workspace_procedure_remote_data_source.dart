@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:ethioguide/core/error/exception.dart';
+import 'package:ethioguide/features/AI%20chat/data/models/conversation_model.dart';
+import 'package:ethioguide/features/procedure/data/models/procedure_step_model.dart';
 import '../../domain/entities/workspace_procedure.dart';
 import '../models/workspace_procedure_model.dart';
 import '../models/workspace_summary_model.dart';
@@ -11,7 +13,7 @@ abstract class WorkspaceProcedureRemoteDataSource {
   Future<WorkspaceSummaryModel> getWorkspaceSummary();
   Future<List<WorkspaceProcedureModel>> getProceduresByStatus(String status);
   Future<List<WorkspaceProcedureModel>> getProceduresByOrganization(String organization);
-  Future<WorkspaceProcedureModel> getProcedureDetail(String id);
+  Future<List<MyProcedureStepModel>> getProcedureDetail(String id);
   Future<bool> updateStepStatus(String procedureId, String stepId, bool isCompleted);
   Future<bool> saveProgress(String procedureId);
 }
@@ -19,21 +21,48 @@ abstract class WorkspaceProcedureRemoteDataSource {
 
 class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemoteDataSource {
   final Dio dio;
-  final String baseUrl;
+
 
   WorkspaceProcedureRemoteDataSourceImpl({
-    required this.dio,
-    this.baseUrl = 'https://api.ethioguide.com', // Mock API base URL
+    required this.dio
   });
 
   // Original methods implementation
   @override
   Future<List<WorkspaceProcedureModel>> getMyProcedures() async {
     try {
-      final response = await dio.get('$baseUrl/workspace/procedures');
+      final response = await dio.get('checklists/myProcedures');
       if (response.statusCode == 200) {
         final data = response.data as List<dynamic>;
-        return data.map((e) => WorkspaceProcedureModel.fromJson(e as Map<String, dynamic>)).toList();
+
+              final futures = data.map((element) async {
+        final procId = element['procedure_id'] as String;
+
+        final procResponse = await dio.get('procedures/$procId');
+
+        if (procResponse.statusCode == 200) {
+          final procedureJson = procResponse.data as Map<String, dynamic>;
+
+          // Merge into WorkspaceProcedureModel
+          return WorkspaceProcedureModel.fromJson(element, procedureJson);
+        /*   (
+            id: element['id'] as String,
+            procedure: ProcedureModel.fromJson(procedureJson),
+            status: element['status'] as String,
+            progressPercentage: element['percent'] as int? ?? 0,
+          ); */
+
+        } else {
+          throw ServerException(
+            message: 'Failed to fetch procedure $procId',
+            statusCode: procResponse.statusCode,
+          );
+        }
+      }).toList();
+
+
+        return data.map((e) => WorkspaceProcedureModel.fromJson(e as Map<String, dynamic> , {})).toList();
+        
       }
       throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
     } on DioException catch (e) {
@@ -48,7 +77,7 @@ class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemote
   @override
   Future<WorkspaceSummaryModel> getWorkspaceSummary() async {
     try {
-      final response = await dio.get('$baseUrl/workspace/summary');
+      final response = await dio.get('workspace/summary');
       if (response.statusCode == 200) {
         return WorkspaceSummaryModel.fromJson(response.data as Map<String, dynamic>);
       }
@@ -65,10 +94,10 @@ class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemote
   @override
   Future<List<WorkspaceProcedureModel>> getProceduresByStatus(String status) async {
     try {
-      final response = await dio.get('$baseUrl/workspace/procedures', queryParameters: {'status': status});
+      final response = await dio.get('workspace/procedures', queryParameters: {'status': status});
       if (response.statusCode == 200) {
         final data = response.data as List<dynamic>;
-        return data.map((e) => WorkspaceProcedureModel.fromJson(e as Map<String, dynamic>)).toList();
+        return data.map((e) => WorkspaceProcedureModel.fromJson(e as Map<String, dynamic>, {})).toList();
       }
       throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
     } on DioException catch (e) {
@@ -83,10 +112,10 @@ class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemote
   @override
   Future<List<WorkspaceProcedureModel>> getProceduresByOrganization(String organization) async {
     try {
-      final response = await dio.get('$baseUrl/workspace/procedures', queryParameters: {'organization': organization});
+      final response = await dio.get('workspace/procedures', queryParameters: {'organization': organization});
       if (response.statusCode == 200) {
         final data = response.data as List<dynamic>;
-        return data.map((e) => WorkspaceProcedureModel.fromJson(e as Map<String, dynamic>)).toList();
+        return data.map((e) => WorkspaceProcedureModel.fromJson(e as Map<String, dynamic> , {})).toList();
       }
       throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
     } on DioException catch (e) {
@@ -100,11 +129,15 @@ class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemote
 
   // New methods for workspace procedure detail feature
   @override
-  Future<WorkspaceProcedureModel> getProcedureDetail(String id) async {
+  Future<List<MyProcedureStepModel>> getProcedureDetail(String id) async {
     try {
-      final response = await dio.get('$baseUrl/workspace/procedures/$id');
+      final response = await dio.get('checklists/$id');
       if (response.statusCode == 200) {
-        return WorkspaceProcedureModel.fromJson(response.data as Map<String, dynamic>);
+
+        final data = response.data as List<dynamic>;
+        return  data.map((e) => MyProcedureStepModel.fromJson(e as Map<String, dynamic>)).toList();
+        
+        
       }
       throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
     } on DioException catch (e) {
@@ -119,7 +152,7 @@ class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemote
   @override
   Future<bool> updateStepStatus(String procedureId, String stepId, bool isCompleted) async {
     try {
-      final response = await dio.patch('$baseUrl/workspace/procedures/$procedureId/steps/$stepId', data: {'isCompleted': isCompleted});
+      final response = await dio.patch('workspace/procedures/$procedureId/steps/$stepId', data: {'isCompleted': isCompleted});
       if (response.statusCode == 200 || response.statusCode == 204) {
         return true;
       }
@@ -136,7 +169,7 @@ class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemote
   @override
   Future<bool> saveProgress(String procedureId) async {
     try {
-      final response = await dio.post('$baseUrl/workspace/procedures/$procedureId/progress');
+      final response = await dio.post('workspace/procedures/$procedureId/progress');
       if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
       }

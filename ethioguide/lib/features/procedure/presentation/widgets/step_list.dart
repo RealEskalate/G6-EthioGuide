@@ -52,8 +52,7 @@ class StepList extends StatelessWidget {
             const SizedBox(height: 10),
             ...steps.map((s) => ListTile(
                   leading: CircleAvatar(child: Text(s.number.toString())),
-                  title: Text(s.title),
-                  subtitle: Text(s.description),
+                  title: Text(s.title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
                 )),
           ],
         ),

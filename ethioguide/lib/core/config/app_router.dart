@@ -1,5 +1,6 @@
 import 'package:ethioguide/features/authentication/presentation/screens/auth_screen.dart';
 import 'package:ethioguide/core/config/route_names.dart';
+import 'package:ethioguide/features/procedure/domain/entities/procedure_detail.dart';
 
 import 'package:ethioguide/features/procedure/presentation/pages/workspace_page.dart';
 import 'package:ethioguide/features/procedure/presentation/pages/workspace_procedure_detail_page.dart';
@@ -19,7 +20,7 @@ import '../../features/procedure/presentation/pages/procedure_page.dart';
 
 // This is the central router configuration for the entire application.
 final GoRouter router = GoRouter(
-  initialLocation: '/discussion',
+  initialLocation: '/Procedure',
 
   // The list of all available routes in the app.
   routes: [
@@ -53,8 +54,8 @@ final GoRouter router = GoRouter(
           path: 'detail',
           name: RouteNames.workspace_detail,
           builder: (context, state) {
-            final procedureId = state.extra as String;
-            return WorkspaceProcedureDetailPage(procedureId: procedureId);
+            final procedure = state.extra as ProcedureDetail;
+            return WorkspaceProcedureDetailPage(procedureDetail: procedure);
           },
         ),
       ], // The function that builds the widget for this screen.

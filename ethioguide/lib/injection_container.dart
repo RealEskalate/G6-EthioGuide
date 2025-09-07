@@ -10,6 +10,24 @@ import 'package:ethioguide/features/authentication/domain/usecases/register_user
 import 'package:ethioguide/features/authentication/domain/usecases/reset_password.dart';
 import 'package:ethioguide/features/authentication/domain/usecases/sign_in_with_google.dart';
 import 'package:ethioguide/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:ethioguide/features/procedure/data/datasources/procedure_remote_data_source.dart';
+import 'package:ethioguide/features/procedure/data/datasources/workspace_procedure_remote_data_source.dart';
+import 'package:ethioguide/features/procedure/data/repositories/procedure_repository_impl.dart';
+import 'package:ethioguide/features/procedure/data/repositories/workspace_procedure_repository_impl.dart';
+import 'package:ethioguide/features/procedure/domain/repositories/procedure_repository.dart';
+import 'package:ethioguide/features/procedure/domain/repositories/workspace_procedure_repository.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/get_feadback.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/get_my_procedure.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_by_organization.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_bystattus.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_detail.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/get_procedures.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/get_workspace_summary.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/getprocedurebyid.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/save_feedback.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/save_procedure.dart';
+import 'package:ethioguide/features/procedure/presentation/bloc/procedure_bloc.dart';
+import 'package:ethioguide/features/procedure/presentation/bloc/workspace_procedure_detail_bloc.dart';
 import 'package:ethioguide/features/workspace_discussion/data/datasources/workspace_discussion_remote_data_source.dart';
 import 'package:ethioguide/features/workspace_discussion/data/repositories/workspace_discussion_repository_impl.dart';
 import 'package:ethioguide/features/workspace_discussion/domain/repositories/workspace_discussion_repository.dart';
@@ -102,6 +120,16 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerFactory<ProcedureBloc>(
+    () => ProcedureBloc(
+      getProcedures: sl(),
+      saveProcedure: sl(),
+      getProceduresbyid: sl(),
+      getFeedbacks: sl(),
+      saveFeedback: sl(),
+    ),
+  );
+
   // Usecase
   sl.registerLazySingleton<SendQuery>(() => SendQuery(repository: sl()));
   sl.registerLazySingleton<GetHistory>(() => GetHistory(repository: sl()));
@@ -114,10 +142,18 @@ Future<void> init() async {
   sl.registerLazySingleton<GetCommunityStats>(() => GetCommunityStats(sl()));
   sl.registerLazySingleton<LikeDiscussion>(() => LikeDiscussion(sl()));
   sl.registerLazySingleton<ReportComment>(() => ReportComment(sl()));
-    sl.registerLazySingleton<ReportDiscussion>(() => ReportDiscussion(sl()));
+  sl.registerLazySingleton<ReportDiscussion>(() => ReportDiscussion(sl()));
 
   sl.registerLazySingleton<GetDiscussions>(() => GetDiscussions(sl()));
   sl.registerLazySingleton<LikeComment>(() => LikeComment(sl()));
+  sl.registerLazySingleton<GetProcedures>(() => GetProcedures(sl()));
+  sl.registerLazySingleton<SaveProcedure>(() => SaveProcedure(sl()));
+  sl.registerLazySingleton<GetProceduresbyid>(() => GetProceduresbyid(sl()));
+
+  sl.registerLazySingleton<GetFeedbacks>(() => GetFeedbacks(sl()));
+  sl.registerLazySingleton<SaveFeedback>(() => SaveFeedback(sl()));
+
+  // Bloc
 
   // Repositories
   sl.registerLazySingleton<AiRepository>(
@@ -130,6 +166,9 @@ Future<void> init() async {
   sl.registerLazySingleton<WorkspaceDiscussionRepository>(
     () => WorkspaceDiscussionRepositoryImpl(sl()),
   );
+  sl.registerLazySingleton<ProcedureRepository>(
+    () => ProcedureRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
 
   // Datasources
   sl.registerLazySingleton<AiRemoteDatasource>(
@@ -140,6 +179,44 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<WorkspaceDiscussionRemoteDataSource>(
     () => WorkspaceDiscussionRemoteDataSourceImpl(dio: sl()),
+  );
+  sl.registerLazySingleton<ProcedureRemoteDataSource>(
+    () => ProcedureRemoteDataSourceImpl(client: sl()),
+  );
+
+  sl.registerLazySingleton<WorkspaceProcedureRemoteDataSource>(
+    () => WorkspaceProcedureRemoteDataSourceImpl(dio: sl()),
+  );
+
+  // Repository (implements ProcedureDetailRepository)
+  sl.registerLazySingleton<ProcedureDetailRepository>(
+    () => WorkspaceProcedureRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
+  // Usecases
+  sl.registerLazySingleton(() => GetProcedureDetails(sl()));
+  sl.registerLazySingleton(() => GetWorkspaceSummary(sl()));
+  sl.registerLazySingleton(() => GetProceduresByStatus(sl()));
+  sl.registerLazySingleton(() => GetProceduresByOrganization(sl()));
+  sl.registerLazySingleton(() => GetProcedureDetail(sl()));
+  // sl.registerLazySingleton(() => UpdateStepStatus(sl()));
+  sl.registerLazySingleton(() => SaveProgress(sl()));
+
+  // Bloc
+  sl.registerFactory<WorkspaceProcedureDetailBloc>(
+    () => WorkspaceProcedureDetailBloc(
+      getProcedureDetail: sl(),
+      getMyProcedureDetails: sl(),
+      // updateStepStatusUseCase: sl(),
+      // saveProgressUseCase: sl(),
+      // getMyProcedureDetails: sl(),
+      // getProceduresByStatus: sl(),
+      // getProceduresByOrganization: sl(),
+      // getWorkspaceSummary: sl(),
+    ),
   );
 
   //! Core

@@ -1,7 +1,9 @@
 import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
 import 'package:flutter/material.dart';
 import 'package:ethioguide/features/procedure/domain/entities/workspace_procedure.dart';
-import 'package:ethioguide/features/procedure/data/sample_data/workspace_sample_data.dart';
+
+
+
 
 /// Widget that displays filters for procedures
 class WorkspaceFilters extends StatelessWidget {
@@ -106,5 +108,18 @@ class _FilterDropdown<T> extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+
+class WorkspaceSampleData {
+  static List<String> getSampleOrganizations() {
+    return [
+      "Ministry of Education",
+      "Ministry of Health",
+      "Immigration Office",
+      "Commercial Bank of Ethiopia",
+      "Addis Ababa City Administration",
+    ];
   }
 }

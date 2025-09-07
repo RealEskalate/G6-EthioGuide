@@ -18,22 +18,24 @@ part 'workspace_procedure_detail_state.dart';
 
 class WorkspaceProcedureDetailBloc extends Bloc<WorkspaceProcedureDetailEvent, WorkspaceProcedureDetailState> {
   final usecase_detail.GetProcedureDetail getProcedureDetail;
-  final usecase_update.UpdateStepStatus updateStepStatusUseCase;
-  final usecase_save.SaveProgress saveProgressUseCase;
+  // final usecase_update.UpdateStepStatus updateStepStatusUseCase;
+  // final usecase_save.SaveProgress saveProgressUseCase;
   final usecase_my.GetProcedureDetails getMyProcedureDetails;
-  final usecase_by_status.GetProceduresByStatus getProceduresByStatus;
-  final usecase_by_org.GetProceduresByOrganization getProceduresByOrganization;
-  final usecase_summary.GetWorkspaceSummary getWorkspaceSummary;
+  // final usecase_by_status.GetProceduresByStatus getProceduresByStatus;
+  // final usecase_by_org.GetProceduresByOrganization getProceduresByOrganization;
+  // final usecase_summary.GetWorkspaceSummary getWorkspaceSummary;
 
   WorkspaceProcedureDetailBloc({
     required this.getProcedureDetail,
-    required this.updateStepStatusUseCase,
-    required this.saveProgressUseCase,
+    // required this.updateStepStatusUseCase,
+    // required this.saveProgressUseCase,
     required this.getMyProcedureDetails,
-    required this.getProceduresByStatus,
-    required this.getProceduresByOrganization,
-    required this.getWorkspaceSummary,
+    // required this.getProceduresByStatus,
+    // required this.getProceduresByOrganization,
+    // required this.getWorkspaceSummary,
   }) : super(ProcedureInitial()) {
+
+
     on<FetchProcedureDetail>((event, emit) async {
       emit(ProcedureLoading());
       final result = await getProcedureDetail(event.id);
@@ -42,8 +44,19 @@ class WorkspaceProcedureDetailBloc extends Bloc<WorkspaceProcedureDetailEvent, W
         (detail) => emit(ProcedureLoaded(detail)),
       );
     });
+    
+       on<FetchMyProcedures>((event, emit) async {
+      emit(ProcedureLoading());
+      final result = await getMyProcedureDetails();
+      result.fold(
+        (failure) => emit(ProcedureError(failure.message)),
+        (procedures) => emit(ProceduresListLoaded(procedures)),
+      );
+    });
 
-    on<UpdateStepStatus>((event, emit) async {
+    
+
+   /*  on<UpdateStepStatus>((event, emit) async {
       // Keep last loaded detail, show loading only for update if needed
       final current = state;
       final result = await updateStepStatusUseCase(event.procedureId, event.stepId, event.isCompleted);
@@ -72,14 +85,7 @@ class WorkspaceProcedureDetailBloc extends Bloc<WorkspaceProcedureDetailEvent, W
       );
     });
 
-    on<FetchMyProcedures>((event, emit) async {
-      emit(ProcedureLoading());
-      final result = await getMyProcedureDetails();
-      result.fold(
-        (failure) => emit(ProcedureError(failure.message)),
-        (procedures) => emit(ProceduresListLoaded(procedures)),
-      );
-    });
+ 
 
     on<FetchProceduresByStatus>((event, emit) async {
       emit(ProcedureLoading());
@@ -90,14 +96,7 @@ class WorkspaceProcedureDetailBloc extends Bloc<WorkspaceProcedureDetailEvent, W
       );
     });
 
-    on<FetchProceduresByOrganization>((event, emit) async {
-      emit(ProcedureLoading());
-      final result = await getProceduresByOrganization(event.organization);
-      result.fold(
-        (failure) => emit(ProcedureError(failure.message)),
-        (procedures) => emit(ProceduresListLoaded(procedures)),
-      );
-    });
+
 
     on<FetchWorkspaceSummary>((event, emit) async {
       emit(ProcedureLoading());
@@ -107,7 +106,8 @@ class WorkspaceProcedureDetailBloc extends Bloc<WorkspaceProcedureDetailEvent, W
         (summary) => emit(WorkspaceSummaryLoaded(summary)),
       );
     });
-  }
+  } */
 }
 
 
+}

@@ -12,7 +12,7 @@ class ProcedureInitial extends WorkspaceProcedureDetailState {}
 class ProcedureLoading extends WorkspaceProcedureDetailState {}
 
 class ProcedureLoaded extends WorkspaceProcedureDetailState {
-  final ProcedureDetail procedureDetail;
+  final List<MyProcedureStep> procedureDetail;
   const ProcedureLoaded(this.procedureDetail);
 
   @override
@@ -59,4 +59,10 @@ class ProcedureError extends WorkspaceProcedureDetailState {
   List<Object?> get props => [message];
 }
 
+class Stepupdate extends WorkspaceProcedureDetailState {
+  final bool check;
+  const Stepupdate(this.check);
 
+  @override
+  List<Object?> get props => [check];
+}

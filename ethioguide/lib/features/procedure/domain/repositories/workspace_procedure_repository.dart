@@ -19,7 +19,7 @@ abstract class ProcedureDetailRepository {
   Future<Either<Failure, List<ProcedureDetail>>> getProceduresByOrganization(String organization);
 
   /// Fetch procedure details by ID
-  Future<Either<String, ProcedureDetail>> getProcedureDetail(String id);
+  Future<Either<String,List<MyProcedureStep>>> getProcedureDetail(String id);
   
   /// Update step status
   Future<Either<String, bool>> updateStepStatus(String procedureId, String stepId, bool isCompleted);

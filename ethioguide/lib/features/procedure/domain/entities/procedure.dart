@@ -5,44 +5,42 @@ class Procedure extends Equatable {
 
   final String id;
   final String title;
-  final String category; // e.g., Transportation, Travel
-  final String duration; // e.g., 2-3 weeks
+  final ProcessTime duration; // e.g., 2-3 weeks
   final String cost; // e.g., 1,200 ETB
-  final String icon; // a semantic icon name or asset key
-  final bool isQuickAccess; // whether to show in quick access grid // a link to the official procedure page
-  // Detail Page fields
   final List<String> requiredDocuments; // e.g., ["Passport Photo", "Birth Certificate"]
   final List<ProcedureStep> steps; // Step-by-step guide
-  final List<Resource> resources; // forms, downloadable items
-  final List<FeedbackItem> feedback; // user reviews
+
+
+   final List<Resource> resources; // forms, downloadable items
+   final List<FeedbackItem> feedback; // user reviews
+  // final String icon; // a semantic icon name or asset key
+  // final bool isQuickAccess; // whether to show in quick access grid // a link to the official procedure /* page */
 
   const Procedure({
     required this.id,
     required this.title,
-    required this.category,
     required this.duration,
     required this.cost,
-    required this.icon,
-    required this.isQuickAccess,
     this.requiredDocuments = const [],
     this.steps = const [],
     this.resources = const [],
-    this.feedback = const [],
+     this.feedback = const [],
+    // required this.icon,
+    // required this.isQuickAccess,
   });
 
   @override
   List<Object?> get props => [
         id,
         title,
-        category,
         duration,
         cost,
-        icon,
-        isQuickAccess,
         requiredDocuments,
         steps,
-        resources,
-        feedback,
+        // resources,
+        // feedback,
+        //    icon,
+        // isQuickAccess,
       ];
 }
 
@@ -50,12 +48,12 @@ class Procedure extends Equatable {
 class ProcedureStep extends Equatable {
   final int number;
   final String title;
-  final String description;
 
-  const ProcedureStep({required this.number, required this.title, required this.description});
+
+  const ProcedureStep({required this.number, required this.title});
 
   @override
-  List<Object?> get props => [number, title, description];
+  List<Object?> get props => [number, title];
 }
 
 class Resource extends Equatable {
@@ -68,16 +66,37 @@ class Resource extends Equatable {
   List<Object?> get props => [name, url];
 }
 
+class ProcessTime extends Equatable {
+  final int minday;
+  final int maxday;
+
+  const ProcessTime({required this.minday, required this.maxday});
+
+
+  @override
+  List<Object?> get props => [minday, maxday];
+}
+
+class Fee extends Equatable {
+    final int amount;
+  final String currency;
+
+  const Fee({required this.amount, required this.currency});
+
+  @override
+  List<Object?> get props => [amount, currency];
+}
+
 class FeedbackItem extends Equatable {
   final String user;
   final String comment;
   final String date;
-  final bool verified;
 
-  const FeedbackItem({required this.user, required this.comment, required this.date, required this.verified});
+
+  const FeedbackItem({required this.user, required this.comment, required this.date});
 
   @override
-  List<Object?> get props => [user, comment, date, verified];
+  List<Object?> get props => [user, comment, date];
 }
 
 

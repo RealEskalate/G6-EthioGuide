@@ -33,25 +33,20 @@ class WorkspaceProcedureCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    procedure.title,
+                    procedure.procedure.title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                _getStatusChip(),
+                // _getStatusChip(),
               ],
             ),
             
-            const SizedBox(height: 8),
+        
             
             // Organization
-            Text(
-              procedure.organization,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
-            ),
+           
             
             const SizedBox(height: 16),
             
@@ -93,12 +88,12 @@ class WorkspaceProcedureCard extends StatelessWidget {
             const SizedBox(height: 16),
             
             // Details
-            _DetailRow(
+           /*  _DetailRow(
               icon: Icons.calendar_today,
               text: 'Started: ${_formatDate(procedure.startDate)}',
             ),
-            
-            if (procedure.estimatedCompletion != null) ...[
+             */
+           /*  if (procedure.estimatedCompletion != null) ...[
               const SizedBox(height: 8),
               _DetailRow(
                 icon: Icons.track_changes,
@@ -112,13 +107,13 @@ class WorkspaceProcedureCard extends StatelessWidget {
                 icon: Icons.check_circle,
                 text: 'Completed: ${_formatDate(procedure.completedDate!)}',
               ),
-            ],
+            ], */
             
-            const SizedBox(height: 8),
-            _DetailRow(
+            // const SizedBox(height: 8),
+          /*   _DetailRow(
               icon: Icons.description,
               text: '${procedure.documentsUploaded}/${procedure.totalDocuments} documents uploaded',
-            ),
+            ), */
             
             const SizedBox(height: 16),
             
@@ -143,7 +138,7 @@ class WorkspaceProcedureCard extends StatelessWidget {
     );
   }
 
-  Widget _getStatusIcon() {
+  /* Widget _getStatusIcon() {
     IconData iconData;
     Color iconColor;
     
@@ -209,24 +204,7 @@ class WorkspaceProcedureCard extends StatelessWidget {
     );
   }
 
-  Color _getProgressColor() {
-    if (procedure.progressPercentage == 100) return Colors.green;
-    if (procedure.progressPercentage > 50) return Colors.orange;
-    return Colors.grey;
-  }
 
-  String _formatDate(DateTime date) {
-    return '${_getMonthName(date.month)} ${date.day}, ${date.year}';
-  }
-
-  String _getMonthName(int month) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    return months[month - 1];
-  }
-}
 
 class _DetailRow extends StatelessWidget {
   final IconData icon;
@@ -256,4 +234,58 @@ class _DetailRow extends StatelessWidget {
       ],
     );
   }
+}
+ */
+
+  Color _getProgressColor() {
+    if (procedure.progressPercentage == 100) return Colors.green;
+    if (procedure.progressPercentage > 50) return Colors.orange;
+    return Colors.grey;
+  }
+
+  String _formatDate(DateTime date) {
+    return '${_getMonthName(date.month)} ${date.day}, ${date.year}';
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month - 1];
+  }
+
+
+   Widget _getStatusIcon() {
+   late IconData iconData;
+  late  Color iconColor;
+    
+    switch (procedure.status) {
+      case ProcedureStatus.completed:
+        iconData = Icons.check_circle;
+        iconColor = Colors.green;
+        break;
+      case ProcedureStatus.inProgress:
+        iconData = Icons.description;
+        iconColor = Colors.blue;
+        break;
+      case ProcedureStatus.notStarted:
+        iconData = Icons.people;
+        iconColor = Colors.purple;
+        break;
+    }
+    
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: iconColor.withOpacity(0.1),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(iconData, color: iconColor, size: 24),
+    );
+  }
+
+  /* 
+  } */
+
 }

@@ -1,23 +1,40 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/discussion.dart';
+import '../../domain/entities/user.dart';
 
 /// Widget that displays a single discussion card
 class DiscussionCard extends StatelessWidget {
-  final Discussion discussion;
+  final Discussion discussions;
   final VoidCallback? onTap;
   final VoidCallback? onLike;
   final VoidCallback? onReport;
   final VoidCallback? onComment;
 
-  const DiscussionCard({
+   DiscussionCard({
     super.key,
-    required this.discussion,
+    required this.discussions,
     this.onTap,
     this.onLike,
     this.onReport,
     this.onComment,
   });
 
+
+final discussion = 
+   Discussion(
+      id: 'd',
+      title: 'How to complete step ${1 + 1}?',
+      content: 'I need help with the requirements for step ${1 + 1}. Any tips?',
+      tags: ['licensing', 'process'],
+      category: 1 % 2 == 0 ? 'General' : 'Business',
+      createdAt: DateTime.now().subtract(Duration(days: 1)),
+      createdBy:  User(id: 'u1', name: 'Test User'),
+      likeCount: 1 * 3,
+      reportCount: 0,
+      commentsCount: 1 + 1,
+    );
+  
+  
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -87,7 +104,7 @@ class DiscussionCard extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              _formatTimeAgo(discussion.createdAt),
+                              _formatTimeAgo(discussions.createdAt),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: Colors.grey[600],
                               ),
@@ -134,7 +151,7 @@ class DiscussionCard extends StatelessWidget {
                   ],
                   Expanded(
                     child: Text(
-                      discussion.title,
+                      discussions.title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -146,7 +163,7 @@ class DiscussionCard extends StatelessWidget {
               
               // Content snippet
               Text(
-                discussion.content,
+                discussions.content,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.grey[700],
                 ),
@@ -159,7 +176,7 @@ class DiscussionCard extends StatelessWidget {
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
-                children: discussion.tags.take(4).map((tag) {
+                children: discussions.tags.take(4).map((tag) {
                   return Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,

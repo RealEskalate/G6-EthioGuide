@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
 import '../repositories/workspace_procedure_repository.dart';
 
-/// Use case for updating step status
-class UpdateStepStatus {
+/// Use case for updating step statusUpdateStepSta
+class  UpdateStepStatus{
   final ProcedureDetailRepository repository;
 
   const UpdateStepStatus(this.repository);

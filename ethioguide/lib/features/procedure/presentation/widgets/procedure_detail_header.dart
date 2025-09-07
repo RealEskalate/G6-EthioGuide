@@ -8,13 +8,16 @@ class ProcedureDetailHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        InfoCard(icon: Icons.timer, title: 'Processing Time', value: duration),
-        InfoCard(icon: Icons.attach_money, title: 'Total Fees', value: cost),
-        InfoCard(icon: Icons.chat, title: 'AI Assistant', value: 'Chat here'),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          InfoCard(icon: Icons.timer, title: 'Processing Time', value: duration),
+          InfoCard(icon: Icons.attach_money, title: 'Total Fees', value: cost),
+          InfoCard(icon: Icons.chat, title: 'AI Assistant', value: 'Chat here'),
+        ],
+      ),
     );
   }
 }

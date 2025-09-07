@@ -79,7 +79,7 @@ class WorkspaceProcedureRepositoryImpl implements ProcedureDetailRepository {
   }
 
   @override
-  Future<Either<String, ProcedureDetail>> getProcedureDetail(String id) async {
+  Future<Either<String,List<MyProcedureStep>>> getProcedureDetail(String id) async {
     if (await networkInfo.isConnected) {
       try {
         final detail = await remoteDataSource.getProcedureDetail(id);

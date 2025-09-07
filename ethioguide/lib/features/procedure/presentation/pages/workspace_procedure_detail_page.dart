@@ -1,6 +1,8 @@
+import 'package:ethioguide/features/procedure/presentation/bloc/workspace_procedure_detail_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:ethioguide/features/procedure/domain/entities/procedure_detail.dart';
 import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/progress_overview_card.dart';
 import '../widgets/step_instructions_list.dart';
@@ -8,55 +10,20 @@ import '../widgets/quick_tips_box.dart';
 import '../widgets/required_documents_list.dart';
 
 /// Page that displays detailed information about a workspace procedure
+
+
 class WorkspaceProcedureDetailPage extends StatelessWidget {
-  final String procedureId;
+final ProcedureDetail procedureDetail;
 
   const WorkspaceProcedureDetailPage({
     super.key,
-    required this.procedureId,
+    required this.procedureDetail,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return const _WorkspaceProcedureDetailView();
-  }
-}
-
-class _WorkspaceProcedureDetailView extends StatelessWidget {
-  const _WorkspaceProcedureDetailView();
 
   @override
   Widget build(BuildContext context) {
-    final mockDetail = ProcedureDetail(
-      id: 'mock-1',
-      title: 'Driver\'s License Renewal',
-      organization: 'Transport Authority',
-      status: ProcedureStatus.inProgress,
-      progressPercentage: 40,
-      documentsUploaded: 1,
-      totalDocuments: 3,
-      startDate: DateTime.now().subtract(const Duration(days: 10)),
-      estimatedCompletion: DateTime.now().add(const Duration(days: 5)),
-      completedDate: null,
-      notes: 'Bring original ID.',
-      steps: const [
-        MyProcedureStep(id: 's1', title: 'Fill application form', description: 'Complete the online form.', isCompleted: true, order: 2),
-        MyProcedureStep(id: 's2', title: 'Upload ID', description: 'Upload scanned national ID.', isCompleted: false, order: 1),
-        MyProcedureStep(id: 's3', title: 'Pay fee', description: 'Pay via bank or mobile.', isCompleted: false , order: 3),
-      ],
-      estimatedTime: '2-3 hours',
-      difficulty: 'Medium',
-      officeType: 'Government Office',
-      quickTips: const [
-        'Go early to avoid queues',
-        'Carry extra photocopies',
-      ],
-      requiredDocuments: const [
-        'National ID',
-        'Old License',
-        'Passport Photo',
-      ],
-    );
+
 
     return Scaffold(
      /*  appBar: AppBar(
@@ -65,7 +32,7 @@ class _WorkspaceProcedureDetailView extends StatelessWidget {
         ],),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ), */
-      body: _ProcedureDetailContent(procedureDetail: mockDetail),
+      body:  _ProcedureDetailContent(procedureDetail: procedureDetail),
     );
   }
 }
@@ -100,14 +67,14 @@ class _ProcedureDetailContent extends StatelessWidget {
               children: [
 
               Text(
-            procedureDetail.title,
+            procedureDetail.procedure.title,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Complete guide to ${procedureDetail.title.toLowerCase()} in Ethiopia.',
+            'Complete guide to ${procedureDetail.procedure.title.toLowerCase()} in Ethiopia.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.grey[600],
             ),
@@ -124,13 +91,29 @@ class _ProcedureDetailContent extends StatelessWidget {
           ProgressOverviewCard(procedureDetail: procedureDetail),
           const SizedBox(height: 20),
 
+           BlocBuilder<
+                WorkspaceProcedureDetailBloc,
+                WorkspaceProcedureDetailState
+              >(
+                builder: (context, state) {
+                  if (state is ProcedureLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is ProcedureError) {
+                    return Text(state.message);
+                  } else if (state is ProcedureLoaded) {
+                    return StepInstructionsList(procedureDetail: state.procedureDetail);
+                  }
+                  return const Center(child: Text('No procedures found'));
+                },
+              ),
+
           // Step-by-Step Instructions
-          StepInstructionsList(procedureDetail: procedureDetail),
-          const SizedBox(height: 20),
+          //StepInstructionsList(procedureDetail: procedureDetail.procedure),
+          // const SizedBox(height: 20),
 
           // Quick Tips Box
-          QuickTipsBox(procedureDetail: procedureDetail),
-          const SizedBox(height: 20),
+          // QuickTipsBox(procedureDetail: procedureDetail),
+          // const SizedBox(height: 20),
 
           // Required Documents List
           RequiredDocumentsList(procedureDetail: procedureDetail),

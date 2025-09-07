@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:ethioguide/core/config/end_points.dart';
 import '../models/discussion_model.dart';
@@ -30,20 +32,19 @@ abstract class WorkspaceDiscussionRemoteDataSource {
   Future<bool> reportComment(String commentId);
 }
 
-class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemoteDataSource {
+class WorkspaceDiscussionRemoteDataSourceImpl
+    implements WorkspaceDiscussionRemoteDataSource {
   final Dio dio;
 
-  WorkspaceDiscussionRemoteDataSourceImpl({
-    required this.dio,
-  });
-
-
+  WorkspaceDiscussionRemoteDataSourceImpl({required this.dio});
 
   @override
   Future<CommunityStatsModel> getCommunityStats() async {
     final response = await dio.get('workspace/community/stats');
     if (response.statusCode == 200) {
-      return CommunityStatsModel.fromJson(response.data as Map<String, dynamic>);
+      return CommunityStatsModel.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     }
     throw DioException(
       requestOptions: RequestOptions(path: 'workspace/community/stats'),
@@ -59,16 +60,20 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
     String? filterType,
   }) async {
     final response = await dio.get(
-      'workspace/discussions',
+      'discussions',
       queryParameters: {
-        if (tag != null) 'tag': tag,
+        if (tag != null) 'tags': tag,
         if (category != null) 'category': category,
-        if (filterType != null) 'filterType': filterType,
+        if (filterType != null) 'title': filterType,
       },
     );
     if (response.statusCode == 200) {
-      final data = response.data as List<dynamic>;
-      return data.map((e) => DiscussionModel.fromJson(e as Map<String, dynamic>)).toList();
+      final decoded = response.data as Map<String, dynamic>;
+      final discussions = DiscussionModel.listFromJson(decoded);
+
+      // final data = response.data as List<dynamic>;
+      return discussions;
+      // data.map((e) => DiscussionModel.fromJson(e as Map<String, dynamic>)).toList();
     }
     throw DioException(
       requestOptions: RequestOptions(path: 'workspace/discussions'),
@@ -113,19 +118,27 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
 
   @override
   Future<bool> reportDiscussion(String discussionId) async {
-    final response = await dio.post('workspace/discussions/$discussionId/report');
+    final response = await dio.post(
+      'workspace/discussions/$discussionId/report',
+    );
     return (response.statusCode == 200 || response.statusCode == 204);
   }
 
   @override
   Future<List<CommentModel>> getComments(String discussionId) async {
-    final response = await dio.get('workspace/discussions/$discussionId/comments');
+    final response = await dio.get(
+      'workspace/discussions/$discussionId/comments',
+    );
     if (response.statusCode == 200) {
       final data = response.data as List<dynamic>;
-      return data.map((e) => CommentModel.fromJson(e as Map<String, dynamic>)).toList();
+      return data
+          .map((e) => CommentModel.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
     throw DioException(
-      requestOptions: RequestOptions(path: 'workspace/discussions/$discussionId/comments'),
+      requestOptions: RequestOptions(
+        path: 'workspace/discussions/$discussionId/comments',
+      ),
       response: response,
       error: 'Failed to fetch comments',
     );
@@ -144,7 +157,9 @@ class WorkspaceDiscussionRemoteDataSourceImpl implements WorkspaceDiscussionRemo
       return CommentModel.fromJson(response.data as Map<String, dynamic>);
     }
     throw DioException(
-      requestOptions: RequestOptions(path: 'workspace/discussions/$discussionId/comments'),
+      requestOptions: RequestOptions(
+        path: 'workspace/discussions/$discussionId/comments',
+      ),
       response: response,
       error: 'Failed to add comment',
     );
