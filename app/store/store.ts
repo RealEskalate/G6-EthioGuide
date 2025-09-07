@@ -10,6 +10,7 @@ import { feedbackApi } from "./slices/feedbackApi";
 import { proceduresApi } from "./slices/proceduresApi";
 import { checklistsApi } from "./slices/checklistsApi";
 import { discussionsApi } from "./slices/discussionsApi";
+import { orgsApi } from "./slices/orgsApi";
 
 export const store = configureStore({
   reducer: {
@@ -21,8 +22,9 @@ export const store = configureStore({
     [noticesApi.reducerPath]: noticesApi.reducer,
     [feedbackApi.reducerPath]: feedbackApi.reducer,
     [proceduresApi.reducerPath]: proceduresApi.reducer,
-    [checklistsApi.reducerPath]: checklistsApi.reducer,
     [discussionsApi.reducerPath]: discussionsApi.reducer,
+    [checklistsApi.reducerPath]: checklistsApi.reducer,
+    [orgsApi.reducerPath]: orgsApi.reducer,
     // [checklistsApi.reducerPath]: checklistsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -34,7 +36,8 @@ export const store = configureStore({
       feedbackApi.middleware,
       proceduresApi.middleware,
       discussionsApi.middleware,
-      checklistsApi.middleware
+      checklistsApi.middleware,
+      orgsApi.middleware
     ),
   devTools: true,
 });

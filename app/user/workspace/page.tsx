@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, CheckCircle, Clock, FileText, PauseCircle, AlertCircle } from "lucide-react"
+import { Calendar, CheckCircle, Clock, FileText, AlertCircle, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CardContent, Card } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -9,7 +9,10 @@ import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useGetMyChecklistsQuery } from "@/app/store/slices/checklistsApi"
 import { useListProceduresQuery } from "@/app/store/slices/proceduresApi"
-import { useMemo } from "react"
+import { useMemo, useState, useEffect } from "react"
+import { motion, useReducedMotion } from "framer-motion"
+import Pagination from "@/components/shared/pagination"
+import { useLazyGetOrgQuery } from "@/app/store/slices/orgsApi"
 
 export default function WorkspacePage() {
   const router = useRouter();
@@ -19,6 +22,27 @@ export default function WorkspacePage() {
     { skip: !session?.accessToken }
   );
   const { data: proceduresData } = useListProceduresQuery({ page: 1, limit: 100 });
+  const [triggerGetOrg] = useLazyGetOrgQuery();
+
+  // Search & org filter state
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [orgFilter, setOrgFilter] = useState<string>("all");
+  const [orgNameMap, setOrgNameMap] = useState<Record<string, string>>({});
+
+  const prefersReducedMotion = useReducedMotion();
+  const listItemVariants = prefersReducedMotion
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : {
+        hidden: { opacity: 0, y: 10, scale: 0.98, filter: "blur(0.2px)" },
+        visible: {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          filter: "none",
+          transition: { type: "spring" as const, stiffness: 220, damping: 18, mass: 0.9 },
+        },
+      }
 
   // Calculate stats from real data
   const stats = useMemo(() => {
@@ -64,6 +88,9 @@ export default function WorkspacePage() {
     
     return myChecklists.map((checklist) => {
       const procedure = proceduresData?.list?.find(p => p.id === checklist.procedureId);
+  const pAny = (procedure || {}) as Record<string, unknown>;
+  const organizationId: string | undefined = (pAny["organizationId"] as string | undefined) || (pAny["OrganizationID"] as string | undefined) || (pAny["organization_id"] as string | undefined);
+      const organizationName = organizationId ? (orgNameMap[organizationId] || "Organization") : "Organization";
       const progress = checklist.progress || 0;
       
       let status = "Not Started";
@@ -89,7 +116,7 @@ export default function WorkspacePage() {
       return {
         id: checklist.id,
         title: procedure?.title || procedure?.name || `Procedure ${checklist.procedureId}`,
-        department: "Immigration Department",
+        department: organizationName,
         status,
         progress,
         startDate: checklist.createdAt ? new Date(checklist.createdAt).toLocaleDateString() : "Recently",
@@ -98,9 +125,62 @@ export default function WorkspacePage() {
         statusColor,
         buttonText,
         buttonVariant,
+        organizationId,
+        organizationName,
       };
     });
-  }, [myChecklists, proceduresData]);
+  }, [myChecklists, proceduresData, orgNameMap]);
+
+  // Fetch organization names lazily for unique IDs from saved procedures
+  useEffect(() => {
+    if (!myChecklists || !proceduresData?.list) return;
+    const ids = new Set<string>();
+    for (const cl of myChecklists) {
+      const p = proceduresData.list.find((pp) => pp.id === cl.procedureId) as Record<string, unknown> | undefined;
+      const oid: string | undefined = (p?.["organizationId"] as string | undefined) || (p?.["OrganizationID"] as string | undefined) || (p?.["organization_id"] as string | undefined);
+      if (oid) ids.add(oid);
+    }
+    const missing = Array.from(ids).filter((id) => !(id in orgNameMap));
+    if (missing.length === 0) return;
+    (async () => {
+      const entries: Array<[string, string]> = [];
+      for (const id of missing) {
+        try {
+          const res = await triggerGetOrg(id).unwrap();
+          entries.push([id, res.name]);
+        } catch {
+          // noop on failure
+        }
+      }
+      if (entries.length) setOrgNameMap((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
+    })();
+  }, [myChecklists, proceduresData, orgNameMap, triggerGetOrg]);
+
+  // Build filtered list (apply search + organization filter)
+  const filteredProcedures = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return procedures.filter((p) => {
+      const matchesSearch = !q ||
+        p.title.toLowerCase().includes(q) ||
+        (p.organizationName || "").toLowerCase().includes(q) ||
+        (p.documentsUploaded || "").toLowerCase().includes(q);
+      const matchesOrg = orgFilter === "all" || (p.organizationName === orgFilter);
+      return matchesSearch && matchesOrg;
+    });
+  }, [procedures, searchQuery, orgFilter]);
+
+  // Pagination state (10 per page)
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(filteredProcedures.length / PAGE_SIZE));
+  useEffect(() => {
+    // Clamp page if procedures length changes or becomes smaller
+    if (page > totalPages) setPage(totalPages);
+  }, [totalPages, page]);
+  const paginatedProcedures = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredProcedures.slice(start, start + PAGE_SIZE);
+  }, [filteredProcedures, page]);
 
   // Add handleRetry to reload the page
   function handleRetry() {
@@ -110,15 +190,29 @@ export default function WorkspacePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Workspace</h1>
-            <p className="text-neutral">Track and manage your ongoing procedures</p>
+    <div className="min-h-screen w-full bg-gray-50 relative overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-24 -right-24 w-56 h-56 rounded-full blur-3xl" style={{ background: 'radial-gradient(closest-side, rgba(167,179,185,0.10), rgba(167,179,185,0))' }}></div>
+        <div className="absolute -bottom-28 -left-28 w-64 h-64 rounded-full blur-3xl" style={{ background: 'radial-gradient(closest-side, rgba(94,156,141,0.10), rgba(94,156,141,0))' }}></div>
+      </div>
+
+      <main className="relative z-10 p-4 sm:p-6 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Section */}
+          <div className="mb-6 md:mb-8 w-full">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-[#a7b3b9]/30 p-4 sm:p-6 md:p-8 shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-[#2e4d57] mb-2">My Workspace</h1>
+                  <p className="text-[#1c3b2e] text-sm sm:text-base">Track and manage your ongoing procedures</p>
+                </div>
+                <div className="inline-flex items-center gap-2 bg-[#3a6a8d]/10 backdrop-blur-sm border border-[#3a6a8d]/30 rounded-full px-3 sm:px-4 py-2">
+                  <CheckCircle className="w-4 h-4 text-[#3a6a8d] animate-pulse" />
+                  <span className="text-xs sm:text-sm font-medium text-[#2e4d57]">Workspace</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
         {/* Error Display */}
         {checklistsError && (
@@ -154,58 +248,58 @@ export default function WorkspacePage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <Card
-              key={index}
-              className="border-0 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer bg-white"
-            >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-neutral mb-1">{stat.title}</p>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {stat.value}
-                    </p>
+            <motion.div key={index} variants={listItemVariants} initial="hidden" animate="visible" transition={{ delay: index * 0.05 + 0.05 }}>
+              <Card className="bg-white/80 backdrop-blur-md rounded-2xl border border-[#e5e7eb] shadow-xl hover:shadow-2xl transition-all duration-700 hover:scale-105 hover:-translate-y-2 cursor-pointer relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#3a6a8d]/10 via-transparent to-[#5e9c8d]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <CardContent className="p-6 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-[#4b5563] mb-1">{stat.title}</p>
+                      <p className="text-3xl font-bold text-[#111827]">{stat.value}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-6" style={{ backgroundColor: '#e6f0f5' }}>
+                      <stat.icon className="w-6 h-6" style={{ color: '#3a6a8d' }} />
+                    </div>
                   </div>
-                  <div className={`p-3 rounded-lg ${stat.bgColor} transition-transform duration-200 hover:scale-110`}>
-                    <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
 
-            {/* Filters */}
-            <div className="flex gap-4 mb-6">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 ">Status:</span>
-              <Select defaultValue="all">
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="not-started">Not Started</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Search & Organization Filter */}
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-[#e5e7eb] p-4 sm:p-5 mb-6 shadow-md flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="relative flex-1 flex min-w-[220px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search your procedures..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent"
+                />
+                <Button
+                  type="button"
+                  className="ml-2 px-4 py-2 bg-[#3A6A8D] hover:bg-[#2d5470] text-white"
+                  onClick={() => { setSearchQuery(searchInput); setPage(1); }}
+                >
+                  Search
+                </Button>
+              </div>
+              <div className="flex flex-none w-full sm:w-64">
+                <Select value={orgFilter} onValueChange={(v) => { setOrgFilter(v); setPage(1); }}>
+                  <SelectTrigger className="w-full border-[#3A6A8D] text-[#3A6A8D] hover:bg-[#3A6A8D]/5 focus:ring-2 focus:ring-[#3A6A8D] focus:border-transparent">
+                    <SelectValue placeholder="All Organizations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Organizations</SelectItem>
+                    {Array.from(new Set(procedures.map((p) => p.organizationName).filter(Boolean))).map((name) => (
+                      <SelectItem key={name as string} value={name as string}>{name as string}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="flex items-center gap-2 ">
-              <span className="text-sm  font-medium text-gray-700">Organization:</span>
-              <Select defaultValue="all">
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Organizations</SelectItem>
-                  <SelectItem value="immigration">Immigration Department</SelectItem>
-                  <SelectItem value="road">Road Authority</SelectItem>
-                  <SelectItem value="bank">National Bank</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
             {/* Procedure Cards */}
             <div className="space-y-4">
@@ -228,27 +322,25 @@ export default function WorkspacePage() {
                   </Button>
                 </div>
               ) : (
-                procedures.map((procedure, index) => (
-                <Card
-                  key={procedure.id}
-                  className="border-0 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 bg-white"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <CardContent className="p-6">
+                paginatedProcedures.map((procedure, index) => (
+                <motion.div key={procedure.id} variants={listItemVariants} initial="hidden" animate="visible" transition={{ delay: index * 0.06 + 0.12 }}>
+                  <Card className="bg-white/80 backdrop-blur-md rounded-2xl border border-[#e5e7eb] shadow-xl hover:shadow-2xl transition-all duration-700 hover:scale-105 hover:-translate-y-2 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#3a6a8d]/10 via-transparent to-[#5e9c8d]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <CardContent className="p-6 relative z-10">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center transition-transform duration-200 hover:scale-110">
-                          <FileText className="w-6 h-6 text-blue-600" />
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-3" style={{ backgroundColor: '#e6f0f5' }}>
+                          <FileText className="w-6 h-6" style={{ color: '#3a6a8d' }} />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-lg text-gray-900 mb-1 hover:text-[#3A6A8D] transition-colors duration-200">
+                          <h3 className="font-semibold text-lg text-[#111827] mb-1 group-hover:text-[#3a6a8d] transition-colors duration-300">
                             {procedure.title}
                           </h3>
-                          <p className="text-gray-600 text-sm">{procedure.department}</p>
+                          <p className="text-[#4b5563] text-sm">{procedure.department}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <Badge className={`${procedure.statusColor} transition-all duration-200`}>
+                        <Badge className={`${procedure.statusColor} border border-[#e5e7eb] transition-all duration-200`}>
                           {procedure.status}
                         </Badge>
                         <Button
@@ -256,8 +348,8 @@ export default function WorkspacePage() {
                           size="sm"
                           className={
                             procedure.buttonVariant === "default"
-                              ? "bg-[#3A6A8D] hover:bg-[#2d5470] text-white transition-all duration-200 hover:scale-105"
-                              : "transition-all duration-200"
+                              ? "bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] hover:from-[#2e4d57] hover:to-[#1c3b2e] text-white transition-all duration-500 hover:scale-105 hover:shadow-lg"
+                              : "transition-all duration-300"
                           }
                           onClick={() => router.push(`/user/checklist/${encodeURIComponent(procedure.id)}`)}
                         >
@@ -268,28 +360,31 @@ export default function WorkspacePage() {
 
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">Progress</span>
-                        <span className="text-sm text-gray-600">{procedure.progress}% Complete</span>
+                        <span className="text-sm font-medium text-[#111827]">Progress</span>
+                        <span className="text-sm text-[#4b5563]">{procedure.progress}% Complete</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                        <div
-                          className={`h-2 rounded-full transition-all duration-1000 ease-out ${
+                      <div className="w-full bg-[#e5e7eb] rounded-full h-2 overflow-hidden">
+                        {(() => {
+                          const barColor =
                             procedure.status === "Completed"
-                              ? "bg-[#5E9C8D]"
+                              ? "bg-[#5e9c8d]"
                               : procedure.status === "In Progress"
-                                ? "bg-[#FEF9C3]"
-                                : "bg-gray-300"
-                          }`}
-                          style={{
-                            width: `${procedure.progress}%`,
-                            animationDelay: `${index * 200 + 500}ms`,
-                          }}
-                        />
+                                ? "bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57]"
+                                : "bg-[#a7b3b9]/50";
+                          return (
+                            <motion.div
+                              className={`h-2 rounded-full ${barColor}`}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${procedure.progress}%` }}
+                              transition={{ type: "spring", stiffness: 180, damping: 24, mass: 0.9 }}
+                            />
+                          );
+                        })()}
                       </div>
                     </div>
 
                     {/* Procedure Details */}
-                    <div className="flex items-center gap-6 text-sm text-gray-600">
+                    <div className="flex items-center gap-6 text-sm text-[#4b5563]">
                       {procedure.startDate && (
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
@@ -313,11 +408,19 @@ export default function WorkspacePage() {
                     </div>
                   </CardContent>
                 </Card>
+                </motion.div>
                 ))
               )}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6">
+                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              </div>
+            )}
           </div>
         </main>
-     
+    </div>
   )
 }
