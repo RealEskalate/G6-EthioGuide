@@ -1,4 +1,13 @@
 {
   "hello": "ሰላም",
-  "languageToggle": "ወደ እንግሊዝኛ ቀይር"
+  "languageToggle": "ወደ እንግሊዝኛ ቀይር",
+  "ai": "EthiGuide AI ረዳት",
+  "text hint": "ጥያቄዎን እዚህ ያስገቡ",
+  "ai response": "የAI ምላሽ",
+  "save checklist": "ዝርዝር አስቀምጥ",
+  "related procedures": "ተዛማጅ ሂደቶች",
+  "start procedure": "ሂደት ጀምር",
+  "translate": "ተርጉም",
+  "change language": "ቋንቋ ቀይር",
+  "log out": "ከመለያዎ ይውጡ"
 }
