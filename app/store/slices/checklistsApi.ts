@@ -1,114 +1,212 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { UserProcedureChecklist, PatchChecklistPayload, ChecklistItem } from '@/app/types/checklist'
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import type { 
+  UserProcedureChecklist, 
+  CreateChecklistResponse, 
+  GetMyProceduresResponse, 
+  GetChecklistItemsResponse 
+} from '@/app/types/checklist'
 
-type PaginatedRaw = { data?: unknown; items?: unknown; results?: unknown }
+type UnknownRecord = Record<string, unknown>
 
-function extractArray(raw: unknown): unknown[] {
+// (removed unused Paginated type)
+
+function extractUnknownArray(raw: unknown): unknown[] {
   if (Array.isArray(raw)) return raw
-  const obj = (raw || {}) as PaginatedRaw
-  if (Array.isArray(obj.data)) return obj.data
-  if (Array.isArray(obj.items)) return obj.items
-  if (Array.isArray(obj.results)) return obj.results
+  if (raw && typeof raw === 'object') {
+    const obj = raw as UnknownRecord
+    // Common envelope keys first
+    for (const key of ['data', 'items', 'results', 'list', 'myProcedures', 'checklists', 'userProcedures', 'procedures']) {
+      const v = obj[key]
+      if (Array.isArray(v)) return v
+      if (v && typeof v === 'object' && Array.isArray((v as UnknownRecord)['data'])) return (v as UnknownRecord)['data'] as unknown[]
+    }
+    // Fallback: find the first array of objects inside any property
+    for (const val of Object.values(obj)) {
+      if (Array.isArray(val) && val.some((e) => e && typeof e === 'object')) return val as unknown[]
+      if (val && typeof val === 'object') {
+        const inner = extractUnknownArray(val)
+        if (inner.length) return inner
+      }
+    }
+  }
   return []
 }
 
-type ChecklistItemRaw = {
-  id?: string; _id?: string
-  title?: string; name?: string
-  description?: string
-  completed?: boolean; done?: boolean
-  order?: number; position?: number
-  updatedAt?: string; updated_at?: string
+function readString(obj: UnknownRecord, key: string): string | undefined {
+  const v = obj[key]
+  return typeof v === 'string' ? v : undefined
 }
 
-type ChecklistRaw = {
-  id?: string; _id?: string; userProcedureId?: string
-  procedureId?: string; procedure_id?: string
-  procedureTitle?: string; title?: string; name?: string
-  organizationName?: string; organization_name?: string; orgName?: string
-  status?: UserProcedureChecklist['status']
-  progress?: number
-  startedAt?: string; completedAt?: string; createdAt?: string; updatedAt?: string
-  started_at?: string; completed_at?: string; created_at?: string; updated_at?: string
-  items?: ChecklistItemRaw[]
+function readNumber(obj: UnknownRecord, key: string): number | undefined {
+  const v = obj[key]
+  return typeof v === 'number' ? v : undefined
 }
 
-function normalizeItem(raw: unknown): ChecklistItem {
-  const r = (raw || {}) as ChecklistItemRaw
-  const id = r.id || r._id || crypto.randomUUID()
+function deriveChecklistFromMyProcedures(u: unknown): UserProcedureChecklist {
+  const obj = (u && typeof u === 'object') ? (u as UnknownRecord) : {}
+  const id = readString(obj, 'id') || ''
+  const procedureId = readString(obj, 'procedure_id') || ''
+  const percent = readNumber(obj, 'percent') || 0
+  const statusStr = readString(obj, 'status') || 'NOT_STARTED'
+  const updatedAt = readString(obj, 'updated_at') || ''
+  const userId = readString(obj, 'user_id') || ''
+
+  // Convert status string to our enum
+  let status: UserProcedureChecklist['status'] = 'NOT_STARTED'
+  if (statusStr === 'COMPLETED' || percent === 100) {
+    status = 'COMPLETED'
+  } else if (statusStr === 'IN_PROGRESS' || percent > 0) {
+    status = 'IN_PROGRESS'
+  }
+
   return {
     id,
-    title: r.title || r.name || 'Item',
-    description: r.description,
-    completed: Boolean(r.completed ?? r.done ?? false),
-    order: r.order ?? r.position,
-    updatedAt: r.updatedAt || r.updated_at,
+    procedureId,
+    status,
+    progress: percent,
+    updatedAt,
+    items: []
   }
 }
 
-function normalizeChecklist(raw: unknown): UserProcedureChecklist {
-  const d = (raw || {}) as ChecklistRaw
-  const id = d.id || d._id || d.userProcedureId || crypto.randomUUID()
-  const items: ChecklistItem[] = Array.isArray(d.items) ? d.items.map(normalizeItem) : []
-  // derive progress if missing
-  let progress = typeof d.progress === 'number' ? d.progress : undefined
-  if ((progress === undefined || progress === null) && items.length) {
-    const done = items.filter(i => i.completed).length
-    progress = Math.round((done / items.length) * 100)
+function deriveChecklistFromItems(items: GetChecklistItemsResponse[]): UserProcedureChecklist {
+  if (!items || items.length === 0) {
+    return {
+      id: '',
+      procedureId: '',
+      status: 'NOT_STARTED',
+      progress: 0,
+      items: []
+    }
   }
-  // derive status if missing
-  let status = d.status
-  if (!status) {
-    if (items.length === 0) status = 'NOT_STARTED'
-    else if (progress === 100) status = 'COMPLETED'
-    else if (progress && progress > 0) status = 'IN_PROGRESS'
-    else status = 'NOT_STARTED'
+
+  const userProcedureId = items[0]?.user_procedure_id || ''
+  const completedCount = items.filter(item => item.is_checked).length
+  const progress = Math.round((completedCount / items.length) * 100)
+  
+  let status: UserProcedureChecklist['status'] = 'NOT_STARTED'
+  if (progress === 100) {
+    status = 'COMPLETED'
+  } else if (progress > 0) {
+    status = 'IN_PROGRESS'
   }
+
+  const checklistItems = items.map(item => ({
+    id: item.id,
+    content: item.content,
+    is_checked: item.is_checked,
+    type: item.type,
+    user_procedure_id: item.user_procedure_id
+  }))
+
   return {
-    id,
-    procedureId: d.procedureId || d.procedure_id || '',
-    procedureTitle: d.procedureTitle || d.title || d.name,
-    organizationName: d.organizationName || d.organization_name || d.orgName,
+    id: userProcedureId,
+    procedureId: '',
     status,
     progress,
-    startedAt: d.startedAt || d.started_at,
-    completedAt: d.completedAt || d.completed_at,
-    createdAt: d.createdAt || d.created_at,
-    updatedAt: d.updatedAt || d.updated_at,
-    items,
+    items: checklistItems
   }
 }
+
+// Use the proxy path to avoid CORS issues
+const API_BASE = '/api/v1'
+
+const rawBaseQuery = fetchBaseQuery({
+  baseUrl: API_BASE,
+  prepareHeaders: (headers) => {
+    if (typeof window !== 'undefined') {
+      const token =
+        localStorage.getItem('accessToken') ||
+        localStorage.getItem('token') ||
+        localStorage.getItem('authToken');
+      if (token) headers.set('Authorization', `Bearer ${token}`)
+    }
+    return headers
+  }
+})
 
 export const checklistsApi = createApi({
   reducerPath: 'checklistsApi',
-  baseQuery: fetchBaseQuery({ baseUrl: '/api/v1' }),
+  baseQuery: rawBaseQuery,
   tagTypes: ['MyChecklists', 'Checklist'],
   endpoints: (builder) => ({
-    getMyChecklists: builder.query<UserProcedureChecklist[], void>({
-      query: () => '/myProcedures',
+    getMyChecklists: builder.query<UserProcedureChecklist[], { token?: string | null } | void>({
+      query: (arg) => ({
+        url: '/checklists/myProcedures',
+        headers: arg && arg.token ? { Authorization: `Bearer ${arg.token}` } : undefined,
+      }),
       transformResponse: (raw: unknown): UserProcedureChecklist[] => {
-        const arr = extractArray(raw)
-        return arr.map(normalizeChecklist)
+        const arr = extractUnknownArray(raw)
+        return arr.map(deriveChecklistFromMyProcedures)
       },
       providesTags: (result) => result ? [
         ...result.map(r => ({ type: 'Checklist' as const, id: r.id })),
         { type: 'MyChecklists', id: 'LIST' }
       ] : [{ type: 'MyChecklists', id: 'LIST' }]
     }),
-    getChecklist: builder.query<UserProcedureChecklist, string>({
-      query: (id) => `/checklists/${id}`,
+    getChecklist: builder.query<UserProcedureChecklist, { id: string; token?: string | null }>({
+      query: ({ id, token }) => ({
+        url: `/checklists/${id}`,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }),
       transformResponse: (raw: unknown): UserProcedureChecklist => {
-        const data = (raw as { data?: unknown })?.data ?? raw
-        return normalizeChecklist(data)
+        // Backend returns an array of items: [{ id, content, is_checked, type, user_procedure_id }]
+        const arr = extractUnknownArray(raw)
+        const items: GetChecklistItemsResponse[] = arr.map((item: unknown) => {
+          const obj = (item && typeof item === 'object') ? (item as UnknownRecord) : {}
+          return {
+            id: readString(obj, 'id') || '',
+            content: readString(obj, 'content') || '',
+            is_checked: Boolean(obj['is_checked']),
+            type: readString(obj, 'type') || '',
+            user_procedure_id: readString(obj, 'user_procedure_id') || ''
+          }
+        })
+        return deriveChecklistFromItems(items)
       },
-      providesTags: (result, error, id) => [{ type: 'Checklist', id }]
+      providesTags: (result) => result ? [{ type: 'Checklist', id: result.id }] : []
     }),
-    patchChecklist: builder.mutation<UserProcedureChecklist, { id: string; body: PatchChecklistPayload }>({
-      query: ({ id, body }) => ({
+    createChecklist: builder.mutation<CreateChecklistResponse, { procedureId: string; token?: string | null }>({
+      query: ({ procedureId, token }) => ({
+        url: '/checklists',
+        method: 'POST',
+        body: { procedure_id: procedureId },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }),
+      transformResponse: (raw: unknown): CreateChecklistResponse => {
+        const obj = (raw && typeof raw === 'object') ? (raw as UnknownRecord) : {}
+        return {
+          id: readString(obj, 'id') || '',
+          percent: readNumber(obj, 'percent') || 0,
+          procedure_id: readString(obj, 'procedure_id') || '',
+          status: readString(obj, 'status') || '',
+          updated_at: readString(obj, 'updated_at') || '',
+          user_id: readString(obj, 'user_id') || ''
+        }
+      },
+      invalidatesTags: [{ type: 'MyChecklists', id: 'LIST' }]
+    }),
+    patchChecklist: builder.mutation<GetChecklistItemsResponse[], { id: string; isChecked?: boolean; token?: string | null }>({
+      query: ({ id, isChecked, token }) => ({
         url: `/checklists/${id}`,
         method: 'PATCH',
-        body
+        body: typeof isChecked === 'boolean' ? { is_checked: isChecked } : undefined,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       }),
+      transformResponse: (raw: unknown): GetChecklistItemsResponse[] => {
+        const arr = extractUnknownArray(raw)
+        return arr.map((item: unknown) => {
+          const obj = (item && typeof item === 'object') ? (item as UnknownRecord) : {}
+          return {
+            id: readString(obj, 'id') || '',
+            content: readString(obj, 'content') || '',
+            is_checked: Boolean(obj['is_checked']),
+            type: readString(obj, 'type') || '',
+            user_procedure_id: readString(obj, 'user_procedure_id') || ''
+          }
+        })
+      },
       invalidatesTags: (result, error, { id }) => [
         { type: 'Checklist', id },
         { type: 'MyChecklists', id: 'LIST' }
@@ -117,4 +215,4 @@ export const checklistsApi = createApi({
   })
 })
 
-export const { useGetMyChecklistsQuery, useGetChecklistQuery, usePatchChecklistMutation } = checklistsApi
+export const { useGetMyChecklistsQuery, useGetChecklistQuery, useCreateChecklistMutation, usePatchChecklistMutation } = checklistsApi

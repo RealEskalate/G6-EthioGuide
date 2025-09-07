@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "lint": "eslint"
+  "dev": "next dev --turbopack",
+  "dev:webpack": "next dev",
+  "dev:clean": "bash -lc 'rm -rf .next && next dev --turbopack'",
+  "clean": "bash -lc 'rm -rf .next .turbo'",
+  "build": "next build --turbopack",
+  "start": "next start",
+  "lint": "eslint"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

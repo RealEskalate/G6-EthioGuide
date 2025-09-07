@@ -1,22 +1,48 @@
 export interface ChecklistItem {
   id: string;
-  title: string;
-  description?: string;
-  completed: boolean;
-  order?: number;
-  updatedAt?: string;
+  content: string;
+  is_checked: boolean;
+  type: string;
+  user_procedure_id: string;
 }
 
 export type ChecklistStatus = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
 
-// Client-side richer model
+// API Response models based on the provided specification
+export interface CreateChecklistResponse {
+  id: string;
+  percent: number;
+  procedure_id: string;
+  status: string;
+  updated_at: string;
+  user_id: string;
+}
+
+export interface GetMyProceduresResponse {
+  id: string;
+  percent: number;
+  procedure_id: string;
+  status: string;
+  updated_at: string;
+  user_id: string;
+}
+
+export interface GetChecklistItemsResponse {
+  content: string;
+  id: string;
+  is_checked: boolean;
+  type: string;
+  user_procedure_id: string;
+}
+
+// Client-side richer model for UI
 export interface UserProcedureChecklist {
   id: string; // checklist or userProcedureId
   procedureId: string;
   procedureTitle?: string;
   organizationName?: string;
   status?: ChecklistStatus;
-  progress?: number; // derived if not provided
+  progress?: number; // derived from percent
   startedAt?: string;
   completedAt?: string;
   createdAt?: string;
@@ -36,6 +62,5 @@ export interface ChecklistResponse {
 }
 
 export interface PatchChecklistPayload {
-  items?: Array<Partial<ChecklistItem> & { id: string }>; // patch individual items
-  status?: UserProcedureChecklist['status'];
+  is_checked?: boolean;
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import { useSession } from "next-auth/react";
+import { useCreateChecklistMutation } from '@/app/store/slices/checklistsApi'
 import { RootState, AppDispatch } from '@/app/store/store';
 import { fetchChatHistory, sendMessage, addUserMessage, clearError, fetchChatById } from '@/app/store/slices/aiChatSlice';
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ export default function ChatPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const router = useRouter();
+  const [createChecklist] = useCreateChecklistMutation();
 
   useEffect(() => {
     const token = session?.accessToken;
@@ -241,7 +243,15 @@ export default function ChatPage() {
                                 <div className="flex flex-wrap gap-1.5 pt-2">
                                   <Button
                                     className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white text-[0.65rem] font-sans py-0.5 px-1.5 rounded-md transform hover:scale-105 transition-transform duration-150"
-                                    onClick={() => router.push("./workspace")}
+                                    onClick={async () => {
+                                      try {
+                                        await createChecklist({ procedureId: String(procedure.id), token: session?.accessToken || undefined }).unwrap()
+                                      } catch {
+                                        // ignore error; still navigate to workspace to show current state
+                                      } finally {
+                                        router.push('/user/workspace')
+                                      }
+                                    }}
                                   >
                                     <Bookmark className="w-2.5 h-2.5 mr-1" />
                                     Save Checklist

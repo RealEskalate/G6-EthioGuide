@@ -8,6 +8,7 @@ import aiChatReducer from "./slices/aiChatSlice";
 import { noticesApi } from "./slices/noticesSlice";
 import { feedbackApi } from "./slices/feedbackApi";
 import { proceduresApi } from "./slices/proceduresApi";
+import { checklistsApi } from "./slices/checklistsApi";
 import { discussionsApi } from "./slices/discussionsApi";
 
 export const store = configureStore({
@@ -20,6 +21,7 @@ export const store = configureStore({
     [noticesApi.reducerPath]: noticesApi.reducer,
     [feedbackApi.reducerPath]: feedbackApi.reducer,
     [proceduresApi.reducerPath]: proceduresApi.reducer,
+  [checklistsApi.reducerPath]: checklistsApi.reducer,
     [discussionsApi.reducerPath]: discussionsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -30,7 +32,8 @@ export const store = configureStore({
       noticesApi.middleware,
       feedbackApi.middleware,
       proceduresApi.middleware,
-      discussionsApi.middleware
+  discussionsApi.middleware,
+  checklistsApi.middleware
     ),
   devTools: true,
 });

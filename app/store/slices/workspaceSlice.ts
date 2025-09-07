@@ -20,10 +20,13 @@ function readAuthToken(): string | null {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
+const RAW_BACKEND = (process.env.NEXT_PUBLIC_API_URL || 'https://ethio-guide-backend.onrender.com').replace(/\/$/, '')
+const API_BASE = /\/api\/v1$/.test(RAW_BACKEND) ? RAW_BACKEND : `${RAW_BACKEND}/api/v1/`
+
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
-    baseUrl: "https://ethio-guide-backend.onrender.com/api/v1/",
+  baseUrl: API_BASE,
     prepareHeaders: (headers) => {
       // changed: prefer browser (session-persisted) token first
       const token = readAuthToken() || readEnvToken();
