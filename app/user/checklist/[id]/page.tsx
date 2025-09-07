@@ -16,7 +16,7 @@ export default function ChecklistDetailPage() {
   const router = useRouter()
   const { data: session } = useSession()
   const { data: checklist, isLoading, isFetching, refetch, error: checklistError } = useGetChecklistQuery({ id, token: session?.accessToken || undefined }, { skip: !id })
-  const [patchChecklist, { isLoading: patching, error: patchError }] = usePatchChecklistMutation()
+  const [patchChecklist, { isLoading: patching /* , error: patchError */ }] = usePatchChecklistMutation()
   const [localItems, setLocalItems] = useState(checklist?.items ?? [])
 
   useEffect(() => {

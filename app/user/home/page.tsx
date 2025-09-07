@@ -28,15 +28,15 @@ export default function UserHomePage() {
   const { data: procData, isLoading } = useListProceduresQuery({ page: 1, limit: 30 })
   const [offset, setOffset] = useState(0) // index offset into list
   const windowSize = 4
-  const list = procData?.list || []
-  const filtered = useMemo(() => {
+  const memoList = useMemo<Procedure[]>(() => (Array.isArray(procData?.list) ? (procData!.list as Procedure[]) : []), [procData])
+  const filtered = useMemo<Procedure[]>(() => {
     const q = searchQuery.trim().toLowerCase()
-    if (!q) return list
-    return list.filter((p: Procedure) => {
+    if (!q) return memoList
+    return memoList.filter((p: Procedure) => {
       const hay = ((p.title || p.name || "") + " " + (p.summary || "")).toLowerCase()
       return hay.includes(q)
     })
-  }, [list, searchQuery])
+  }, [memoList, searchQuery])
   useEffect(() => {
     setOffset(0)
   }, [searchQuery])
@@ -129,7 +129,7 @@ export default function UserHomePage() {
                     const currency = feesArr[0]?.currency || ""
                     const feeText = feesArr.length === 0 || totalFee === 0 ? "Free" : `${totalFee} ${currency}`.trim()
                     const tags: string[] = Array.isArray(p.tags) ? p.tags : []
-                    const updated = p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : null
+                    // const updated = p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : null
                     const docsCount = Array.isArray(p.documentsRequired) ? p.documentsRequired.length : null
                     const verified = !!p.verified
 

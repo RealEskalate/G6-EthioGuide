@@ -10,7 +10,7 @@ const isObject = (v: unknown): v is AnyRecord => typeof v === 'object' && v !== 
 const get = <T = unknown>(o: unknown, key: string): T | undefined => (isObject(o) ? (o[key] as T) : undefined)
 const asString = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : v == null ? fallback : String(v))
 const toNum = (v: unknown, fallback = 0): number => (typeof v === 'number' ? v : typeof v === 'string' && v !== '' ? Number(v) : fallback)
-const asArray = <T = unknown>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : [])
+// const asArray = (v: unknown) => Array.isArray(v) ? v : []
 
 export interface ProcedureListArgs {
   page?: number;
