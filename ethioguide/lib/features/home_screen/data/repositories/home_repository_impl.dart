@@ -49,7 +49,7 @@ class HomeRepositoryImpl implements HomeRepository {
         title: 'Community Discussions',
         subtitle: 'Ask questions, share experiences, and help others navigate government processes',
         details: ['1.2k members', '42 active discussions'],
-        routeName: RouteNames.workspacediscussion,
+        routeName: RouteNames.workspaceDiscussion,
       ),
     ];
   }

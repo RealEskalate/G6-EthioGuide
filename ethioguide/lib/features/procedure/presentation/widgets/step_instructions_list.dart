@@ -10,7 +10,8 @@ import '../bloc/workspace_procedure_detail_bloc.dart';
 ///
 class StepInstructionsList extends StatefulWidget {
   final List<MyProcedureStep> procedureDetail;
-  const StepInstructionsList({super.key, required this.procedureDetail});
+  final String id;
+  const StepInstructionsList({super.key, required this.procedureDetail , required this.id});
 
   @override
   State<StepInstructionsList> createState() => _StepInstructionsList();
@@ -43,7 +44,7 @@ class _StepInstructionsList extends State<StepInstructionsList> {
 
             // Steps list
             ...widget.procedureDetail.map(
-              (step) => _StepItem(step: step, procedureId: step.id),
+              (step) => _StepItem(step: step, procedureId: widget.id),
             ),
           ],
         ),
@@ -116,18 +117,38 @@ class _StepItemState extends State<_StepItem> {
             ),
           ),
 
-          // Toggle button
-          Checkbox(
-            value: isChecked,
-            onChanged: (value) {
-              if (value != null) {
+          BlocListener<
+            WorkspaceProcedureDetailBloc,
+            WorkspaceProcedureDetailState
+          >(
+            listener: (context, state) {
+              if (state is Stepupdate) {
                 setState(() {
-                  isChecked = value;
+                  isChecked = state.check;
                 });
+               
               }
             },
-            activeColor: Colors.green,
+            child: Checkbox(
+              value: isChecked,
+              onChanged: (value) {
+                if (value != null) {
+                  context.read<WorkspaceProcedureDetailBloc>().add(
+                    UpdateStepStatusevent(widget.step.id),
+                  );
+
+                    context.read<WorkspaceProcedureDetailBloc>().add(
+                    FetchProcedureDetail(
+                      widget.procedureId
+                    ),
+                  ); 
+                }
+              },
+              activeColor: Colors.green,
+            ),
           ),
+
+          // Toggle button
         ],
       ),
     );

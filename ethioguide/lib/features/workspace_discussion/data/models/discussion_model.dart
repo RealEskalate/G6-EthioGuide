@@ -10,6 +10,7 @@ class DiscussionModel extends Discussion {
     required super.title,
     required super.content,
     required super.tags,
+    required super.procedure,
     required super.category,
     required super.createdAt,
     required super.createdBy,
@@ -19,24 +20,29 @@ class DiscussionModel extends Discussion {
     super.isPinned = false,
   });
 
-  factory DiscussionModel.fromJson(Map<String, dynamic> json) {
-    return DiscussionModel(
-      id: json["ID"] as String,
-      title: json['Title'] as String,
-      content: json['Content'] as String,
-      tags: (json["Tags"] != null)
-        ? (json["Tags"] as List<dynamic>).cast<String>()
-        : [],
-      createdAt: DateTime.parse(json['CreatedAt'] as String),
+factory DiscussionModel.fromJson(Map<String, dynamic> json) {
+  final data = json['post'] ?? json; // handle wrapped vs unwrapped
 
-      category: '',
-      createdBy: User(id: '', name: ''),
-      likeCount: 0,
-      reportCount: 0,
-      commentsCount: 0,
-      isPinned: false,
-    );
-  }
+  return DiscussionModel(
+    id: data["ID"] as String,
+    title: data['Title'] as String,
+    content: data['Content'] as String,
+    tags: (data["Tags"] != null)
+        ? (data["Tags"] as List<dynamic>).cast<String>()
+        : [],
+    procedure: (data["Procedures"] != null)
+        ? (data["Procedures"] as List<dynamic>).cast<String>()
+        : [],
+    category: '', // backend doesn’t send yet
+    createdAt: DateTime.parse(data['CreatedAt'] as String),
+    createdBy: User(id: data["UserID"] ?? '', name: ''), // fix user fallback
+    likeCount: 0,
+    reportCount: 0,
+    commentsCount: 0,
+    isPinned: false,
+  );
+}
+
 
   static List<DiscussionModel> listFromJson(Map<String, dynamic> json) {
     final postsJson = json["Posts"]?["posts"] as List<dynamic>? ?? [];

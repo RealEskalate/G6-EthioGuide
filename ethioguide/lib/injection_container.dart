@@ -28,6 +28,7 @@ import 'package:ethioguide/features/procedure/domain/usecases/get_workspace_summ
 import 'package:ethioguide/features/procedure/domain/usecases/getprocedurebyid.dart';
 import 'package:ethioguide/features/procedure/domain/usecases/save_feedback.dart';
 import 'package:ethioguide/features/procedure/domain/usecases/save_procedure.dart';
+import 'package:ethioguide/features/procedure/domain/usecases/update_step_status.dart';
 import 'package:ethioguide/features/procedure/presentation/bloc/procedure_bloc.dart';
 import 'package:ethioguide/features/procedure/presentation/bloc/workspace_procedure_detail_bloc.dart';
 import 'package:ethioguide/features/workspace_discussion/data/datasources/workspace_discussion_remote_data_source.dart';
@@ -42,6 +43,7 @@ import 'package:ethioguide/features/workspace_discussion/domain/usecases/like_co
 import 'package:ethioguide/features/workspace_discussion/domain/usecases/like_discussion.dart';
 import 'package:ethioguide/features/workspace_discussion/domain/usecases/report_comment.dart';
 import 'package:ethioguide/features/workspace_discussion/domain/usecases/report_discussion.dart';
+
 import 'package:ethioguide/features/workspace_discussion/presentation/bloc/workspace_discussion_bloc.dart';
 
 import 'package:ethioguide/features/home_screen/presentaion/bloc/home_bloc.dart';
@@ -51,6 +53,8 @@ import 'package:ethioguide/features/profile/domain/repositories/profile_reposito
 import 'package:ethioguide/features/profile/domain/usecases/get_user_profile.dart';
 import 'package:ethioguide/features/profile/domain/usecases/logout_user.dart';
 import 'package:ethioguide/features/profile/presentation/bloc/profile_bloc.dart';
+
+
 
 // REMOVED: No longer need to import google_sign_in here.
 
@@ -77,9 +81,6 @@ import 'package:ethioguide/features/home_screen/data/repositories/home_repositor
 import 'package:ethioguide/features/home_screen/domain/repositories/home_repository.dart';
 import 'package:ethioguide/features/home_screen/domain/usecases/get_home_data.dart';
 
-
-
-
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -92,10 +93,9 @@ Future<void> init() async {
       forgotPassword: sl(),
       resetPassword: sl(),
       signInWithGoogle: sl(),
+      verifyAccount: sl(),
     ),
   );
-
-  sl.registerFactory(() => AuthBloc(loginUser: sl(), registerUser: sl(), forgotPassword: sl(), resetPassword: sl(), signInWithGoogle: sl(), verifyAccount: sl(),));
 
   sl.registerLazySingleton(() => LoginUser(sl()));
   sl.registerLazySingleton(() => RegisterUser(sl()));
@@ -150,17 +150,11 @@ Future<void> init() async {
       getProceduresbyid: sl(),
       getFeedbacks: sl(),
       saveFeedback: sl(),
-
-  
-  sl.registerFactory(() => HomeBloc(getHomeData: sl()));
-
-   sl.registerFactory(
-    () => ProfileBloc(
-      getUserProfile: sl(),
-      logoutUser: sl(),
-
     ),
   );
+  sl.registerFactory(() => HomeBloc(getHomeData: sl()));
+
+  sl.registerFactory(() => ProfileBloc(getUserProfile: sl(), logoutUser: sl()));
 
   // Usecase
   sl.registerLazySingleton<SendQuery>(() => SendQuery(repository: sl()));
@@ -189,10 +183,9 @@ Future<void> init() async {
   // Bloc
 
   sl.registerLazySingleton(() => GetHomeData(sl()));
-   sl.registerLazySingleton(() => GetUserProfile(sl()));
+  sl.registerLazySingleton(() => GetUserProfile(sl()));
   sl.registerLazySingleton(() => LogoutUser(sl()));
-   sl.registerLazySingleton(() => VerifyAccount(sl()));
-
+  sl.registerLazySingleton(() => VerifyAccount(sl()));
 
   // Repositories
   sl.registerLazySingleton<AiRepository>(
@@ -210,7 +203,6 @@ Future<void> init() async {
     () => ProcedureRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
   );
 
-  
   sl.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl());
   sl.registerLazySingleton<ProfileRepository>(
     () => ProfileRepositoryImpl(
@@ -219,8 +211,6 @@ Future<void> init() async {
       networkInfo: sl(),
     ),
   );
-
-
 
   // Datasources
   sl.registerLazySingleton<AiRemoteDatasource>(
@@ -253,27 +243,25 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetProcedureDetails(sl()));
   sl.registerLazySingleton(() => GetWorkspaceSummary(sl()));
   sl.registerLazySingleton(() => GetProceduresByStatus(sl()));
-  sl.registerLazySingleton(() => GetProceduresByOrganization(sl()));
   sl.registerLazySingleton(() => GetProcedureDetail(sl()));
-  // sl.registerLazySingleton(() => UpdateStepStatus(sl()));
-  sl.registerLazySingleton(() => SaveProgress(sl()));
+   sl.registerLazySingleton(() => UpdateStepStatus(sl()));
 
   // Bloc
   sl.registerFactory<WorkspaceProcedureDetailBloc>(
     () => WorkspaceProcedureDetailBloc(
       getProcedureDetail: sl(),
       getMyProcedureDetails: sl(),
-      // updateStepStatusUseCase: sl(),
+      procedureDetailRepository: sl()
       // saveProgressUseCase: sl(),
       // getMyProcedureDetails: sl(),
       // getProceduresByStatus: sl(),
       // getProceduresByOrganization: sl(),
       // getWorkspaceSummary: sl(),
     ),
+  );
 
   sl.registerLazySingleton<ProfileRemoteDataSource>(
     () => ProfileRemoteDataSourceImpl(dio: sl()),
-
   );
 
   //! Core
@@ -295,8 +283,8 @@ Future<void> init() async {
         baseUrl: EndPoints.baseUrl,
         headers: {'X-Client-Type': 'mobile'},
 
-      connectTimeout: const Duration(seconds: 111), // Waits 60s to connect
-      receiveTimeout: const Duration(seconds: 111), 
+        connectTimeout: const Duration(seconds: 111), // Waits 60s to connect
+        receiveTimeout: const Duration(seconds: 111),
       ),
     );
     dio.interceptors.add(AuthInterceptor(sl<CoreAuthRepository>(), dio));

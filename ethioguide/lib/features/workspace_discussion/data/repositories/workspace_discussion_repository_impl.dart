@@ -55,6 +55,8 @@ class WorkspaceDiscussionRepositoryImpl implements WorkspaceDiscussionRepository
         procedure: procedure,
         // category: category,
       );
+     print('repo');
+      print(result);
       return Right(result);
     } catch (e) {
       return Left(e.toString());

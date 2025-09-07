@@ -14,7 +14,7 @@ abstract class WorkspaceProcedureRemoteDataSource {
   Future<List<WorkspaceProcedureModel>> getProceduresByStatus(String status);
   Future<List<WorkspaceProcedureModel>> getProceduresByOrganization(String organization);
   Future<List<MyProcedureStepModel>> getProcedureDetail(String id);
-  Future<bool> updateStepStatus(String procedureId, String stepId, bool isCompleted);
+  Future<bool> updateStepStatus(String cheklistid);
   Future<bool> saveProgress(String procedureId);
 }
 
@@ -27,31 +27,32 @@ class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemote
     required this.dio
   });
 
-  // Original methods implementation
   @override
-  Future<List<WorkspaceProcedureModel>> getMyProcedures() async {
-    try {
-      final response = await dio.get('checklists/myProcedures');
-      if (response.statusCode == 200) {
-        final data = response.data as List<dynamic>;
+Future<List<WorkspaceProcedureModel>> getMyProcedures() async {
+  try {
+    final response = await dio.get('checklists/myProcedures');
 
-              final futures = data.map((element) async {
+    print('my workshop');
+    print(response.data);
+
+    if (response.statusCode == 200) {
+      final data = response.data['message'] as List<dynamic>;
+
+      final futures = data.map((element) async {
         final procId = element['procedure_id'] as String;
 
         final procResponse = await dio.get('procedures/$procId');
 
+        print(procResponse.data);
+
         if (procResponse.statusCode == 200) {
           final procedureJson = procResponse.data as Map<String, dynamic>;
 
-          // Merge into WorkspaceProcedureModel
-          return WorkspaceProcedureModel.fromJson(element, procedureJson);
-        /*   (
-            id: element['id'] as String,
-            procedure: ProcedureModel.fromJson(procedureJson),
-            status: element['status'] as String,
-            progressPercentage: element['percent'] as int? ?? 0,
-          ); */
-
+          // merge checklist info (element) + procedure info (procedureJson)
+          return WorkspaceProcedureModel.fromJson(
+            procedureJson,
+            element as Map<String, dynamic>
+          );
         } else {
           throw ServerException(
             message: 'Failed to fetch procedure $procId',
@@ -60,19 +61,75 @@ class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemote
         }
       }).toList();
 
-
-        return data.map((e) => WorkspaceProcedureModel.fromJson(e as Map<String, dynamic> , {})).toList();
-        
-      }
-      throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
-    } on DioException catch (e) {
-      final status = e.response?.statusCode;
-      final msg = e.message ?? 'Network error while fetching workspace procedures';
-      throw ServerException(message: msg, statusCode: status);
-    } catch (e) {
-      throw ServerException(message: e.toString());
+      // ✅ wait for all async requests
+      return await Future.wait(futures);
     }
+
+    throw ServerException(
+      message: 'Unexpected status code',
+      statusCode: response.statusCode,
+    );
+  } on DioException catch (e) {
+    final status = e.response?.statusCode;
+    final msg = e.message ?? 'Network error while fetching workspace procedures';
+    throw ServerException(message: msg, statusCode: status);
+  } catch (e) {
+    throw ServerException(message: e.toString());
   }
+}
+
+
+  // Original methods implementation
+  // @override
+  // Future<List<WorkspaceProcedureModel>> getMyProcedures() async {
+  //   try {
+      
+  //     final response = await dio.get('checklists/myProcedures');
+
+  //     print('my workshop');
+  //     print(response.data);
+
+
+  //     if (response.statusCode == 200) {
+  //        final data = response.data['message'] as List<dynamic>;
+
+  //             final futures = data.map((element) async {
+  //       final procId = element['procedure_id'] as String;
+
+  //       final procResponse = await dio.get('procedures/$procId');
+
+  //       print(procResponse.data);
+
+  //       if (procResponse.statusCode == 200) {
+  //         final procedureJson = procResponse.data as Map<String, dynamic>;
+
+  //         // Merge into WorkspaceProcedureModel
+  //         return WorkspaceProcedureModel.fromJson(element, procedureJson);
+
+  //       } else {
+  //         throw ServerException(
+  //           message: 'Failed to fetch procedure $procId',
+  //           statusCode: procResponse.statusCode,
+  //         );
+  //       }
+  //     }).toList();
+
+
+  //       return data.map((e) => WorkspaceProcedureModel.fromJson(e as Map<String, dynamic> , {})).toList();
+        
+  //     }
+  //     throw ServerException(message: 'Unexpected status code', statusCode: response.statusCode);
+  //   } on DioException catch (e) {
+  //     final status = e.response?.statusCode;
+  //     final msg = e.message ?? 'Network error while fetching workspace procedures';
+  //     throw ServerException(message: msg, statusCode: status);
+  //   } catch (e) {
+  //     throw ServerException(message: e.toString());
+  //   }
+  // }
+
+
+
 
   @override
   Future<WorkspaceSummaryModel> getWorkspaceSummary() async {
@@ -134,7 +191,7 @@ class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemote
       final response = await dio.get('checklists/$id');
       if (response.statusCode == 200) {
 
-        final data = response.data as List<dynamic>;
+        final data = response.data["message"] as List<dynamic>;
         return  data.map((e) => MyProcedureStepModel.fromJson(e as Map<String, dynamic>)).toList();
         
         
@@ -150,9 +207,9 @@ class WorkspaceProcedureRemoteDataSourceImpl implements WorkspaceProcedureRemote
   }
 
   @override
-  Future<bool> updateStepStatus(String procedureId, String stepId, bool isCompleted) async {
+  Future<bool> updateStepStatus(String cheklistid) async {
     try {
-      final response = await dio.patch('workspace/procedures/$procedureId/steps/$stepId', data: {'isCompleted': isCompleted});
+      final response = await dio.patch('checklists/$cheklistid');
       if (response.statusCode == 200 || response.statusCode == 204) {
         return true;
       }

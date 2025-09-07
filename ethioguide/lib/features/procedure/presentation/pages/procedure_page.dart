@@ -2,6 +2,7 @@ import 'package:ethioguide/core/components/dashboard_card.dart';
 import 'package:ethioguide/core/config/app_color.dart';
 import 'package:ethioguide/core/config/app_theme.dart';
 import 'package:ethioguide/features/procedure/presentation/bloc/procedure_bloc.dart';
+import 'package:ethioguide/features/procedure/presentation/pages/procedure_detail_page.dart';
 import 'package:ethioguide/features/procedure/presentation/widgets/procedure_card.dart';
 import 'package:ethioguide/features/workspace_discussion/presentation/bloc/workspace_discussion_bloc.dart';
 import 'package:ethioguide/features/workspace_discussion/presentation/bloc/worspace_discustion_state.dart';
@@ -176,7 +177,7 @@ class _QuickAccessGrid extends StatelessWidget {
                 LoadProcedureByIdEvent(item.id),
               );
 
-              context.push(RouteNames.procedure_detail);
+              context.push(RouteNames.procedureDetail);
             },
           );
         },
@@ -198,7 +199,9 @@ Widget _buildProceduresList(List<Procedure> procedures) {
         onTap: () {
           context.read<ProcedureBloc>().add(LoadProcedureByIdEvent(p.id));
 
-          context.push(RouteNames.procedure_detail);
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProcedureDetailPage(),));
+
+          // context.push(RouteNames.procedureDetail);
         },
       );
     },

@@ -51,7 +51,7 @@ class DiscussionTab extends StatelessWidget {
                   // Time
                 ElevatedButton(onPressed: () {
               context
-                  .push(RouteNames.workspacediscussion);
+                  .push(RouteNames.workspaceDiscussion);
                 }, child: const Text('Join discussion')),
                 ],
               ),

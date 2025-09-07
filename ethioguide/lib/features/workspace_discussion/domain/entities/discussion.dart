@@ -7,6 +7,7 @@ class Discussion extends Equatable {
   final String title;
   final String content;
   final List<String> tags;
+  final List<String> procedure;
   final String category;
   final DateTime createdAt;
   final User createdBy;
@@ -20,6 +21,7 @@ class Discussion extends Equatable {
     required this.title,
     required this.content,
     required this.tags,
+    required this.procedure,
     required this.category,
     required this.createdAt,
     required this.createdBy,
@@ -35,6 +37,7 @@ class Discussion extends Equatable {
         title,
         content,
         tags,
+        procedure,
         category,
         createdAt,
         createdBy,

@@ -100,9 +100,13 @@ class WorkspaceDiscussionRemoteDataSourceImpl
         // 'category': category,
       },
     );
-    if (response.statusCode == 200 || response.statusCode == 201) {
+   print('data');
+    print(response.data);
+    print(response.statusCode);
+    if (response.statusCode == 201) {
       return DiscussionModel.fromJson(response.data as Map<String, dynamic>);
     }
+
     throw DioException(
       requestOptions: RequestOptions(path: 'discussions'),
       response: response,

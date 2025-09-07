@@ -15,15 +15,14 @@ class FetchProcedureDetail extends WorkspaceProcedureDetailEvent {
   List<Object?> get props => [id];
 }
 
-class UpdateStepStatus extends WorkspaceProcedureDetailEvent {
+class UpdateStepStatusevent extends WorkspaceProcedureDetailEvent {
   final String procedureId;
-  final String stepId;
-  final bool isCompleted;
 
-  const UpdateStepStatus(this.procedureId, this.stepId, this.isCompleted);
+
+  const UpdateStepStatusevent(this.procedureId);
 
   @override
-  List<Object?> get props => [procedureId, stepId, isCompleted];
+  List<Object?> get props => [procedureId];
 }
 
 class SaveProgress extends WorkspaceProcedureDetailEvent {

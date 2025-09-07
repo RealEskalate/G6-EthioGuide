@@ -26,6 +26,7 @@ final discussion =
       title: 'How to complete step ${1 + 1}?',
       content: 'I need help with the requirements for step ${1 + 1}. Any tips?',
       tags: ['licensing', 'process'],
+      procedure: [],
       category: 1 % 2 == 0 ? 'General' : 'Business',
       createdAt: DateTime.now().subtract(Duration(days: 1)),
       createdBy:  User(id: 'u1', name: 'Test User'),

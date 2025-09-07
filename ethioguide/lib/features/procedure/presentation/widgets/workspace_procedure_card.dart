@@ -257,8 +257,8 @@ class _DetailRow extends StatelessWidget {
 
 
    Widget _getStatusIcon() {
-   late IconData iconData;
-  late  Color iconColor;
+   IconData iconData =     Icons.check_circle;
+   Color iconColor = Colors.green;
     
     switch (procedure.status) {
       case ProcedureStatus.completed:

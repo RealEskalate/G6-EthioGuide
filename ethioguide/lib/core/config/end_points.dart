@@ -19,6 +19,6 @@ class EndPoints {
   static const String updateProfile = '/auth/me';
   static const String updatePassword = '/auth/me/password';
 
-  static final translateContentEndPoint = 'ai/translate';
+  // static final translateContentEndPoint = 'ai/translate';
 
 }

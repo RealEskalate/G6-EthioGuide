@@ -139,7 +139,6 @@ class WorkspaceDiscussionBloc
         title: event.title,
         content: event.content,
         tags: event.tags,
-        
         procedure: event.procedure
       );
 

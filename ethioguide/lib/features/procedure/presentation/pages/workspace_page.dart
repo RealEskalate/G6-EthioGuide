@@ -3,6 +3,7 @@ import 'package:ethioguide/core/config/route_names.dart';
 import 'package:ethioguide/features/procedure/domain/entities/procedure_detail.dart';
 import 'package:ethioguide/features/procedure/domain/entities/procedure_step.dart';
 import 'package:ethioguide/features/procedure/presentation/bloc/workspace_procedure_detail_bloc.dart';
+import 'package:ethioguide/features/procedure/presentation/pages/workspace_procedure_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:ethioguide/core/config/app_color.dart';
 import 'package:ethioguide/core/config/app_theme.dart';
@@ -96,6 +97,7 @@ class _WorkspacePageState extends State<WorkspacePage> {
                     return const Center(child: CircularProgressIndicator());
                   } else if (state is ProcedureError) {
                     return Text(state.message);
+                    
                   } else if (state is ProceduresListLoaded) {
                     return _buildProceduresList(state.procedures);
                   }
@@ -137,7 +139,13 @@ class _WorkspacePageState extends State<WorkspacePage> {
         return WorkspaceProcedureCard(
           procedure: procedure,
           onTap: () {
-            context.push(RouteNames.workspace_detail, extra: procedure);
+
+            //FetchProcedureDetail
+            context.read<WorkspaceProcedureDetailBloc>().add(FetchProcedureDetail(procedure.id));
+            // context.push(RouteNames.workspaceDetail, extra: procedure);
+            Navigator.of(context).push(MaterialPageRoute(builder: (context) =>WorkspaceProcedureDetailPage(
+              procedureDetail: procedure,
+            ) ,));
           },
         );
       },

@@ -22,7 +22,7 @@ abstract class ProcedureDetailRepository {
   Future<Either<String,List<MyProcedureStep>>> getProcedureDetail(String id);
   
   /// Update step status
-  Future<Either<String, bool>> updateStepStatus(String procedureId, String stepId, bool isCompleted);
+  Future<Either<String, bool>> updateStepStatus(String procedureId);
   
   /// Save progress
   Future<Either<String, bool>> saveProgress(String procedureId);

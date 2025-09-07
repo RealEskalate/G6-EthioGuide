@@ -34,76 +34,38 @@ import '../../features/procedure/presentation/pages/procedure_page.dart';
 // This is the central router configuration for the entire application.
 
 final GoRouter router = GoRouter(
-  initialLocation: '/',
-
+  initialLocation: '/auth',
   routes: [
-    // --- STANDALONE ROUTES (No persistent UI like a back button to a shell) ---
     GoRoute(
       path: '/',
       name: RouteNames.splash,
-
-      builder: (context, state) =>
-          const SplashScreen(), // The function that builds the widget for this screen.
+      builder: (context, state) => const SplashScreen(),
     ),
 
-    GoRoute(
-      path: '/Procedure',
-      name: RouteNames.procedure,
-      builder: (context, state) => const ProcedurePage(),
-      routes: [
-        GoRoute(
-          path: 'detail',
-          name: RouteNames.procedure_detail,
-          builder: (context, state) => const ProcedureDetailPage(),
-        ),
-      ], // The function that builds the widget for this screen.
-    ),
-
-    GoRoute(
-      path: '/workspace',
-      name: RouteNames.workspace,
-      builder: (context, state) => const WorkspacePage(),
-      routes: [
-        GoRoute(
-          path: 'detail',
-          name: RouteNames.workspace_detail,
-          builder: (context, state) {
-            final procedure = state.extra as ProcedureDetail;
-            return WorkspaceProcedureDetailPage(procedureDetail: procedure);
-          },
-        ),
-      ], // The function that builds the widget for this screen.
-    ),
-
-    GoRoute(
-      path: '/discussion',
-      name: RouteNames.workspacediscussion,
-      builder: (context, state) =>
-          const WorkspaceDiscussionPage(), // The function that builds the widget for this screen.
-
-    ),
     GoRoute(
       path: '/onboarding',
       name: RouteNames.onboarding,
       builder: (context, state) => const OnboardingScreen(),
     ),
+
     GoRoute(
       path: '/auth',
       name: RouteNames.auth,
-
-      builder: (context, state) =>
-          AuthScreen(verificationToken: state.uri.queryParameters['token']),
-
+      builder: (context, state) => AuthScreen(
+        verificationToken: state.uri.queryParameters['token'],
+      ),
+      routes: [
+        GoRoute(
+          path: 'reset-password',
+          name: 'reset_password',
+          builder: (context, state) {
+            final token = state.uri.queryParameters['token'] ?? '';
+            return ResetPasswordView(resetToken: token);
+          },
+        ),
+      ],
     ),
-    // This deep link for password reset is a special case and should be top-level.
-    GoRoute(
-      path: '/auth/reset-password',
-      name: 'reset_password',
-      builder: (context, state) {
-        final token = state.uri.queryParameters['token'] ?? '';
-        return ResetPasswordView(resetToken: token);
-      },
-    ),
+
 
 
     GoRoute(
@@ -111,53 +73,50 @@ final GoRouter router = GoRouter(
       name: RouteNames.home,
       builder: (context, state) => const HomeScreen(),
       routes: [
-        // These are now CHILD routes of '/home'.
-        // To navigate to them, you use their path RELATIVE to the parent.
-        // e.g., context.push('/home/profile') or context.pushNamed('profile')
         GoRoute(
-          path: 'profile', // No leading '/'
-          name: 'profile',
+          path: 'profile',
+          name: RouteNames.profile,
           builder: (context, state) => const ProfileScreen(),
         ),
         GoRoute(
-          path: 'aiChat', // No leading '/'
+          path: 'aiChat',
           name: RouteNames.aiChat,
           builder: (context, state) => const ChatPage(),
         ),
         GoRoute(
-          path: 'procedure', // No leading '/'
+          path: 'procedure',
           name: RouteNames.procedure,
           builder: (context, state) => const ProcedurePage(),
           routes: [
             GoRoute(
-              path: 'detail',
-              name: RouteNames.procedure_detail,
+              path: 'proceduredetail',
+              name: RouteNames.procedureDetail,
               builder: (context, state) => const ProcedureDetailPage(),
             ),
           ],
         ),
         GoRoute(
-          path: 'workspace', // No leading '/'
+          path: 'workspace',
           name: RouteNames.workspace,
           builder: (context, state) => const WorkspacePage(),
           routes: [
             GoRoute(
               path: 'detail',
-              name: RouteNames.workspace_detail,
+              name: RouteNames.workspaceDetail,
               builder: (context, state) {
-                final procedureId = state.extra as String;
-                return WorkspaceProcedureDetailPage(procedureId: procedureId);
+                final procedure = state.extra as ProcedureDetail;
+                return WorkspaceProcedureDetailPage(procedureDetail: procedure);
               },
             ),
           ],
         ),
         GoRoute(
-          path: 'discussion', // No leading '/'
-          name: RouteNames.workspacediscussion,
+          path: 'discussion',
+          name: RouteNames.workspaceDiscussion,
           builder: (context, state) => const WorkspaceDiscussionPage(),
         ),
         GoRoute(
-          path: 'placeholder', // A generic placeholder child route
+          path: 'placeholder',
           name: 'placeholder',
           builder: (context, state) => const PlaceholderScreen(),
         ),
