@@ -1,7 +1,7 @@
-import { Trash2 } from "lucide-react";
+"use client";
 import { Card, CardContent } from "@/components/ui/card";
 import { BiSolidEdit } from "react-icons/bi";
-import { FaEye } from "react-icons/fa";
+// import { FaEye } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,46 +12,62 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
+import { useState, useEffect } from "react";
+import Notice from "@/types/notice";
 import Link from "next/link";
+// import { Trash2 } from "lucide-react";
+import Pagination from "../shared/pagination";
+import DeleteConfirmDialog from "../shared/AdminAndOrg/DeleteConfirmDialog";
+import { useSession } from "next-auth/react";
 
 export default function OrgNoticeMangement() {
-  const notices = [
-    {
-      title: "New Business Registration Requirements",
-      detail:
-        "Updated documentation requirements for new business applications",
-      status: "Published",
-      publishDate: "Jan 15, 2024",
-      expiryDate: "Mar 15, 2024",
-      lastUpdatedAt: "Jan 20, 2024",
-    },
-    {
-      title: "Office Closure - Holiday Schedule",
-      detail:
-        "Business registration office will be closed during national holidays",
-      status: "Published",
-      publishDate: "Dec 15, 2023",
-      expiryDate: "Dec 15, 2023",
-      lastUpdatedAt: "Jan 18, 2024",
-    },
-    {
-      title: "Digital Transformation Initiative",
-      detail: "Introduction of new online services for business registration",
-      status: "Published",
-      publishDate: "Dec 01, 2023",
-      expiryDate: "Jan 01, 2024",
-      lastUpdatedAt: "Dec 15, 2023",
-    },
-    {
-      title: "Fee Structure Updates",
-      detail: "Revised fee schedule for various business registration services",
-      status: "Published",
-      publishDate: "Jan 10, 2024",
-      expiryDate: "Jun 10, 2024",
-      lastUpdatedAt: "Jan 12, 2024",
-    },
-  ];
+  const [notices, setNotices] = useState<Notice[]>([]);
+  const [page, setPage] = useState(1);
+  // const [totalNotice, setTotalNotice] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [reload, setReload] = useState(false);
+  const { data: session } = useSession();
+  const token = session?.accessToken;
+  // const userId = session?.user?.id;
+
+  // console.log(notices);
+
+  const handleDelete = async (id: string) => {
+    // toast.success("Item deleted successfully!");
+    await fetch(
+      `https://ethio-guide-backend.onrender.com/api/v1/notices/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    setReload((prev) => !prev);
+  };
+
+  useEffect(() => {
+    const fetchsNotices = async () => {
+      try {
+        // const res = await fetch(`https://ethio-guide-backend.onrender.com/api/v1/notices?page=${page}&limit=${5}`);
+        const res = await fetch(
+          `https://ethio-guide-backend.onrender.com/api/v1/notices`
+        );
+
+        const data = await res.json();
+
+        setNotices(data.data); // adjust to your API response
+        // setTotalNotice(data.total); // if returned
+        setTotalPages(Math.ceil(data.total / 5));
+        console.log(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchsNotices();
+  }, [page, reload]); // <-- this will re-run whenever 'page' changes
 
   return (
     <div className="p-6 space-y-6 w-full">
@@ -83,7 +99,7 @@ export default function OrgNoticeMangement() {
                 <TableRow className="text-neutral">
                   <TableHead>Notice Title</TableHead>
                   <TableHead>Publish Date</TableHead>
-                  <TableHead>Expiry Date</TableHead>
+                  {/* <TableHead>Expiry Date</TableHead> */}
                   <TableHead>Last Updated</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -91,33 +107,43 @@ export default function OrgNoticeMangement() {
 
               <TableBody>
                 {notices.map(
-                  ({
-                    title,
-                    detail,
-                    publishDate,
-                    expiryDate,
-                    lastUpdatedAt,
-                  }) => (
-                    <TableRow key={title} className="hover:bg-accent">
+                  ({ id, title, content, created_at, updated_at }) => (
+                    <TableRow key={id} className="hover:bg-accent">
                       <TableCell>
                         <p className="font-medium">{title}</p>
                         <p className="text-sm text-muted-foreground text-neutral">
-                          {detail}
+                          {content?.length > 100
+                            ? content.slice(0, 100) + "..."
+                            : content}
                         </p>
                       </TableCell>
                       <TableCell className="text-neutral">
-                        {publishDate}
+                        {new Date(created_at).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </TableCell>
                       <TableCell className="text-neutral">
-                        {expiryDate}
-                      </TableCell>
-                      <TableCell className="text-neutral">
-                        {lastUpdatedAt}
+                        {new Date(updated_at).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </TableCell>
                       <TableCell className="flex space-x-2 mt-3">
-                        <FaEye className="w-4 h-4 text-primary cursor-pointer" />
-                        <BiSolidEdit className="w-4 h-4 text-primary cursor-pointer" />
-                        <Trash2 className="w-4 h-4 text-red-600 cursor-pointer" />
+                        {/* <FaEye className="w-4 h-4 text-primary cursor-pointer" /> */}
+                        <Link href={`/organization/notices/edit/${id}`}>
+                          <Button className="p-2 bg-transparent hover:bg-blue-50 rounded-full transition-all duration-200 hover:scale-105">
+                            <BiSolidEdit className="w-4 h-4 text-blue-600" />
+                          </Button>
+                        </Link>
+                        <DeleteConfirmDialog
+                          title="Delete Notice"
+                          description="This will permanently remove this notice from your organization."
+                          confirmLabel="Delete"
+                          onConfirm={() => handleDelete(id)}
+                        />
                       </TableCell>
                     </TableRow>
                   )
@@ -125,25 +151,14 @@ export default function OrgNoticeMangement() {
               </TableBody>
             </Table>
           </div>
-          {/* Pagination */}
-          <div className="flex items-center justify-between mt-4">
-            <p className="text-sm text-muted-foreground text-neutral">
-              Showing 1 to 4 of 12 results
-            </p>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm">
-                Previous
-              </Button>
-              <Button size="sm" className="bg-primary text-white">
-                1
-              </Button>
-              <Button variant="outline" size="sm">
-                Next
-              </Button>
-            </div>
-          </div>
         </CardContent>
       </Card>
+      {/* Pagination */}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={(pagenum: number) => setPage(pagenum)}
+      />
 
       {/* Create New Notice */}
       <div className="flex justify-end">

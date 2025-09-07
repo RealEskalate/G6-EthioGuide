@@ -7,19 +7,31 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-export default function AddProcedurePage() {
-  const { data: session } = useSession();
-  const token = session?.accessToken;
+// Shape of payload sent to backend
+interface ProcedurePayload {
+  name: string;
+  prerequisites: string[];
+  steps: Record<string, string>;
+  amount: number;
+  minDays: number;
+  maxDays: number;
+  result: string;
+}
 
-  const route = useRouter();
+export default function AddProcedurePage() {
+  const router = useRouter();
+
+  const { data: session } = useSession();
+  const token = (session as { accessToken?: string } | null)?.accessToken;
+
   // State matching backend structure
-  const [name, setName] = useState(""); // title
-  const [prerequisites, setPrerequisites] = useState([""]);
-  const [steps, setSteps] = useState([""]);
-  const [amount, setAmount] = useState(0);
-  const [minDays, setMinDays] = useState(0);
-  const [maxDays, setMaxDays] = useState(0);
-  const [result, setResult] = useState("");
+  const [name, setName] = useState<string>("");
+  const [prerequisites, setPrerequisites] = useState<string[]>([""]);
+  const [steps, setSteps] = useState<string[]>([""]);
+  const [amount, setAmount] = useState<number>(0);
+  const [minDays, setMinDays] = useState<number>(0);
+  const [maxDays, setMaxDays] = useState<number>(0);
+  const [result, setResult] = useState<string>("");
 
   // Handlers for dynamic arrays
   const updatePrerequisite = (index: number, value: string) => {
@@ -46,19 +58,18 @@ export default function AddProcedurePage() {
 
   // Submit handler
   const handleSubmit = async () => {
-    // Basic validation
     if (!name.trim()) return alert("Procedure name is required");
     if (prerequisites.some((p) => !p.trim()))
       return alert("All prerequisites must have text");
     if (steps.some((s) => !s.trim())) return alert("All steps must have text");
 
-    const payload = {
+    const payload: ProcedurePayload = {
       name,
       prerequisites,
-      steps: steps.reduce((acc, step, i) => {
+      steps: steps.reduce<Record<string, string>>((acc, step, i) => {
         acc[(i + 1).toString()] = step;
         return acc;
-      }, {} as Record<string, string>),
+      }, {}),
       amount,
       minDays,
       maxDays,
@@ -74,22 +85,28 @@ export default function AddProcedurePage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify(payload),
         }
       );
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
+        const errorData = (await res.json().catch(() => null)) as
+          | { message?: string }
+          | null;
         throw new Error(errorData?.message || "Failed to add procedure");
       }
 
-      // alert("Procedure added successfully!");
-      route.push("/admin/procedures");
+      router.push("/organization/procedures");
     } catch (error: unknown) {
-      console.error("Error:", error);
-      alert(`Failed to add procedure: ${error instanceof Error ? error.message : "Unknown error"}`);
+      if (error instanceof Error) {
+        console.error("Error:", error);
+        alert(`Failed to add procedure: ${error.message}`);
+      } else {
+        console.error("Unknown error:", error);
+        alert("Failed to add procedure: Unknown error");
+      }
     }
   };
 
@@ -195,7 +212,7 @@ export default function AddProcedurePage() {
       </div>
 
       {/* Submit */}
-      <Button className="bg-primary text-rd" onClick={handleSubmit}>
+      <Button className="bg-primary text-white" onClick={handleSubmit}>
         Save Procedure
       </Button>
     </div>

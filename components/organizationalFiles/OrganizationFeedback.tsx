@@ -1,17 +1,38 @@
-'use client'
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { FaThumbsUp, FaEye, FaReply, FaCheck } from "react-icons/fa"
+"use client";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { FaThumbsUp, FaEye, FaReply, FaCheck } from "react-icons/fa";
+import Feedback from "@/types/feedback";
 
 const feedbackData = [
   {
     id: 1,
-    feedback: "The visa application process is too complicated and takes forever...",
+    feedback:
+      "The visa application process is too complicated and takes forever...",
     detail: "User feedback regarding processing delays",
     procedure: "Visa Application",
     date: "Jan 15, 2025",
@@ -20,7 +41,8 @@ const feedbackData = [
   },
   {
     id: 2,
-    feedback: "Great improvement in the online portal! Much easier to navigate now.",
+    feedback:
+      "Great improvement in the online portal! Much easier to navigate now.",
     detail: "Positive feedback on system updates",
     procedure: "Work Permit",
     date: "Jan 14, 2025",
@@ -36,32 +58,38 @@ const feedbackData = [
     upvotes: 5,
     status: "Action Taken",
   },
-]
+];
 
 export default function OrganizationFeedback() {
-  const [search, setSearch] = useState("")
-
-  const filteredFeedback = feedbackData.filter((item) =>
-    item.feedback.toLowerCase().includes(search.toLowerCase())
-  )
+  const [search, setSearch] = useState("");
+  const [filteredFeedback, setFilteredFeedback] = useState<Feedback[]>(feedbackData);
+  // setFilteredFeedback(feedbackData);
+  //   feedbackData.filter((item) =>
+  //     item.feedback.toLowerCase().includes(search.toLowerCase())
+  //   )
+  // );
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "New":
-        return <Badge className="bg-blue-100 text-primary">New</Badge>
+        return <Badge className="bg-blue-100 text-primary">New</Badge>;
       case "Reviewed":
-        return <Badge className="bg-yellow-100 text-yellow-600">Reviewed</Badge>
+        return (
+          <Badge className="bg-yellow-100 text-yellow-600">Reviewed</Badge>
+        );
       case "Action Taken":
-        return <Badge className="bg-green-100 text-secondary">Action Taken</Badge>
+        return (
+          <Badge className="bg-green-100 text-secondary">Action Taken</Badge>
+        );
       default:
-        return <Badge variant="secondary">{status}</Badge>
+        return <Badge variant="secondary">{status}</Badge>;
     }
-  }
+  };
 
   return (
     <div className="p-6 text-primary-dark">
       {/* Header */}
-      <h1 className="text-2xl font-bold">Organization Feedback</h1>
+      <h1 className="text-2xl font-bold">Feedback</h1>
       <p className="text-sm text-muted-foreground mb-6">
         Manage and respond to user feedback for your procedures
       </p>
@@ -124,14 +152,39 @@ export default function OrganizationFeedback() {
               <TableRow key={item.id}>
                 <TableCell>
                   <p className="font-medium">{item.feedback}</p>
-                  <p className="text-sm text-muted-foreground text-neutral">{item.detail}</p>
+                  <p className="text-sm text-muted-foreground text-neutral">
+                    {item.detail}
+                  </p>
                 </TableCell>
-                <TableCell className="text-secondary-dark">{item.procedure}</TableCell>
+                <TableCell className="text-secondary-dark">
+                  {item.procedure}
+                </TableCell>
                 <TableCell className="text-neutral">{item.date}</TableCell>
                 <TableCell className="flex items-center gap-2 text-secondary-light">
                   <FaThumbsUp /> {item.upvotes}
                 </TableCell>
-                <TableCell>{getStatusBadge(item.status)}</TableCell>
+                <TableCell>
+                  <Select
+                    defaultValue={item.status.toLowerCase()} // make sure value matches option keys
+                    onValueChange={(newStatus) => {
+                      setFilteredFeedback((prev) =>
+                        prev.map((f) =>
+                          f.id === item.id ? { ...f, status: newStatus } : f
+                        )
+                      );
+                    }}
+                  >
+                    <SelectTrigger className="w-[280px]">
+                      <SelectValue>{getStatusBadge(item.status)}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inaccuracy">Inaccuracy</SelectItem>
+                      <SelectItem value="missing">Missing</SelectItem>
+                      <SelectItem value="outdated">Outdated</SelectItem>
+                      <SelectItem value="thanks">Thanks</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
                 <TableCell className="flex gap-3 justify-end text-gray-600">
                   <FaEye className="cursor-pointer" />
                   <FaReply className="cursor-pointer" />
@@ -146,7 +199,8 @@ export default function OrganizationFeedback() {
       {/* Pagination */}
       <div className="flex justify-between items-center mt-4">
         <p className="text-sm text-muted-foreground">
-          Showing 1 to {filteredFeedback.length} of {feedbackData.length} results
+          Showing 1 to {filteredFeedback.length} of {feedbackData.length}{" "}
+          results
         </p>
         <Pagination>
           <PaginationContent>
@@ -154,7 +208,10 @@ export default function OrganizationFeedback() {
               <PaginationPrevious href="#" />
             </PaginationItem>
             <PaginationItem>
-              <Button variant="outline" size="sm">1</Button> {/*need to add a state to manage page number here*/}
+              <Button variant="outline" size="sm">
+                1
+              </Button>{" "}
+              {/*need to add a state to manage page number here*/}
             </PaginationItem>
             <PaginationItem>
               <PaginationNext href="#" />
@@ -163,5 +220,5 @@ export default function OrganizationFeedback() {
         </Pagination>
       </div>
     </div>
-  )
+  );
 }

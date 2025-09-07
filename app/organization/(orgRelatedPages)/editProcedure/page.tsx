@@ -1,174 +1,175 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-
-type Requirement = { text: string; optional?: boolean };
-type Step = { order: number; text: string };
-type Fee = { label: string; amount: number; currency: string };
-type ProcessingTime = { minDays?: number; maxDays?: number };
-
-type Procedure = {
-  title: string;
-  requirements: Requirement[];
-  steps: Step[];
-  fees: Fee[];
-  processingTime?: ProcessingTime;
-  // id?: string; // if you need it for API updates
-};
+import ProcedurePropCapital from "@/types/procedureRecive";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function EditProcedurePage({
   procedure,
 }: {
-  procedure: Procedure;
+  procedure: ProcedurePropCapital;
 }) {
-  const [title, setTitle] = useState<string>(procedure?.title ?? "");
-  const [requirements, setRequirements] = useState<Requirement[]>(
-    procedure?.requirements ?? []
-  );
-  const [steps, setSteps] = useState<Step[]>(procedure?.steps ?? []);
-  const [fees, setFees] = useState<Fee[]>(procedure?.fees ?? []);
-  const [processingTime, setProcessingTime] = useState<ProcessingTime>(
-    procedure?.processingTime ?? {}
-  );
+  const { data: session } = useSession();
+  const token = session?.accessToken;
 
-  // -------- Requirements --------
-  const addRequirement = () => {
-    if (
-      requirements.length === 0 ||
-      requirements[requirements.length - 1].text.trim() !== ""
-    ) {
-      setRequirements((prev) => [...prev, { text: "", optional: false }]);
+  // ---------------- State ----------------
+  const [name, setName] = useState("");
+  const [prerequisites, setPrerequisites] = useState<string[]>([]);
+  const [result, setResult] = useState("");
+  const [steps, setSteps] = useState<Record<string, string>>({});
+  const [fees, setFees] = useState({
+    label: "",
+    amount: 0,
+    currency: "Birr",
+  });
+  const [processingTime, setProcessingTime] = useState({
+    minDays: 0,
+    maxDays: 0,
+  });
+
+  // Normalize backend → frontend
+  useEffect(() => {
+    if (procedure) {
+      setName(procedure.Name ?? "");
+      setPrerequisites(procedure.Content?.Prerequisites ?? []);
+      setResult(procedure.Content?.Result ?? {});
+      setSteps(procedure.Content?.Steps ?? {});
+
+      // Map backend Fees → frontend Fees
+      setFees(
+        procedure.Fees
+          ? {
+              label: procedure.Fees.Label,
+              amount: procedure.Fees.Amount,
+              currency: procedure.Fees.Currency,
+            }
+          : { label: "", amount: 0, currency: "Birr" }
+      );
+
+      // Map ProcessingTime
+      setProcessingTime(
+        procedure.ProcessingTime
+          ? {
+              minDays: procedure.ProcessingTime.MinDays,
+              maxDays: procedure.ProcessingTime.MaxDays,
+            }
+          : { minDays: 0, maxDays: 0 }
+      );
     }
-  };
+  }, [procedure]);
 
-  const updateRequirement = <K extends keyof Requirement>(
-    i: number,
-    field: K,
-    value: Requirement[K]
-  ) => {
-    setRequirements((prev) => {
-      const copy = [...prev];
-      copy[i] = { ...copy[i], [field]: value };
-      return copy;
-    });
-  };
+    const route = useRouter()
+  // ---------------- Update ----------------
+  const handleUpdate = async () => {
+    if (!token) return;
 
-  // -------- Steps --------
-  const addStep = () => {
-    if (steps.length === 0 || steps[steps.length - 1].text.trim() !== "") {
-      setSteps((prev) => [...prev, { order: prev.length + 1, text: "" }]);
-    }
-  };
-
-  const updateStep = (i: number, value: string) => {
-    setSteps((prev) => {
-      const copy = [...prev];
-      copy[i] = { ...copy[i], text: value };
-      return copy;
-    });
-  };
-
-  // (Optional) remove a step & re-number
-  const removeStep = (i: number) => {
-    setSteps((prev) => {
-      const copy = prev.filter((_, idx) => idx !== i);
-      return copy.map((s, idx) => ({ ...s, order: idx + 1 }));
-    });
-  };
-
-  // -------- Fees --------
-  const addFee = () => {
-    const last = fees[fees.length - 1];
-    if (fees.length === 0 || (last.label.trim() !== "" && last.amount > 0)) {
-      setFees((prev) => [...prev, { label: "", amount: 0, currency: "Birr" }]);
-    }
-  };
-
-  const updateFee = <K extends keyof Fee>(
-    i: number,
-    field: K,
-    value: Fee[K]
-  ) => {
-    setFees((prev) => {
-      const copy = [...prev];
-      copy[i] = { ...copy[i], [field]: value };
-      return copy;
-    });
-  };
-
-  // -------- Submit --------
-  const handleSubmit = () => {
-    const payload: Procedure = {
-      title,
-      requirements,
-      steps,
-      fees,
-      processingTime,
+    const payload = {
+      ID: procedure.ID,
+      Name: name,
+      Content: {
+        Prerequisites: prerequisites,
+        Result: result,
+        Steps: steps,
+      },
+      Fees: fees,
+      ProcessingTime: processingTime,
     };
-    console.log("Updating procedure:", payload);
-    // TODO: PUT/PATCH to your API here
+
+    console.log("Updating with:", payload);
+
+    const res = await fetch(
+      `https://ethio-guide-backend.onrender.com/api/v1/procedures/${procedure.ID}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!res.ok) {
+      console.error("Failed to update procedure");
+    } else {
+      console.log("Procedure updated!");
+      route.push("/organization/procedures")
+    }
   };
 
+  // ---------------- Render ----------------
   return (
     <div className="max-w-2xl mx-auto space-y-6 text-primary-dark">
       <h2 className="text-xl font-semibold">Edit Procedure</h2>
 
-      {/* Title */}
+      {/* Name */}
       <div>
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="name">Name</Label>
         <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
       </div>
 
-      {/* Requirements */}
+      {/* Prerequisites */}
       <div>
-        <h3 className="font-medium">Requirements</h3>
-        {requirements.map((req, i) => (
-          <div key={i} className="flex gap-2 items-center mb-2">
-            <Input
-              placeholder="Requirement text"
-              value={req.text}
-              onChange={(e) => updateRequirement(i, "text", e.target.value)}
-            />
-            <label className="flex items-center gap-1 text-sm">
-              <input
-                type="checkbox"
-                checked={!!req.optional}
-                onChange={(e) =>
-                  updateRequirement(i, "optional", e.target.checked)
-                }
-              />
-              Optional
-            </label>
-          </div>
+        <h3 className="font-medium">Prerequisites</h3>
+        {prerequisites.map((p, i) => (
+          <Input
+            key={i}
+            value={p}
+            onChange={(e) => {
+              const updated = [...prerequisites];
+              updated[i] = e.target.value;
+              setPrerequisites(updated);
+            }}
+            className="mb-2"
+          />
         ))}
-        <Button variant="outline" onClick={addRequirement}>
-          + Add Requirement
+        <Button
+          variant="outline"
+          onClick={() => setPrerequisites([...prerequisites, ""])}
+        >
+          + Add Prerequisite
         </Button>
+      </div>
+
+      {/* Result */}
+      <div>
+        <Label htmlFor="result">Result</Label>
+        <Input
+          id="result"
+          value={result}
+          onChange={(e) => setResult(e.target.value)}
+        />
       </div>
 
       {/* Steps */}
       <div>
         <h3 className="font-medium">Steps</h3>
-        {steps.map((s, i) => (
-          <div key={i} className="flex items-center gap-2 mb-2">
+        {Object.entries(steps).map(([order, text]) => (
+          <div key={order} className="flex gap-2 mb-2">
+            <span>{order}.</span>
             <Input
-              placeholder={`Step ${i + 1}`}
-              value={s.text}
-              onChange={(e) => updateStep(i, e.target.value)}
+              value={text}
+              onChange={(e) => setSteps({ ...steps, [order]: e.target.value })}
             />
-            <Button variant="ghost" type="button" onClick={() => removeStep(i)}>
-              Remove
-            </Button>
           </div>
         ))}
-        <Button variant="outline" onClick={addStep}>
+        <Button
+          variant="outline"
+          onClick={() =>
+            setSteps({
+              ...steps,
+              [Object.keys(steps).length + 1]: "",
+            })
+          }
+        >
           + Add Step
         </Button>
       </div>
@@ -176,30 +177,27 @@ export default function EditProcedurePage({
       {/* Fees */}
       <div>
         <h3 className="font-medium">Fees</h3>
-        {fees.map((f, i) => (
-          <div key={i} className="flex gap-2 mb-2">
-            <Input
-              placeholder="Label"
-              value={f.label}
-              onChange={(e) => updateFee(i, "label", e.target.value)}
-            />
-            <Input
-              type="number"
-              min={0}
-              placeholder="Amount"
-              value={f.amount}
-              onChange={(e) => updateFee(i, "amount", Number(e.target.value))}
-            />
-            <Input
-              placeholder="Currency"
-              value={f.currency}
-              onChange={(e) => updateFee(i, "currency", e.target.value)}
-            />
-          </div>
-        ))}
-        <Button variant="outline" onClick={addFee}>
-          + Add Fee
-        </Button>
+        <div className="flex gap-2 mb-2">
+          <Input
+            placeholder="Label"
+            value={fees.label}
+            onChange={(e) => setFees({ ...fees, label: e.target.value })}
+          />
+          <Input
+            type="number"
+            min={0}
+            placeholder="Amount"
+            value={fees.amount}
+            onChange={(e) =>
+              setFees({ ...fees, amount: Number(e.target.value) })
+            }
+          />
+          <Input
+            placeholder="Currency"
+            value={fees.currency}
+            onChange={(e) => setFees({ ...fees, currency: e.target.value })}
+          />
+        </div>
       </div>
 
       {/* Processing Time */}
@@ -210,30 +208,30 @@ export default function EditProcedurePage({
             type="number"
             min={0}
             placeholder="Min Days"
-            value={processingTime?.minDays ?? ""}
+            value={processingTime.minDays}
             onChange={(e) =>
-              setProcessingTime((prev) => ({
-                ...(prev ?? {}),
+              setProcessingTime({
+                ...processingTime,
                 minDays: Number(e.target.value),
-              }))
+              })
             }
           />
           <Input
             type="number"
             min={0}
             placeholder="Max Days"
-            value={processingTime?.maxDays ?? ""}
+            value={processingTime.maxDays}
             onChange={(e) =>
-              setProcessingTime((prev) => ({
-                ...(prev ?? {}),
+              setProcessingTime({
+                ...processingTime,
                 maxDays: Number(e.target.value),
-              }))
+              })
             }
           />
         </div>
       </div>
 
-      <Button className="bg-primary text-white" onClick={handleSubmit}>
+      <Button className="bg-primary text-white" onClick={handleUpdate}>
         Save Changes
       </Button>
     </div>
