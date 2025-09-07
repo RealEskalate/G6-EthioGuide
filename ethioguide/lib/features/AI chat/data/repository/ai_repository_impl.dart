@@ -3,9 +3,11 @@ import 'package:ethioguide/core/error/exception.dart';
 import 'package:ethioguide/core/error/failures.dart';
 import 'package:ethioguide/core/network/network_info.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/entities/conversation.dart';
+import 'package:ethioguide/features/AI%20chat/Domain/entities/translated_conversation.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/repository/ai_repository.dart';
 import 'package:ethioguide/features/AI%20chat/data/datasources/ai_local_datasource.dart';
 import 'package:ethioguide/features/AI%20chat/data/datasources/ai_remote_datasource.dart';
+import 'package:ethioguide/features/AI%20chat/data/models/translated_conversation_model.dart';
 
 class AiRepositoryImpl implements AiRepository {
   final AiRemoteDatasource remoteDatasource;
@@ -69,15 +71,14 @@ class AiRepositoryImpl implements AiRepository {
   }
 
   @override
-  Future<Either<Failure, String>> translateContent(
-    String content,
-    String lang,
+  Future<Either<Failure, TranslatedConversation>> translateContent(
+    TranslatedConversationModel conversation,
   ) async {
     try {
       if (!(await networkInfo.isConnected)) {
         return Left(NetworkFailure(message: 'No internet connection'));
       }
-      final translated = await remoteDatasource.translateContent(content, lang);
+      final translated = await remoteDatasource.translateContent(conversation);
       return Right(translated);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
@@ -85,4 +86,22 @@ class AiRepositoryImpl implements AiRepository {
       return Left(ServerFailure(message: 'Unexpected error: $e'));
     }
   }
+
+  // @override
+  // Future<Either<Failure, String>> translateContent(
+  //   String content,
+  //   String lang,
+  // ) async {
+  //   try {
+  //     if (!(await networkInfo.isConnected)) {
+  //       return Left(NetworkFailure(message: 'No internet connection'));
+  //     }
+  //     final translated = await remoteDatasource.translateContent(content, lang);
+  //     return Right(translated);
+  //   } on ServerException catch (e) {
+  //     return Left(ServerFailure(message: e.message));
+  //   } catch (e) {
+  //     return Left(ServerFailure(message: 'Unexpected error: $e'));
+  //   }
+  // }
 }

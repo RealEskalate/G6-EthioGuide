@@ -89,19 +89,21 @@ class _ChatPageState extends State<ChatPage> {
     _scrollToBottom();
   }
 
-  void _removeLoadingMessage() {
+  void _removeLoadingMessage({required bool queryFailed}) {
     setState(() {
       final conv = _history.removeLast();
       // Add Just the query to display as failed
-      _history.add(
-        Conversation(
-          id: conv.id,
-          request: conv.request,
-          response: '',
-          source: 'failed',
-          procedures: [],
-        ),
-      );
+      if (queryFailed) {
+        _history.add(
+          Conversation(
+            id: conv.id,
+            request: conv.request,
+            response: '',
+            source: 'failed',
+            procedures: [],
+          ),
+        );
+      }
     });
   }
 
@@ -130,10 +132,10 @@ class _ChatPageState extends State<ChatPage> {
           });
           _scrollToBottom();
         } else if (state is AiQuerySuccess) {
-          _removeLoadingMessage();
+          _removeLoadingMessage(queryFailed: false);
           _addMessage(conversation: state.conversation);
         } else if (state is AiError) {
-          _removeLoadingMessage();
+          _removeLoadingMessage(queryFailed: true);
           _addMessage(
             conversation: Conversation(
               id: 'error-${DateTime.now().millisecondsSinceEpoch}',
@@ -144,9 +146,22 @@ class _ChatPageState extends State<ChatPage> {
             ),
           );
         } else if (state is AiTranslateSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Translated: ${state.translated}')),
-          );
+          final newConv = state.translated;
+          for (int i = 0; i < _history.length; i++) {
+            if (_history[i].id == state.id) {
+              setState(() {
+                final curConv = _history[i];
+                _history[i] = Conversation(
+                  id: curConv.id,
+                  request: curConv.request,
+                  response: newConv.response,
+                  source: curConv.source,
+                  procedures: newConv.procedures,
+                );
+              });
+              break;
+            }
+          }
         }
       },
       child: Scaffold(
@@ -207,7 +222,9 @@ class _ChatPageState extends State<ChatPage> {
                           hintText: 'Type your question here...',
                           prefixIcon: IconButton(
                             onPressed: _listen,
-                            icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+                            icon: Icon(
+                              _isListening ? Icons.mic : Icons.mic_none,
+                            ),
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(18),
