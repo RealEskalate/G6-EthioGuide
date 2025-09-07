@@ -1,9 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+// import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import type { 
   UserProcedureChecklist, 
   CreateChecklistResponse, 
-  GetMyProceduresResponse, 
   GetChecklistItemsResponse 
 } from '@/app/types/checklist'
 
@@ -50,7 +49,7 @@ function deriveChecklistFromMyProcedures(u: unknown): UserProcedureChecklist {
   const percent = readNumber(obj, 'percent') || 0
   const statusStr = readString(obj, 'status') || 'NOT_STARTED'
   const updatedAt = readString(obj, 'updated_at') || ''
-  const userId = readString(obj, 'user_id') || ''
+  // const userId = readString(obj, 'user_id') || ''
 
   // Convert status string to our enum
   let status: UserProcedureChecklist['status'] = 'NOT_STARTED'

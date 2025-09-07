@@ -3,15 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-  "dev": "next dev --turbopack",
-  "dev:webpack": "next dev",
-  "dev:clean": "bash -lc 'rm -rf .next && next dev --turbopack'",
-  "clean": "bash -lc 'rm -rf .next .turbo'",
-  "build": "next build --turbopack",
-  "start": "next start",
-  "lint": "eslint"
+    "dev": "next dev --turbopack",
+    "dev:webpack": "next dev",
+    "dev:clean": "bash -lc 'rm -rf .next && next dev --turbopack'",
+    "clean": "bash -lc 'rm -rf .next .turbo'",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "eslint"
   },
   "dependencies": {
+    "@google-cloud/text-to-speech": "^6.3.0",
     "@hookform/resolvers": "^5.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-avatar": "^1.1.10",
