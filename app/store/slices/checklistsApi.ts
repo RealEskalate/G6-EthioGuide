@@ -1,9 +1,9 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+// import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import type { 
   UserProcedureChecklist, 
   CreateChecklistResponse, 
-  GetMyProceduresResponse, 
+  // GetMyProceduresResponse, 
   GetChecklistItemsResponse 
 } from '@/app/types/checklist'
 
