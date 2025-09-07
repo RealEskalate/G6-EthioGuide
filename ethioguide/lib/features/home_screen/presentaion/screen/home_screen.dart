@@ -1,3 +1,4 @@
+import 'package:ethioguide/core/components/bottom_nav_bar.dart';
 import 'package:ethioguide/features/home_screen/domain/entities/home_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,6 +25,7 @@ class HomeScreen extends StatelessWidget {
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
+  final pageIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -136,6 +138,8 @@ class HomeView extends StatelessWidget {
           );
         },
       ),
+
+      bottomNavigationBar: bottomNav(context: context, selectedIndex: pageIndex),
     );
   }
 }

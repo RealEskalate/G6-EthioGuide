@@ -64,10 +64,14 @@ Widget bottomNav({required BuildContext context, required selectedIndex}) {
       onTap: (index) {
         switch (index) {
           case 0:
-            if (index != selectedIndex) {}
+            if (index != selectedIndex) {
+              context.goNamed(RouteNames.home);
+            }
             break;
           case 1:
-            if (index != selectedIndex) {}
+            if (index != selectedIndex) {
+              context.goNamed(RouteNames.workspace);
+            }
             break;
           case 2:
             if (index != selectedIndex) {
@@ -75,7 +79,9 @@ Widget bottomNav({required BuildContext context, required selectedIndex}) {
             }
             break;
           case 3:
-            if (index != selectedIndex) {}
+            if (index != selectedIndex) {
+              // context.goNamed(RouteNames)
+            }
             break;
         }
       },
