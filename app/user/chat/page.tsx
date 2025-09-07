@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   Bot,
   User,
@@ -28,6 +29,7 @@ import {
   Play,
   Square,
   Plus,
+  Sparkles,
 } from "lucide-react";
 
 // Minimal Web Speech API typings in the global namespace
@@ -609,92 +611,112 @@ export default function ChatPage() {
   };
 
   if (status === "loading") {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen w-full bg-gray-50 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-24 -right-24 w-56 h-56 rounded-full blur-3xl" style={{ background: 'radial-gradient(closest-side, rgba(167,179,185,0.10), rgba(167,179,185,0))' }} />
+        </div>
+        <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-[#a7b3b9]/30 p-6 shadow-lg text-center animate-fade-in-up">
+            <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#a7b3b9]/40 border-t-[#3a6a8d] mx-auto" />
+            <p className="text-[#2e4d57] mt-4 font-medium">Loading your AI assistant…</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (status === "unauthenticated") {
-    return <div>Please sign in to access the chat.</div>;
+    return (
+      <div className="min-h-screen w-full bg-gray-50 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-24 -right-24 w-56 h-56 rounded-full blur-3xl" style={{ background: 'radial-gradient(closest-side, rgba(167,179,185,0.10), rgba(167,179,185,0))' }} />
+        </div>
+        <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-[#a7b3b9]/30 p-6 shadow-lg text-center animate-fade-in-up">
+            <Bot className="w-10 h-10 text-[#3a6a8d] mx-auto" />
+            <h2 className="text-xl font-bold text-[#2e4d57] mt-3">Authentication Required</h2>
+            <p className="text-[#1c3b2e] mt-1">Please sign in to access your AI assistant.</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <div
-        className={`bg-white border-r border-gray-200 transition-all duration-300 ${showHistory ? "w-80" : "w-0"} overflow-hidden`}
-      >
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center space-x-2">
-            <History className="w-5 h-5 text-[#3A6A8D]" />
-            <h2 className="font-semibold text-gray-900">Chat History</h2>
-          </div>
-        </div>
-        <div className="p-4 space-y-3 max-h-[calc(100vh-80px)] overflow-y-auto">
-          {chatHistory.map((chat) => (
-            <Card
-              key={chat.id}
-              className="cursor-pointer hover:shadow-md transition-shadow duration-200 border border-gray-200"
-              onClick={() => handleChatSelect(chat.id)}
-            >
-              <CardContent className="p-3">
-                <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-1">{chat.title}</h3>
-                <p className="text-xs text-gray-600 mb-2 line-clamp-2">{chat.lastMessage}</p>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-3 h-3" />
-                    <span>{chat.timestamp}</span>
-                  </div>
-                  <span>{chat.messageCount} messages</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+    <div className="min-h-screen w-full bg-gray-50 relative overflow-hidden">
+      {/* Subtle radial background, consistent with other pages */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-24 -right-24 w-56 h-56 rounded-full blur-3xl" style={{ background: 'radial-gradient(closest-side, rgba(167,179,185,0.10), rgba(167,179,185,0))' }} />
       </div>
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="bg-gray-50 border-b border-gray-50 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-[#3A6A8D] to-[#6aa5d8] tracking-tight">Your AI Guide</h1>
-              <p className="text-sm text-gray-600 mt-1">Ask anything about procedures, fees, and steps — in English or Amharic.</p>
+
+      <div className="relative z-10 flex">
+        <div
+        className={`bg-white border-r border-gray-200 transition-all duration-300 ${showHistory ? "w-80" : "w-0"} overflow-hidden`}
+        >
+          <div className="p-4 border-b border-gray-200 animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 bg-[#3a6a8d] rounded-lg flex items-center justify-center">
+                <History className="w-3.5 h-3.5 text-white" />
+              </div>
+              <h2 className="font-semibold text-[#2e4d57]">Chat History</h2>
             </div>
-            <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowHistory(!showHistory)}
-                className="border-gray-200 text-[#3A6A8D] hover:text-white bg-white hover:bg-[#3A6A8D] transition-colors rounded-full px-4"
-                title={showHistory ? 'Hide previous conversations' : 'Show previous conversations'}
-            >
-              <History className="w-4 h-4 mr-2" />
-                {showHistory ? "Hide History" : "History"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  dispatch(clearMessages());
-                  setInputMessage("");
-                  setSpeakingMessageId(null);
-                  if (typeof window !== 'undefined' && window.speechSynthesis?.speaking) {
-                    try { window.speechSynthesis.cancel(); } catch {}
-                  }
-                  if (audioRef.current && !audioRef.current.paused) {
-                    try { audioRef.current.pause(); } catch {}
-                  }
-                  setSuccessMessage('Started a new chat');
-                  setTimeout(() => setSuccessMessage(''), 2000);
-                }}
-                className="border-[#3A6A8D] text-white bg-[#3A6A8D] hover:bg-[#2d5470] rounded-full px-4"
-                title="Start a new chat"
+        </div>
+          <div className="p-4 space-y-3 max-h-[calc(100vh-80px)] overflow-y-auto">
+            {chatHistory.map((chat, idx) => (
+              <Card
+                key={chat.id}
+                className="relative overflow-hidden cursor-pointer bg-white/90 backdrop-blur-sm rounded-2xl border border-[#a7b3b9]/30 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-fade-in-up group"
+                style={{ animationDelay: `${Math.min(idx * 0.04, 0.4)}s` }}
+                onClick={() => handleChatSelect(chat.id)}
               >
-                <Plus className="w-4 h-4 mr-2" /> New Chat
-            </Button>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#a7b3b9]/5 to-[#5e9c8d]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
+                <CardContent className="relative z-10 p-3">
+                  <div className="flex items-start justify-between gap-3 mb-1.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-8 h-8 bg-[#3a6a8d]/10 rounded-xl flex items-center justify-center">
+                        <Bot className="w-4 h-4 text-[#3a6a8d]" />
+                      </div>
+                      <h3 className="font-medium text-[#2e4d57] text-sm line-clamp-1 group-hover:text-[#3a6a8d] transition-colors duration-300">
+                        {chat.title}
+                      </h3>
+                    </div>
+                    <span className="text-[10px] text-[#a7b3b9] whitespace-nowrap">{chat.messageCount} msgs</span>
+                  </div>
+                  {chat.lastMessage && (
+                    <p className="text-xs text-[#1c3b2e] mb-2 line-clamp-2">{chat.lastMessage}</p>
+                  )}
+                  <div className="flex items-center justify-between text-[11px] text-[#a7b3b9]">
+                    <div className="inline-flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" />
+                      <span>{chat.timestamp}</span>
+                    </div>
+                    <span className="hidden sm:inline text-[#a7b3b9]">Open</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+        </div>
+        </div>
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col">
+        {/* Header */}
+          <div className="bg-transparent border-b border-gray-200/50 p-6 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-extrabold text-[#2e4d57] tracking-tight">Your AI Guide</h1>
+                <p className="text-sm text-gray-600 mt-1">Ask anything about procedures, fees, and steps — in English or Amharic.</p>
+              </div>
+              <div className="inline-flex items-center gap-2 bg-[#3a6a8d]/10 backdrop-blur-sm border border-[#3a6a8d]/30 rounded-full px-3 py-2">
+                <Sparkles className="w-4 h-4 text-[#3a6a8d]" />
+                <span className="text-xs font-medium text-[#2e4d57]">AI Assistant</span>
+              </div>
             </div>
           </div>
-        </div>
         {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Subtle intro, always visible */}
-          <div className="bg-white/70 backdrop-blur rounded-xl border border-gray-200 p-4 md:p-5 shadow-sm">
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl border border-[#a7b3b9]/30 p-4 md:p-5 shadow-sm animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-full bg-[#3A6A8D] flex items-center justify-center shrink-0">
                 <Bot className="w-5 h-5 text-white" />
@@ -712,9 +734,13 @@ export default function ChatPage() {
               <Button variant="ghost" onClick={() => dispatch(clearError())} className="ml-2 text-sm">Clear</Button>
             </p>
           )} */}
-          {successMessage && <p className="text-green-500">{successMessage}</p>}
-          {messages.map((message) => (
-            <div key={message.id} className="animate-fade-in">
+          {successMessage && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-2 shadow-sm animate-fade-in-up">
+              {successMessage}
+            </div>
+          )}
+          {messages.map((message, idx) => (
+            <div key={message.id} className="animate-fade-in-up" style={{ animationDelay: `${Math.min(0.2 + idx * 0.05, 0.8)}s` }}>
               {message.type === "assistant" ? (
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0">
@@ -723,27 +749,84 @@ export default function ChatPage() {
                     </div>
                   </div>
                   <div className="flex-1 space-y-4">
-                    <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+                    <div className="group relative overflow-hidden bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-[#a7b3b9]/30 hover:shadow-xl transition-all duration-300">
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#a7b3b9]/5 to-[#5e9c8d]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
+                      <div className="relative z-10">
+                      {/* Context badges */}
+                      {(() => {
+                        const raw: unknown = message.content as unknown;
+                        const text = typeof raw === 'string' ? raw : (typeof raw === 'object' && raw && (raw as { response?: string }).response ? (raw as { response?: string }).response! : JSON.stringify(raw));
+                        const lowers = text.toLowerCase();
+                        const badges: { key: string; label: string; emoji: string }[] = [];
+                        if (/fee|cost|price|payment/.test(lowers)) badges.push({ key: 'fee', label: 'Fees', emoji: '💸' });
+                        if (/document|form|passport|id/.test(lowers)) badges.push({ key: 'doc', label: 'Documents', emoji: '📄' });
+                        if (/office|location|ministry|appointment/.test(lowers)) badges.push({ key: 'office', label: 'Office', emoji: '🏢' });
+                        if (/time|days|hours|deadline|processing/.test(lowers)) badges.push({ key: 'time', label: 'Timing', emoji: '⏱️' });
+                        if (badges.length === 0) return null;
+                        return (
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            {badges.map(b => (
+                              <span key={b.key} className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-[#3a6a8d]/10 text-[#2e4d57] border border-[#3a6a8d]/30">
+                                <span>{b.emoji}</span>
+                                <span className="font-medium">{b.label}</span>
+                              </span>
+                            ))}
+                          </div>
+                        );
+                      })()}
                       <div className="text-gray-900 prose prose-sm md:prose-base lg:prose-lg max-w-none leading-relaxed">
                         {(() => {
                           const raw: unknown = message.content as unknown;
                           const text = typeof raw === 'string' ? raw : (typeof raw === 'object' && raw && (raw as { response?: string }).response ? (raw as { response?: string }).response! : JSON.stringify(raw));
-                          return <ReactMarkdown>{String(text)}</ReactMarkdown>;
+                          return (
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                h1: ({ node, ...props }) => (
+                                  <h1 className="text-xl md:text-2xl font-bold text-[#2e4d57] mb-2" {...props} />
+                                ),
+                                h2: ({ node, ...props }) => (
+                                  <h2 className="text-lg md:text-xl font-semibold text-[#3A6A8D] mt-3 mb-1.5" {...props} />
+                                ),
+                                p: ({ node, ...props }) => (
+                                  <p className="my-2 leading-7" {...props} />
+                                ),
+                                ul: ({ node, ...props }) => (
+                                  <ul className="list-disc pl-5 space-y-1" {...props} />
+                                ),
+                                ol: ({ node, ...props }) => (
+                                  <ol className="list-decimal pl-5 space-y-1" {...props} />
+                                ),
+                                li: ({ node, ...props }) => (
+                                  <li className="marker:text-[#5e9c8d]" {...props} />
+                                ),
+                                strong: ({ node, ...props }) => (
+                                  <strong className="font-semibold text-[#2e4d57]" {...props} />
+                                ),
+                                em: ({ node, ...props }) => (
+                                  <em className="text-[#5e9c8d]" {...props} />
+                                ),
+                              }}
+                            >
+                              {`🤖 ${String(text)}`}
+                            </ReactMarkdown>
+                          );
                         })()}
                       </div>
                       <div className="flex items-center justify-between mt-4">
-                        <span className="text-xs text-gray-500">{message.timestamp}</span>
-                        <Badge variant="secondary" className="bg-green-100 text-green-700">
-                          <CheckCircle className="w-3 h-3 mr-1" />
+                        <span className="text-xs text-[#a7b3b9]">{message.timestamp}</span>
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-[#5e9c8d]/15 text-[#1c3b2e] border border-[#5e9c8d]/30 rounded-full px-2 py-1">
+                          <CheckCircle className="w-3 h-3" />
                           Verified
-                        </Badge>
+                        </span>
+                      </div>
                       </div>
                       {supportsTTS && (
                         <div className="mt-3 flex justify-end">
                           <Button
                             variant="outline"
-                            size="sm"
-                            className="border-gray-300 bg-transparent hover:bg-blue-100 hover:text-blue-700 text-xs py-1 px-2"
+                          size="sm"
+                          className="border-[#a7b3b9]/40 bg-transparent hover:bg-[#3a6a8d]/10 hover:text-[#2e4d57] text-xs py-1 px-2 rounded-xl"
                             onClick={() => speakMessage(message.content, message.id)}
                           >
                             {speakingMessageId === message.id ? (
@@ -761,7 +844,7 @@ export default function ChatPage() {
                     </div>
                     <Button
                       variant="outline"
-                      className="border-gray-300 bg-transparent hover:bg-blue-100 hover:text-blue-700 text-xs py-1 px-2"
+                      className="border-[#a7b3b9]/40 bg-transparent hover:bg-[#3a6a8d]/10 hover:text-[#2e4d57] text-xs py-1 px-2"
                       onClick={() => translateMessage(message)}
                       disabled={!!translating[message.id]}
                     >
@@ -781,22 +864,22 @@ export default function ChatPage() {
                           return (
                             <Card
                               key={procedure.id}
-                              className="bg-white border-2 border-transparent bg-gradient-to-r from-blue-50 to-indigo-50 rounded-md shadow-xs hover:shadow-sm hover:scale-102 transition-all duration-200 animate-in fade-in"
+                              className="bg-white/90 backdrop-blur-sm border border-[#a7b3b9]/30 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
                             >
-                              <CardContent className="p-2">
+                              <CardContent className="p-3">
                                 <div className="flex items-center space-x-2 mb-1.5">
-                                  <div className="w-5 h-5 bg-indigo-100 rounded-full flex items-center justify-center transform hover:scale-110 transition-transform duration-150">
-                                    <IconComponent className="w-2.5 h-2.5 text-indigo-600" />
+                                  <div className="w-5 h-5 bg-[#3a6a8d]/10 rounded-full flex items-center justify-center">
+                                    <IconComponent className="w-2.5 h-2.5 text-[#3a6a8d]" />
                                   </div>
-                                  <h3 className="font-medium text-gray-900 text-xs font-sans">
+                                  <h3 className="font-medium text-[#2e4d57] text-xs font-sans">
                                     Procedure {procedure.id}: {procedure.title}
                                   </h3>
                                 </div>
                                 <ul className="space-y-0.5 ml-7">
                                   {procedure.items.length > 0 ? (
                                     procedure.items.map((item, index) => (
-                                      <li key={index} className="text-gray-700 text-[0.65rem] font-sans flex items-start">
-                                        <span className="w-0.75 h-0.75 bg-indigo-400 rounded-full mt-1 mr-1.5 flex-shrink-0"></span>
+                                      <li key={index} className="text-[#1c3b2e] text-[0.65rem] font-sans flex items-start">
+                                        <span className="w-1 h-1 bg-[#3a6a8d] rounded-full mt-1 mr-1.5 flex-shrink-0"></span>
                                         {item}
                                       </li>
                                     ))
@@ -806,7 +889,7 @@ export default function ChatPage() {
                                 </ul>
                                 <div className="flex flex-wrap gap-1.5 pt-2">
                                   <Button
-                                    className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white text-[0.65rem] font-sans py-0.5 px-1.5 rounded-md transform hover:scale-105 transition-transform duration-150"
+                                    className="bg-[#3A6A8D] hover:bg-[#2d5470] text-white text-[0.65rem] font-sans py-0.5 px-1.5 rounded-md"
                                     onClick={async () => {
                                       try {
                                         await createChecklist({ procedureId: String(procedure.id), token: session?.accessToken || undefined }).unwrap()
@@ -822,7 +905,7 @@ export default function ChatPage() {
                                   </Button>
                                   <Button
                                     variant="outline"
-                                    className="border-indigo-300 bg-transparent hover:bg-indigo-100 hover:text-indigo-700 text-[0.65rem] font-sans py-0.5 px-1.5 rounded-md transform hover:scale-105 transition-transform duration-150"
+                                    className="border-[#a7b3b9]/40 bg-transparent hover:bg-[#3a6a8d]/10 hover:text-[#2e4d57] text-[0.65rem] font-sans py-0.5 px-1.5 rounded-md"
                                   >
                                     <Play className="w-2.5 h-2.5 mr-1" />
                                     Procedure
@@ -838,13 +921,13 @@ export default function ChatPage() {
                 </div>
               ) : (
                 <div className="flex items-start space-x-3 justify-end">
-                  <div className="bg-[#3A6A8D] text-white rounded-lg p-4 max-w-md shadow-sm">
-                    <p className="text-sm font-sans">{message.content}</p>
-                    <span className="text-xs text-gray-200 mt-2 block">{message.timestamp}</span>
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 max-w-md shadow-sm border border-[#a7b3b9]/30">
+                    <p className="text-sm font-sans text-[#2e4d57]">{message.content}</p>
+                    <span className="text-xs text-[#a7b3b9] mt-2 block">{message.timestamp}</span>
                   </div>
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-gray-600" />
+                    <div className="w-8 h-8 bg-[#3a6a8d]/10 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-[#3a6a8d]" />
                     </div>
                   </div>
                 </div>
@@ -860,8 +943,10 @@ export default function ChatPage() {
           )}
         </div>
         {/* Input Area */}
-        <div className="bg-gray-50 p-4">
-          <div className="flex items-center space-x-3 max-w-4xl mx-auto">
+        <div className="bg-transparent border-t border-gray-200/50 p-4 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="max-w-4xl mx-auto flex flex-col gap-3">
+            {/* Row 1: input controls */}
+            <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="sm"
@@ -896,7 +981,7 @@ export default function ChatPage() {
             >
               {voiceLang.startsWith('am') ? 'AM' : 'EN'}
             </Button>
-            <div className="flex-1 bg-white rounded-full px-4 py-3 shadow-sm border border-[#3A6A8D] focus-within:ring-2 focus-within:ring-[#3A6A8D] focus-within:border-transparent">
+            <div className="flex-1 bg-white rounded-full px-4 py-3 shadow-sm border border-gray-200 focus-within:ring-2 focus-within:ring-[#3A6A8D]/50 focus-within:border-transparent">
               <input
                 type="text"
                 value={inputMessage}
@@ -913,9 +998,42 @@ export default function ChatPage() {
             >
               <Send className="w-4 h-4" />
             </Button>
+            </div>
+            {/* Row 2: History + New, placed below */}
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowHistory(!showHistory)}
+                className="border-[#3a6a8d]/30 bg-white hover:bg-[#3a6a8d]/10 text-[#2e4d57] rounded-xl px-3 py-2 transition-all duration-300 hover:scale-105 shadow-sm"
+                title={showHistory ? 'Hide previous conversations' : 'Show previous conversations'}
+              >
+                <History className="w-4 h-4 mr-1.5 text-[#3a6a8d]" />
+                {showHistory ? 'Hide' : 'History'}
+              </Button>
+              <Button
+                onClick={() => {
+                  dispatch(clearMessages());
+                  setInputMessage("");
+                  setSpeakingMessageId(null);
+                  if (typeof window !== 'undefined' && window.speechSynthesis?.speaking) {
+                    try { window.speechSynthesis.cancel(); } catch {}
+                  }
+                  if (audioRef.current && !audioRef.current.paused) {
+                    try { audioRef.current.pause(); } catch {}
+                  }
+                  setSuccessMessage('Started a new chat');
+                  setTimeout(() => setSuccessMessage(''), 2000);
+                }}
+                className="bg-[#3a6a8d] hover:bg-[#2d5470] text-white rounded-xl px-3 py-2 transition-all duration-300 hover:scale-105 shadow-sm"
+                title="Start a new chat"
+              >
+                <Plus className="w-4 h-4 mr-1.5" /> New
+              </Button>
+            </div>
             {/* Hidden audio element for cloud TTS playback */}
             <audio ref={audioRef} hidden />
           </div>
+        </div>
         </div>
       </div>
     </div>
