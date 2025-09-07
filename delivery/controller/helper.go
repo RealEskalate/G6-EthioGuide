@@ -10,7 +10,7 @@ import (
 )
 
 func HandleError(c *gin.Context, err error) {
-	log.Panicf("Error %v\n", err)
+	log.Printf("Error: %v\n", err)
 	switch {
 	// --- 400 Bad Request ---
 	// Catch specific validation errors first
@@ -45,7 +45,6 @@ func HandleError(c *gin.Context, err error) {
 	case errors.Is(err, domain.ErrUserNotFound),
 		errors.Is(err, domain.ErrNotFound):
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-	// Add other "not found" errors here if you have them (e.g., domain.ErrBlogNotFound)
 
 	// --- 409 Conflict ---
 	case errors.Is(err, domain.ErrEmailExists),
@@ -53,6 +52,10 @@ func HandleError(c *gin.Context, err error) {
 		errors.Is(err, domain.ErrPhoneNumberExists),
 		errors.Is(err, domain.ErrConflict):
 		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+
+	// --- 502 Bad Gateway ---
+	case errors.Is(err, domain.ErrTranslationMismatch):
+		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
 
 	// --- 500 Internal Server Error (Default) ---
 	default:

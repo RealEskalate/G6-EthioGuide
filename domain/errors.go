@@ -40,6 +40,7 @@ var (
 	ErrInvalidQueryParam   = errors.New("invalid query parameter")
 	ErrInvalidIDFormat     = errors.New("invalid ID format")
 	ErrEmptyParamField     = errors.New("empty parameter field")
+	ErrTranslationMismatch = errors.New("translation mismatch")
 
 	//Database errors
 	ErrUnableToEnterData  = errors.New("unable to enter data into database")

@@ -105,18 +105,24 @@ func (g *geminiUseCase) TranslateJSON(ctx context.Context, data map[string]inter
 	}
 
 	// === Translate in a single batch call ===
-	const separator = "|||"
+	const separator = "<!--EthioGuideTranslationSeparator-->"
 	contentToTranslate := strings.Join(originals, separator)
 
 	prompt := fmt.Sprintf(`
-	You are an expert JSON translator. Translate each text segment separated by "%s" into the language with code '%s'.
-	- IMPORTANT: Preserve the "%s" separator between each translated segment in your response.
-	- Do not alter the number of segments.
-	- Do not add any introductory text, explanations, or markdown formatting. Your response must only contain the translated segments joined by the separator.
-	
-	Here is the text to translate:
-	%s
-	`, separator, targetLang, separator, contentToTranslate)
+You are a machine that translates text segments.
+You will be given a block of text containing one or more segments separated by "%s".
+Translate each segment into the language with the code '%s'.
+Your response MUST contain the exact same number of "%s" separators as the input.
+Do not add or remove separators.
+Do not add any introductory text, explanations, markdown, or any text other than the translated segments and their separators.
+
+Example:
+Input Text: "Hello world|||How are you?"
+Your Response for target language 'fr': "Bonjour le monde|||Comment ça va?"
+
+Now, perform the translation for the following text:
+%s
+`, separator, targetLang, separator, separator, contentToTranslate)
 
 	translatedBlock, err := g.geminiServices.GenerateCompletion(ctx, prompt)
 	if err != nil {
@@ -125,7 +131,7 @@ func (g *geminiUseCase) TranslateJSON(ctx context.Context, data map[string]inter
 
 	translatedParts := strings.Split(translatedBlock, separator)
 	if len(translatedParts) != len(originals) {
-		return nil, fmt.Errorf("translation mismatch: expected %d parts, got %d. AI failed to follow instructions", len(originals), len(translatedParts))
+		return nil, fmt.Errorf("%w: expected %d parts, got %d. AI failed to follow instructions", domain.ErrTranslationMismatch, len(originals), len(translatedParts))
 	}
 
 	translationMap := make(map[string]string)
