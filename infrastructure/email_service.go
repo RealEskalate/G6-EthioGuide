@@ -96,7 +96,7 @@ func (s *SmtpEmailService) send(to, subject, templateFile string, data interface
 	m.SetHeader("From", s.from)
 	m.SetHeader("To", to)
 	m.SetHeader("Subject", subject)
-	m.SetBody("text/html", body.String())
+	m.SetBody("text/html", body.String(), gomail.SetPartEncoding(gomail.Unencoded))
 
 	// Best Practice: Add a plain text alternative for clients that don't render HTML
 	if d, ok := data.(emailData); ok {
@@ -105,7 +105,7 @@ func (s *SmtpEmailService) send(to, subject, templateFile string, data interface
 			d.Username,
 			d.ActionURL,
 		)
-		m.AddAlternative("text/plain", plainTextBody)
+		m.AddAlternative("text/plain", plainTextBody, gomail.SetPartEncoding(gomail.Unencoded))
 	}
 
 	return s.dialer.DialAndSend(m)
