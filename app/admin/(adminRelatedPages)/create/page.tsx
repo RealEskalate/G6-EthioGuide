@@ -33,7 +33,7 @@ export default function RegisterOrganization() {
       });
 
       if (res.status === 201 || res.status === 200) {
-        setMessage("✅ Organization created successfully.");
+        setMessage("Organization created successfully.");
         setEmail("");
         setName("");
         setType("");
@@ -41,10 +41,10 @@ export default function RegisterOrganization() {
         const text = await res.text();
         setMessage(`⚠️ ${text || "Invalid request."}`);
       } else {
-        setMessage("❌ Something went wrong. Try again later.");
+        setMessage(" Something went wrong. Try again later.");
       }
-    } catch (err) {
-      setMessage("❌ Network error. Please try again.");
+    } catch (e) {
+      setMessage(` Network error. Please try again. ${e}`);
     } finally {
       setLoading(false);
     }
