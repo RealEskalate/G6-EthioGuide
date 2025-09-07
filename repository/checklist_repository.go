@@ -66,6 +66,7 @@ func (cr *ChecklistRepository) CreateChecklist(ctx context.Context, userid, proc
 	doc := &UserProcedureModel{
 		UserID:      objuserID,
 		ProcedureID: objID,
+		Status:      "Not Started",
 		Percent:     0,
 		UpdatedAt:   time.Now(),
 	}
