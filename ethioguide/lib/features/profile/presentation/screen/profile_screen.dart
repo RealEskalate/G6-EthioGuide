@@ -1,3 +1,4 @@
+import 'package:ethioguide/core/components/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -16,7 +17,8 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       // Use GetIt to create the ProfileBloc and add the initial event to fetch data
-      create: (context) => GetIt.instance<ProfileBloc>()..add(FetchProfileData()),
+      create: (context) =>
+          GetIt.instance<ProfileBloc>()..add(FetchProfileData()),
       child: const ProfileView(),
     );
   }
@@ -24,6 +26,7 @@ class ProfileScreen extends StatelessWidget {
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
+  final int pageIndex = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +42,18 @@ class ProfileView extends StatelessWidget {
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('My Profile', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 20)),
-            Text('Manage your account information', style: TextStyle(color: Colors.grey, fontSize: 14)),
+            Text(
+              'My Profile',
+              style: TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+            Text(
+              'Manage your account information',
+              style: TextStyle(color: Colors.grey, fontSize: 14),
+            ),
           ],
         ),
         actions: [
@@ -70,7 +83,10 @@ class ProfileView extends StatelessWidget {
           }
           if (state.status == ProfileStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage), backgroundColor: Colors.red),
+              SnackBar(
+                content: Text(state.errorMessage),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         },
@@ -85,6 +101,10 @@ class ProfileView extends StatelessWidget {
           // Show an empty state or an error message if the user is null
           return const Center(child: Text('Could not load profile.'));
         },
+      ),
+      bottomNavigationBar: bottomNav(
+        context: context,
+        selectedIndex: pageIndex,
       ),
     );
   }
@@ -135,7 +155,10 @@ class _ProfileHeaderCard extends StatelessWidget {
                 radius: 50,
                 backgroundColor: AppColors.darkGreenColor,
                 // Display the user's initials as a fallback
-                child: Text(user.initials, style: const TextStyle(fontSize: 40, color: Colors.white)),
+                child: Text(
+                  user.initials,
+                  style: const TextStyle(fontSize: 40, color: Colors.white),
+                ),
                 // TODO: Add logic to show user.profilePicture if it's not null
               ),
               Positioned(
@@ -144,17 +167,28 @@ class _ProfileHeaderCard extends StatelessWidget {
                 child: CircleAvatar(
                   backgroundColor: Colors.grey[300],
                   child: IconButton(
-                    icon: const Icon(Icons.camera_alt_outlined, color: Colors.black54),
-                    onPressed: () { /* TODO: Implement image picker */ },
+                    icon: const Icon(
+                      Icons.camera_alt_outlined,
+                      color: Colors.black54,
+                    ),
+                    onPressed: () {
+                      /* TODO: Implement image picker */
+                    },
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          Text(user.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          Text(
+            user.name,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
-          Text('Member since $memberSince', style: const TextStyle(color: Colors.grey, fontSize: 14)),
+          Text(
+            'Member since $memberSince',
+            style: const TextStyle(color: Colors.grey, fontSize: 14),
+          ),
         ],
       ),
     );
@@ -179,10 +213,18 @@ class _PersonalInfoCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Personal Information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Personal Information',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               IconButton(
-                icon: const Icon(Icons.edit_outlined, color: AppColors.darkGreenColor),
-                onPressed: () { /* TODO: Implement edit profile navigation */ },
+                icon: const Icon(
+                  Icons.edit_outlined,
+                  color: AppColors.darkGreenColor,
+                ),
+                onPressed: () {
+                  /* TODO: Implement edit profile navigation */
+                },
               ),
             ],
           ),
@@ -192,7 +234,7 @@ class _PersonalInfoCard extends StatelessWidget {
           _InfoRow(label: 'Email Address', value: user.email),
           const Divider(height: 32),
           // TODO: Add the real phone number when available
-          _InfoRow(label: 'Phone Number', value: '+251 91 123 4567'), 
+          _InfoRow(label: 'Phone Number', value: '+251 91 123 4567'),
         ],
       ),
     );
@@ -211,7 +253,10 @@ class _InfoRow extends StatelessWidget {
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
       ],
     );
   }

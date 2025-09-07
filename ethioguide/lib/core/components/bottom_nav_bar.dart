@@ -80,7 +80,7 @@ Widget bottomNav({required BuildContext context, required selectedIndex}) {
             break;
           case 3:
             if (index != selectedIndex) {
-              // context.goNamed(RouteNames)
+              context.goNamed(RouteNames.profile);
             }
             break;
         }
