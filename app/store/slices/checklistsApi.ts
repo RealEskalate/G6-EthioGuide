@@ -1,11 +1,11 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
-import type {
-  UserProcedureChecklist,
-  CreateChecklistResponse,
-  GetMyProceduresResponse,
-  GetChecklistItemsResponse,
-} from "@/app/types/checklist";
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+// import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import type { 
+  UserProcedureChecklist, 
+  CreateChecklistResponse, 
+  // GetMyProceduresResponse, 
+  GetChecklistItemsResponse 
+} from '@/app/types/checklist'
 
 type UnknownRecord = Record<string, unknown>;
 

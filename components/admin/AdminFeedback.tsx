@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   Table,
   TableBody,
@@ -10,215 +10,176 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { FaThumbsUp, FaEye, FaReply, FaCheck } from "react-icons/fa";
-import Feedback from "@/types/feedback";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import Pagination from "../shared/pagination";
 
-const feedbackData = [
-  {
-    id: 1,
-    feedback:
-      "The visa application process is too complicated and takes forever...",
-    detail: "User feedback regarding processing delays",
-    procedure: "Visa Application",
-    date: "Jan 15, 2025",
-    upvotes: 12,
-    status: "New",
-  },
-  {
-    id: 2,
-    feedback:
-      "Great improvement in the online portal! Much easier to navigate now.",
-    detail: "Positive feedback on system updates",
-    procedure: "Work Permit",
-    date: "Jan 14, 2025",
-    upvotes: 8,
-    status: "Reviewed",
-  },
-  {
-    id: 3,
-    feedback: "Document requirements are unclear. Need better guidelines.",
-    detail: "Suggestion for documentation improvement",
-    procedure: "Citizenship",
-    date: "Jan 13, 2025",
-    upvotes: 5,
-    status: "Action Taken",
-  },
-];
+import { Eye, Reply, Check, ThumbsUp } from "lucide-react";
+
+// type for feedback coming from API
+type Feedback = {
+  id: string;
+  content: string;
+  procedure_id: string;
+  created_at: string;
+  like_count: number;
+  status: string;
+  type: string;
+};
 
 export default function AdminFeedback() {
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [search, setSearch] = useState("");
-  const [filteredFeedback, setFilteredFeedback] = useState<Feedback[]>(feedbackData);
-  // setFilteredFeedback(feedbackData);
-  //   feedbackData.filter((item) =>
-  //     item.feedback.toLowerCase().includes(search.toLowerCase())
-  //   )
-  // );
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [limit, setLimit] = useState(5);
+  const [loading, setLoading] = useState(false);
+
+  const { data: session } = useSession();
+  const token = session?.accessToken;
+
+  // 🔥 fetch feedback from API
+  useEffect(() => {
+    async function fetchFeedback() {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `https://ethio-guide-backend.onrender.com/api/v1/feedback?page=${page}&limit=${limit}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) throw new Error("Failed to fetch feedback");
+
+        const data = await res.json();
+        setFeedbacks(data.feedbacks.feedbacks);
+        setTotal(data.feedbacks.total);
+        setLimit(data.feedbacks.limit);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (token) fetchFeedback();
+  }, [page, limit, token]);
+
+  // ✅ filter feedback by search
+  const filtered = feedbacks.filter((f) =>
+    f.content.toLowerCase().includes(search.toLowerCase())
+  );
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "New":
-        return <Badge className="bg-blue-100 text-primary">New</Badge>;
-      case "Reviewed":
-        return (
-          <Badge className="bg-yellow-100 text-yellow-600">Reviewed</Badge>
-        );
-      case "Action Taken":
-        return (
-          <Badge className="bg-green-100 text-secondary">Action Taken</Badge>
-        );
+      case "new":
+        return <Badge className="bg-blue-100 text-blue-700">New</Badge>;
+      case "reviewed":
+        return <Badge className="bg-yellow-100 text-yellow-700">Reviewed</Badge>;
+      case "declined":
+        return <Badge className="bg-red-100 text-red-700">Declined</Badge>;
+      case "resolved":
+        return <Badge className="bg-green-100 text-green-700">Resolved</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
+  const totalPages = Math.ceil(total / limit);
+
   return (
     <div className="p-6 text-primary-dark">
-      {/* Header */}
-      <h1 className="text-2xl font-bold">Feedback</h1>
-      <p className="text-sm text-muted-foreground mb-6">
-        Manage and respond to user feedback for your procedures
-      </p>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">User Feedback</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Manage and respond to feedback submitted for your procedures
+          </p>
+        </CardHeader>
+        <CardContent>
+          {/* Search Bar */}
+          <div className="flex gap-4 mb-6">
+            <Input
+              placeholder="Search feedback..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
 
-      {/* Filters */}
-      <div className="flex gap-4 mb-6">
-        <Input
-          placeholder="Search feedback..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Select>
-          <SelectTrigger className="w-[280px]">
-            <SelectValue placeholder="All Procedures" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Procedures</SelectItem>
-            <SelectItem value="visa">Visa Application</SelectItem>
-            <SelectItem value="work">Work Permit</SelectItem>
-            <SelectItem value="citizenship">Citizenship</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select>
-          <SelectTrigger className="w-[250px]">
-            <SelectValue placeholder="All Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="new">New</SelectItem>
-            <SelectItem value="reviewed">Reviewed</SelectItem>
-            <SelectItem value="action">Action Taken</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select>
-          <SelectTrigger className="w-[250px]">
-            <SelectValue placeholder="Sort by Date" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Newest</SelectItem>
-            <SelectItem value="oldest">Oldest</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          {/* Table */}
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Feedback</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Upvotes</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  [...Array(limit)].map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell colSpan={5}>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : filtered.length > 0 ? (
+                  filtered.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="max-w-xs">
+                        <p className="font-medium">{item.content}</p>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(item.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="flex items-center gap-2">
+                        <ThumbsUp size={16} /> {item.like_count}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(item.status)}</TableCell>
+                      <TableCell className="flex gap-3 justify-end text-gray-600">
+                        <Eye className="cursor-pointer hover:text-primary" />
+                        <Reply className="cursor-pointer hover:text-primary" />
+                        <Check className="cursor-pointer hover:text-primary" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">
+                      No feedback found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
-      {/* Table */}
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Feedback</TableHead>
-              <TableHead>Procedure</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Upvotes</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredFeedback.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>
-                  <p className="font-medium">{item.feedback}</p>
-                  <p className="text-sm text-muted-foreground text-neutral">
-                    {item.detail}
-                  </p>
-                </TableCell>
-                <TableCell className="text-secondary-dark">
-                  {item.procedure}
-                </TableCell>
-                <TableCell className="text-neutral">{item.date}</TableCell>
-                <TableCell className="flex items-center gap-2 text-secondary-light">
-                  <FaThumbsUp /> {item.upvotes}
-                </TableCell>
-                <TableCell>
-                  <Select
-                    defaultValue={item.status.toLowerCase()} // make sure value matches option keys
-                    onValueChange={(newStatus) => {
-                      setFilteredFeedback((prev) =>
-                        prev.map((f) =>
-                          f.id === item.id ? { ...f, status: newStatus } : f
-                        )
-                      );
-                    }}
-                  >
-                    <SelectTrigger className="w-[280px]">
-                      <SelectValue>{getStatusBadge(item.status)}</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="inaccuracy">Inaccuracy</SelectItem>
-                      <SelectItem value="missing">Missing</SelectItem>
-                      <SelectItem value="outdated">Outdated</SelectItem>
-                      <SelectItem value="thanks">Thanks</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell className="flex gap-3 justify-end text-gray-600">
-                  <FaEye className="cursor-pointer" />
-                  <FaReply className="cursor-pointer" />
-                  <FaCheck className="cursor-pointer" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-4">
-        <p className="text-sm text-muted-foreground">
-          Showing 1 to {filteredFeedback.length} of {feedbackData.length}{" "}
-          results
-        </p>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious href="#" />
-            </PaginationItem>
-            <PaginationItem>
-              <Button variant="outline" size="sm">
-                1
-              </Button>{" "}
-              {/*need to add a state to manage page number here*/}
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+          {/* Pagination */}
+          {/* <div className="flex justify-between items-center mt-4"> */}
+            {/* <p className="text-sm text-muted-foreground">
+              Showing {(page - 1) * limit + 1} to{" "}
+              {Math.min(page * limit, total)} of {total} results
+            </p> */}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          {/* </div> */}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -16,16 +16,20 @@ const page = async () => {
     throw new Error("Failed to fetch data");
   }
 
-  const data = await res.json(); 
+  const data = await res.json();
   const data2 = await res2.json();
 
   // console.log("Fetched procedures:", data.pagination);
-  // console.log("Fetched notices:", data2.total);
+  console.log("Fetched notices:", data2);
   const total = data.pagination.total;
   const totalNotices = data2.total;
 
-  // const total = 
-  return <AdminDashboard totalNotices={totalNotices} totalProcedures={total} />;
+  // const total = data.pagination.total;
+  return (
+    <>
+      <AdminDashboard totalNotices={totalNotices} totalProcedures={total} />
+    </>
+  );
 };
 
 export default page;

@@ -1,202 +1,359 @@
+// "use client";
+// import { useState } from "react";
+// import { Card, CardContent } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
+// import { Separator } from "@/components/ui/separator";
+// import { LogOut, Trash2 } from "lucide-react";
+// import { FaCrown } from "react-icons/fa";
+// import rickProfile from "@/public/images/rickProfile.webp";
+// import PasswordInputBox from "@/components/admin/PasswordInputBox";
+// import { FaCamera } from "react-icons/fa6";
+// import Image from "next/image";
+
+// export default function AccountSettingsPage() {
+//   const [fullName, setFullName] = useState("Sarah Johnson");
+//   const [email, setEmail] = useState("sarah.johnson@email.com");
+//   const [currentPassword, setCurrentPassword] = useState("");
+//   const [newPassword, setNewPassword] = useState("");
+//   const [confirmPassword, setConfirmPassword] = useState("");
+
+//   const userInfo = {
+//     fullName: "Sarah Johnson",
+//     email: "sarah.johnson@email.com",
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gray-50 flex justify-center py-10 px-4 text-primary-dark">
+//       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+//         {/* Left side */}
+//         <div className="lg:col-span-2 space-y-6">
+//           {/* Profile Section */}
+//           <Card className="border-neutral-100">
+//             <CardContent className="relative flex items-center gap-4 p-6">
+//               <Image
+//                 src={rickProfile}
+//                 alt="Profile"
+//                 width={80}
+//                 height={80}
+//                 className="w-20 h-20 rounded-full object-cover"
+//                 priority
+//               />
+//               {/* change profile picture btn  */}
+//               <Button className="size-7 absolute bottom-5 left-20 bg-primary rounded-full"><FaCamera className="text-white size-3"/></Button>
+//               <div>
+//                 <h2 className="text-xl font-semibold">{userInfo.fullName}</h2>
+//                 <p className="text-sm text-gray-500">{userInfo.email}</p>
+//                 <span className="inline-flex items-center 
+//                 p-1 text-secondary px-3 bg-secondary-light rounded-2xl bg-opacity-20 text-sm mt-1">
+//                   <FaCrown size={16} className="mr-1" /> Admin Status
+//                 </span>
+//               </div>
+//             </CardContent>
+//           </Card>
+
+//           {/* Account Settings */}
+//           <Card className="border-neutral-100">
+//             <CardContent className="p-6 space-y-6">
+//               <h3 className="text-lg font-semibold">Account Settings</h3>
+
+//               {/* Personal Information */}
+//               <div className="space-y-4">
+//                 <h4 className="font-medium">Personal Informaion</h4>
+//                 <div>
+//                   <Label htmlFor="fullName" className="text-neutral-dark  ">
+//                     Full Name
+//                   </Label>
+//                   <Input
+//                     id="fullName"
+//                     value={fullName}
+//                     onChange={(e) => setFullName(e.target.value)}
+//                   />
+//                 </div>
+//                 <div>
+//                   <Label htmlFor="email" className="text-neutral-dark  ">
+//                     Email
+//                   </Label>
+//                   <Input
+//                     id="email"
+//                     type="email"
+//                     value={email}
+//                     onChange={(e) => setEmail(e.target.value)}
+//                   />
+//                 </div>
+//                 <div className="flex gap-3">
+//                   <Button className="text-white">Save Changes</Button>
+//                   <Button variant="outline">Cancel</Button>
+//                 </div>
+//               </div>
+
+//               <Separator />
+
+//               {/* Change Password */}
+//               <div className="space-y-4">
+//                 <h4 className="font-medium">Change Password</h4>
+//                 <PasswordInputBox label="Current Password" value={currentPassword} setPass={setCurrentPassword} placeHolder="Enter your current password" />
+//                 <PasswordInputBox label="New Password" value={newPassword} setPass={setNewPassword} placeHolder="Enter your new password" />
+//                 <PasswordInputBox label="Confirm New Password" value={confirmPassword} setPass={setConfirmPassword} placeHolder="Enter your new password" />
+
+//                 <Button className="bg-primary text-white">
+//                   Update Password
+//                 </Button>
+//               </div>
+//             </CardContent>
+//           </Card>
+//         </div>
+
+//         {/* Right side */}
+//         <div className="space-y-6">
+//           {/* Subscription Plan */}
+//           {/* <Card className="border-neutral-100">
+//             <CardContent className="p-6">
+//               <h3 className="font-semibold mb-2">Subscription Plan</h3>
+//               <div className="relative bg-gradient-to-r from-primary-light to-secondary-light text-white p-4 rounded-xl">
+//                 <h4 className="font-bold">Premium Plan</h4>
+//                 <p>$29/month</p>
+//                 <span><FaCrown className="text-3xl absolute right-5 top-5"/></span>
+//               </div>
+//               <ul className="mt-4 text-sm text-gray-600 space-y-2">
+//                 <li className="flex justify-between">
+//                   All Chat Access:{" "}
+//                   <span className="font-medium">Unlimited</span>
+//                 </li>
+//                 <li className="flex justify-between">
+//                   Document Storage: <span className="font-medium">50GB</span>
+//                 </li>
+//                 <li className="flex items-center gap-1 justify-between">
+//                   Priority Support{" "}
+//                   <CheckCircle size={16} className="text-green-500" />
+//                 </li>
+//               </ul>
+//             </CardContent>
+//           </Card> */}
+
+//           {/* Logout + Delete */}
+//           <div className="space-y-3">
+//             <Button
+//               variant="outline"
+//               className="w-full flex items-center justify-center gap-2 border-neutral-200"
+//             >
+//               <LogOut size={16} /> Logout
+//             </Button>
+//             <Button
+//               variant="ghost"
+//               className="w-full text-red-600 hover:text-red-700 flex items-center justify-center gap-2"
+//             >
+//               <Trash2 size={16} /> Delete Account
+//             </Button>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
 "use client";
 
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from 'react-redux';
+import { useSession } from "next-auth/react"; 
+import { RootState, AppDispatch } from '@/app/store/store';
+import { fetchUserProfile, updateUserProfile, updatePassword, clearPasswordStatus } from '@/app/store/slices/userSlice';
 
-export default function OrganizationSettings() {
-  // Example state, replace with actual data/fetch logic
-  const [orgName, setOrgName] = useState("Tech Solutions Inc.");
-  const [contactPerson, setContactPerson] = useState("John Smith");
-  const [email, setEmail] = useState("contact@techsolutions.com");
-  const [city, setCity] = useState("San Francisco");
-  const [subCity, setSubCity] = useState("Downtown");
-  const [woreda, setWoreda] = useState("District 1");
-  const [fullAddress, setFullAddress] = useState("123 Tech Street, Suite 456, San Francisco, CA 94105");
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { LogOut, Trash2 } from "lucide-react";
+import { FaCrown } from "react-icons/fa";
+import rickProfile from "@/public/images/rickProfile.webp"; 
+
+import PasswordInputBox from "@/components/admin/PasswordInputBox";
+import { FaCamera } from "react-icons/fa6";
+import Image from "next/image";
+
+export default function AccountSettingsPage() {
+  const dispatch: AppDispatch = useDispatch();
+  const { data: session, status } = useSession();
+  const { profile, profileStatus, profileError, passwordStatus, passwordError } = useSelector((state: RootState) => state.user);
+
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [profileSuccessMessage, setProfileSuccessMessage] = useState(""); 
+
+  useEffect(() => {
+    const token = session?.accessToken;
+    if (status === 'authenticated' && token) {
+      dispatch(fetchUserProfile(token));
+    }
+  }, [dispatch, session, status]);
+
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.name);
+      setUsername(profile.username);
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (passwordStatus === 'succeeded') {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => dispatch(clearPasswordStatus()), 3000); // Clear password status after 3 seconds
+    }
+  }, [passwordStatus, dispatch]);
+
+  const handleSaveChanges = () => {
+    const token = session?.accessToken;
+    if (token) {
+      const profileData = { name: fullName, userDetail: { username } };
+      dispatch(updateUserProfile({ profileData, token })).then((result) => {
+        if (result.meta.requestStatus === "fulfilled") {
+          setProfileSuccessMessage("Profile updated successfully!");
+          setTimeout(() => setProfileSuccessMessage(""), 3000); // Clear message after 3 seconds
+        }
+      });
+    }
+  };
+
+  const handleUpdatePassword = () => {
+    const token = session?.accessToken;
+    if (newPassword !== confirmPassword) {
+      console.error("New passwords do not match");
+      dispatch(clearPasswordStatus()); // Clear any previous password status
+      return;
+    }
+    if (token) {
+      const passwordData = { old_password: currentPassword, new_password: newPassword };
+      dispatch(updatePassword({ passwordData, token }));
+    }
+  };
+
+  if (status === "loading" || (profileStatus === 'loading' && !profile)) {
+    return <div>Loading...</div>;
+  }
+
+  if (status === "unauthenticated") {
+    return <div>Please sign in to view your account settings.</div>
+  }
+  
+  if (!profile) {
+    return <div>Could not load profile. Please try again later.</div>;
+  }
 
   return (
-    <div className="min-h-screen bg-[#f7fafd] flex flex-row">
-      {/* Sidebar */}
-      <aside className="w-[300px] bg-white rounded-xl shadow p-8 flex flex-col items-center mt-8 ml-8 h-fit">
-        <div className="flex flex-col items-center mb-8">
-          <div className="bg-[#eaf2f7] rounded-full p-4 mb-2">
-            {/* Icon placeholder */}
-            <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
-              <path fill="#2d5c7f" d="M12 2C7.03 2 3 6.03 3 11c0 4.97 4.03 9 9 9s9-4.03 9-9c0-4.97-4.03-9-9-9Zm0 16c-3.87 0-7-3.13-7-7 0-3.87 3.13-7 7-7s7 3.13 7 7c0 3.87-3.13 7-7 7Z"/>
-              <circle cx="12" cy="11" r="3" fill="#2d5c7f"/>
-            </svg>
-          </div>
-          <div className="font-semibold text-lg text-[#2d5c7f]">{orgName}</div>
-          <Badge variant="secondary" className="mt-1 text-xs bg-[#eaf2f7] text-[#2d5c7f] px-3 py-1 rounded">{`Organization ID: ORG-2024-001`}</Badge>
+    <div className="min-h-screen bg-gray-50 flex justify-center py-10 px-4 text-primary-dark">
+      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left side */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Profile Section */}
+          <Card className="border-neutral-100">
+            <CardContent className="relative flex items-center gap-4 p-6">
+              <Image
+                src={profile.profile_picture || rickProfile}
+                alt="Profile"
+                width={80}
+                height={80}
+                className="w-20 h-20 rounded-full object-cover"
+                priority
+              />
+              <Button className="size-7 absolute bottom-5 left-20 bg-primary rounded-full"><FaCamera className="text-white size-3"/></Button>
+              <div>
+                <h2 className="text-xl font-semibold">{profile.name}</h2>
+                <p className="text-sm text-gray-500">{profile.email}</p>
+                {profile.role !== 'user' && (
+                  <span className="inline-flex items-center p-1 text-secondary px-3 bg-secondary-light rounded-2xl bg-opacity-20 text-sm mt-1">
+                    <FaCrown size={16} className="mr-1" /> Oranizaional Manager 
+                  </span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Account Settings */}
+          <Card className="border-neutral-100">
+            <CardContent className="p-6 space-y-6">
+              <h3 className="text-lg font-semibold">Account Settings</h3>
+
+              {/* Personal Information */}
+              <div className="space-y-4">
+                <h4 className="font-medium">Personal Information</h4>
+                <div>
+                  <Label htmlFor="fullName" className="text-neutral-dark">Full Name</Label>
+                  <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                </div>
+                <div>
+                  <Label htmlFor="username" className="text-neutral-dark">Username</Label>
+                  <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                </div>
+                <div>
+                  <Label htmlFor="email" className="text-neutral-dark">Email</Label>
+                  <Input id="email" type="email" value={profile.email} disabled />
+                </div>
+                <div className="flex gap-3">
+                  <Button className="text-white" onClick={handleSaveChanges} disabled={profileStatus === 'loading'}>
+                    {profileStatus === 'loading' ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                  <Button variant="outline">Cancel</Button>
+                </div>
+                {profileError && <p className="text-red-500 mt-2">{profileError}</p>}
+                {profileSuccessMessage && <p className="text-green-500 mt-2">{profileSuccessMessage}</p>}
+              </div>
+
+              <Separator />
+
+              {/* Change Password */}
+              <div className="space-y-4">
+                <h4 className="font-medium">Change Password</h4>
+                <PasswordInputBox label="Current Password" value={currentPassword} setPass={setCurrentPassword} placeHolder="Enter your current password" />
+                <PasswordInputBox label="New Password" value={newPassword} setPass={setNewPassword} placeHolder="Enter your new password" />
+                <PasswordInputBox label="Confirm New Password" value={confirmPassword} setPass={setConfirmPassword} placeHolder="Enter your new password" />
+                <Button className="bg-primary text-white" onClick={handleUpdatePassword} disabled={passwordStatus === 'loading'}>
+                  {passwordStatus === 'loading' ? 'Updating...' : 'Update Password'}
+                </Button>
+                {passwordError && <p className="text-red-500 mt-2">{passwordError}</p>}
+                {passwordStatus === 'succeeded' && <p className="text-green-500 mt-2">Password updated successfully!</p>}
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        <nav className="w-full">
-          <ul>
-            <li className="mb-2">
-              <Button variant="outline" className="w-full justify-start text-neutral border-[#eaf2f7] bg-[#eaf2f7] font-semibold">
-                <svg className="inline mr-2" width="18" height="18" fill="none" viewBox="0 0 24 24">
-                  <path fill="#2d5c7f" d="M12 2C7.03 2 3 6.03 3 11c0 4.97 4.03 9 9 9s9-4.03 9-9c0-4.97-4.03-9-9-9Zm0 16c-3.87 0-7-3.13-7-7 0-3.87 3.13-7 7-7s7 3.13 7 7c0 3.87-3.13 7-7 7Z"/>
-                </svg>
-                Organization Details
-              </Button>
-            </li>
-            <li>
-              <Button variant="ghost" className="w-full justify-start text-neutral font-semibold">
-                <svg className="inline mr-2" width="18" height="18" fill="none" viewBox="0 0 24 24">
-                  <path fill="#2d5c7f" d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-                </svg>
-                Account Settings
-              </Button>
-            </li>
-          </ul>
-        </nav>
-      </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col gap-8 mt-8 ml-8 mr-8 max-w-4xl">
-        {/* Organization Details */}
-        <Card className="mb-4 rounded-xl border border-gray-100 shadow-none bg-white">
-          <CardHeader className="pb-2 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-                <path fill="#2d5c7f" d="M12 2C7.03 2 3 6.03 3 11c0 4.97 4.03 9 9 9s9-4.03 9-9c0-4.97-4.03-9-9-9Zm0 16c-3.87 0-7-3.13-7-7 0-3.87 3.13-7 7-7s7 3.13 7 7c0 3.87-3.13 7-7 7Z"/>
-              </svg>
-              <h2 className="font-semibold text-lg text-[#2d5c7f]">Organization Details</h2>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <form className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-neutral mb-2">Organization Name</label>
-                  <Input
-                    value={orgName}
-                    onChange={e => setOrgName(e.target.value)}
-                    className="rounded-lg border-gray-300 focus:border-[#2d5c7f] focus:ring-[#2d5c7f] text-base h-12"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-neutral mb-2">Contact Person</label>
-                  <Input
-                    value={contactPerson}
-                    onChange={e => setContactPerson(e.target.value)}
-                    className="rounded-lg border-gray-300 focus:border-[#2d5c7f] focus:ring-[#2d5c7f] text-base h-12"
-                  />
-                </div>
+        {/* Right side */}
+        <div className="space-y-6">
+          {/* Subscription Plan */}
+          {/* <Card className="border-neutral-100">
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-2">Subscription Plan</h3>
+              <div className="relative bg-gradient-to-r from-primary-light to-secondary-light text-white p-4 rounded-xl">
+                <h4 className="font-bold">Premium Plan</h4>
+                <p>$29/month</p>
+                <span><FaCrown className="text-3xl absolute right-5 top-5"/></span>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-neutral mb-2">Email Address</label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="rounded-lg border-gray-300 focus:border-[#2d5c7f] focus:ring-[#2d5c7f] text-base h-12"
-                />
-              </div>
-              <div>
-                <div className="font-semibold text-[#2d5c7f] mb-2 mt-4 text-lg">Address Information</div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-neutral mb-2">City</label>
-                    <Input
-                      value={city}
-                      onChange={e => setCity(e.target.value)}
-                      className="rounded-lg border-gray-300 focus:border-[#2d5c7f] focus:ring-[#2d5c7f] text-base h-12"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-neutral mb-2">Sub-city</label>
-                    <Input
-                      value={subCity}
-                      onChange={e => setSubCity(e.target.value)}
-                      className="rounded-lg border-gray-300 focus:border-[#2d5c7f] focus:ring-[#2d5c7f] text-base h-12"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-neutral mb-2">Woreda</label>
-                    <Input
-                      value={woreda}
-                      onChange={e => setWoreda(e.target.value)}
-                      className="rounded-lg border-gray-300 focus:border-[#2d5c7f] focus:ring-[#2d5c7f] text-base h-12"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-neutral mb-2">Full Address</label>
-                  <textarea
-                    value={fullAddress}
-                    onChange={e => setFullAddress(e.target.value)}
-                    rows={2}
-                    className="w-full rounded-lg border border-gray-300 focus:border-[#2d5c7f] focus:ring-[#2d5c7f] p-3 resize-none text-base"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 mt-4">
-                <Button type="submit" className="bg-[#2d5c7f] hover:bg-[#20435c] text-white px-6 py-2 rounded-lg h-12">Save Changes</Button>
-                <Button variant="outline" type="button" className="px-6 py-2 rounded-lg h-12 border-gray-300">Cancel</Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+              <ul className="mt-4 text-sm text-gray-600 space-y-2">
+                <li className="flex justify-between">All Chat Access: <span className="font-medium">Unlimited</span></li>
+                <li className="flex justify-between">Document Storage: <span className="font-medium">50GB</span></li>
+                <li className="flex items-center gap-1 justify-between">Priority Support <CheckCircle size={16} className="text-green-500" /></li>
+              </ul>
+            </CardContent>
+          </Card> */}
 
-        {/* Account Settings */}
-        <Card className="mb-4 rounded-xl border border-gray-100 shadow-none bg-white">
-          <CardHeader className="pb-2 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-                <path fill="#2d5c7f" d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-              </svg>
-              <h2 className="font-semibold text-lg text-[#2d5c7f]">Account Settings</h2>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="font-semibold text-[#2d5c7f] mb-2 mt-2 text-base">Update Credentials</div>
-            <form className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-neutral mb-2">Current Password</label>
-                  <Input
-                    type="password"
-                    value={currentPassword}
-                    onChange={e => setCurrentPassword(e.target.value)}
-                    className="rounded-lg border-gray-300 focus:border-[#2d5c7f] focus:ring-[#2d5c7f] text-base h-12"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-neutral mb-2">New Password</label>
-                  <Input
-                    type="password"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    className="rounded-lg border-gray-300 focus:border-[#2d5c7f] focus:ring-[#2d5c7f] text-base h-12"
-                  />
-                </div>
-              </div>
-              <Button type="submit" className="bg-[#2d5c7f] hover:bg-[#20435c] text-white px-6 py-2 rounded-lg h-12 mt-2">Update Password</Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Danger Zone */}
-        <div className="rounded-xl border border-red-300 bg-white mt-4 p-0 overflow-hidden">
-          <div className="flex items-center gap-2 px-6 py-4 border-b border-red-300 bg-red-50">
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-              <path fill="#e53e3e" d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 14h-2v-2h2zm0-4h-2V7h2z"/>
-            </svg>
-            <span className="font-semibold text-lg text-[#e53e3e]">Danger Zone</span>
-          </div>
-          <div className="flex items-center justify-between px-6 py-4 bg-red-50">
-            <div>
-              <div className="font-semibold text-[#e53e3e]">Delete Account</div>
-              <div className="text-sm text-[#e53e3e]">Permanently delete your organization and all data</div>
-            </div>
-            <Button variant="destructive" className="bg-[#e53e3e] hover:bg-[#c53030] text-white px-6 py-2 rounded-lg h-12">Delete Account</Button>
+          {/* Logout + Delete */}
+          <div className="space-y-3">
+            <Button variant="outline" className="w-full flex items-center justify-center gap-2 border-neutral-200">
+              <LogOut size={16} /> Logout
+            </Button>
+            <Button variant="ghost" className="w-full text-red-600 hover:text-red-700 flex items-center justify-center gap-2">
+              <Trash2 size={16} /> Delete Account
+            </Button>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
