@@ -24,8 +24,12 @@ const page = async () => {
   const total = data.pagination.total;
   const totalNotices = data2.total;
 
-  // const total =
-  return <AdminDashboard totalNotices={totalNotices} totalProcedures={total} />;
+  // const total = data.pagination.total;
+  return (
+    <>
+      <AdminDashboard totalNotices={totalNotices} totalProcedures={total} />
+    </>
+  );
 };
 
 export default page;
