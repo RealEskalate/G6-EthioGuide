@@ -62,8 +62,8 @@ export default function CreatePostPage() {
               <SelectContent className="rounded-lg border border-gray-200 shadow-md bg-white">
                 <SelectItem value="passport">passport</SelectItem>
                 <SelectItem value="tax">tax</SelectItem>
-                <SelectItem value="business">business</SelectItem>
-                <SelectItem value="events">events</SelectItem>
+                <SelectItem value="business">National Id</SelectItem>
+                {/* <SelectItem value="events">events</SelectItem> */}
               </SelectContent>
             </Select>
           </div>

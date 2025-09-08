@@ -28,6 +28,14 @@ export interface DiscussionsList {
   limit: number;
 }
 
+// Shared arg type for getDiscussions queries
+type DiscussionsQueryArgs = {
+  page?: number;
+  limit?: number;
+  userId?: string;
+  selfOnly?: boolean;
+} | void;
+
 // add: single discussion detail type (matches backend schema)
 export interface DiscussionDetail {
   content: string;
@@ -172,6 +180,71 @@ export const discussionsApi = apiSlice.injectEndpoints({
               : undefined,
         };
       },
+      invalidatesTags: () => [{ type: "Discussion", id: "LIST" }],
+      async onQueryStarted(arg, { dispatch, queryFulfilled, getState }) {
+        // Create a temporary post for instant UI feedback
+        const nowIso = new Date().toISOString();
+        const tempPost: DiscussionPost = {
+          ID: `tmp-${Date.now()}`,
+          UserID: readCurrentUserId() ?? readUserIdFromToken() ?? "",
+          Title: arg.title,
+          Content: arg.content,
+          Procedures: null,
+          Tags: Array.isArray(arg.tags) ? arg.tags.map((t) => String(t)) : [],
+          CreatedAt: nowIso,
+          UpdatedAt: nowIso,
+        };
+
+        // Patch all cached getDiscussions queries by prepending the temp post
+        const state = getState() as unknown;
+        const root =
+          typeof state === "object" && state !== null
+            ? (state as Record<string, unknown>)[apiSlice.reducerPath]
+            : undefined;
+        const entries = Object.entries(
+          (root as { queries?: Record<string, unknown> })?.queries ?? {}
+        ) as Array<
+          [
+            string,
+            {
+              endpointName?: string;
+              originalArgs?: DiscussionsQueryArgs;
+            }
+          ]
+        >;
+
+        const patches: Array<{ undo: () => void }> = [];
+        for (const [, q] of entries) {
+          if (q?.endpointName !== "getDiscussions") continue;
+          const args = q.originalArgs as DiscussionsQueryArgs;
+          const patch = dispatch(
+            discussionsApi.util.updateQueryData(
+              "getDiscussions",
+              args,
+              (draft) => {
+                if (!draft || !Array.isArray(draft.posts)) return;
+                draft.posts.unshift(tempPost);
+                draft.total = (draft.total || 0) + 1;
+                if (
+                  typeof draft.limit === "number" &&
+                  draft.posts.length > draft.limit
+                ) {
+                  draft.posts.pop();
+                }
+              }
+            )
+          );
+          patches.push(patch);
+        }
+
+        try {
+          await queryFulfilled;
+          // On success, invalidatesTags will trigger a refetch to replace temp with real post
+        } catch {
+          // On failure, revert optimistic updates
+          patches.forEach((p) => p.undo());
+        }
+      },
     }),
     // add: GET /discussions
     getDiscussions: builder.query<
@@ -271,10 +344,22 @@ export const discussionsApi = apiSlice.injectEndpoints({
 
         return { posts, total, page, limit };
       },
+      providesTags: (result) => {
+        const base = [{ type: "Discussion", id: "LIST" } as const];
+        if (!result?.posts?.length) return base;
+        return [
+          ...base,
+          ...result.posts.map((p) => ({
+            type: "Discussion" as const,
+            id: String(p.ID),
+          })),
+        ];
+      },
     }),
     // add: GET /discussions/{id}
     getDiscussionById: builder.query<DiscussionDetail, string>({
       query: (id) => `discussions/${id}`,
+      providesTags: (_res, _err, id) => [{ type: "Discussion", id }],
     }),
     // added: update discussion
     updateDiscussion: builder.mutation<

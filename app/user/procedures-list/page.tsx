@@ -124,6 +124,15 @@ export default function ProceduresPage() {
               </p>
             </div>
 
+            {/* added: quick redirect to Workspace */}
+            <div className="mb-4 flex justify-end">
+              <Link href="/user/workspace">
+                <Button className="bg-[#3A6A8D] hover:bg-[#2e4d57] text-white">
+                  Go to Workspace
+                </Button>
+              </Link>
+            </div>
+
             {/* Search and Filters */}
             <div className="flex items-center justify-between gap-4 mb-8">
               <div className="flex items-center gap-4">

@@ -41,3 +41,28 @@
 html[lang="am"] {
   font-family:'Noto Sans Ethiopic',sans-serif;
 }
+
+/* Shared subtle animations (used by Home and Chat) */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.45s ease-out both;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.35s ease-out both;
+}

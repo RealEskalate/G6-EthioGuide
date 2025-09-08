@@ -1,48 +1,72 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { ProceduresResponse } from "@/app/types/myprocedures";
 
-// Read token from env (name: ACCESS_TOKEN or NEXT_PUBLIC_ACCESS_TOKEN)
-function readEnvToken(): string | null {
+// Read token from localStorage/sessionStorage/cookie/env
+function readToken(): string | null {
+  if (typeof window !== "undefined") {
+    const ls =
+      localStorage.getItem("accessToken") ||
+      localStorage.getItem("access_token") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken");
+    const ss =
+      sessionStorage.getItem("accessToken") ||
+      sessionStorage.getItem("access_token") ||
+      sessionStorage.getItem("token") ||
+      sessionStorage.getItem("authToken");
+    const cookieMatch =
+      typeof document !== "undefined"
+        ? document.cookie.match(/(?:^|; )accessToken=([^;]+)/)
+        : null;
+    const cookieToken = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
+    return ls || ss || cookieToken || null;
+  }
+  // server fallback
   return (
     process.env.NEXT_PUBLIC_ACCESS_TOKEN || process.env.ACCESS_TOKEN || null
   );
 }
 
-// Read token from localStorage or cookie (adjust key names if different)
-function readAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  const fromLocalStorage =
-    localStorage.getItem("accessToken") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("authToken");
-  if (fromLocalStorage) return fromLocalStorage;
-  const m = document.cookie.match(/(?:^|; )accessToken=([^;]+)/);
-  return m ? decodeURIComponent(m[1]) : null;
-}
-
-const RAW_BACKEND = (process.env.NEXT_PUBLIC_API_URL || 'https://ethio-guide-backend.onrender.com').replace(/\/$/, '')
-const API_BASE = /\/api\/v1$/.test(RAW_BACKEND) ? RAW_BACKEND : `${RAW_BACKEND}/api/v1/`
+const RAW_BACKEND = (
+  process.env.NEXT_PUBLIC_API_URL || "https://ethio-guide-backend.onrender.com"
+).replace(/\/$/, "");
+const API_BASE = /\/api\/v1$/.test(RAW_BACKEND)
+  ? RAW_BACKEND
+  : `${RAW_BACKEND}/api/v1/`;
 
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
-  baseUrl: API_BASE,
+    baseUrl: API_BASE,
     prepareHeaders: (headers) => {
-      // changed: prefer browser (session-persisted) token first
-      const token = readAuthToken() || readEnvToken();
-      if (token) headers.set("Authorization", `Bearer ${token}`);
+      const token = readToken();
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
       return headers;
     },
   }),
-  tagTypes: ["Procedure"],
+  tagTypes: ["Procedure", "Discussion"],
   endpoints: (builder) => ({
     getMyProcedures: builder.query<
       ProceduresResponse,
       { page?: number; limit?: number }
     >({
-      // Direct backend endpoint
-      query: ({ page = 1, limit = 20 } = {}) =>
-        `myProcedures?page=${page}&limit=${limit}`,
+      query: ({ page = 1, limit = 20 } = {}) => {
+        const token = readToken();
+        // Debug: remove after verifying
+        if (typeof window !== "undefined") {
+          console.debug(
+            "getMyProcedures Authorization present:",
+            Boolean(token)
+          );
+        }
+        return {
+          url: `checklists/procedures?page=${page}&limit=${limit}`,
+          method: "GET",
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        };
+      },
       providesTags: ["Procedure"],
     }),
   }),
