@@ -83,7 +83,9 @@ export default function OrganizationFeedback() {
       case "new":
         return <Badge className="bg-blue-100 text-blue-700">New</Badge>;
       case "reviewed":
-        return <Badge className="bg-yellow-100 text-yellow-700">Reviewed</Badge>;
+        return (
+          <Badge className="bg-yellow-100 text-yellow-700">Reviewed</Badge>
+        );
       case "declined":
         return <Badge className="bg-red-100 text-red-700">Declined</Badge>;
       case "resolved":
@@ -115,15 +117,15 @@ export default function OrganizationFeedback() {
           </div>
 
           {/* Table */}
-          <div className="rounded-lg border">
+          <div className="rounded-lg border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Feedback</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Upvotes</TableHead>
+                  {/* <TableHead>Upvotes</TableHead> */}
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  {/* <TableHead className="text-right">Actions</TableHead> */}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -138,21 +140,24 @@ export default function OrganizationFeedback() {
                 ) : filtered.length > 0 ? (
                   filtered.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="max-w-xs">
-                        <p className="font-medium">{item.content}</p>
+                      <TableCell className="max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg overflow-hidden whitespace-nowrap text-ellipsis">
+                        <p className="font-medium" title={item.content}>
+                          {item.content}
+                        </p>
                       </TableCell>
+
                       <TableCell>
                         {new Date(item.created_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="flex items-center gap-2">
+                      {/* <TableCell className="flex items-center gap-2">
                         <ThumbsUp size={16} /> {item.like_count}
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell>{getStatusBadge(item.status)}</TableCell>
-                      <TableCell className="flex gap-3 justify-end text-gray-600">
+                      {/* <TableCell className="flex gap-3 justify-end text-gray-600">
                         <Eye className="cursor-pointer hover:text-primary" />
                         <Reply className="cursor-pointer hover:text-primary" />
                         <Check className="cursor-pointer hover:text-primary" />
-                      </TableCell>
+                      </TableCell> */}
                     </TableRow>
                   ))
                 ) : (
@@ -168,15 +173,15 @@ export default function OrganizationFeedback() {
 
           {/* Pagination */}
           {/* <div className="flex justify-between items-center mt-4"> */}
-            {/* <p className="text-sm text-muted-foreground">
+          {/* <p className="text-sm text-muted-foreground">
               Showing {(page - 1) * limit + 1} to{" "}
               {Math.min(page * limit, total)} of {total} results
             </p> */}
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
           {/* </div> */}
         </CardContent>
       </Card>
