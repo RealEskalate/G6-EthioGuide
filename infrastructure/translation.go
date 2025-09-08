@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings" // Ensure strings is imported
 
@@ -34,6 +35,8 @@ func NewTranslationMiddleware(geminiUseCase domain.IGeminiUseCase) gin.HandlerFu
 			c.Next()
 			return
 		}
+
+		log.Println("header: lang=", targetLang)
 
 		// Replace the writer
 		c.Writer = blw
