@@ -6,6 +6,10 @@ export const proceduresApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: "https://ethio-guide-backend.onrender.com/api/v1/",
     // no Authorization headers required
+    prepareHeaders: (headers) => {
+      headers.set("lang", localStorage.getItem("i18nextLng") || "en");
+      return headers;
+    },
   }),
   endpoints: (builder) => ({
     getProcedures: builder.query<

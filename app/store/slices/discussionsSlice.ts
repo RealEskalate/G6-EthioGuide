@@ -178,6 +178,7 @@ export const discussionsApi = apiSlice.injectEndpoints({
             lsToken || envToken
               ? { Authorization: `Bearer ${lsToken ?? envToken}` }
               : undefined,
+              'lang': localStorage.getItem("i18nextLng") || "en",
         };
       },
       invalidatesTags: () => [{ type: "Discussion", id: "LIST" }],

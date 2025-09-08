@@ -158,6 +158,7 @@ export const checklistsApi = createApi({
           arg && arg.token
             ? { Authorization: `Bearer ${arg.token}` }
             : undefined,
+            'lang': localStorage.getItem("i18nextLng") || "en",
       }),
       transformResponse: (raw: unknown): UserProcedureChecklist[] => {
         const arr = extractUnknownArray(raw);

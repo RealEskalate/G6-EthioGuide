@@ -36,7 +36,15 @@ export interface ProcedureListResponse {
 export const proceduresApi = createApi({
   reducerPath: 'proceduresApi',
   // Use relative path so Next.js rewrite (in next.config.ts) proxies to external backend server-side (avoids CORS)
-  baseQuery: fetchBaseQuery({ baseUrl: '/api/v1' }),
+  baseQuery: fetchBaseQuery({ baseUrl: '/api/v1',
+    prepareHeaders: (headers) => {
+      if (typeof window !== 'undefined') {
+        headers.set('lang', localStorage.getItem('i18nextLng') || 'en')
+      }
+      return headers;
+    }
+
+   }),
   tagTypes: ['Procedure', 'Procedures'],
   endpoints: (builder) => ({
     listProcedures: builder.query<ProcedureListResponse, ProcedureListArgs | void>({

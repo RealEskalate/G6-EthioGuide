@@ -11,6 +11,9 @@ export default async function EditProcedure({ params }: Props) {
   const { id } = await params;
   // const session = await getServerSession(options);
   // const token = session?.accessToken;
+  const language = localStorage.getItem("i18nextLng") || "en";
+  console.log("lang",language)
+ 
   
   const res = await fetch(
     `https://ethio-guide-backend.onrender.com/api/v1/procedures/${id}`,
@@ -19,6 +22,7 @@ export default async function EditProcedure({ params }: Props) {
       headers: {
         "Content-Type": "application/json",
         // Authorization: `Bearer ${token}`,
+        'lang': localStorage.getItem("i18nextLng") || "en",
       },
     }
   );
