@@ -56,7 +56,7 @@ export default function CreateOfficialNotice() {
 
     const data = await res.json();
     console.log("Notice created:", data);
-    route.push("/admin/notices");
+    route.push("/organization/notices");
     // alert("Notice created successfully!");
   } catch (err) {
     console.error(err);
