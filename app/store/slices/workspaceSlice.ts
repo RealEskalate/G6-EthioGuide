@@ -42,6 +42,7 @@ export const apiSlice = createApi({
       const token = readToken();
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
+        headers.set("lang", localStorage.getItem("i18nextLng") || "en");
       }
       return headers;
     },

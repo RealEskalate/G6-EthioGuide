@@ -35,11 +35,13 @@ function buildQuery(params?: RequestOptions["query"]): string {
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", headers = {}, body, query, authToken, idempotencyKey } = options;
-
+  const language = localStorage.getItem("i18nextLng") || "en";
+  console.log("lang",language)
   const url = `${API_BASE_URL}${path}${buildQuery(query)}`;
   const finalHeaders: HeadersInit = {
     "Content-Type": "application/json",
     ...headers,
+    "lang": "am",
   };
 
   if (authToken) {
