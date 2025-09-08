@@ -106,11 +106,12 @@ func (ctrl *UserController) Register(c *gin.Context) {
 		IsVerified:       false,
 	}
 	account := &domain.Account{
-		Name:         req.Name,
-		Email:        req.Email,
-		PasswordHash: req.Password,
-		Role:         domain.RoleUser,
-		UserDetail:   userDetail,
+		Name:          req.Name,
+		Email:         req.Email,
+		PasswordHash:  req.Password,
+		ProfilePicURL: "https://res.cloudinary.com/dmcsjc9yv/image/upload/v1757316658/placeholder_jereof.jpg",
+		Role:          domain.RoleUser,
+		UserDetail:    userDetail,
 	}
 
 	err := ctrl.userUsecase.Register(c.Request.Context(), account)

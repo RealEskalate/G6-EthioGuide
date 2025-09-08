@@ -561,10 +561,11 @@ func (uc *UserUsecase) RegisterOrg(ctx context.Context, Name, Email, OrgType str
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 	orgAccount := domain.Account{
-		Name:         Name,
-		Email:        Email,
-		Role:         domain.RoleOrg,
-		PasswordHash: hashedPassword,
+		Name:          Name,
+		Email:         Email,
+		Role:          domain.RoleOrg,
+		PasswordHash:  hashedPassword,
+		ProfilePicURL: "https://res.cloudinary.com/dmcsjc9yv/image/upload/v1757316658/placeholder_jereof.jpg",
 		OrganizationDetail: &domain.OrganizationDetail{
 			Type: domain.OrganizationType(OrgType),
 		},
