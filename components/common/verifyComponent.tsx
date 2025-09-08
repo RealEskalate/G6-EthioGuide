@@ -12,6 +12,8 @@ export default function VerifyComponent() {
   >("idle");
   const [message, setMessage] = useState("");
 
+  const API = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
     const activateUser = async () => {
       setVerificationStatus("loading");
@@ -24,7 +26,7 @@ export default function VerifyComponent() {
       }
 
       try {
-        const response = await fetch("/api/auth/verify-api", {
+        const response = await fetch(`${API}/auth/verify`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ activationToken: activationToken }), 

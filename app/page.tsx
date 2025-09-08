@@ -26,8 +26,11 @@ import {
 } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
+import { useTranslation } from "react-i18next"
+import i18next from "i18next"
 
 export default function HomePage() {
+  const { t } = useTranslation("common")
   const [isVisible, setIsVisible] = useState(false)
   const [scrollY, setScrollY] = useState(0)
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
@@ -38,7 +41,6 @@ export default function HomePage() {
     const handleScroll = () => setScrollY(window.scrollY)
     window.addEventListener("scroll", handleScroll, { passive: true })
 
-    // Intersection Observer for section animations
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -50,7 +52,6 @@ export default function HomePage() {
       { threshold: 0.1, rootMargin: "50px" },
     )
 
-    // Observe all sections
     const sections = document.querySelectorAll("[data-animate]")
     sections.forEach((section) => observerRef.current?.observe(section))
 
@@ -61,6 +62,11 @@ export default function HomePage() {
       observerRef.current?.disconnect()
     }
   }, [])
+
+  // Function to handle language change
+  const handleLanguageChange = (lng: string) => {
+    i18next.changeLanguage(lng)
+  }
 
   return (
     <div className="min-h-screen bg-[#f9fafb] overflow-x-hidden">
@@ -75,7 +81,7 @@ export default function HomePage() {
             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-[#3a6a8d] to-[#2e4d57] rounded-lg flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 shadow-lg group-hover:shadow-xl">
               <Image
                 src="/images/ethioguide-symbol.png"
-                alt="EthioGuide Logo"
+                alt={t("welcome")}
                 width={24}
                 height={24}
                 className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:scale-110"
@@ -84,19 +90,19 @@ export default function HomePage() {
               />
             </div>
             <span className="font-semibold text-[#111827] text-sm sm:text-base transition-all duration-300 group-hover:text-[#3a6a8d] group-hover:scale-105">
-              EthioGuide
+              {t("welcome")}
             </span>
           </div>
 
           <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
-            {["Home", "Services", "Discussions"].map((item, index) => (
+            {["home", "services", "discussions"].map((item, index) => (
               <a
                 key={item}
-                href={item === 'Services' ? '#features' : '#'}
+                href={item === "services" ? "#features" : "#"}
                 className="text-[#4b5563] hover:text-[#111827] transition-all duration-500 hover:scale-105 relative group text-sm xl:text-base"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <span className="relative z-10">{item}</span>
+                <span className="relative z-10">{t(`nav.${item}`)}</span>
                 <div className="absolute inset-0 bg-[#3a6a8d]/10 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300 -z-10"></div>
                 <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] group-hover:w-full transition-all duration-500"></div>
               </a>
@@ -111,7 +117,7 @@ export default function HomePage() {
                   size="sm"
                   className="text-[#4b5563] hover:text-[#111827] hover:bg-[#f3f4f6] transition-all duration-300 hover:scale-105 group px-2 sm:px-3 text-xs sm:text-sm"
                 >
-                  EN{" "}
+                  {t("language.code")}
                   <ChevronDown className="ml-1 h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-300 group-hover:rotate-180" />
                 </Button>
               </DropdownMenuTrigger>
@@ -119,11 +125,17 @@ export default function HomePage() {
                 align="end"
                 className="animate-in slide-in-from-top-2 duration-300 backdrop-blur-md bg-white/95 w-32 sm:w-auto"
               >
-                <DropdownMenuItem className="cursor-pointer hover:bg-[#f3f4f6] transition-all duration-200 hover:scale-105 text-xs sm:text-sm">
-                  🇺🇸 English
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-[#f3f4f6] transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
+                  onClick={() => handleLanguageChange("en")}
+                >
+                  🇺🇸 {t("language.english")}
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer hover:bg-[#f3f4f6] transition-all duration-200 hover:scale-105 text-xs sm:text-sm">
-                  🇪🇹 አማርኛ
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-[#f3f4f6] transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
+                  onClick={() => handleLanguageChange("am")}
+                >
+                  🇪🇹 {t("language.amharic")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -134,7 +146,7 @@ export default function HomePage() {
               asChild
             >
               <a href="/auth/login">
-                <span className="relative z-10">Sign In</span>
+                <span className="relative z-10">{t("login")}</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               </a>
             </Button>
@@ -153,18 +165,18 @@ export default function HomePage() {
         {isMobileMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md border-b border-[#e5e7eb] shadow-lg animate-in slide-in-from-top-2 duration-300">
             <div className="px-4 py-4 space-y-4">
-              {["Home", "Services", "Discussions"].map((item) => (
+              {["home", "services", "discussions"].map((item) => (
                 <a
                   key={item}
-                  href={item === 'Services' ? '#features' : '#'}
+                  href={item === "services" ? "#features" : "#"}
                   className="block text-[#4b5563] hover:text-[#111827] transition-all duration-300 py-2 border-b border-[#f3f4f6] last:border-0"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {item}
+                  {t(`nav.${item}`)}
                 </a>
               ))}
               <Button className="w-full bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] hover:from-[#2e4d57] hover:to-[#1c3b2e] text-white transition-all duration-500">
-                Sign In
+                {t("login")}
               </Button>
             </div>
           </div>
@@ -197,36 +209,36 @@ export default function HomePage() {
             style={{ transitionDelay: "200ms" }}
           >
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#111827] mb-4 sm:mb-6 text-balance leading-tight">
-              <span className="inline-block transition-all duration-700 hover:scale-105">Navigate</span>{" "}
+              <span className="inline-block transition-all duration-700 hover:scale-105">{t("hero.title.navigate")}</span>{" "}
               <span
                 className="inline-block transition-all duration-700 hover:scale-105"
                 style={{ transitionDelay: "100ms" }}
               >
-                Ethiopia&#39;s
+                {t("hero.title.ethiopia")}
               </span>{" "}
               <span
                 className="text-[#3a6a8d] inline-block transition-all duration-700 hover:scale-105 bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] bg-clip-text text-transparent"
                 style={{ transitionDelay: "200ms" }}
               >
-                Services
+                {t("hero.title.services")}
               </span>{" "}
               <span
                 className="inline-block transition-all duration-700 hover:scale-105"
                 style={{ transitionDelay: "300ms" }}
               >
-                with
+                {t("hero.title.with")}
               </span>{" "}
               <span
                 className="inline-block transition-all duration-700 hover:scale-105"
                 style={{ transitionDelay: "400ms" }}
               >
-                AI
+                {t("hero.title.ai")}
               </span>{" "}
               <span
                 className="inline-block transition-all duration-700 hover:scale-105"
                 style={{ transitionDelay: "500ms" }}
               >
-                Guidance
+                {t("hero.title.guidance")}
               </span>
             </h1>
             <p
@@ -235,8 +247,7 @@ export default function HomePage() {
               }`}
               style={{ transitionDelay: "400ms" }}
             >
-              Get instant help with government procedures, business registration, document renewals, and more. Your
-              AI-powered assistant for Ethiopian bureaucracy.
+              {t("hero.description")}
             </p>
             <Button
               className={`bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] hover:from-[#2e4d57] hover:to-[#1c3b2e] text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-3 text-sm sm:text-base lg:text-lg transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:-translate-y-1 relative overflow-hidden group ${
@@ -247,7 +258,7 @@ export default function HomePage() {
             >
               <a href="/auth/register">
                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 transition-transform duration-300 group-hover:scale-110" />
-                <span className="relative z-10">Start AI Chat</span>
+                <span className="relative z-10">{t("hero.cta")}</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               </a>
             </Button>
@@ -259,9 +270,9 @@ export default function HomePage() {
               style={{ transitionDelay: "800ms" }}
             >
               {[
-                { color: "#5e9c8d", text: "Free to use" },
-                { color: "#3a6a8d", text: "Secure & Private" },
-                { color: "#a7b3b9", text: "24/7 Available" },
+                { color: "#5e9c8d", text: t("hero.features.free") },
+                { color: "#3a6a8d", text: t("hero.features.secure") },
+                { color: "#a7b3b9", text: t("hero.features.available") },
               ].map((item, index) => (
                 <div
                   key={item.text}
@@ -294,38 +305,39 @@ export default function HomePage() {
                     <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white transition-transform duration-300 hover:scale-110" />
                   </div>
                   <span className="font-medium text-[#111827] text-sm sm:text-base transition-colors duration-300 group-hover:text-[#3a6a8d]">
-                    EthioGuide AI
+                    {t("hero.ai_assistant.title")}
                   </span>
                   <Badge className="bg-[#5e9c8d] text-white animate-pulse text-xs">●</Badge>
                 </div>
 
                 <div className="space-y-3 sm:space-y-4">
                   <div className="bg-[#f3f4f6] rounded-lg p-2 sm:p-3 transition-all duration-300 hover:bg-[#e5e7eb] hover:scale-[1.02]">
-                    <p className="text-xs sm:text-sm text-[#4b5563]">How can I renew my Ethiopian passport?</p>
+                    <p className="text-xs sm:text-sm text-[#4b5563]">{t("hero.ai_assistant.question")}</p>
                   </div>
 
                   <div className="bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] text-white rounded-lg p-3 sm:p-4 transition-all duration-500 hover:scale-[1.02] hover:shadow-lg">
-                    <p className="text-xs sm:text-sm mb-2">
-                      I&#39;ll help you with passport renewal. Here&#39;s what you need:
-                    </p>
+                    <p className="text-xs sm:text-sm mb-2">{t("hero.ai_assistant.response")}</p>
                     <ul className="text-xs space-y-1">
-                      {["Current passport", "2 passport photos", "Birth certificate", "550 ETB fee"].map(
-                        (item, index) => (
-                          <li
-                            key={item}
-                            className="transition-all duration-300 hover:translate-x-1"
-                            style={{ animationDelay: `${index * 100}ms` }}
-                          >
-                            • {item}
-                          </li>
-                        ),
-                      )}
+                      {[
+                        t("hero.ai_assistant.requirements.current_passport"),
+                        t("hero.ai_assistant.requirements.photos"),
+                        t("hero.ai_assistant.requirements.birth_certificate"),
+                        t("hero.ai_assistant.requirements.fee"),
+                      ].map((item, index) => (
+                        <li
+                          key={item}
+                          className="transition-all duration-300 hover:translate-x-1"
+                          style={{ animationDelay: `${index * 100}ms` }}
+                        >
+                          • {item}
+                        </li>
+                      ))}
                     </ul>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <Input
-                      placeholder="Ask anything about Ethiopian services..."
+                      placeholder={t("hero.ai_assistant.placeholder")}
                       className="flex-1 text-xs sm:text-sm border-[#e5e7eb] focus:ring-2 focus:ring-[#3a6a8d] transition-all duration-300 focus:scale-[1.02]"
                     />
                     <Button
@@ -352,12 +364,12 @@ export default function HomePage() {
           >
             <CardContent className="p-4 sm:p-6 lg:p-8 text-center">
               <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#111827] mb-4 sm:mb-6 transition-all duration-500 hover:scale-105">
-                What can I help you with today?
+                {t("search.title")}
               </h2>
 
               <div className="relative mb-4 sm:mb-6 group">
                 <Input
-                  placeholder="Search for services, locations, or procedures..."
+                  placeholder={t("search.placeholder")}
                   className="w-full py-2 sm:py-3 pl-3 sm:pl-4 pr-10 sm:pr-12 text-sm sm:text-base lg:text-lg border-[#e5e7eb] focus:ring-2 focus:ring-[#3a6a8d] transition-all duration-500 focus:scale-[1.02] focus:shadow-lg"
                 />
                 <Button
@@ -369,18 +381,21 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-                {["ID Renewal", "Business Registration", "Passport Application", "Tax Registration"].map(
-                  (item, index) => (
-                    <Badge
-                      key={item}
-                      variant="outline"
-                      className="px-2 sm:px-3 lg:px-4 py-1 sm:py-2 text-xs sm:text-sm border-[#e5e7eb] text-[#4b5563] hover:bg-[#f3f4f6] hover:border-[#3a6a8d] hover:text-[#3a6a8d] transition-all duration-300 hover:scale-105 cursor-pointer hover:shadow-md"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      {item}
-                    </Badge>
-                  ),
-                )}
+                {[
+                  t("search.badges.id_renewal"),
+                  t("search.badges.business_registration"),
+                  t("search.badges.passport_application"),
+                  t("search.badges.tax_registration"),
+                ].map((item, index) => (
+                  <Badge
+                    key={item}
+                    variant="outline"
+                    className="px-2 sm:px-3 lg:px-4 py-1 sm:py-2 text-xs sm:text-sm border-[#e5e7eb] text-[#4b5563] hover:bg-[#f3f4f6] hover:border-[#3a6a8d] hover:text-[#3a6a8d] transition-all duration-300 hover:scale-105 cursor-pointer hover:shadow-md"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    {item}
+                  </Badge>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -400,10 +415,10 @@ export default function HomePage() {
             }`}
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#111827] mb-3 sm:mb-4 transition-all duration-500 hover:scale-105">
-              Everything You Need in One Place
+              {t("features.title")}
             </h2>
             <p className="text-sm sm:text-base lg:text-lg text-[#4b5563]">
-              Comprehensive tools to navigate Ethiopian services
+              {t("features.description")}
             </p>
           </div>
 
@@ -413,25 +428,25 @@ export default function HomePage() {
                 icon: Bot,
                 color: "#3a6a8d",
                 bg: "#e6f0f5",
-                title: "AI Assistant",
-                desc: "Get instant answers about procedures, requirements, and timelines from our intelligent AI guide.",
-                cta: "Try AI Chat →",
+                title: t("features.ai_assistant.title"),
+                desc: t("features.ai_assistant.description"),
+                cta: t("features.ai_assistant.cta"),
               },
               {
                 icon: FileText,
                 color: "#5e9c8d",
                 bg: "#e8f4f2",
-                title: "Step-by-step Guides",
-                desc: "Detailed procedures with checklists, required documents, and estimated costs for every service.",
-                cta: "View Procedures →",
+                title: t("features.guides.title"),
+                desc: t("features.guides.description"),
+                cta: t("features.guides.cta"),
               },
               {
                 icon: Users,
                 color: "#2e4d57",
                 bg: "#e3e8ea",
-                title: "Community Forum",
-                desc: "Connect with other users, share experiences, and get help from the community.",
-                cta: "Join Discussion →",
+                title: t("features.forum.title"),
+                desc: t("features.forum.description"),
+                cta: t("features.forum.cta"),
               },
             ].map((feature, index) => (
               <Card
@@ -486,9 +501,9 @@ export default function HomePage() {
             }`}
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#111827] mb-3 sm:mb-4 transition-all duration-500 hover:scale-105">
-              Popular Services
+              {t("services.title")}
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-[#4b5563]">Most requested procedures and services</p>
+            <p className="text-sm sm:text-base lg:text-lg text-[#4b5563]">{t("services.description")}</p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -497,29 +512,29 @@ export default function HomePage() {
                 icon: Passport,
                 gradient: "from-[#e6f0f5] to-[#d1e7f0]",
                 color: "#3a6a8d",
-                title: "Passport Services",
-                desc: "Renewal, replacement, and new applications.",
+                title: t("category.passport"),
+                desc: t("services.passport.description"),
               },
               {
                 icon: Building,
                 gradient: "from-[#e8f4f2] to-[#d1ede7]",
                 color: "#5e9c8d",
-                title: "Business Registration",
-                desc: "Start your business legally in Ethiopia.",
+                title: t("category.business"),
+                desc: t("services.business.description"),
               },
               {
                 icon: CreditCard,
                 gradient: "from-[#e3e8ea] to-[#d6dde0]",
                 color: "#2e4d57",
-                title: "ID Card Services",
-                desc: "National ID renewal and replacement.",
+                title: t("category.id"),
+                desc: t("services.id.description"),
               },
               {
                 icon: Calculator,
                 gradient: "from-[#f0f2f3] to-[#e6eaeb]",
                 color: "#1c3b2e",
-                title: "Tax Services",
-                desc: "Tax registration and tax filing assistance.",
+                title: t("category.tax"),
+                desc: t("services.tax.description"),
               },
             ].map((service, index) => (
               <Card
@@ -546,7 +561,7 @@ export default function HomePage() {
                     style={{ color: service.color }}
                     asChild
                   >
-                    <a href="/auth/register">Learn more →</a>
+                    <a href="/auth/register">{t("services.cta")}</a>
                   </Button>
                 </CardContent>
               </Card>
@@ -568,9 +583,9 @@ export default function HomePage() {
             }`}
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#111827] mb-3 sm:mb-4 transition-all duration-500 hover:scale-105">
-              Simple, Transparent Pricing
+              {t("pricing.title")}
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-[#4b5563]">Choose the plan that fits your needs</p>
+            <p className="text-sm sm:text-base lg:text-lg text-[#4b5563]">{t("pricing.description")}</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
@@ -582,20 +597,22 @@ export default function HomePage() {
               style={{ transitionDelay: "200ms" }}
             >
               <CardContent className="p-4 sm:p-6 lg:p-8">
-                <h3 className="text-xl sm:text-2xl font-bold text-[#111827] mb-2">Free</h3>
-                <p className="text-sm sm:text-base text-[#4b5563] mb-4 sm:mb-6">Perfect for occasional users</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-[#111827] mb-2">{t("pricing.free.title")}</h3>
+                <p className="text-sm sm:text-base text-[#4b5563] mb-4 sm:mb-6">{t("pricing.free.description")}</p>
 
                 <div className="mb-4 sm:mb-6">
-                  <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#111827]">0 ETB</span>
-                  <span className="text-sm sm:text-base text-[#4b5563]">/month</span>
+                  <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#111827]">
+                    {t("pricing.free.price")}
+                  </span>
+                  <span className="text-sm sm:text-base text-[#4b5563]">{t("pricing.per_month")}</span>
                 </div>
 
                 <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
                   {[
-                    "Basic AI guidance (10 questions/month)",
-                    "Document checklists (5 downloads/month)",
-                    "Basic procedure notifications",
-                    "Community forum access",
+                    t("pricing.free.features.basic_ai"),
+                    t("pricing.free.features.checklists"),
+                    t("pricing.free.features.notifications"),
+                    t("pricing.free.features.forum"),
                   ].map((feature, index) => (
                     <li
                       key={feature}
@@ -613,7 +630,7 @@ export default function HomePage() {
                   className="w-full border-[#e5e7eb] text-[#4b5563] bg-transparent hover:bg-[#f3f4f6] transition-all duration-500 hover:scale-105 hover:shadow-lg text-sm sm:text-base"
                   asChild
                 >
-                  <a href="/auth/register">Start Free</a>
+                  <a href="/auth/register">{t("pricing.free.cta")}</a>
                 </Button>
               </CardContent>
             </Card>
@@ -627,26 +644,28 @@ export default function HomePage() {
             >
               <div className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2">
                 <Badge className="bg-gradient-to-r from-[#3a6a8d] to-[#2e4d57] text-white px-3 sm:px-4 py-1 animate-pulse text-xs sm:text-sm">
-                  POPULAR
+                  {t("pricing.pro.badge")}
                 </Badge>
               </div>
               <CardContent className="p-4 sm:p-6 lg:p-8">
-                <h3 className="text-xl sm:text-2xl font-bold text-[#111827] mb-2">Pro</h3>
-                <p className="text-sm sm:text-base text-[#4b5563] mb-4 sm:mb-6">For regular users with ongoing needs</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-[#111827] mb-2">{t("pricing.pro.title")}</h3>
+                <p className="text-sm sm:text-base text-[#4b5563] mb-4 sm:mb-6">{t("pricing.pro.description")}</p>
 
                 <div className="mb-4 sm:mb-6">
-                  <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#111827]">250 ETB</span>
-                  <span className="text-sm sm:text-base text-[#4b5563]">/month</span>
+                  <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#111827]">
+                    {t("pricing.pro.price")}
+                  </span>
+                  <span className="text-sm sm:text-base text-[#4b5563]">{t("pricing.per_month")}</span>
                 </div>
 
                 <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
                   {[
-                    "Unlimited AI guidance",
-                    "Unlimited document storage",
-                    "Priority notifications & reminders",
-                    "Document expiry tracking",
-                    "Procedure progress tracking",
-                    "Priority support",
+                    t("pricing.pro.features.unlimited_ai"),
+                    t("pricing.pro.features.storage"),
+                    t("pricing.pro.features.notifications"),
+                    t("pricing.pro.features.expiry"),
+                    t("pricing.pro.features.progress"),
+                    t("pricing.pro.features.support"),
                   ].map((feature, index) => (
                     <li
                       key={feature}
@@ -664,7 +683,7 @@ export default function HomePage() {
                   asChild
                 >
                   <a href="/auth/register">
-                    <span className="relative z-10">Upgrade to Pro</span>
+                    <span className="relative z-10">{t("pricing.pro.cta")}</span>
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                   </a>
                 </Button>
@@ -694,10 +713,10 @@ export default function HomePage() {
           }`}
         >
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4 transition-all duration-500 hover:scale-105">
-            Ready to Get Started?
+            {t("cta.title")}
           </h2>
           <p className="text-sm sm:text-base lg:text-lg text-[#a7b3b9] mb-6 sm:mb-8 leading-relaxed">
-            Join thousands of Ethiopians who are navigating services with ease
+            {t("cta.description")}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
@@ -707,7 +726,7 @@ export default function HomePage() {
             >
               <a href="/auth/register">
                 <Bot className="w-4 h-4 sm:w-5 sm:h-5 mr-2 transition-transform duration-300 group-hover:scale-110" />
-                <span className="relative z-10">Try AI Assistant</span>
+                <span className="relative z-10">{t("cta.ai_assistant")}</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#3a6a8d]/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               </a>
             </Button>
@@ -718,14 +737,14 @@ export default function HomePage() {
             >
               <a href="/auth/register">
                 <User className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                Create Account
+                {t("cta.create_account")}
               </a>
             </Button>
           </div>
         </div>
       </section>
 
-        <footer className="bg-[#2e4d57] py-10 px-3 sm:px-4 lg:px-6" data-animate id="footer">
+      <footer className="bg-[#2e4d57] py-10 px-3 sm:px-4 lg:px-6" data-animate id="footer">
         <div className="max-w-7xl mx-auto">
           <div
             className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 transition-all duration-1000 ${
@@ -736,21 +755,21 @@ export default function HomePage() {
               <div className="flex items-center gap-2 mb-4 group cursor-pointer">
                 <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-[#3a6a8d] to-[#2e4d57] rounded-lg flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
                   <Image
-                src="/images/ethioguide-symbol.png"
-                alt="EthioGuide Logo"
-                width={24}
-                height={24}
-                className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:scale-110"
-                style={{ objectFit: "contain" }}
-                priority
-              />
+                    src="/images/ethioguide-symbol.png"
+                    alt={t("welcome")}
+                    width={24}
+                    height={24}
+                    className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:scale-110"
+                    style={{ objectFit: "contain" }}
+                    priority
+                  />
                 </div>
                 <span className="font-semibold text-white text-sm sm:text-base transition-colors duration-300 group-hover:text-[#3a6a8d]">
-                  EthioGuide
+                  {t("welcome")}
                 </span>
               </div>
               <p className="text-[#a0aec0] text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
-                Your AI-powered guide to Ethiopian government services and procedures.
+                {t("footer.description")}
               </p>
               <div className="flex gap-3 sm:gap-4">
                 {[Facebook, Twitter, Linkedin].map((Icon, index) => (
@@ -767,16 +786,30 @@ export default function HomePage() {
 
             {[
               {
-                title: "Services",
-                links: ["AI Chat Assistant", "Procedure Guides", "Document Tracking", "Community Forum"],
+                title: t("footer.services.title"),
+                links: [
+                  t("footer.services.ai_assistant"),
+                  t("footer.services.guides"),
+                  t("footer.services.tracking"),
+                  t("footer.services.forum"),
+                ],
               },
               {
-                title: "Support",
-                links: ["Help Center", "Contact Us", "Feedback", "Report Issue"],
+                title: t("footer.support.title"),
+                links: [
+                  t("footer.support.help_center"),
+                  t("footer.support.contact"),
+                  t("footer.support.feedback"),
+                  t("footer.support.report"),
+                ],
               },
               {
-                title: "Legal",
-                links: ["Privacy Policy", "Terms of Service", "Cookie Policy"],
+                title: t("footer.legal.title"),
+                links: [
+                  t("footer.legal.privacy"),
+                  t("footer.legal.terms"),
+                  t("footer.legal.cookie"),
+                ],
               },
             ].map((column) => (
               <div key={column.title}>
@@ -799,10 +832,11 @@ export default function HomePage() {
           </div>
 
           <div className="border-t border-[#4a5568] mt-6 sm:mt-8 pt-6 sm:pt-8 text-center">
-            <p className="text-[#a0aec0] text-xs sm:text-sm">© 2025 EthioGuide.</p>
+            <p className="text-[#a0aec0] text-xs sm:text-sm">{t("footer.copyright")}</p>
           </div>
         </div>
       </footer>
     </div>
   )
 }
+

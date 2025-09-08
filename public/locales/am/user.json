@@ -1,0 +1,378 @@
+
+{
+  "welcome": {
+    "title": "እንደገና እንኳን ደህና መጡ!",
+    "description": "የኢትዮጵያ መንግሥት ሂደቶችን በቀላሉ ያስሱ",
+    "services": "የመንግሥት አገልግሎቶች"
+  },
+  "search": {
+    "placeholder": "የመንግሥት ሂደቶችን ፈልግ...",
+    "button": "ፈልግ"
+  },
+  "procedures": {
+    "title": "ፈጣን መዳረሻ ሂደቶች",
+    "default_title": "ሂደት",
+    "verified": "የተረጋገጠ",
+    "days": "ቀናት",
+    "free": "ነፃ",
+    "docs": "ሰነዶች",
+    "more": "ተጨማሪ",
+    "button": "ዝርዝር ክፈት"
+  },
+  "activity": {
+    "title": "የቅርብ ጊዜ እንቅስቃሴዎች",
+    "items": {
+      "passport_renewal": "ፓስፖርት ማደስ",
+      "business_license": "የንግድ ፈቃድ ማመልከቻ",
+      "vehicle_registration": "የተሽከርካሪ ምዝገባ"
+    },
+    "status": {
+      "completed": "ተጠናቀቀ",
+      "in_progress": "በሂደት ላይ"
+    },
+    "times": {
+      "two_hours": "ከ2 ሰዓታት በፊት",
+      "one_day": "ከ1 ቀን በፊት",
+      "one_week": "ከ1 ሳምንት በፊት"
+    },
+    "view_all": "ሁሉንም እንቅስቃሴዎች ተመልከት →"
+  },
+  "feedback": {
+    "title": "ግብረመልስ",
+    "submit_title": "ግብረመልስ አስገባ",
+    "form": {
+      "type_label": "የግብረመልስ አይነት",
+      "type_placeholder": "የግብረመልስ አይነት ምረጥ",
+      "types": {
+        "inaccuracy": "ስህተት ሪፖርት አድርግ",
+        "improvement": "ማሻሻያ",
+        "other": "ሌላ"
+      },
+      "subject_label": "ርዕሰ ጉዳይ/ሂደት/ሰነድ",
+      "subject_placeholder": "የሪፖርት ሂደትህን ግለፅ...",
+      "detailed_label": "ዝርዝር ግብረመልስ",
+      "detailed_placeholder": "እባክህ ዝርዝር ግብረመልስ አቅርብ...",
+      "tags_label": "መለያዎች (በነጠላ ለይ)",
+      "tags_placeholder": "ለምሳሌ፡ ሰነድ፣ ክፍያ፣ መዘግየት",
+      "submit_button": "ግብረመልስ ላክ",
+      "submitting": "በመላክ ላይ...",
+      "no_procedure": "ግብረመልስ ለመላክ ከሂደት ገፅ ክፈት።"
+    },
+    "history_title": "የእርስዎ ግብረመልስ ታሪክ",
+    "history": {
+      "no_procedure": "ምንም ሂደት አልተመረጠም። የተወሰነ ሂደት ግብረመልስ ለመመልከት ክፈት።",
+      "loading": "በመጫን ላይ...",
+      "error": "የግብረመልስ ታሪክ መጫን አልተሳካም።",
+      "empty": "እስካሁን ምንም ግብረመልስ የለም። የመጀመሪያ ለመሆን አስገባ።",
+      "status": {
+        "new": "አዲስ",
+        "pending": "በመጠባበቅ ላይ",
+        "resolved": "ተፈታ"
+      },
+      "previous": "ቀዳሚ",
+      "next": "ቀጣይ",
+      "page": "ገፅ {{current}} ከ {{total}}"
+    },
+    "errors": {
+      "no_procedure": "ግብረመልስ ለመላክ ከሂደት ክፈት።",
+      "not_authenticated": "ግብረመልስ ለመላክ መግባት አለብህ።",
+      "no_content": "እባክህ ግብረመልስህን አስገባ።",
+      "submit_failed": "ግብረመልስ መላክ አልተሳካም"
+    },
+    "success": "ግብረመልስ ተልኳል።"
+  },
+  "workspace": {
+    "title": "የእኔ የሥራ ቦታ",
+    "description": "በመጠን ላይ ያሉ ሂደቶችዎን ይከታተሉ እና ያስተዳድሩ",
+    "label": "የሥራ ቦታ",
+    "stats": {
+      "total": "ጠቅላላ ሂደቶች",
+      "in_progress": "በሂደት ላይ",
+      "completed": "ተጠናቀቀ",
+      "available": "የሚገኙ ሂደቶች"
+    },
+    "status": {
+      "not_started": "አልተጀመረም",
+      "in_progress": "በሂደት ላይ",
+      "completed": "ተጠናቀቀ",
+      "ongoing": "በመቀጠል ላይ"
+    },
+    "actions": {
+      "start": "አሁን ጀምር",
+      "continue": "ቀጥል",
+      "view_details": "ዝርዝሮችን ተመልከት",
+      "retry": "እንደገና ሞክር",
+      "login": "ወደ መግቢያ ሂድ",
+      "browse": "ሂደቶችን አስስ"
+    },
+    "default_organization": "ድርጅት",
+    "default_procedure": "ሂደት {{id}}",
+    "default_date": "በቅርቡ",
+    "search": {
+      "placeholder": "የእርስዎ ሂደቶችን ፈልግ...",
+      "button": "ፈልግ"
+    },
+    "filter": {
+      "all": "ሁሉም ድርጅቶች"
+    },
+    "progress": "እድገት",
+    "progress_value": "{{percent}}% ተጠናቀቀ",
+    "start_date": "የተጀመረበት: {{date}}",
+    "estimated_completion": "የሚገመተው መጠናቀቅ: {{status}}",
+    "documents_uploaded": "{{completed}}/{{total}} ሰነዶች ተሰቀሉ",
+    "errors": {
+      "title": "ሂደቶችን መጫን ላይ ስህተት",
+      "auth_failed": "ማረጋገጫ አልተሳካም። እባክህ የመግቢያ ማረጋገጫህን አረጋግጥ።",
+      "load_failed": "ሂደቶችህን መጫን ላይ ችግር ነበር። እባክህ እንደገና ሞክር።"
+    },
+    "loading": "ሂደቶችህን በመጫን ላይ...",
+    "empty": "ምንም ሂደቶች አልተገኙም። ከሂደቶች ዝርዝር ቼክሊስት በመፍጠር ጀምር።"
+  },
+  "community": {
+    "title": "የማህበረሰብ ውይይቶች",
+    "description": "ውይይቱን ተቀላቀል። አጋራ፣ ጠይቅ እና ተባበር።",
+    "actions": {
+      "my_discussions": "የእኔ ውይይቶች",
+      "my_discussions_short": "እኔ",
+      "add_discussion": "ውይይት ጨምር",
+      "add_discussion_short": "አዲስ",
+      "filters": "ማጣሪያዎች እና መለያዎች",
+      "view_more": "ተጨማሪ ተመልከት",
+      "view_less": "ያነሰ ተመልከት"
+    },
+    "default_author": "ተጠቃሚ",
+    "default_title": "ርዕስ የለውም",
+    "author_anonymous": "ስም-አልባ",
+    "search": {
+      "placeholder": "ውይይቶችን ፈልግ...",
+      "button": "ፈልግ"
+    },
+    "filter": {
+      "all": "ሁሉም ምድቦች"
+    },
+    "filters": {
+      "title": "ማጣሪያዎች እና መለያዎች",
+      "category": "ምድብ",
+      "popular_tags": "ታዋቂ መለያዎች",
+      "apply": "ተግብር",
+      "reset": "ዳግም አስጀምር"
+    },
+    "tags": {
+      "national_id": "ብሔራዊ መታወቂያ",
+      "passport": "ፓስፖርት",
+      "tax": "ግብር"
+    },
+    "popular_tags": "ታዋቂ መለያዎች",
+    "pagination": "ገፅ {{current}} ከ {{total}}",
+    "total": "ጠቅላላ: {{count}}",
+    "loading": "በመጫን ላይ...",
+    "errors": {
+      "load_failed": "ውይይቶችን መጫን አልተሳካም።"
+    },
+    "empty": "ምንም ውይይቶች ከማጣሪያዎችህ ጋር አይዛመዱም።"
+  },
+  "my_discussions": {
+    "title": "የእኔ ውይይቶች",
+    "actions": {
+      "back_to_discussions": "ወደ ውይይቶች ተመለስ",
+      "edit": "አርትዕ",
+      "save": "አስቀምጥ",
+      "cancel": "ይቅር"
+    },
+    "default_title": "ርዕስ የለውም",
+    "edit": {
+      "title_placeholder": "ርዕስ አርትዕ",
+      "content_placeholder": "ይዘት አርትዕ"
+    },
+    "loading": "በመጫን ላይ...",
+    "errors": {
+      "load_failed": "ውይይቶችን መጫን አልተሳካም።",
+      "update_failed": "ማዘመን አልተሳካም። እባክህ እንደገና ሞክር።",
+      "empty_fields": "ርዕስ እና ይዘት ባዶ መሆን አይችሉም።"
+    },
+    "empty": "ምንም ውይይቶች አልተገኙም።"
+  },
+  "notices": {
+    "title": "ይፋዊ ማስታወቂያዎች",
+    "description": "የተለያዩ ድርጅቶች ማስታወቂያዎችን ያግኙ",
+    "search": {
+      "placeholder": "ማስታወቂያዎችን ፈልግ...",
+      "button": "ፈልግ"
+    },
+    "filter": {
+      "all": "ሁሉም ድርጅቶች"
+    },
+    "published": "የታተመ:",
+    "organization": "ድርጅት:",
+    "actions": {
+      "view_more": "ተጨማሪ ተመልከት",
+      "view_less": "ያነሰ ተመልከት"
+    },
+    "default_title": "ርዕስ የለውም ማስታወቂያ",
+    "default_organization": "ድርጅት",
+    "unknown_date": "ያልታወቀ",
+    "loading": "በመጫን ላይ...",
+    "errors": {
+      "load_failed": "ማስታወቂዪያዎችን መጫን አልተሳካም።"
+    },
+    "empty": "ምንም ማስታወቂያዎች አልተገኙም።"
+  },
+  "notices.detail": {
+    "not_found": "ማስታወቂያ አልተገኘም",
+    "actions": {
+      "back_to_notices": "ወደ ማስታወቂያዎች ተመለስ"
+    },
+    "greeting": "ውድ የቡድን አባላት፣",
+    "default_description": "ምንም መግለጫ የለም።",
+    "key_changes": "ዋና የፖሊሲ ለውጦች:",
+    "security_updates": "የደህንነት ፕሮቶኮል ማሻሻያዎች:",
+    "contact_info": "ስለእነዚህ የፖሊሲ ለውጦች ጥያቄዎች ካሉዎት፣ እባክዎ የኤች አር ዲፓርትመንትን ያነጋግሩ ወይም ለሚቀጥለው ሳምንት መርሐግብር የተያዘ የመረጃ ክፍለ ጊዜዎችን ይሳተፉ። እነዚህን ለውጦች ተግባራዊ ለማድረግ ትብብርዎ በጣም እናመሰግናለን።",
+    "closing": "መልካም ምኞቶች፣",
+    "default_author": "የኤች አር ዳይሬክተር",
+    "author_title": "የኤች አር ዳይሬክተር",
+    "attachments": "ተቀንጮች"
+  },
+  "chat": {
+    "title": "የእርስዎ ኤአይ መመሪያ",
+    "description": "ስለ ሂደቶች፣ ክፍያዎች እና ደረጃዎች ማንኛውንም ነገር በእንግሊዝኛ ወይም በአማርኛ ይጠይቁ።",
+    "assistant_label": "ኤአይ ረዳት",
+    "welcome": "እንኳን ደህና መጡ",
+    "welcome_message": "ጥያቄዎን ይተይቡ ወይም ይናገሩ። ለነጻ እጅ የድምፅ አጠቃቀም አውቶን ይጠቀሙ። ለተመረጠው ቋንቋ ኤኤም/ኢኤን ቀይር። መልሱን ቋንቋ ለመቀየር ተርጉም የሚለውን ጠቅ ያድርጉ።",
+    "loading": "የእርስዎን ኤአይ ረዳት በመጫን ላይ...",
+    "auth_required": "ማረጋገጫ ያስፈልጋል",
+    "sign_in": "እባክዎ የእርስዎን ኤአይ ረዳት ለመድረስ ይግቡ።",
+    "history_title": "የውይይት ታሪክ",
+    "history_empty": "ምንም የውይይት ታሪክ የለም።",
+    "default_title": "ርዕስ የለውም ውይይት",
+    "messages": "መልእክቶች",
+    "unknown_date": "ያልታወቀ",
+    "messages_loading": "መልእክቶች በመጫን ላይ...",
+    "success_message": "መልእክት በተሳካ ሁኔታ ተልኳል!",
+    "history_loaded": "የውይይት ታሪክ በተሳካ ሁኔታ ተጭኗል!",
+    "translate_failed": "ትርጉም አልተሳካም",
+    "verified": "የተረጋገጠ",
+    "procedure": "ሂደት",
+    "default_procedure": "ርዕስ የለውም ሂደት",
+    "no_details": "ምንም ዝርዝሮች የሉም",
+    "suggestions_title": "ፈጣን አስተያየቶች",
+    "suggestions": {
+      "suggestion1": "የንግድ ፈቃድ ለማግኘት ምን ሰነዶች ያስፈልጋሉ?",
+      "suggestion2": "የቱሪስት ቪዛ ማመልከቻን ለመጀመር እርዳኝ።",
+      "suggestion3": "የመኖሪያ ፈቃድ ለማደስ ደረጃዎችን አሳየኝ።",
+      "suggestion4": "መስፈርቶቹን ወደ አማርኛ ተርጉም።"
+    },
+    "badges": {
+      "fees": "ክፍያዎች",
+      "documents": "ሰነዶች",
+      "office": "ቢሮ",
+      "timing": "ጊዜ"
+    },
+    "actions": {
+      "open": "ክፈት",
+      "clear_error": "አጽዳ",
+      "play": "አጫው",
+      "stop": "አቁም",
+      "translating": "በመተርጎም ላይ...",
+      "translate_to_en": "ወደ እንግሊዝኛ ተርጉም",
+      "translate_to_am": "ወደ አማርኛ ተርጉም",
+      "save_checklist": "ቼክሊስት አስቀምጥ",
+      "start_listening": "የድምፅ ግብዓት ጀምር",
+      "stop_listening": "ማዳመጥ አቁም",
+      "voice_not_supported": "የድምፅ ግብዓት አይደገፍም",
+      "toggle_voice_mode": "የድምፅ ሁነታን ቀይር (በራስ-ሰር መላክ እና በራስ-ሰር መናገር)",
+      "toggle_language": "የድምፅ ቋንቋን በአማርኛ እና እንግሊዝኛ መካከል ቀይር",
+      "auto": "አውቶ",
+      "manual": "በእጅ",
+      "history": "ታሪክ",
+      "hide": "ደብቅ",
+      "show_history": "ቀዳሚ ውይይቶችን አሳይ",
+      "hide_history": "ቀዳሚ ውይይቶችን ደብቅ",
+      "new": "አዲስ",
+      "start_new_chat": "አዲስ ውይይት ጀምር"
+    }
+  },
+  "checklist_detail": {
+    "back": "ተመለስ",
+    "loading": "ቼክሊስት በመጫን ላይ...",
+    "errors": {
+      "load_failed": "ቼክሊስት መጫን አልተሳካም።"
+    },
+    "default_procedure": "ሂደት {{id}}",
+    "unknown_date": "ያልታወቀ",
+    "status": {
+      "not_started": "አልተጀመረም",
+      "in_progress": "በሂደት ላይ",
+      "completed": "ተጠናቀቀ"
+    },
+    "progress": "እድገት",
+    "progress_value": "{{percent}}% ተጠናቀቀ",
+    "items_title": "የቼክሊስት ንጥሎች",
+    "default_item": "ንጥል",
+    "item_type": "አይነት: {{type}}",
+    "empty_items": "ለዚህ ቼክሊስት እስካሁን ምንም ንጥሎች የሉም።",
+    "actions": {
+      "retry": "እንደገና ሞክር"
+    }
+  },
+  "procedure_detail": {
+    "back": "ወደ መነሻ ተመለስ",
+    "loading": "በመጫን ላይ...",
+    "not_found": "ሂደት አልተገኘም",
+    "errors": {
+      "load_failed": "ሂደት መጫን አልተሳካም።"
+    },
+    "verified": "የተረጋገጠ",
+    "default_procedure": "ሂደት",
+    "views": "{{count}} እይታዎች",
+    "likes": "{{count}} መውደዶች",
+    "updated_at": "የተዘመነ {{date}}",
+    "fees_value": "{{total}} {{currency}}",
+    "no_fees": "ምንም ክፍያ የለም",
+    "processing_time": "የሂደት ጊዜ",
+    "processing_time_value": "{{min}}-{{max}} ቀናት",
+    "no_processing_time": "አልተገለጸም",
+    "processing_time_description": "አማካይ የሂደት ጊዜ",
+    "total_fees": "ጠቅላላ ክፍያዎች",
+    "total_fees_description": "ሁሉም ክፍያዎች ተካተዋል",
+    "steps_title": "ደረጃ-በደረጃ መመሪያዎች",
+    "steps_description": "የእርስዎን {{procedure}} ለመጠናቀቅ እነዚህን ደረጃዎች ይከተሉ",
+    "default_step": "ደረጃ",
+    "no_step_description": "ምንም መግለጫ የለም",
+    "empty_steps": "ለዚህ ሂደት ምንም ደረጃዎች አልተገለጹም።",
+    "documents_title": "የሚያስፈልጉ ሰነዶች",
+    "default_document": "ሰነድ",
+    "empty_documents": "ምንም ሰነዶች አልተዘረዘሩም።",
+    "tabs": {
+      "feedback": "ግብረመልስ",
+      "notices": "ማስታወቂያዎች",
+      "discussions": "ውይይት"
+    },
+    "feedback_title": "የቅርብ ጊዜ ግብረመልስ",
+    "feedback_description": "ሌሎች ስለዚህ ሂደት ምን ይላሉ",
+    "feedback_loading": "ግብረመልስ በመጫን ላይ...",
+    "feedback_empty": "እስካሁን ምንም ግብረመልስ የለም። የመጀመሪያውን አጋራ!",
+    "feedback_user": "ተጠቃሚ {{id}}",
+    "anonymous_user": "ስም-አልባ",
+    "default_user_initial": "ተ",
+    "no_feedback_content": "ምንም ይዘት አልቀረበም",
+    "notices_title": "አስፈላጊ ማስታወቂያዎች",
+    "no_notices": "እስካሁን ምንም ማስታወቂያዎች የሉም",
+    "no_notices_description": "ይፋዊ ዝመናዎችን እዚህ እናሳያለን።",
+    "discussions_title": "የማህበረሰብ ውይይት",
+    "discussions_description": "ጥያቄዎችን ይጠይቁ እና ከማህበረሰቡ እርዳታ ያግኙ",
+    "discussions_loading": "ውይይቶችን በመጫን ላይ...",
+    "discussions_empty": "እስካሁን ምንም ውይይቶች የሉም። የመጀመሪያውን ጀምር!",
+    "default_discussion_title": "ርዕስ የለውም",
+    "no_discussion_content": "ምንም ይዘት አልቀረበም",
+    "recently": "በቅርቡ",
+    "actions": {
+      "download_guide": "መመሪያ አውርድ",
+      "share": "አጋራ",
+      "save_checklist": "ቼክሊስት አስቀምጥ",
+      "saving": "በመቆጠብ ላይ...",
+      "add_feedback": "ግብረመልስ ጨምር",
+      "view_discussions": "ውይይቶችን ተመልከት"
+    }
+  },
+  "loading": "በመጫን ላይ..."
+}

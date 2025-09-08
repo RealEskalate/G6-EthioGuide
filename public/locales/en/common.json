@@ -5,15 +5,156 @@
   "categories": "Explore Services",
   "category": {
     "passport": "Passport Services",
-    "id": "ID Services",
-    "business": "Business Services",
-    "banking": "Banking Services"
+    "id": "ID Card Services",
+    "business": "Business Registration",
+    "tax": "Tax Services"
   },
   "explore": "Explore",
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "discussions": "Discussions"
+  },
+  "language": {
+    "code": "EN",
+    "english": "English",
+    "amharic": "Amharic"
+  },
+  "hero": {
+    "title": {
+      "navigate": "Navigate",
+      "ethiopia": "Ethiopia’s",
+      "services": "Services",
+      "with": "with",
+      "ai": "AI",
+      "guidance": "Guidance"
+    },
+    "description": "Get instant help with government procedures, business registration, document renewals, and more. Your AI-powered assistant for Ethiopian bureaucracy.",
+    "cta": "Start AI Chat",
+    "features": {
+      "free": "Free to use",
+      "secure": "Secure & Private",
+      "available": "24/7 Available"
+    },
+    "ai_assistant": {
+      "title": "EthioGuide AI",
+      "question": "How can I renew my Ethiopian passport?",
+      "response": "I’ll help you with passport renewal. Here’s what you need:",
+      "requirements": {
+        "current_passport": "Current passport",
+        "photos": "2 passport photos",
+        "birth_certificate": "Birth certificate",
+        "fee": "550 ETB fee"
+      },
+      "placeholder": "Ask anything about Ethiopian services..."
+    }
+  },
+  "search": {
+    "title": "What can I help you with today?",
+    "placeholder": "Search for services, locations, or procedures...",
+    "badges": {
+      "id_renewal": "ID Renewal",
+      "business_registration": "Business Registration",
+      "passport_application": "Passport Application",
+      "tax_registration": "Tax Registration"
+    }
+  },
+  "features": {
+    "title": "Everything You Need in One Place",
+    "description": "Comprehensive tools to navigate Ethiopian services",
+    "ai_assistant": {
+      "title": "AI Assistant",
+      "description": "Get instant answers about procedures, requirements, and timelines from our intelligent AI guide.",
+      "cta": "Try AI Chat →"
+    },
+    "guides": {
+      "title": "Step-by-step Guides",
+      "description": "Detailed procedures with checklists, required documents, and estimated costs for every service.",
+      "cta": "View Procedures →"
+    },
+    "forum": {
+      "title": "Community Forum",
+      "description": "Connect with other users, share experiences, and get help from the community.",
+      "cta": "Join Discussion →"
+    }
+  },
+  "services": {
+    "title": "Popular Services",
+    "description": "Most requested procedures and services",
+    "cta": "Learn more →",
+    "passport": {
+      "description": "Renewal, replacement, and new applications."
+    },
+    "business": {
+      "description": "Start your business legally in Ethiopia."
+    },
+    "id": {
+      "description": "National ID renewal and replacement."
+    },
+    "tax": {
+      "description": "Tax registration and tax filing assistance."
+    }
+  },
+  "pricing": {
+    "title": "Simple, Transparent Pricing",
+    "description": "Choose the plan that fits your needs",
+    "per_month": "/month",
+    "free": {
+      "title": "Free",
+      "description": "Perfect for occasional users",
+      "price": "0 ETB",
+      "cta": "Start Free",
+      "features": {
+        "basic_ai": "Basic AI guidance (10 questions/month)",
+        "checklists": "Document checklists (5 downloads/month)",
+        "notifications": "Basic procedure notifications",
+        "forum": "Community forum access"
+      }
+    },
+    "pro": {
+      "title": "Pro",
+      "description": "For regular users with ongoing needs",
+      "price": "250 ETB",
+      "cta": "Upgrade to Pro",
+      "badge": "POPULAR",
+      "features": {
+        "unlimited_ai": "Unlimited AI guidance",
+        "storage": "Unlimited document storage",
+        "notifications": "Priority notifications & reminders",
+        "expiry": "Document expiry tracking",
+        "progress": "Procedure progress tracking",
+        "support": "Priority support"
+      }
+    }
+  },
+  "cta": {
+    "title": "Ready to Get Started?",
+    "description": "Join thousands of Ethiopians who are navigating services with ease",
+    "ai_assistant": "Try AI Assistant",
+    "create_account": "Create Account"
+  },
   "footer": {
-    "about": "About",
-    "contact": "Contact",
-    "terms": "Terms",
-    "privacy": "Privacy"
+    "description": "Your AI-powered guide to Ethiopian government services and procedures.",
+    "copyright": "© 2025 EthioGuide.",
+    "services": {
+      "title": "Services",
+      "ai_assistant": "AI Chat Assistant",
+      "guides": "Procedure Guides",
+      "tracking": "Document Tracking",
+      "forum": "Community Forum"
+    },
+    "support": {
+      "title": "Support",
+      "help_center": "Help Center",
+      "contact": "Contact Us",
+      "feedback": "Feedback",
+      "report": "Report Issue"
+    },
+    "legal": {
+      "title": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookie": "Cookie Policy"
+    }
   }
 }
