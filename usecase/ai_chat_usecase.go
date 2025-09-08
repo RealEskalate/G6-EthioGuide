@@ -31,6 +31,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
+	userFriendlyErrorResponse := "I'm sorry, but I encountered a technical issue and can't answer your question right now. Please try again in a few moments."
 	orgQuery := query
 	classifierPrompt := fmt.Sprintf(`
 	Classify the following user query into one of these categories:
@@ -49,7 +50,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 			UserID:    userId,
 			Source:    "unofficial",
 			Request:   orgQuery,
-			Response:  err.Error(),
+			Response:  userFriendlyErrorResponse,
 		}, err
 	}
 	switch category {
@@ -60,7 +61,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 			UserID:    userId,
 			Source:    "unofficial",
 			Request:   orgQuery,
-			Response:  "The request is offensive!!",
+			Response:  "I am unable to process this request as it appears to violate our content policy. Please rephrase your question to continue.",
 		}, errors.New("your query contains offensive content and cannot be processed")
 
 	case "irrelevant":
@@ -70,7 +71,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 			UserID:    userId,
 			Source:    "unofficial",
 			Request:   orgQuery,
-			Response:  "The request is irrelevant to this application!!",
+			Response:  "I can only answer questions about Ethiopian government procedures. Could you please ask a question related to that topic?",
 		}, nil
 	}
 
@@ -84,7 +85,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 			UserID:    userId,
 			Source:    "unofficial",
 			Request:   orgQuery,
-			Response:  err.Error(),
+			Response:  userFriendlyErrorResponse,
 		}, err
 	}
 	if orglang == "unknown" {
@@ -94,7 +95,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 			UserID:    userId,
 			Source:    "unofficial",
 			Request:   orgQuery,
-			Response:  "This is unknown language",
+			Response:  "I'm sorry, I could not determine the language of your request. I currently support Amharic and English. Please try again in one of these languages.",
 		}, domain.ErrUnsupportedLanguage
 	} else if orglang != "english" {
 		prompt := fmt.Sprintf("translate this query %s in to English lanuage. And i do not want you to add another thing by yourself", query)
@@ -106,8 +107,8 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 				UserID:    userId,
 				Source:    "Couldn't translate the request",
 				Request:   orgQuery,
-				Response:  err.Error(),
-			}, domain.ErrUnsupportedLanguage
+				Response:  "I'm sorry, I had trouble understanding your request. Could you please try rephrasing it?",
+			}, fmt.Errorf("%w %v", domain.ErrUnsupportedLanguage, err)
 		}
 	}
 
@@ -120,7 +121,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 			UserID:    userId,
 			Source:    "unofficial",
 			Request:   orgQuery,
-			Response:  err.Error(),
+			Response:  userFriendlyErrorResponse,
 		}, err
 	}
 
@@ -133,7 +134,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 			UserID:    userId,
 			Source:    "unofficial",
 			Request:   orgQuery,
-			Response:  err.Error(),
+			Response:  userFriendlyErrorResponse,
 		}, err
 	}
 
@@ -151,10 +152,22 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 		)
 	}
 
-	prompt = fmt.Sprintf(`You are an assistant helping Ethiopians navigate bureaucracy.
-    Here are the most relevant procedures:
-    %s
-    Now answer the user query: %s`, contextText, query)
+	prompt = fmt.Sprintf(`You are an assistant for EthioGuide, helping people with Ethiopian bureaucracy.
+Your tone should be clear, helpful, and encouraging.
+Use the following information to answer the user's query.
+
+*Relevant Procedures:*
+---
+%s
+---
+
+*User's Query:* "%s"
+
+*Instructions:*
+1.  Provide a direct and concise answer to the user's query.
+2.  Format your answer for easy reading. Use asterisks for bolding (e.g., *Key Requirement*) and numbered lists for steps.
+3.  If the provided procedures are a good match, present the most relevant one clearly.
+4.  If the procedures don't seem to be a good match, politely state that you couldn't find a specific procedure but can offer general advice.`, contextText, query)
 
 	answer, err := u.LLMService.GenerateCompletion(ctx, prompt)
 	if err != nil {
@@ -164,7 +177,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 			UserID:    userId,
 			Source:    "unofficial",
 			Request:   orgQuery,
-			Response:  err.Error(),
+			Response:  userFriendlyErrorResponse,
 		}, err
 	}
 	source := "unofficial"
@@ -174,10 +187,12 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 	// After: return answer, nil
 
 	if orglang != "english" {
-		prompt := fmt.Sprintf(`I want you to translate procedure into this %s language by keeping its format as it is.
-		here is the procedure
-		%s
-		`, orglang, answer)
+		prompt := fmt.Sprintf(`Translate the following answer into the language '%s'.
+    IMPORTANT: Preserve the formatting exactly, including any asterisks for bolding and any numbered lists. Do not add any extra commentary.
+
+    *Answer to Translate:*
+    %s
+    `, orglang, answer)
 		answer, err = u.LLMService.GenerateCompletion(ctx, prompt)
 		if err != nil {
 			return &domain.AIChat{
@@ -186,7 +201,7 @@ func (u *AIChatUsecase) AIchat(ctx context.Context, userId, query string) (*doma
 				UserID:    userId,
 				Source:    "unofficial",
 				Request:   orgQuery,
-				Response:  err.Error(),
+				Response:  userFriendlyErrorResponse,
 			}, err
 		}
 	}
