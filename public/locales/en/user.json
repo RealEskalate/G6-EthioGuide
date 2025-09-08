@@ -1,0 +1,380 @@
+
+{
+  "welcome": {
+    "title": "Welcome back!",
+    "description": "Navigate Ethiopian government procedures with ease",
+    "services": "Government Services"
+  },
+  "search": {
+    "placeholder": "Search government procedures...",
+    "button": "Search"
+  },
+  "procedures": {
+    "title": "Quick Access Procedures",
+    "default_title": "Procedure",
+    "verified": "Verified",
+    "days": "days",
+    "free": "Free",
+    "docs": "docs",
+    "more": "more",
+    "button": "Open Detail"
+  },
+  "activity": {
+    "title": "Recent Activity",
+    "items": {
+      "passport_renewal": "Passport Renewal",
+      "business_license": "Business License Application",
+      "vehicle_registration": "Vehicle Registration"
+    },
+    "status": {
+      "completed": "Completed",
+      "in_progress": "In Progress"
+    },
+    "times": {
+      "two_hours": "2 hours ago",
+      "one_day": "1 day ago",
+      "one_week": "1 week ago"
+    },
+    "view_all": "View All Activities →"
+  },
+  "feedback": {
+    "title": "Feedback",
+    "submit_title": "Submit Feedback",
+    "form": {
+      "type_label": "Type of Feedback",
+      "type_placeholder": "Select feedback type",
+      "types": {
+        "inaccuracy": "Report Inaccuracy",
+        "improvement": "Improvement",
+        "other": "Other"
+      },
+      "subject_label": "Subject/Procedure/Document",
+      "subject_placeholder": "Describe your report procedure...",
+      "detailed_label": "Detailed Feedback",
+      "detailed_placeholder": "Please provide detailed feedback...",
+      "tags_label": "Tags (comma separated)",
+      "tags_placeholder": "e.g. document, payment, delay",
+      "submit_button": "Send Feedback",
+      "submitting": "Submitting...",
+      "no_procedure": "Open the feedback page from a procedure to submit feedback."
+    },
+    "history_title": "Your Feedback History",
+    "history": {
+      "no_procedure": "No procedure selected. Open feedback from a specific procedure to view its feedback.",
+      "loading": "Loading...",
+      "error": "Failed to load feedback history.",
+      "empty": "No feedback yet. Be the first to submit.",
+      "status": {
+        "new": "New",
+        "pending": "Pending",
+        "resolved": "Resolved"
+      },
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {{current}} of {{total}}"
+    },
+    "errors": {
+      "no_procedure": "Open feedback from a procedure to submit.",
+      "not_authenticated": "You must be logged in to submit feedback.",
+      "no_content": "Please enter your feedback.",
+      "submit_failed": "Failed to submit feedback"
+    },
+    "success": "Feedback submitted."
+  },
+  "workspace": {
+    "title": "My Workspace",
+    "description": "Track and manage your ongoing procedures",
+    "label": "Workspace",
+    "stats": {
+      "total": "Total Procedures",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "available": "Available Procedures"
+    },
+    "status": {
+      "not_started": "Not Started",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "ongoing": "Ongoing"
+    },
+    "actions": {
+      "start": "Start Now",
+      "continue": "Continue",
+      "view_details": "View Details",
+      "retry": "Try Again",
+      "login": "Go to Login",
+      "browse": "Browse Procedures"
+    },
+    "default_organization": "Organization",
+    "default_procedure": "Procedure {{id}}",
+    "default_date": "Recently",
+    "search": {
+      "placeholder": "Search your procedures...",
+      "button": "Search"
+    },
+    "filter": {
+      "all": "All Organizations"
+    },
+    "progress": "Progress",
+    "progress_value": "{{percent}}% Complete",
+    "start_date": "Started: {{date}}",
+    "estimated_completion": "Est. completion: {{status}}",
+    "documents_uploaded": "{{completed}}/{{total}} documents uploaded",
+    "errors": {
+      "title": "Error loading procedures",
+      "auth_failed": "Authentication failed. Please check your login credentials.",
+      "load_failed": "There was a problem loading your procedures. Please try again."
+    },
+    "loading": "Loading your procedures...",
+    "empty": "No procedures found. Start by creating a checklist from the procedures list."
+  },
+  "community": {
+    "title": "Community Discussions",
+    "description": "Join the conversation. Share, ask, and collaborate.",
+    "actions": {
+      "my_discussions": "My Discussions",
+      "my_discussions_short": "Me",
+      "add_discussion": "Add Discussion",
+      "add_discussion_short": "New",
+      "filters": "Filters & Tags",
+      "view_more": "View More",
+      "view_less": "View Less",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "default_author": "User",
+    "default_title": "Untitled",
+    "author_anonymous": "Anonymous",
+    "search": {
+      "placeholder": "Search discussions...",
+      "button": "Search"
+    },
+    "filter": {
+      "all": "All Categories"
+    },
+    "filters": {
+      "title": "Filters & Tags",
+      "category": "Category",
+      "popular_tags": "Popular Tags",
+      "apply": "Apply",
+      "reset": "Reset"
+    },
+    "tags": {
+      "national_id": "National ID",
+      "passport": "Passport",
+      "tax": "Tax"
+    },
+    "popular_tags": "Popular Tags",
+    "pagination": "Page {{current}} of {{total}}",
+    "total": "Total: {{count}}",
+    "loading": "Loading...",
+    "errors": {
+      "load_failed": "Failed to load discussions."
+    },
+    "empty": "No discussions match your filters."
+  },
+  "my_discussions": {
+    "title": "My Discussions",
+    "actions": {
+      "back_to_discussions": "Back to Discussions",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "default_title": "Untitled",
+    "edit": {
+      "title_placeholder": "Edit title",
+      "content_placeholder": "Edit content"
+    },
+    "loading": "Loading...",
+    "errors": {
+      "load_failed": "Failed to load discussions.",
+      "update_failed": "Failed to update. Please try again.",
+      "empty_fields": "Title and content cannot be empty."
+    },
+    "empty": "No discussions found."
+  },
+  "notices": {
+    "title": "Official Notices",
+    "description": "Get notices of different organizations",
+    "search": {
+      "placeholder": "Search notices...",
+      "button": "Search"
+    },
+    "filter": {
+      "all": "All Organizations"
+    },
+    "published": "Published:",
+    "organization": "Organization:",
+    "actions": {
+      "view_more": "View More",
+      "view_less": "View Less"
+    },
+    "default_title": "Untitled Notice",
+    "default_organization": "Organization",
+    "unknown_date": "Unknown",
+    "loading": "Loading...",
+    "errors": {
+      "load_failed": "Failed to load notices."
+    },
+    "empty": "No notices found."
+  },
+  "notices.detail": {
+    "not_found": "Notice Not Found",
+    "actions": {
+      "back_to_notices": "Back to Notices"
+    },
+    "greeting": "Dear Team Members,",
+    "default_description": "No description available.",
+    "key_changes": "Key Policy Changes:",
+    "security_updates": "Security Protocol Updates:",
+    "contact_info": "For questions regarding these policy changes, please contact the HR department or attend one of our information sessions scheduled for next week. Your cooperation in implementing these changes is greatly appreciated.",
+    "closing": "Best regards,",
+    "default_author": "HR Director",
+    "author_title": "HR Director",
+    "attachments": "Attachments"
+  },
+  "chat": {
+    "title": "Your AI Guide",
+    "description": "Ask anything about procedures, fees, and steps — in English or Amharic.",
+    "assistant_label": "AI Assistant",
+    "welcome": "Welcome",
+    "welcome_message": "Type or speak your question. Use Auto for hands-free voice. Toggle AM/EN for your preferred language. Click Translate to switch the answer language.",
+    "loading": "Loading your AI assistant…",
+    "auth_required": "Authentication Required",
+    "sign_in": "Please sign in to access your AI assistant.",
+    "history_title": "Chat History",
+    "history_empty": "No chat history available.",
+    "default_title": "Untitled Chat",
+    "messages": "msgs",
+    "unknown_date": "Unknown",
+    "messages_loading": "Loading messages...",
+    "success_message": "Message sent successfully!",
+    "history_loaded": "Chat history loaded successfully!",
+    "translate_failed": "Translation failed",
+    "verified": "Verified",
+    "procedure": "Procedure",
+    "default_procedure": "Untitled Procedure",
+    "no_details": "No details available",
+    "suggestions_title": "Quick Suggestions",
+    "suggestions": {
+      "suggestion1": "What documents do I need for a business license?",
+      "suggestion2": "Help me start the tourist visa application.",
+      "suggestion3": "Show me the steps to renew a residence permit.",
+      "suggestion4": "Translate the requirements into Amharic."
+    },
+    "badges": {
+      "fees": "Fees",
+      "documents": "Documents",
+      "office": "Office",
+      "timing": "Timing"
+    },
+    "actions": {
+      "open": "Open",
+      "clear_error": "Clear",
+      "play": "Play",
+      "stop": "Stop",
+      "translating": "Translating…",
+      "translate_to_en": "Translate to EN",
+      "translate_to_am": "Translate to AM",
+      "save_checklist": "Save Checklist",
+      "start_listening": "Start voice input",
+      "stop_listening": "Stop listening",
+      "voice_not_supported": "Voice input not supported",
+      "toggle_voice_mode": "Toggle voice mode (auto send and auto speak)",
+      "toggle_language": "Toggle voice language between Amharic and English",
+      "auto": "Auto",
+      "manual": "Manual",
+      "history": "History",
+      "hide": "Hide",
+      "show_history": "Show previous conversations",
+      "hide_history": "Hide previous conversations",
+      "new": "New",
+      "start_new_chat": "Start a new chat"
+    }
+  },
+  "checklist_detail": {
+    "back": "Back",
+    "loading": "Loading checklist…",
+    "errors": {
+      "load_failed": "Failed to load checklist."
+    },
+    "default_procedure": "Procedure {{id}}",
+    "unknown_date": "Unknown",
+    "status": {
+      "not_started": "Not Started",
+      "in_progress": "In Progress",
+      "completed": "Completed"
+    },
+    "progress": "Progress",
+    "progress_value": "{{percent}}% Complete",
+    "items_title": "Checklist Items",
+    "default_item": "Item",
+    "item_type": "Type: {{type}}",
+    "empty_items": "No items yet for this checklist.",
+    "actions": {
+      "retry": "Try Again"
+    }
+  },
+  "procedure_detail": {
+    "back": "Back to Home",
+    "loading": "Loading...",
+    "not_found": "Procedure Not Found",
+    "errors": {
+      "load_failed": "Failed to load procedure."
+    },
+    "verified": "Verified",
+    "default_procedure": "Procedure",
+    "views": "{{count}} views",
+    "likes": "{{count}} likes",
+    "updated_at": "Updated {{date}}",
+    "fees_value": "{{total}} {{currency}}",
+    "no_fees": "No fees",
+    "processing_time": "Processing Time",
+    "processing_time_value": "{{min}}-{{max}} days",
+    "no_processing_time": "Not specified",
+    "processing_time_description": "Average processing time",
+    "total_fees": "Total Fees",
+    "total_fees_description": "All fees included",
+    "steps_title": "Step-by-Step Instructions",
+    "steps_description": "Follow these steps to complete your {{procedure}}",
+    "default_step": "Step",
+    "no_step_description": "No description available",
+    "empty_steps": "No steps defined for this procedure.",
+    "documents_title": "Required Documents",
+    "default_document": "Document",
+    "empty_documents": "No documents listed.",
+    "tabs": {
+      "feedback": "Feedback",
+      "notices": "Notices",
+      "discussions": "Discussion"
+    },
+    "feedback_title": "Recent Feedback",
+    "feedback_description": "What others say about this procedure",
+    "feedback_loading": "Loading feedback...",
+    "feedback_empty": "No feedback yet. Be the first to share!",
+    "feedback_user": "User {{id}}",
+    "anonymous_user": "Anonymous",
+    "default_user_initial": "U",
+    "no_feedback_content": "No content provided",
+    "notices_title": "Important Notices",
+    "no_notices": "No notices yet",
+    "no_notices_description": "We will display official updates here.",
+    "discussions_title": "Community Discussion",
+    "discussions_description": "Ask questions and get help from the community",
+    "discussions_loading": "Loading discussions...",
+    "discussions_empty": "No discussions yet. Start the first one!",
+    "default_discussion_title": "Untitled",
+    "no_discussion_content": "No content provided",
+    "recently": "Recently",
+    "actions": {
+      "download_guide": "Download Guide",
+      "share": "Share",
+      "save_checklist": "Save Checklist",
+      "saving": "Saving…",
+      "add_feedback": "Add Feedback",
+      "view_discussions": "View Discussions"
+    }
+  },
+  "loading": "Loading..."
+}

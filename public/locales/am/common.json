@@ -1,19 +1,160 @@
 {
-  "welcome": "እንኳን ወደ EthioGuide በደህና መጡ",
+  "welcome": "እንኳን ወደ ኢትዮጋይድ ተገኙ",
   "hero_description": "ቢሮክራሲን በቀላሉ ያቃልሉ",
-  "login": "ግባ",
+  "login": "ይግቡ",
   "categories": "አገልግሎቶችን ያስሱ",
   "category": {
     "passport": "የፓስፖርት አገልግሎቶች",
-    "id": "የመታወቂያ አገልግሎቶች",
-    "business": "የቢዝነስ አገልግሎቶች",
-    "banking": "የባንክ አገልግሎቶች"
+    "id": "የመታወቂያ ካርድ አገልግሎቶች",
+    "business": "የንግድ ምዝገባ",
+    "tax": "የግብር አገልግሎቶች"
   },
-  "explore": "አስስ",
+  "explore": "ያስሱ",
+  "nav": {
+    "home": "መነሻ",
+    "services": "አገልግሎቶች",
+    "discussions": "ውይይቶች"
+  },
+  "language": {
+    "code": "አማ",
+    "english": "እንግሊዝኛ",
+    "amharic": "አማርኛ"
+  },
+  "hero": {
+    "title": {
+      "navigate": "መሄድ",
+      "ethiopia": "የኢትዮጵያ",
+      "services": "አገልግሎቶች",
+      "with": "ጋር",
+      "ai": "ኤአይ",
+      "guidance": "መመሪያ"
+    },
+    "description": "የመንግስት ሂደቶች፣ የንግድ ምዝገባ፣ የሰነድ እድሳት እና ሌሎች በፍጥነት እገዛ ያግኙ። ለኢትዮጵያ ቢሮክራሲ የኤአይ ረዳትዎ።",
+    "cta": "የኤአይ ውይይት ይጀምሩ",
+    "features": {
+      "free": "በነጻ መጠቀም",
+      "secure": "ደህንነቱ የተጠበቀ እና ግላዊ",
+      "available": "24/7 ይገኛል"
+    },
+    "ai_assistant": {
+      "title": "ኢትዮጋይድ ኤአይ",
+      "question": "የኢትዮጵያ ፓስፖርቴን እንዴት ማደስ እችላለሁ?",
+      "response": "የፓስፖርት እድሳት እንዲረዳዎት እረዳዎታለሁ። የሚያስፈልጉዎት ነገሮች፡",
+      "requirements": {
+        "current_passport": "አሁን ያለው ፓስፖርት",
+        "photos": "2 የፓስፖርት ፎቶዎች",
+        "birth_certificate": "የልደት ምስክር ወረቀት",
+        "fee": "550 ብር ክፍያ"
+      },
+      "placeholder": "ስለ ኢትዮጵያ አገልግሎቶች ማንኛውንም ይጠይቁ..."
+    }
+  },
+  "search": {
+    "title": "ዛሬ ምን ልረዳዎት እችላለሁ?",
+    "placeholder": "አገልግሎቶችን፣ ቦታዎችን ወይም ሂደቶችን ይፈልጉ...",
+    "badges": {
+      "id_renewal": "የመታወቂያ እድሳት",
+      "business_registration": "የንግድ ምዝገባ",
+      "passport_application": "የፓስፖርት ማመልከቻ",
+      "tax_registration": "የግብር ምዝገባ"
+    }
+  },
+  "features": {
+    "title": "ሁሉም ነገር በአንድ ቦታ",
+    "description": "የኢትዮጵያ አገልግሎቶችን ለመጠቀም አጠቃላይ መሣሪያዎች",
+    "ai_assistant": {
+      "title": "ኤአይ ረዳት",
+      "description": "ስለ ሂደቶች፣ መስፈርቶች እና ጊዜ መስመሮች ከእኛ የማሰብ ችሎታ ያለው ኤአይ መመሪያ ፈጣን መልሶች ያግኙ።",
+      "cta": "ኤአይ ውይይት ይሞክሩ →"
+    },
+    "guides": {
+      "title": "ደረጃ በደረጃ መመሪያዎች",
+      "description": "ለእያንዳንዱ አገልግሎት ዝርዝር ሂደቶች፣ የተፈተሹ ዝርዝሮች፣ አስፈላጊ ሰነዶች እና የተገመተ ወጪ።",
+      "cta": "ሂደቶችን ይመልከቱ →"
+    },
+    "forum": {
+      "title": "የማህበረሰብ መድረክ",
+      "description": "ሌሎች ተጠቃሚዎች ጋር ይገናኙ፣ ልምዶችን ያጋሩ እና ከማህበረሰቡ እገዛ ያግኙ።",
+      "cta": "ውይይት ይቀላቀሉ →"
+    }
+  },
+  "services": {
+    "title": "ታዋቂ አገልግሎቶች",
+    "description": "በጣም የተጠየቁ ሂደቶች እና አገልግሎቶች",
+    "cta": "ተጨማሪ ይወቁ →",
+    "passport": {
+      "description": "እድሳት፣ መተካት እና አዲስ ማመልከቻዎች።"
+    },
+    "business": {
+      "description": "በኢትዮጵያ ውስጥ ንግድዎን በህጋዊ መንገድ ይጀምሩ።"
+    },
+    "id": {
+      "description": "የብሔራዊ መታወቂያ እድሳት እና መተካት።"
+    },
+    "tax": {
+      "description": "የግብር ምዝገባ እና የግብር መመለሻ እገዛ።"
+    }
+  },
+  "pricing": {
+    "title": "ቀላል፣ ግልፅ የዋጋ አሰጣጥ",
+    "description": "ፍላጎቶችዎን የሚያሟላ እቅድ ይምረጡ",
+    "per_month": "/በወር",
+    "free": {
+      "title": "ነፃ",
+      "description": "ለአልፎ አልፎ ተጠቃሚዎች ተስማሚ",
+      "price": "0 ብር",
+      "cta": "በነጻ ይጀምሩ",
+      "features": {
+        "basic_ai": "መሠረታዊ የኤአይ መመሪያ (10 ጥያቄዎች/ወር)",
+        "checklists": "የሰነድ ቼክሊስቶች (5 ውርዶች/ወር)",
+        "notifications": "መሠረታዊ የሂደት ማሳወቂያዎች",
+        "forum": "የማህበረሰብ መድረክ መዳረሻ"
+      }
+    },
+    "pro": {
+      "title": "ፕሮ",
+      "description": "ለተከታታይ ፍላጎቶች ላላቸው ተጠቃሚዎች",
+      "price": "250 ብር",
+      "cta": "ወደ ፕሮ ያሻሽሉ",
+      "badge": "ታዋቂ",
+      "features": {
+        "unlimited_ai": "ያልተገደበ የኤአይ መመሪያ",
+        "storage": "ያልተገደበ የሰነድ ማከማቻ",
+        "notifications": "ቅድሚያ የሚሰጣቸው ማሳወቂያዎች እና አስታዋሾች",
+        "expiry": "የሰነድ ጊዜ መጠን መከታተል",
+        "progress": "የሂደት መሻሻል መከታተል",
+        "support": "ቅድሚያ የሚሰጥ ድጋፍ"
+      }
+    }
+  },
+  "cta": {
+    "title": "መጀመር ዝግጁ ነዎት?",
+    "description": "አገልግሎቶችን በቀላሉ ከሚጠቀሙ በሺዎች የሚቆጠሩ ኢትዮጵያውያን ጋር ይቀላቀሉ",
+    "ai_assistant": "ኤአይ ረዳት ይሞክሩ",
+    "create_account": "መለያ ይፍጠሩ"
+  },
   "footer": {
-    "about": "ስለ",
-    "contact": "እውቂያ",
-    "terms": "ውሎች",
-    "privacy": "ግላዊነት"
+    "description": "ለኢትዮጵያ መንግስት አገልግሎቶች እና ሂደቶች የኤአይ ረዳትዎ።",
+    "copyright": "© 2025 ኢትዮጋይድ።",
+    "services": {
+      "title": "አገልግሎቶች",
+      "ai_assistant": "ኤአይ ውይይት ረዳት",
+      "guides": "የሂደት መመሪያዎች",
+      "tracking": "የሰነድ መከታተል",
+      "forum": "የማህበረሰብ መድረክ"
+    },
+    "support": {
+      "title": "ድጋፍ",
+      "help_center": "የእገዛ ማዕከል",
+      "contact": "ያግኙን",
+      "feedback": "አስተያየት",
+      "report": "ችግር ሪፖርት ያድርጉ"
+    },
+    "legal": {
+      "title": "ህጋዊ",
+      "privacy": "የግላዊነት መመሪያ",
+      "terms": "የአገልግሎት ውል",
+      "cookie": "የኩኪ መመሪያ"
+    }
   }
 }
