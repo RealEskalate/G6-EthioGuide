@@ -1,88 +1,133 @@
 package repository_test
 
-// import (
-// 	"context"
-// 	"testing"
+import (
+	"EthioGuide/domain"
+	. "EthioGuide/repository"
+	"context"
+	"testing"
 
-// 	"EthioGuide/domain"
-// 	"EthioGuide/repository"
+	"github.com/stretchr/testify/suite"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
-// 	"github.com/stretchr/testify/suite"
-// 	"go.mongodb.org/mongo-driver/bson"
-// 	"go.mongodb.org/mongo-driver/bson/primitive"
-// 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
-// )
+type PreferencesRepositoryTestSuite struct {
+	suite.Suite
+	db         *mongo.Database
+	repo       domain.IPreferencesRepository
+	collection *mongo.Collection
+}
 
-// type PreferencesRepositorySuite struct {
-//     suite.Suite
-//     mt   *mtest.T
-//     repo domain.IPreferencesRepository
-// }
+func (s *PreferencesRepositoryTestSuite) SetupSuite() {
+	s.db = testDBClient.Database(testDBName)
+	s.repo = NewPreferencesRepository(s.db)
+	s.collection = s.db.Collection("preferences")
+}
 
-// func (s *PreferencesRepositorySuite) SetupTest() {
-//     s.mt = mtest.New(s.T(), mtest.NewOptions().ClientType(mtest.Mock))
-//     s.repo = repository.NewPreferencesRepositoryMongo(s.mt.DB)
-// }
+func (s *PreferencesRepositoryTestSuite) TearDownSuite() {
+	s.db.Drop(context.Background())
+}
 
-// func (s *PreferencesRepositorySuite) TearDownTest() {
-//     s.mt.Close()
-// }
+func (s *PreferencesRepositoryTestSuite) BeforeTest(suiteName, testName string) {
+	s.collection.DeleteMany(context.Background(), bson.M{})
+}
 
-// func (s *PreferencesRepositorySuite) TestCreateAndGetByUserID() {
-//     s.mt.Run("Create and GetByUserID", func(mt *mtest.T) {
-//         ctx := context.Background()
-//         userID := "user123"
-//         pref := &domain.Preferences{
-//             UserID:            userID,
-//             PreferredLang:     "en",
-//             PushNotification:  true,
-//             EmailNotification: false,
-//         }
+func TestPreferencesRepositoryTestSuite(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode.")
+	}
+	suite.Run(t, new(PreferencesRepositoryTestSuite))
+}
 
-//         mt.AddMockResponses(mtest.CreateSuccessResponse())
-//         err := s.repo.Create(ctx, pref)
-//         s.NoError(err)
-//         s.NotEmpty(pref.ID)
+func (s *PreferencesRepositoryTestSuite) TestCreate() {
+	ctx := context.Background()
+	userID := primitive.NewObjectID().Hex()
 
-//         // Prepare a mock response for FindOne
-//         oid, _ := primitive.ObjectIDFromHex(pref.ID)
-//         mt.AddMockResponses(mtest.CreateCursorResponse(
-//             1, "preferences.test", mtest.FirstBatch,
-//             bson.D{
-//                 {"_id", oid},
-//                 {"user_id", userID},
-//                 {"preferredLang", "en"},
-//                 {"pushNotification", true},
-//                 {"emailNotification", false},
-//             },
-//         ))
+	preferences := &domain.Preferences{
+		UserID:            userID,
+		PreferredLang:     domain.English,
+		PushNotification:  true,
+		EmailNotification: false,
+	}
 
-//         got, err := s.repo.GetByUserID(ctx, userID)
-//         s.NoError(err)
-//         s.Equal(userID, got.UserID)
-//         s.Equal("en", string(got.PreferredLang))
-//         s.Equal(true, got.PushNotification)
-//         s.Equal(false, got.EmailNotification)
-//     })
-// }
+	err := s.repo.Create(ctx, preferences)
+	s.NoError(err)
+	s.NotEmpty(preferences.ID, "Domain preferences ID should be back-filled after creation")
 
-// func (s *PreferencesRepositorySuite) TestUpdateByUserID() {
-//     s.mt.Run("UpdateByUserID", func(mt *mtest.T) {
-//         ctx := context.Background()
-//         userID := "user456"
-//         pref := &domain.Preferences{
-//             UserID:            userID,
-//             PreferredLang:     "am",
-//             PushNotification:  false,
-//             EmailNotification: true,
-//         }
+	// Verify directly in the DB
+	var createdModel PreferencesDTO
+	objID, _ := primitive.ObjectIDFromHex(preferences.ID)
+	err = s.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&createdModel)
+	s.NoError(err)
+	s.Equal(userID, createdModel.UserID)
+	s.Equal("en", createdModel.PreferredLang)
+	s.True(createdModel.PushNotification)
+}
 
-//         mt.AddMockResponses(mtest.CreateSuccessResponse())
-//         err := s.repo.UpdateByUserID(ctx, userID, pref)
-//         s.NoError(err)
-//     })
-// }
+func (s *PreferencesRepositoryTestSuite) TestGetByUserID() {
+	ctx := context.Background()
+	userID := primitive.NewObjectID().Hex()
 
-// func TestPreferencesRepositorySuite(t *testing.T) {
-//     suite.Run(t, new(PreferencesRepositorySuite))
-// }
+	// Arrange: Create a document to fetch
+	prefToCreate := &domain.Preferences{UserID: userID, PreferredLang: domain.Amharic}
+	err := s.repo.Create(ctx, prefToCreate)
+	s.Require().NoError(err)
+
+	s.Run("Success", func() {
+		found, err := s.repo.GetByUserID(ctx, userID)
+		s.NoError(err)
+		s.NotNil(found)
+		s.Equal(userID, found.UserID)
+		s.Equal(domain.Amharic, found.PreferredLang)
+	})
+
+	s.Run("Failure - Not Found", func() {
+		nonExistentUserID := primitive.NewObjectID().Hex()
+		_, err := s.repo.GetByUserID(ctx, nonExistentUserID)
+		s.Error(err)
+		s.ErrorIs(err, mongo.ErrNoDocuments)
+	})
+}
+
+func (s *PreferencesRepositoryTestSuite) TestUpdateByUserID() {
+	ctx := context.Background()
+	userID := primitive.NewObjectID().Hex()
+
+	// Arrange: Create a document to update
+	prefToCreate := &domain.Preferences{
+		UserID:            userID,
+		PreferredLang:     domain.English,
+		PushNotification:  false,
+		EmailNotification: false,
+	}
+	err := s.repo.Create(ctx, prefToCreate)
+	s.Require().NoError(err)
+
+	s.Run("Success", func() {
+		// Prepare the updated domain object
+		updatedPrefs := &domain.Preferences{
+			UserID:            userID,
+			PreferredLang:     domain.Amharic,
+			PushNotification:  true,
+			EmailNotification: true,
+		}
+
+		err := s.repo.UpdateByUserID(ctx, userID, updatedPrefs)
+		s.NoError(err)
+
+		// Verify directly in the DB
+		var result PreferencesDTO
+		err = s.collection.FindOne(ctx, bson.M{"user_id": userID}).Decode(&result)
+		s.NoError(err)
+		s.Equal("am", result.PreferredLang)
+		s.True(result.PushNotification)
+		s.True(result.EmailNotification)
+	})
+
+	s.Run("Failure - Not Found", func() {
+		nonExistentUserID := primitive.NewObjectID().Hex()
+		err := s.repo.UpdateByUserID(ctx, nonExistentUserID, &domain.Preferences{UserID: nonExistentUserID})
+		s.ErrorIs(err, domain.ErrUserNotFound)
+	})
+}

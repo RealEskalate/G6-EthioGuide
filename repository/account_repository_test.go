@@ -419,3 +419,140 @@ func (s *AccountRepositoryTestSuite) TestExistsByUsername() {
 		s.Error(err)
 	})
 }
+
+func (s *AccountRepositoryTestSuite) TestUpdateUserFields() {
+	ctx := context.Background()
+	// Arrange: Create a user to update
+	account := &domain.Account{
+		Name:  "Fields User",
+		Email: "fields@example.com",
+		Role:  domain.RoleUser,
+		UserDetail: &domain.UserDetail{
+			Username:   "fieldsuser",
+			IsVerified: false,
+		},
+	}
+	err := s.repo.Create(ctx, account)
+	s.Require().NoError(err, "Setup: failed to create user")
+
+	s.Run("Success - Update single field", func() {
+		update := map[string]interface{}{"name": "Updated Fields User"}
+		err := s.repo.UpdateUserFields(ctx, account.ID, update)
+		s.NoError(err)
+
+		// Verify directly in the DB
+		fetched, err := s.repo.GetById(ctx, account.ID)
+		s.NoError(err)
+		s.Equal("Updated Fields User", fetched.Name)
+		s.Equal("fieldsuser", fetched.UserDetail.Username) // Ensure other fields are unchanged
+	})
+
+	s.Run("Success - Update nested field", func() {
+		update := map[string]interface{}{"user_detail.is_verified": true}
+		err := s.repo.UpdateUserFields(ctx, account.ID, update)
+		s.NoError(err)
+
+		// Verify
+		fetched, err := s.repo.GetById(ctx, account.ID)
+		s.NoError(err)
+		s.True(fetched.UserDetail.IsVerified)
+	})
+
+	s.Run("Failure - Not Found", func() {
+		nonExistentID := primitive.NewObjectID().Hex()
+		update := map[string]interface{}{"name": "Does not matter"}
+		err := s.repo.UpdateUserFields(ctx, nonExistentID, update)
+		s.ErrorIs(err, domain.ErrUserNotFound)
+	})
+
+	s.Run("Success - No fields to update", func() {
+		// Should not return an error
+		err := s.repo.UpdateUserFields(ctx, account.ID, map[string]interface{}{})
+		s.NoError(err)
+	})
+}
+
+func (s *AccountRepositoryTestSuite) TestGetOrgs() {
+	ctx := context.Background()
+	// Arrange: Create some orgs and some users to filter through
+	org1 := &domain.Account{
+		Name:  "Government Org A",
+		Email: "gov.a@example.com",
+		Role:  domain.RoleOrg,
+		OrganizationDetail: &domain.OrganizationDetail{
+			Type:        domain.OrgTypeGov,
+			Description: "A test government agency.",
+		},
+	}
+	org2 := &domain.Account{
+		Name:  "Private Company B",
+		Email: "priv.b@example.com",
+		Role:  domain.RoleOrg,
+		OrganizationDetail: &domain.OrganizationDetail{
+			Type: domain.OrgTypePrivate,
+		},
+	}
+	org3 := &domain.Account{
+		Name:  "Government Org C",
+		Email: "gov.c@example.com",
+		Role:  domain.RoleOrg,
+		OrganizationDetail: &domain.OrganizationDetail{
+			Type: domain.OrgTypeGov,
+		},
+	}
+	user := &domain.Account{Name: "Regular User", Email: "user@example.com", Role: domain.RoleUser}
+	s.Require().NoError(s.repo.Create(ctx, org1))
+	s.Require().NoError(s.repo.Create(ctx, org2))
+	s.Require().NoError(s.repo.Create(ctx, org3))
+	s.Require().NoError(s.repo.Create(ctx, user))
+
+	s.Run("Success - No filters", func() {
+		filter := domain.GetOrgsFilter{Page: 1, PageSize: 10}
+		orgs, total, err := s.repo.GetOrgs(ctx, filter)
+		s.NoError(err)
+		s.Equal(int64(3), total, "Should find all 3 orgs")
+		s.Len(orgs, 3)
+	})
+
+	s.Run("Success - Filter by Type", func() {
+		filter := domain.GetOrgsFilter{Type: "gov", Page: 1, PageSize: 10}
+		orgs, total, err := s.repo.GetOrgs(ctx, filter)
+		s.NoError(err)
+		s.Equal(int64(2), total, "Should find 2 government orgs")
+		s.Len(orgs, 2)
+	})
+
+	s.Run("Success - Filter by Query in Name", func() {
+		filter := domain.GetOrgsFilter{Query: "Company", Page: 1, PageSize: 10}
+		orgs, total, err := s.repo.GetOrgs(ctx, filter)
+		s.NoError(err)
+		s.Equal(int64(1), total)
+		s.Len(orgs, 1)
+		s.Equal("Private Company B", orgs[0].Name)
+	})
+
+	s.Run("Success - Filter by Query in Description", func() {
+		filter := domain.GetOrgsFilter{Query: "agency", Page: 1, PageSize: 10}
+		orgs, total, err := s.repo.GetOrgs(ctx, filter)
+		s.NoError(err)
+		s.Equal(int64(1), total)
+		s.Len(orgs, 1)
+		s.Equal("Government Org A", orgs[0].Name)
+	})
+
+	s.Run("Success - Pagination", func() {
+		// Get the first page with 2 results
+		filter1 := domain.GetOrgsFilter{Page: 1, PageSize: 2}
+		orgs1, total1, err1 := s.repo.GetOrgs(ctx, filter1)
+		s.NoError(err1)
+		s.Equal(int64(3), total1, "Total should still be 3")
+		s.Len(orgs1, 2)
+
+		// Get the second page with 1 result
+		filter2 := domain.GetOrgsFilter{Page: 2, PageSize: 2}
+		orgs2, total2, err2 := s.repo.GetOrgs(ctx, filter2)
+		s.NoError(err2)
+		s.Equal(int64(3), total2)
+		s.Len(orgs2, 1)
+	})
+}
