@@ -1,161 +1,221 @@
 package controller_test
 
-// import (
-// 	. "EthioGuide/delivery/controller"
-// 	"EthioGuide/domain"
-// 	"bytes"
-// 	"context"
-// 	"encoding/json"
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"testing"
+import (
+	. "EthioGuide/delivery/controller"
+	"EthioGuide/domain"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// 	"github.com/gin-gonic/gin"
-// 	"github.com/stretchr/testify/mock"
-// 	"github.com/stretchr/testify/suite"
-// )
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
+)
 
-// type MockNoticeUsecase struct{ mock.Mock }
+// MockNoticeUsecase is a mock for the INoticeUseCase interface
+type MockNoticeUsecase struct {
+	mock.Mock
+}
 
-// var _ domain.INoticeUseCase = (*MockNoticeUsecase)(nil)
+func (m *MockNoticeUsecase) CreateNotice(ctx context.Context, notice *domain.Notice) error {
+	args := m.Called(ctx, notice)
+	return args.Error(0)
+}
 
-// func (m *MockNoticeUsecase) CreateNotice(ctx context.Context, notice *domain.Notice) error {
-// 	return m.Called(ctx, notice).Error(0)
-// }
-// func (m *MockNoticeUsecase) GetNoticesByFilter(ctx context.Context, filter *domain.NoticeFilter) ([]*domain.Notice, int64, error) {
-// 	args := m.Called(ctx, filter)
-// 	var res []*domain.Notice
-// 	if args.Get(0) != nil {
-// 		res = args.Get(0).([]*domain.Notice)
-// 	}
-// 	total := int64(0)
-// 	if args.Get(1) != nil {
-// 		total = args.Get(1).(int64)
-// 	}
-// 	return res, total, args.Error(2)
-// }
-// func (m *MockNoticeUsecase) UpdateNotice(ctx context.Context, id string, notice *domain.Notice) error {
-// 	return m.Called(ctx, id, notice).Error(0)
-// }
-// func (m *MockNoticeUsecase) DeleteNotice(ctx context.Context, id string) error {
-// 	return m.Called(ctx, id).Error(0)
-// }
+func (m *MockNoticeUsecase) GetNoticesByFilter(ctx context.Context, filter *domain.NoticeFilter) ([]*domain.Notice, int64, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*domain.Notice), args.Get(1).(int64), args.Error(2)
+}
 
-// type NoticeControllerTestSuite struct {
-// 	suite.Suite
-// 	router *gin.Engine
-// 	ctrl   *NoticeController
-// 	mockUC *MockNoticeUsecase
-// }
+func (m *MockNoticeUsecase) UpdateNotice(ctx context.Context, id string, notice *domain.Notice) error {
+	args := m.Called(ctx, id, notice)
+	return args.Error(0)
+}
 
-// func (s *NoticeControllerTestSuite) SetupSuite() {
-// 	gin.SetMode(gin.TestMode)
-// }
+func (m *MockNoticeUsecase) DeleteNotice(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
 
-// func (s *NoticeControllerTestSuite) SetupTest() {
-// 	s.router = gin.New()
-// 	s.mockUC = new(MockNoticeUsecase)
-// 	s.ctrl = NewNoticeController(s.mockUC)
+// NoticeControllerTestSuite is the test suite for NoticeController
+type NoticeControllerTestSuite struct {
+	suite.Suite
+	router      *gin.Engine
+	mockUsecase *MockNoticeUsecase
+	controller  *NoticeController
+}
 
-// 	// Routes
-// 	s.router.POST("/notices", s.ctrl.CreateNotice)
-// 	s.router.GET("/notices", s.ctrl.GetNoticesByFilter)
-// 	// Wrap Update/Delete to supply :id to controller method signatures
-// 	s.router.PUT("/notices/:id", func(c *gin.Context) { s.ctrl.UpdateNotice(c, c.Param("id")) })
-// 	s.router.DELETE("/notices/:id", func(c *gin.Context) { s.ctrl.DeleteNotice(c, c.Param("id")) })
-// }
+// SetupTest is run before each test in the suite
+func (s *NoticeControllerTestSuite) SetupTest() {
+	s.router = gin.Default()
+	s.mockUsecase = new(MockNoticeUsecase)
+	s.controller = NewNoticeController(s.mockUsecase)
 
-// func TestNoticeControllerTestSuite(t *testing.T) {
-// 	suite.Run(t, new(NoticeControllerTestSuite))
-// }
+	authMiddleware := func(c *gin.Context) {
+		c.Set("userID", "test-org-id")
+		c.Next()
+	}
 
-// func (s *NoticeControllerTestSuite) TestCreateNotice() {
-// 	body := NoticeDTO{
-// 		OrganizationID: "64dbf7c7c12e2c3a4b5a6c7d",
-// 		Title:          "Test Notice",
-// 		Content:        "Body",
-// 		Tags:           []string{"go"},
-// 	}
-// 	jsonBody, _ := json.Marshal(body)
+	notices := s.router.Group("/notices")
+	{
+		notices.POST("", authMiddleware, s.controller.CreateNotice)
+		notices.GET("", s.controller.GetNoticesByFilter)
+		notices.PATCH("/:id", authMiddleware, s.controller.UpdateNotice)
+		notices.DELETE("/:id", authMiddleware, s.controller.DeleteNotice)
+	}
+}
 
-// 	s.mockUC.On("CreateNotice", mock.Anything, mock.AnythingOfType("*domain.Notice")).Return(nil).Once()
+func (s *NoticeControllerTestSuite) TestCreateNotice_Success() {
+	// Arrange
+	reqBody := NoticeDTO{Title: "New Notice", Content: "Important update"}
+	s.mockUsecase.On("CreateNotice", mock.Anything, mock.AnythingOfType("*domain.Notice")).Return(nil).Once()
 
-// 	req := httptest.NewRequest(http.MethodPost, "/notices", bytes.NewBuffer(jsonBody))
-// 	req.Header.Set("Content-Type", "application/json")
-// 	w := httptest.NewRecorder()
-// 	s.router.ServeHTTP(w, req)
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/notices", toJSON(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+	s.router.ServeHTTP(w, req)
 
-// 	s.Equal(http.StatusCreated, w.Code)
-// 	s.mockUC.AssertExpectations(s.T())
-// }
+	// Assert
+	s.Equal(http.StatusCreated, w.Code)
+	s.Contains(w.Body.String(), "Notice Created successfully.")
+	s.mockUsecase.AssertExpectations(s.T())
+}
 
-// func (s *NoticeControllerTestSuite) TestGetNoticesByFilter() {
-// 	expected := []*domain.Notice{{Title: "N1"}}
-// 	total := int64(1)
+func (s *NoticeControllerTestSuite) TestCreateNotice_UsecaseError() {
+	// Arrange
+	reqBody := NoticeDTO{Title: "New Notice", Content: "Important update"}
+	s.mockUsecase.On("CreateNotice", mock.Anything, mock.AnythingOfType("*domain.Notice")).Return(domain.ErrNotFound).Once()
 
-// 	s.mockUC.
-// 		On("GetNoticesByFilter", mock.Anything, mock.MatchedBy(func(f *domain.NoticeFilter) bool {
-// 			// Expect controller to parse these correctly
-// 			return f.OrganizationID == "64dbf7c7c12e2c3a4b5a6c7d" &&
-// 				len(f.Tags) == 2 &&
-// 				f.Tags[0] == "go" &&
-// 				f.Tags[1] == "api" &&
-// 				f.Page == 2 &&
-// 				f.Limit == 20 &&
-// 				f.SortBy == "created_At" &&
-// 				f.SortOrder == "ASC"
-// 		})).
-// 		Return(expected, total, nil).Once()
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/notices", toJSON(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+	s.router.ServeHTTP(w, req)
 
-// 	req := httptest.NewRequest(http.MethodGet, "/notices?organizationId=64dbf7c7c12e2c3a4b5a6c7d&tags=go,api&page=2&limit=20&sortBy=created_At&sortOrder=ASC", nil)
-// 	w := httptest.NewRecorder()
-// 	s.router.ServeHTTP(w, req)
+	// Assert
+	s.Equal(http.StatusNotFound, w.Code)
+	s.Contains(w.Body.String(), domain.ErrNotFound.Error())
+	s.mockUsecase.AssertExpectations(s.T())
+}
 
-// 	s.Equal(http.StatusOK, w.Code)
-// 	var resp struct {
-// 		Data  []NoticeDTO `json:"data"`
-// 		Total int64       `json:"total"`
-// 		Page  int64       `json:"page"`
-// 		Limit int64       `json:"limit"`
-// 	}
-// 	_ = json.Unmarshal(w.Body.Bytes(), &resp)
-// 	s.Len(resp.Data, 1)
-// 	s.Equal("N1", resp.Data[0].Title)
-// 	s.Equal(int64(1), resp.Total)
-// 	s.Equal(int64(2), resp.Page)
-// 	s.Equal(int64(20), resp.Limit)
+func (s *NoticeControllerTestSuite) TestGetNoticesByFilter_Success() {
+	// Arrange
+	expectedNotices := []*domain.Notice{{ID: "notice-1", Title: "Test Notice"}}
+	var total int64 = 1
+	filter := &domain.NoticeFilter{
+		OrganizationID: "org-123",
+		Tags:           []string{"urgent", "update"},
+		Page:           1,
+		Limit:          10,
+		SortBy:         "createdAt",
+		SortOrder:      domain.SortDesc,
+	}
+	s.mockUsecase.On("GetNoticesByFilter", mock.Anything, filter).Return(expectedNotices, total, nil).Once()
 
-// 	s.mockUC.AssertExpectations(s.T())
-// }
+	// Act
+	w := httptest.NewRecorder()
+	url := "/notices?organizationId=org-123&tags=urgent,update&sortBy=createdAt&sortOrder=DESC"
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	s.router.ServeHTTP(w, req)
 
-// func (s *NoticeControllerTestSuite) TestUpdateNotice() {
-// 	id := "64dbf7c7c12e2c3a4b5a6c7d"
-// 	body := NoticeDTO{
-// 		Title:   "Updated",
-// 		Content: "New",
-// 		Tags:    []string{"a", "b"},
-// 	}
-// 	jsonBody, _ := json.Marshal(body)
+	// Assert
+	s.Equal(http.StatusOK, w.Code)
+	var resp NoticeListResponse
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	s.NoError(err)
+	s.Equal(total, resp.Total)
+	s.Len(resp.Data, 1)
+	s.Equal("Test Notice", resp.Data[0].Title)
+	s.mockUsecase.AssertExpectations(s.T())
+}
 
-// 	s.mockUC.On("UpdateNotice", mock.Anything, id, mock.AnythingOfType("*domain.Notice")).Return(nil).Once()
+func (s *NoticeControllerTestSuite) TestGetNoticesByFilter_InvalidPageParam() {
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/notices?page=abc", nil)
+	s.router.ServeHTTP(w, req)
 
-// 	req := httptest.NewRequest(http.MethodPut, "/notices/"+id, bytes.NewBuffer(jsonBody))
-// 	req.Header.Set("Content-Type", "application/json")
-// 	w := httptest.NewRecorder()
-// 	s.router.ServeHTTP(w, req)
+	// Assert
+	s.Equal(http.StatusBadRequest, w.Code)
+	s.Contains(w.Body.String(), "Invalid 'page' parameter")
+}
 
-// 	s.Equal(http.StatusOK, w.Code)
-// 	s.mockUC.AssertExpectations(s.T())
-// }
+func (s *NoticeControllerTestSuite) TestUpdateNotice_Success() {
+	// Arrange
+	noticeID := "notice-123"
+	reqBody := NoticeDTO{Title: "Updated Title", Content: "Updated Content"}
+	s.mockUsecase.On("UpdateNotice", mock.Anything, noticeID, mock.AnythingOfType("*domain.Notice")).Return(nil).Once()
 
-// func (s *NoticeControllerTestSuite) TestDeleteNotice() {
-// 	id := "64dbf7c7c12e2c3a4b5a6c7d"
-// 	s.mockUC.On("DeleteNotice", mock.Anything, id).Return(nil).Once()
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPatch, fmt.Sprintf("/notices/%s", noticeID), toJSON(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+	s.router.ServeHTTP(w, req)
 
-// 	req := httptest.NewRequest(http.MethodDelete, "/notices/"+id, nil)
-// 	w := httptest.NewRecorder()
-// 	s.router.ServeHTTP(w, req)
+	// Assert
+	s.Equal(http.StatusOK, w.Code)
+	s.Contains(w.Body.String(), "Notice Updated successfully.")
+	s.mockUsecase.AssertExpectations(s.T())
+}
 
-// 	s.Equal(http.StatusOK, w.Code)
-// 	s.mockUC.AssertExpectations(s.T())
-// }
+func (s *NoticeControllerTestSuite) TestUpdateNotice_NotFound() {
+	// Arrange
+	noticeID := "notice-404"
+	reqBody := NoticeDTO{Title: "Updated Title"}
+	s.mockUsecase.On("UpdateNotice", mock.Anything, noticeID, mock.AnythingOfType("*domain.Notice")).Return(domain.ErrNotFound).Once()
+
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPatch, fmt.Sprintf("/notices/%s", noticeID), toJSON(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+	s.router.ServeHTTP(w, req)
+
+	// Assert
+	s.Equal(http.StatusNotFound, w.Code)
+	s.Contains(w.Body.String(), domain.ErrNotFound.Error())
+	s.mockUsecase.AssertExpectations(s.T())
+}
+
+func (s *NoticeControllerTestSuite) TestDeleteNotice_Success() {
+	// Arrange
+	noticeID := "notice-to-delete"
+	s.mockUsecase.On("DeleteNotice", mock.Anything, noticeID).Return(nil).Once()
+
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/notices/%s", noticeID), nil)
+	s.router.ServeHTTP(w, req)
+
+	// Assert
+	s.Equal(http.StatusOK, w.Code)
+	s.Contains(w.Body.String(), "Notice Deleted successfully.")
+	s.mockUsecase.AssertExpectations(s.T())
+}
+
+func (s *NoticeControllerTestSuite) TestDeleteNotice_NotFound() {
+	// Arrange
+	noticeID := "notice-404"
+	s.mockUsecase.On("DeleteNotice", mock.Anything, noticeID).Return(domain.ErrNotFound).Once()
+
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/notices/%s", noticeID), nil)
+	s.router.ServeHTTP(w, req)
+
+	// Assert
+	s.Equal(http.StatusNotFound, w.Code)
+	s.Contains(w.Body.String(), domain.ErrNotFound.Error())
+	s.mockUsecase.AssertExpectations(s.T())
+}
+
+// TestNoticeControllerTestSuite runs the entire suite
+func TestNoticeControllerTestSuite(t *testing.T) {
+	suite.Run(t, new(NoticeControllerTestSuite))
+}

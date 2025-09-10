@@ -1,153 +1,155 @@
 package controller_test
 
-// import (
-// 	. "EthioGuide/delivery/controller"
-// 	"EthioGuide/domain"
-// 	"bytes"
-// 	"context"
-// 	"encoding/json"
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"testing"
+import (
+	. "EthioGuide/delivery/controller"
+	"EthioGuide/domain"
+	"bytes"
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// 	"github.com/gin-gonic/gin"
-// 	"github.com/stretchr/testify/mock"
-// 	"github.com/stretchr/testify/suite"
-// )
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
+)
 
-// // --- Mocks & Placeholders ---
+// MockGeminiUseCase is a mock for the IGeminiUseCase interface
+type MockGeminiUseCase struct {
+	mock.Mock
+}
 
-// // MockGeminiUseCase is a mock implementation of the IGeminiUseCase interface.
-// type MockGeminiUseCase struct {
-// 	mock.Mock
-// }
+func (m *MockGeminiUseCase) TranslateJSON(ctx context.Context, data map[string]interface{}, targetLang string) (map[string]interface{}, error) {
+	args := m.Called(ctx, data, targetLang)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[string]interface{}), args.Error(1)
+}
 
-// // Ensure MockGeminiUseCase implements the interface.
-// var _ domain.IGeminiUseCase = (*MockGeminiUseCase)(nil)
+// GeminiControllerTestSuite is the test suite for GeminiController
+type GeminiControllerTestSuite struct {
+	suite.Suite
+	router      *gin.Engine
+	mockUsecase *MockGeminiUseCase
+	controller  *GeminiController
+}
 
-// // TranslateContent is the mocked method.
-// func (m *MockGeminiUseCase) TranslateContent(ctx context.Context, content string, targetLang string) (string, error) {
-// 	args := m.Called(ctx, content, targetLang)
-// 	return args.String(0), args.Error(1)
-// }
+// SetupTest is run before each test in the suite
+func (s *GeminiControllerTestSuite) SetupTest() {
+	gin.SetMode(gin.TestMode)
+	s.router = gin.Default()
+	s.mockUsecase = new(MockGeminiUseCase)
+	s.controller = NewGeminiController(s.mockUsecase)
 
-// // --- Test Suite Definition ---
+	// Setup routes
+	s.router.POST("/ai/translate", s.controller.Translate)
+}
 
-// type GeminiControllerTestSuite struct {
-// 	suite.Suite
-// 	router      *gin.Engine
-// 	mockUsecase *MockGeminiUseCase
-// 	controller  *GeminiController
-// 	recorder    *httptest.ResponseRecorder
-// }
+func (s *GeminiControllerTestSuite) TestTranslate_Success_WithLangHeader() {
+	// Arrange
+	requestBody := TranslateDTO{
+		Content: map[string]interface{}{"title": "Hello", "body": "World"},
+	}
+	expectedResponse := map[string]interface{}{"title": "Hola", "body": "Mundo"}
+	targetLang := "es"
 
-// // SetupSuite runs once before the entire suite.
-// func (s *GeminiControllerTestSuite) SetupSuite() {
-// 	gin.SetMode(gin.TestMode)
-// }
+	s.mockUsecase.On("TranslateJSON", mock.Anything, requestBody.Content, targetLang).Return(expectedResponse, nil).Once()
 
-// // SetupTest runs before each individual test.
-// func (s *GeminiControllerTestSuite) SetupTest() {
-// 	s.recorder = httptest.NewRecorder()
-// 	s.router = gin.Default()
-// 	s.mockUsecase = new(MockGeminiUseCase)
-// 	s.controller = NewGeminiController(s.mockUsecase)
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/ai/translate", toJSON(requestBody))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("lang", targetLang)
+	s.router.ServeHTTP(w, req)
 
-// 	s.router.POST("/translate", s.controller.Translate)
-// }
+	// Assert
+	s.Equal(http.StatusOK, w.Code)
+	var resp map[string]map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	s.NoError(err)
+	s.Equal(expectedResponse, resp["content"])
+	s.mockUsecase.AssertExpectations(s.T())
+}
 
-// // TestGeminiControllerTestSuite is the entry point for the suite.
-// func TestGeminiControllerTestSuite(t *testing.T) {
-// 	suite.Run(t, new(GeminiControllerTestSuite))
-// }
+func (s *GeminiControllerTestSuite) TestTranslate_Success_DefaultLang() {
+	// Arrange
+	requestBody := TranslateDTO{
+		Content: map[string]interface{}{"title": "Hello"},
+	}
+	expectedResponse := map[string]interface{}{"title": "Hello"} // Assuming default 'en' doesn't change it
+	defaultLang := "en"
 
-// // --- Test Cases ---
+	s.mockUsecase.On("TranslateJSON", mock.Anything, requestBody.Content, defaultLang).Return(expectedResponse, nil).Once()
 
-// func (s *GeminiControllerTestSuite) TestTranslate_Success() {
-// 	// Arrange
-// 	requestBody := TranslateDTO{Content: "Hello"}
-// 	jsonBody, _ := json.Marshal(requestBody)
-// 	targetLang := "am"
-// 	expectedTranslation := "ሰላም"
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/ai/translate", toJSON(requestBody))
+	req.Header.Set("Content-Type", "application/json")
+	// No 'lang' header is set
+	s.router.ServeHTTP(w, req)
 
-// 	// Configure the mock to expect a call with these specific arguments
-// 	s.mockUsecase.On("TranslateContent", mock.Anything, requestBody.Content, targetLang).
-// 		Return(expectedTranslation, nil).Once()
+	// Assert
+	s.Equal(http.StatusOK, w.Code)
+	var resp map[string]map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	s.NoError(err)
+	s.Equal(expectedResponse, resp["content"])
+	s.mockUsecase.AssertExpectations(s.T())
+}
 
-// 	// Act
-// 	req, _ := http.NewRequest(http.MethodPost, "/translate", bytes.NewBuffer(jsonBody))
-// 	req.Header.Set("Content-Type", "application/json")
-// 	req.Header.Set("lang", targetLang) // Set the language header
-// 	s.router.ServeHTTP(s.recorder, req)
+func (s *GeminiControllerTestSuite) TestTranslate_InvalidJSON() {
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/ai/translate", bytes.NewBufferString(`{"content":`)) // Malformed JSON
+	req.Header.Set("Content-Type", "application/json")
+	s.router.ServeHTTP(w, req)
 
-// 	// Assert
-// 	s.Equal(http.StatusOK, s.recorder.Code)
+	// Assert
+	s.Equal(http.StatusBadRequest, w.Code)
+	s.Contains(w.Body.String(), "Invalid request body")
+}
 
-// 	var response map[string]string
-// 	json.Unmarshal(s.recorder.Body.Bytes(), &response)
-// 	s.Equal(expectedTranslation, response["content"])
+func (s *GeminiControllerTestSuite) TestTranslate_MissingContentField() {
+	// Arrange
+	invalidBody := map[string]string{"message": "This is not the right structure"}
 
-// 	s.mockUsecase.AssertExpectations(s.T())
-// }
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/ai/translate", toJSON(invalidBody))
+	req.Header.Set("Content-Type", "application/json")
+	s.router.ServeHTTP(w, req)
 
-// func (s *GeminiControllerTestSuite) TestTranslate_Success_DefaultLanguage() {
-// 	// Arrange
-// 	requestBody := TranslateDTO{Content: "Hello"}
-// 	jsonBody, _ := json.Marshal(requestBody)
-// 	defaultLang := "en" // This is the fallback language
-// 	expectedTranslation := "Hello"
+	// Assert
+	s.Equal(http.StatusBadRequest, w.Code)
+	s.Contains(w.Body.String(), "Invalid request body")
+}
 
-// 	// Configure the mock to expect a call with the default language 'en'
-// 	s.mockUsecase.On("TranslateContent", mock.Anything, requestBody.Content, defaultLang).
-// 		Return(expectedTranslation, nil).Once()
+func (s *GeminiControllerTestSuite) TestTranslate_UsecaseError() {
+	// Arrange
+	requestBody := TranslateDTO{
+		Content: map[string]interface{}{"title": "Hello"},
+	}
+	targetLang := "fr"
 
-// 	// Act (No 'lang' header is set)
-// 	req, _ := http.NewRequest(http.MethodPost, "/translate", bytes.NewBuffer(jsonBody))
-// 	req.Header.Set("Content-Type", "application/json")
-// 	s.router.ServeHTTP(s.recorder, req)
+	// Use a specific domain error that HandleError can map
+	s.mockUsecase.On("TranslateJSON", mock.Anything, requestBody.Content, targetLang).Return(nil, domain.ErrTranslationMismatch).Once()
 
-// 	// Assert
-// 	s.Equal(http.StatusOK, s.recorder.Code)
-// 	s.mockUsecase.AssertExpectations(s.T())
-// }
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/ai/translate", toJSON(requestBody))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("lang", targetLang)
+	s.router.ServeHTTP(w, req)
 
-// func (s *GeminiControllerTestSuite) TestTranslate_InvalidRequestBody() {
-// 	// Arrange: Malformed JSON
-// 	invalidJsonBody := []byte(`{"content": "missing quote}`)
+	// Assert
+	s.Equal(http.StatusBadGateway, w.Code) // HandleError maps this to 502
+	s.Contains(w.Body.String(), domain.ErrTranslationMismatch.Error())
+	s.mockUsecase.AssertExpectations(s.T())
+}
 
-// 	// Act
-// 	req, _ := http.NewRequest(http.MethodPost, "/translate", bytes.NewBuffer(invalidJsonBody))
-// 	req.Header.Set("Content-Type", "application/json")
-// 	s.router.ServeHTTP(s.recorder, req)
-
-// 	// Assert
-// 	s.Equal(http.StatusBadRequest, s.recorder.Code)
-// 	s.Contains(s.recorder.Body.String(), "Invalid request body")
-
-// 	// Crucially, assert that the use case was never called
-// 	s.mockUsecase.AssertNotCalled(s.T(), "TranslateContent", mock.Anything, mock.Anything, mock.Anything)
-// }
-
-// func (s *GeminiControllerTestSuite) TestTranslate_UsecaseReturnsError() {
-// 	// Arrange
-// 	requestBody := TranslateDTO{Content: "This will fail"}
-// 	jsonBody, _ := json.Marshal(requestBody)
-// 	targetLang := "klingon"
-
-// 	// Configure the mock to return a domain-specific error
-// 	s.mockUsecase.On("TranslateContent", mock.Anything, requestBody.Content, targetLang).
-// 		Return("", domain.ErrUnsupportedLanguage).Once()
-
-// 	// Act
-// 	req, _ := http.NewRequest(http.MethodPost, "/translate", bytes.NewBuffer(jsonBody))
-// 	req.Header.Set("Content-Type", "application/json")
-// 	req.Header.Set("lang", targetLang)
-// 	s.router.ServeHTTP(s.recorder, req)
-
-// 	// Assert
-// 	// We check for the status code that our dummy HandleError provides for this error.
-// 	s.Equal(http.StatusBadRequest, s.recorder.Code)
-// 	s.Contains(s.recorder.Body.String(), domain.ErrUnsupportedLanguage.Error())
-
-// 	s.mockUsecase.AssertExpectations(s.T())
-// }
+// TestGeminiControllerTestSuite runs the entire suite
+func TestGeminiControllerTestSuite(t *testing.T) {
+	suite.Run(t, new(GeminiControllerTestSuite))
+}

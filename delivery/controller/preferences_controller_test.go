@@ -1,117 +1,177 @@
 package controller_test
 
-// import (
-// 	"bytes"
-// 	"context"
-// 	"encoding/json"
-// 	"net/http"
-// 	"net/http/httptest"
-// 	"testing"
+import (
+	. "EthioGuide/delivery/controller"
+	"EthioGuide/domain"
+	"bytes"
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// 	"EthioGuide/delivery/controller"
-// 	"EthioGuide/domain"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
+)
 
-// 	"github.com/gin-gonic/gin"
-// 	"github.com/stretchr/testify/mock"
-// 	"github.com/stretchr/testify/suite"
-// )
+// MockPreferencesUsecase is a mock for the IPreferencesUsecase interface
+type MockPreferencesUsecase struct {
+	mock.Mock
+}
 
-// // --- Mock Usecase ---
-// type MockPreferencesUsecase struct {
-// 	mock.Mock
-// }
+func (m *MockPreferencesUsecase) CreateUserPreferences(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
 
-// func (m *MockPreferencesUsecase) CreateUserPreferences(ctx context.Context, userID string) error {
-// 	args := m.Called(ctx, userID)
-// 	return args.Error(0)
-// }
-// func (m *MockPreferencesUsecase) GetUserPreferences(ctx context.Context, userID string) (*domain.Preferences, error) {
-// 	args := m.Called(ctx, userID)
-// 	if args.Get(0) != nil {
-// 		return args.Get(0).(*domain.Preferences), args.Error(1)
-// 	}
-// 	return nil, args.Error(1)
-// }
+func (m *MockPreferencesUsecase) GetUserPreferences(ctx context.Context, userId string) (*domain.Preferences, error) {
+	args := m.Called(ctx, userId)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Preferences), args.Error(1)
+}
 
-// func (m *MockPreferencesUsecase) UpdateUserPreferences(ctx context.Context, pref *domain.Preferences) error {
-// 	args := m.Called(ctx, pref)
-// 	return args.Error(0)
-// }
+func (m *MockPreferencesUsecase) UpdateUserPreferences(ctx context.Context, preferences *domain.Preferences) error {
+	args := m.Called(ctx, preferences)
+	return args.Error(0)
+}
 
-// // --- Test Suite ---
-// type PreferencesControllerTestSuite struct {
-// 	suite.Suite
-// 	router      *gin.Engine
-// 	mockUsecase *MockPreferencesUsecase
-// 	controller  *controller.PreferencesController
-// 	recorder    *httptest.ResponseRecorder
-// }
+// PreferencesControllerTestSuite is the test suite for PreferencesController
+type PreferencesControllerTestSuite struct {
+	suite.Suite
+	router      *gin.Engine
+	mockUsecase *MockPreferencesUsecase
+	controller  *PreferencesController
+}
 
-// func (s *PreferencesControllerTestSuite) SetupTest() {
-// 	gin.SetMode(gin.TestMode)
-// 	s.recorder = httptest.NewRecorder()
-// 	s.router = gin.Default()
-// 	s.mockUsecase = new(MockPreferencesUsecase)
-// 	s.controller = controller.NewPreferencesController(s.mockUsecase)
-// 	s.router.GET("/users/me/preferences", func(c *gin.Context) {
-// 		c.Set("userID", "user123")
-// 		s.controller.GetUserPreferences(c)
-// 	})
-// 	s.router.PATCH("/users/me/preferences", func(c *gin.Context) {
-// 		c.Set("userID", "user123")
-// 		s.controller.UpdateUserPreferences(c)
-// 	})
-// }
+// SetupTest is run before each test in the suite
+func (s *PreferencesControllerTestSuite) SetupTest() {
+	s.router = gin.Default()
+	s.mockUsecase = new(MockPreferencesUsecase)
+	s.controller = NewPreferencesController(s.mockUsecase)
 
-// func TestPreferencesControllerTestSuite(t *testing.T) {
-// 	suite.Run(t, new(PreferencesControllerTestSuite))
-// }
+	authMiddleware := func(c *gin.Context) {
+		c.Set("userID", "test-user-id")
+		c.Next()
+	}
 
-// // --- Tests ---
+	authGroup := s.router.Group("/auth/me/preferences")
+	authGroup.Use(authMiddleware)
+	{
+		authGroup.GET("", s.controller.GetUserPreferences)
+		authGroup.PATCH("", s.controller.UpdateUserPreferences)
+	}
+}
 
-// func (s *PreferencesControllerTestSuite) TestGetUserPreferences_Success() {
-// 	expected := &domain.Preferences{
-// 		UserID:            "user123",
-// 		PreferredLang:     "en",
-// 		PushNotification:  true,
-// 		EmailNotification: false,
-// 	}
-// 	s.mockUsecase.On("GetUserPreferences", mock.Anything, "user123").Return(expected, nil).Once()
+func (s *PreferencesControllerTestSuite) TestGetUserPreferences_Success() {
+	// Arrange
+	expectedPrefs := &domain.Preferences{
+		UserID:            "test-user-id",
+		PreferredLang:     domain.Amharic,
+		PushNotification:  true,
+		EmailNotification: false,
+	}
+	s.mockUsecase.On("GetUserPreferences", mock.Anything, "test-user-id").Return(expectedPrefs, nil).Once()
 
-// 	req, _ := http.NewRequest(http.MethodGet, "/users/me/preferences", nil)
-// 	s.router.ServeHTTP(s.recorder, req)
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/auth/me/preferences", nil)
+	s.router.ServeHTTP(w, req)
 
-// 	s.Equal(http.StatusOK, s.recorder.Code)
-// 	var resp map[string]interface{}
-// 	json.Unmarshal(s.recorder.Body.Bytes(), &resp)
-// 	s.Equal("en", resp["preferredLang"])
-// 	s.Equal(true, resp["pushNotification"])
-// 	s.Equal(false, resp["emailNotification"])
-// }
+	// Assert
+	s.Equal(http.StatusOK, w.Code)
+	var resp PreferencesDTO
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	s.NoError(err)
+	s.Equal(string(expectedPrefs.PreferredLang), resp.PreferredLang)
+	s.Equal(expectedPrefs.PushNotification, resp.PushNotification)
+	s.Equal(expectedPrefs.EmailNotification, resp.EmailNotification)
+	s.mockUsecase.AssertExpectations(s.T())
+}
 
-// func (s *PreferencesControllerTestSuite) TestUpdateUserPreferences_Success() {
-// 	dto := controller.PreferencesDTO{
-// 		PreferredLang:     "am",
-// 		PushNotification:  false,
-// 		EmailNotification: true,
-// 	}
-// 	body, _ := json.Marshal(dto)
-// 	expected := &domain.Preferences{
-// 		UserID:            "user123",
-// 		PreferredLang:     "am",
-// 		PushNotification:  false,
-// 		EmailNotification: true,
-// 	}
-// 	s.mockUsecase.On("UpdateUserPreferences", mock.Anything, expected).Return(nil).Once()
+func (s *PreferencesControllerTestSuite) TestGetUserPreferences_NotFound() {
+	// Arrange
+	s.mockUsecase.On("GetUserPreferences", mock.Anything, "test-user-id").Return(nil, domain.ErrNotFound).Once()
 
-// 	req, _ := http.NewRequest(http.MethodPatch, "/users/me/preferences", bytes.NewBuffer(body))
-// 	req.Header.Set("Content-Type", "application/json")
-// 	s.router.ServeHTTP(s.recorder, req)
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/auth/me/preferences", nil)
+	s.router.ServeHTTP(w, req)
 
-// 	s.Equal(http.StatusOK, s.recorder.Code)
-// 	var resp map[string]interface{}
-// 	json.Unmarshal(s.recorder.Body.Bytes(), &resp)
-// 	s.Equal("am", resp["preferredLang"])
-// 	s.Equal(false, resp["pushNotification"])
-// 	s.Equal(true, resp["emailNotification"])
-// }
+	// Assert
+	s.Equal(http.StatusNotFound, w.Code)
+	s.Contains(w.Body.String(), "Preferences not found")
+	s.mockUsecase.AssertExpectations(s.T())
+}
+
+func (s *PreferencesControllerTestSuite) TestUpdateUserPreferences_Success() {
+	// Arrange
+	reqBody := PreferencesDTO{
+		PreferredLang:     "en",
+		PushNotification:  false,
+		EmailNotification: true,
+	}
+	expectedPrefsArg := &domain.Preferences{
+		UserID:            "test-user-id",
+		PreferredLang:     domain.English,
+		PushNotification:  false,
+		EmailNotification: true,
+	}
+	s.mockUsecase.On("UpdateUserPreferences", mock.Anything, expectedPrefsArg).Return(nil).Once()
+
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPatch, "/auth/me/preferences", toJSON(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+	s.router.ServeHTTP(w, req)
+
+	// Assert
+	s.Equal(http.StatusOK, w.Code)
+	var resp PreferencesDTO
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	s.NoError(err)
+	s.Equal(reqBody.PreferredLang, resp.PreferredLang)
+	s.Equal(reqBody.PushNotification, resp.PushNotification)
+	s.Equal(reqBody.EmailNotification, resp.EmailNotification)
+	s.mockUsecase.AssertExpectations(s.T())
+}
+
+func (s *PreferencesControllerTestSuite) TestUpdateUserPreferences_InvalidJSON() {
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPatch, "/auth/me/preferences", bytes.NewBufferString(`{"preferredLang":`))
+	req.Header.Set("Content-Type", "application/json")
+	s.router.ServeHTTP(w, req)
+
+	// Assert
+	s.Equal(http.StatusBadRequest, w.Code)
+	s.Contains(w.Body.String(), "Invalid input")
+}
+
+func (s *PreferencesControllerTestSuite) TestUpdateUserPreferences_UsecaseError() {
+	// Arrange
+	reqBody := PreferencesDTO{PreferredLang: "xx"} // Invalid lang
+	expectedPrefsArg := &domain.Preferences{
+		UserID:        "test-user-id",
+		PreferredLang: "xx",
+	}
+	s.mockUsecase.On("UpdateUserPreferences", mock.Anything, expectedPrefsArg).Return(domain.ErrUnsupportedLanguage).Once()
+
+	// Act
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPatch, "/auth/me/preferences", toJSON(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+	s.router.ServeHTTP(w, req)
+
+	// Assert
+	s.Equal(http.StatusBadRequest, w.Code)
+	s.Contains(w.Body.String(), domain.ErrUnsupportedLanguage.Error())
+	s.mockUsecase.AssertExpectations(s.T())
+}
+
+// TestPreferencesControllerTestSuite runs the entire suite
+func TestPreferencesControllerTestSuite(t *testing.T) {
+	suite.Run(t, new(PreferencesControllerTestSuite))
+}
