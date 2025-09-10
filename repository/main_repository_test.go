@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 	// Start a MongoDB container
 	mongodbContainer, err := mongodb.Run(ctx,
 		"mongo:6.0",
-		// mongodb.WithReplicaSet("rs0"),
+		mongodb.WithReplicaSet("rs0"),
 	)
 	if err != nil {
 		log.Fatalf("Failed to start MongoDB container: %s", err)

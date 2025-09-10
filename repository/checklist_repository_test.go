@@ -1,6 +1,7 @@
 package repository_test
 
 import (
+	"EthioGuide/domain"
 	. "EthioGuide/repository"
 	"context"
 	"testing"
@@ -138,66 +139,66 @@ func (s *ChecklistRepositoryTestSuite) TestGetChecklistByUserProcedureID() {
 	s.Len(checklists, 2, "Should only find checklist items for the specified user procedure")
 }
 
-// func (s *ChecklistRepositoryTestSuite) TestToggleCheckAndUpdateStatus() {
-// 	ctx := context.Background()
-// 	userProcID := primitive.NewObjectID()
+func (s *ChecklistRepositoryTestSuite) TestToggleCheckAndUpdateStatus() {
+	ctx := context.Background()
+	userProcID := primitive.NewObjectID()
 
-// 	// Arrange: Create 4 checklist items for a user procedure
-// 	itemsToInsert := []interface{}{
-// 		bson.M{"user_procedure_id": userProcID, "is_checked": false, "content": "Item 1"},
-// 		bson.M{"user_procedure_id": userProcID, "is_checked": false, "content": "Item 2"},
-// 		bson.M{"user_procedure_id": userProcID, "is_checked": false, "content": "Item 3"},
-// 		bson.M{"user_procedure_id": userProcID, "is_checked": false, "content": "Item 4"},
-// 	}
-// 	res, err := s.checklistCollection.InsertMany(ctx, itemsToInsert)
-// 	s.Require().NoError(err)
-// 	checklistItemID := res.InsertedIDs[0].(primitive.ObjectID) // Get the ID of the first item
+	// Arrange: Create 4 checklist items for a user procedure
+	itemsToInsert := []interface{}{
+		bson.M{"user_procedure_id": userProcID, "is_checked": false, "content": "Item 1"},
+		bson.M{"user_procedure_id": userProcID, "is_checked": false, "content": "Item 2"},
+		bson.M{"user_procedure_id": userProcID, "is_checked": false, "content": "Item 3"},
+		bson.M{"user_procedure_id": userProcID, "is_checked": false, "content": "Item 4"},
+	}
+	res, err := s.checklistCollection.InsertMany(ctx, itemsToInsert)
+	s.Require().NoError(err)
+	checklistItemID := res.InsertedIDs[0].(primitive.ObjectID) // Get the ID of the first item
 
-// 	// Also create the parent user_procedure document
-// 	_, err = s.userProcedureCollection.InsertOne(ctx, bson.M{"_id": userProcID, "status": "Not Started", "percent": 0})
-// 	s.Require().NoError(err)
+	// Also create the parent user_procedure document
+	_, err = s.userProcedureCollection.InsertOne(ctx, bson.M{"_id": userProcID, "status": "Not Started", "percent": 0})
+	s.Require().NoError(err)
 
-// 	s.Run("Success - Toggle one item to In Progress", func() {
-// 		// Act
-// 		updatedChecklist, err := s.repo.ToggleCheckAndUpdateStatus(ctx, checklistItemID.Hex())
+	s.Run("Success - Toggle one item to In Progress", func() {
+		// Act
+		updatedChecklist, err := s.repo.ToggleCheckAndUpdateStatus(ctx, checklistItemID.Hex())
 
-// 		// Assert
-// 		s.NoError(err)
-// 		s.True(updatedChecklist.IsChecked, "Checklist item should now be checked")
+		// Assert
+		s.NoError(err)
+		s.True(updatedChecklist.IsChecked, "Checklist item should now be checked")
 
-// 		// Verify parent document directly in DB
-// 		var userProc UserProcedureModel
-// 		err = s.userProcedureCollection.FindOne(ctx, bson.M{"_id": userProcID}).Decode(&userProc)
-// 		s.NoError(err)
-// 		s.Equal("In Progress", userProc.Status)
-// 		s.Equal(25, userProc.Percent) // 1 out of 4 is 25%
-// 	})
+		// Verify parent document directly in DB
+		var userProc UserProcedureModel
+		err = s.userProcedureCollection.FindOne(ctx, bson.M{"_id": userProcID}).Decode(&userProc)
+		s.NoError(err)
+		s.Equal("In Progress", userProc.Status)
+		s.Equal(25, userProc.Percent) // 1 out of 4 is 25%
+	})
 
-// 	s.Run("Success - Toggle final item to Completed", func() {
-// 		// First, check all other items
-// 		_, err := s.checklistCollection.UpdateMany(ctx,
-// 			bson.M{"user_procedure_id": userProcID, "_id": bson.M{"$ne": checklistItemID}},
-// 			bson.M{"$set": bson.M{"is_checked": true}},
-// 		)
-// 		s.Require().NoError(err)
+	s.Run("Success - Toggle final item to Completed", func() {
+		// First, check all other items
+		_, err := s.checklistCollection.UpdateMany(ctx,
+			bson.M{"user_procedure_id": userProcID, "_id": bson.M{"$ne": checklistItemID}},
+			bson.M{"$set": bson.M{"is_checked": true}},
+		)
+		s.Require().NoError(err)
 
-// 		// Act: Toggle the last unchecked item
-// 		updatedChecklist, err := s.repo.ToggleCheckAndUpdateStatus(ctx, checklistItemID.Hex())
-// 		s.NoError(err)
-// 		s.True(updatedChecklist.IsChecked)
+		// Act: Toggle the last unchecked item
+		updatedChecklist, err := s.repo.ToggleCheckAndUpdateStatus(ctx, checklistItemID.Hex())
+		s.NoError(err)
+		s.True(updatedChecklist.IsChecked)
 
-// 		// Verify parent document
-// 		var userProc UserProcedureModel
-// 		err = s.userProcedureCollection.FindOne(ctx, bson.M{"_id": userProcID}).Decode(&userProc)
-// 		s.NoError(err)
-// 		s.Equal("Completed", userProc.Status)
-// 		s.Equal(100, userProc.Percent)
-// 	})
+		// Verify parent document
+		var userProc UserProcedureModel
+		err = s.userProcedureCollection.FindOne(ctx, bson.M{"_id": userProcID}).Decode(&userProc)
+		s.NoError(err)
+		s.Equal("Completed", userProc.Status)
+		s.Equal(100, userProc.Percent)
+	})
 
-// 	s.Run("Failure - Checklist item not found", func() {
-// 		nonExistentID := primitive.NewObjectID().Hex()
-// 		_, err := s.repo.ToggleCheckAndUpdateStatus(ctx, nonExistentID)
-// 		s.Error(err)
-// 		s.ErrorIs(err, domain.ErrNotFound)
-// 	})
-// }
+	s.Run("Failure - Checklist item not found", func() {
+		nonExistentID := primitive.NewObjectID().Hex()
+		_, err := s.repo.ToggleCheckAndUpdateStatus(ctx, nonExistentID)
+		s.Error(err)
+		s.ErrorIs(err, domain.ErrNotFound)
+	})
+}
