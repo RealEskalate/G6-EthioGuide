@@ -100,7 +100,7 @@ func (nc *NoticeController) GetNoticesByFilter(ctx *gin.Context) {
 
 	// Sorting (only created_At supported)
 	filter.SortBy = ctx.Query("sortBy")
-	filter.SortOrder = domain.SortOrder(strings.ToUpper(ctx.DefaultQuery("sortOrder", string(domain.SortDesc))))
+	filter.SortOrder = domain.SortOrder(strings.ToLower(ctx.DefaultQuery("sortOrder", string(domain.SortDesc))))
 
 	notices, total, err := nc.noticeUsecase.GetNoticesByFilter(ctx, filter)
 	if err != nil {

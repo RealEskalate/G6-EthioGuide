@@ -43,7 +43,7 @@ func (c *AIChatController) AIChatController(ctx *gin.Context) {
 
 	answer, err := c.usecase.AIchat(ctx.Request.Context(), userID.(string), req.Query)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(ctx, err)
 		return
 	}
 

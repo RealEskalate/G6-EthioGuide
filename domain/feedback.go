@@ -37,8 +37,8 @@ type Feedback struct {
 }
 
 type FeedbackFilter struct {
-	Page int64
-	Limit int64
-	Status *string
+	Page        int64
+	Limit       int64
+	Status      *string
 	ProcedureID *string
 }

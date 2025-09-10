@@ -335,7 +335,7 @@ func (ctrl *UserController) Logout(c *gin.Context) {
 			return
 		}
 	} else {
-		setAuthCookie(c, "", -1)
+		unsetAuthCookie(c)
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
@@ -758,4 +758,8 @@ func setAuthCookie(c *gin.Context, refreshToken string, refreshTokenTTL int) {
 	if refreshToken != "" {
 		c.SetCookie("refresh_token", refreshToken, refreshTokenTTL, "/", "", false, true)
 	}
+}
+
+func unsetAuthCookie(c *gin.Context) {
+	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
 }

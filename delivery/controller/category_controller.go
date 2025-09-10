@@ -89,7 +89,7 @@ func (ctrl *CategoryController) GetCategory(c *gin.Context) {
 	options.Limit = limit
 
 	options.SortBy = c.Query("sortBy") // e.g., "date", "popularity", "title"
-	if strings.ToUpper(c.Query("sortOrder")) == string(domain.SortAsc) {
+	if strings.ToLower(c.Query("sortOrder")) == string(domain.SortAsc) {
 		options.SortOrder = domain.SortAsc
 	} else {
 		options.SortOrder = domain.SortDesc

@@ -21,7 +21,10 @@ func HandleError(c *gin.Context, err error) {
 		errors.Is(err, domain.ErrUsernameEmpty),
 		errors.Is(err, domain.ErrUsernameTooLong),
 		errors.Is(err, domain.ErrInvalidBody),
-		errors.Is(err, domain.ErrUnsupportedLanguage):
+		errors.Is(err, domain.ErrUnsupportedLanguage),
+		errors.Is(err, domain.ErrInvalidBody),
+		errors.Is(err, domain.ErrInvalidQueryParam),
+		errors.Is(err, domain.ErrInvalidEmailFormat):
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 
 	// Catch generic validation error
@@ -43,7 +46,9 @@ func HandleError(c *gin.Context, err error) {
 
 	// --- 404 Not Found ---
 	case errors.Is(err, domain.ErrUserNotFound),
-		errors.Is(err, domain.ErrNotFound):
+		errors.Is(err, domain.ErrNotFound),
+		errors.Is(err, domain.ErrPostNotFound),
+		errors.Is(err, domain.ErrProcedureNotFound):
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 
 	// --- 409 Conflict ---
