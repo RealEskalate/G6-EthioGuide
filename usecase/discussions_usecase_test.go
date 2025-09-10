@@ -37,9 +37,11 @@ func (m *MockPostRepository) GetPostByID(ctx context.Context, id string) (*domai
 
 func (m *MockPostRepository) GetPosts(ctx context.Context, opts domain.PostFilters) ([]*domain.Post, int64, error) {
 	args := m.Called(ctx, opts)
-	posts, _ := args.Get(0).([]*domain.Post)
-	total, _ := args.Get(1).(int64)
-	return posts, total, args.Error(2)
+	// If the first argument (the slice) is nil, return nil, otherwise cast it.
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*domain.Post), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *MockPostRepository) UpdatePost(ctx context.Context, post *domain.Post) (*domain.Post, error) {
@@ -55,9 +57,6 @@ func (m *MockPostRepository) DeletePost(ctx context.Context, id, userID, role st
 	args := m.Called(ctx, id, userID, role)
 	return args.Error(0)
 }
-
-
-
 
 // PostUseCaseTestSuite defines the test suite for PostUseCase
 type PostUseCaseTestSuite struct {
@@ -180,7 +179,7 @@ func (suite *PostUseCaseTestSuite) TestGetPosts() {
 			opts: domain.PostFilters{
 				Title: stringPtr("Error"),
 			},
-			expectedPosts: []*domain.Post{},
+			expectedPosts: nil,
 			expectedTotal: 0,
 			expectedError: errors.New("db error"),
 			mockSetup: func(opts domain.PostFilters, expectedPosts []*domain.Post, expectedTotal int64, expectedError error) {

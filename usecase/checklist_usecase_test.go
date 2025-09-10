@@ -44,27 +44,12 @@ func (m *MockChecklistRepository) GetChecklistByUserProcedureID(ctx context.Cont
 	return args.Get(0).([]*domain.Checklist), args.Error(1)
 }
 
-func (m *MockChecklistRepository) FindCheck(ctx context.Context, checklistID string) (*domain.Checklist, error) {
+func (m *MockChecklistRepository) ToggleCheckAndUpdateStatus(ctx context.Context, checklistID string) (*domain.Checklist, error) {
 	args := m.Called(ctx, checklistID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*domain.Checklist), args.Error(1)
-}
-
-func (m *MockChecklistRepository) ToggleCheck(ctx context.Context, checklistID string) error {
-	args := m.Called(ctx, checklistID)
-	return args.Error(0)
-}
-
-func (m *MockChecklistRepository) CountDocumentsChecklist(ctx context.Context, filter interface{}) (int64, error) {
-	args := m.Called(ctx, filter)
-	return int64(args.Int(0)), args.Error(1)
-}
-
-func (m *MockChecklistRepository) UpdateUserProcedure(ctx context.Context, filter interface{}, updatefields map[string]interface{}) error {
-	args := m.Called(ctx, filter, updatefields)
-	return args.Error(0)
 }
 
 // --- Test Suite Definition ---
@@ -196,103 +181,30 @@ func (s *ChecklistUsecaseTestSuite) TestGetChecklistByUserProcedureID() {
 
 func (s *ChecklistUsecaseTestSuite) TestUpdateChecklist() {
 	checklistID := uuid.New().String()
-	userProcedureID := uuid.New().String()
-	mockChecklist := &domain.Checklist{ID: checklistID, UserProcedureID: userProcedureID, IsChecked: false}
+	expectedChecklist := &domain.Checklist{ID: checklistID, IsChecked: true}
 
-	s.Run("Success - Not Started to In Progress", func() {
+	s.Run("Success", func() {
 		s.SetupTest()
-		s.mockRepo.On("FindCheck", mock.Anything, checklistID).Return(mockChecklist, nil).Once()
-		s.mockRepo.On("ToggleCheck", mock.Anything, checklistID).Return(nil).Once()
-		s.mockRepo.On("CountDocumentsChecklist", mock.Anything, mock.AnythingOfType("map[string]interface {}")).Return(10, nil).Once() // Total
-		s.mockRepo.On("CountDocumentsChecklist", mock.Anything, mock.AnythingOfType("map[string]interface {}")).Return(5, nil).Once()  // Checked
-		s.mockRepo.On("UpdateUserProcedure", mock.Anything, mock.Anything, mock.MatchedBy(func(update map[string]interface{}) bool {
-			return update["status"] == "In Progress"
-		})).Return(nil).Once()
+		s.mockRepo.On("ToggleCheckAndUpdateStatus", mock.Anything, checklistID).Return(expectedChecklist, nil).Once()
 
-		checklist, err := s.usecase.UpdateChecklist(s.ctx, checklistID)
+		result, err := s.usecase.UpdateChecklist(s.ctx, checklistID)
 
 		s.NoError(err)
-		s.True(checklist.IsChecked)
+		s.Equal(expectedChecklist, result)
 		s.mockRepo.AssertExpectations(s.T())
 	})
 
-	s.Run("Success - In Progress to Completed", func() {
-		s.SetupTest()
-		mockChecklist.IsChecked = false
-		s.mockRepo.On("FindCheck", mock.Anything, checklistID).Return(mockChecklist, nil).Once()
-		s.mockRepo.On("ToggleCheck", mock.Anything, checklistID).Return(nil).Once()
-		s.mockRepo.On("CountDocumentsChecklist", mock.Anything, mock.AnythingOfType("map[string]interface {}")).Return(10, nil).Once() // Total
-		s.mockRepo.On("CountDocumentsChecklist", mock.Anything, mock.AnythingOfType("map[string]interface {}")).Return(10, nil).Once() // Checked
-		s.mockRepo.On("UpdateUserProcedure", mock.Anything, mock.Anything, mock.MatchedBy(func(update map[string]interface{}) bool {
-			return update["status"] == "Completed"
-		})).Return(nil).Once()
-
-		checklist, err := s.usecase.UpdateChecklist(s.ctx, checklistID)
-
-		s.NoError(err)
-		s.True(checklist.IsChecked)
-		s.mockRepo.AssertExpectations(s.T())
-	})
-
-	s.Run("Success - Completed to In Progress", func() {
-		s.SetupTest()
-		mockChecklist.IsChecked = true // Start as checked
-		s.mockRepo.On("FindCheck", mock.Anything, checklistID).Return(mockChecklist, nil).Once()
-		s.mockRepo.On("ToggleCheck", mock.Anything, checklistID).Return(nil).Once()
-		s.mockRepo.On("CountDocumentsChecklist", mock.Anything, mock.AnythingOfType("map[string]interface {}")).Return(10, nil).Once() // Total
-		s.mockRepo.On("CountDocumentsChecklist", mock.Anything, mock.AnythingOfType("map[string]interface {}")).Return(9, nil).Once()   // Checked (after un-checking one)
-		s.mockRepo.On("UpdateUserProcedure", mock.Anything, mock.Anything, mock.MatchedBy(func(update map[string]interface{}) bool {
-			return update["status"] == "In Progress"
-		})).Return(nil).Once()
-
-		checklist, err := s.usecase.UpdateChecklist(s.ctx, checklistID)
-
-		s.NoError(err)
-		s.False(checklist.IsChecked) // It should be toggled to false
-		s.mockRepo.AssertExpectations(s.T())
-	})
-
-	s.Run("Success - In Progress to Not Started", func() {
-		s.SetupTest()
-		mockChecklist.IsChecked = true // Start as checked
-		s.mockRepo.On("FindCheck", mock.Anything, checklistID).Return(mockChecklist, nil).Once()
-		s.mockRepo.On("ToggleCheck", mock.Anything, checklistID).Return(nil).Once()
-		s.mockRepo.On("CountDocumentsChecklist", mock.Anything, mock.AnythingOfType("map[string]interface {}")).Return(10, nil).Once() // Total
-		s.mockRepo.On("CountDocumentsChecklist", mock.Anything, mock.AnythingOfType("map[string]interface {}")).Return(0, nil).Once()   // Checked (after un-checking the last one)
-		s.mockRepo.On("UpdateUserProcedure", mock.Anything, mock.Anything, mock.MatchedBy(func(update map[string]interface{}) bool {
-			return update["status"] == "Not Started"
-		})).Return(nil).Once()
-
-		checklist, err := s.usecase.UpdateChecklist(s.ctx, checklistID)
-
-		s.NoError(err)
-		s.False(checklist.IsChecked)
-		s.mockRepo.AssertExpectations(s.T())
-	})
-
-		s.Run("Failure - Invalid ID", func() {
+	s.Run("Failure - Invalid ID", func() {
 		s.SetupTest()
 		_, err := s.usecase.UpdateChecklist(s.ctx, "")
 		s.ErrorIs(err, domain.ErrInvalidID)
+		s.mockRepo.AssertNotCalled(s.T(), "ToggleCheckAndUpdateStatus")
 	})
 
-	s.Run("Failure - FindCheck Error", func() {
+	s.Run("Failure - Repository Error", func() {
 		s.SetupTest()
-		repoErr := errors.New("find error")
-		s.mockRepo.On("FindCheck", mock.Anything, checklistID).Return(nil, repoErr).Once()
-
-		_, err := s.usecase.UpdateChecklist(s.ctx, checklistID)
-
-		s.Error(err)
-		s.ErrorIs(err, repoErr)
-		s.mockRepo.AssertExpectations(s.T())
-	})
-
-	s.Run("Failure - ToggleCheck Error", func() {
-		s.SetupTest()
-		repoErr := errors.New("toggle error")
-		s.mockRepo.On("FindCheck", mock.Anything, checklistID).Return(mockChecklist, nil).Once()
-		s.mockRepo.On("ToggleCheck", mock.Anything, checklistID).Return(repoErr).Once()
+		repoErr := errors.New("transaction failed")
+		s.mockRepo.On("ToggleCheckAndUpdateStatus", mock.Anything, checklistID).Return(nil, repoErr).Once()
 
 		_, err := s.usecase.UpdateChecklist(s.ctx, checklistID)
 

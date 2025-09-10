@@ -86,6 +86,92 @@ func (s *NoticeUsecaseTestSuite) TestGetNoticesByFilter() {
 		s.Equal(int64(0), total)
 		s.mockRepo.AssertExpectations(s.T())
 	})
+
+	s.Run("Success - Fetches data correctly", func() {
+		// Arrange
+		s.SetupTest()
+		filter := &domain.NoticeFilter{Page: 1, Limit: 10}
+		expectedNotices := []*domain.Notice{{ID: "notice-1", Title: "Test Notice"}}
+		var expectedTotal int64 = 1
+
+		s.mockRepo.On("GetByFilter", mock.Anything, filter).Return(expectedNotices, nil).Once()
+		s.mockRepo.On("CountByFilter", mock.Anything, filter).Return(expectedTotal, nil).Once()
+
+		// Act
+		notices, total, err := s.uc.GetNoticesByFilter(context.Background(), filter)
+
+		// Assert
+		s.NoError(err)
+		s.Equal(expectedTotal, total)
+		s.Equal(expectedNotices, notices)
+		s.mockRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Enforces defaults and caps limit", func() {
+		// Arrange
+		s.SetupTest()
+		filter := &domain.NoticeFilter{Page: 0, Limit: 1000} // Values to be corrected by the usecase
+
+		// The repo should be called with the corrected values
+		expectedFilter := &domain.NoticeFilter{
+			Page:      1,
+			Limit:     100,
+			SortBy:    "created_At",
+			SortOrder: domain.SortDesc,
+		}
+
+		s.mockRepo.On("GetByFilter", mock.Anything, expectedFilter).Return([]*domain.Notice{}, nil).Once()
+		s.mockRepo.On("CountByFilter", mock.Anything, expectedFilter).Return(int64(0), nil).Once()
+
+		// Act
+		_, total, err := s.uc.GetNoticesByFilter(context.Background(), filter)
+
+		// Assert
+		s.NoError(err)
+		s.Equal(int64(0), total)
+		s.mockRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - GetByFilter returns error", func() {
+		// Arrange
+		s.SetupTest()
+		filter := &domain.NoticeFilter{Page: 1, Limit: 10, SortBy: "created_At", SortOrder: domain.SortDesc}
+		expectedError := errors.New("get filter error")
+
+		s.mockRepo.On("GetByFilter", mock.Anything, filter).Return(nil, expectedError).Once()
+
+		// Act
+		notices, total, err := s.uc.GetNoticesByFilter(context.Background(), filter)
+
+		// Assert
+		s.Error(err)
+		s.ErrorIs(err, expectedError)
+		s.Nil(notices)
+		s.Zero(total)
+		// CountByFilter should not be called if GetByFilter fails
+		s.mockRepo.AssertNotCalled(s.T(), "CountByFilter")
+		s.mockRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - CountByFilter returns error", func() {
+		// Arrange
+		s.SetupTest()
+		filter := &domain.NoticeFilter{Page: 1, Limit: 10, SortBy: "created_At", SortOrder: domain.SortDesc}
+		expectedError := errors.New("count filter error")
+
+		s.mockRepo.On("GetByFilter", mock.Anything, filter).Return([]*domain.Notice{}, nil).Once()
+		s.mockRepo.On("CountByFilter", mock.Anything, filter).Return(int64(0), expectedError).Once()
+
+		// Act
+		notices, total, err := s.uc.GetNoticesByFilter(context.Background(), filter)
+
+		// Assert
+		s.Error(err)
+		s.ErrorIs(err, expectedError)
+		s.Nil(notices)
+		s.Zero(total)
+		s.mockRepo.AssertExpectations(s.T())
+	})
 }
 
 func (s *NoticeUsecaseTestSuite) TestUpdateNotice() {

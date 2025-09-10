@@ -1,252 +1,211 @@
 package usecase_test
 
-// import (
-// 	"EthioGuide/domain"
-// 	"EthioGuide/usecase"
-// 	"context"
-// 	"errors"
-// 	"testing"
-// 	"time"
+import (
+	"EthioGuide/domain"
+	. "EthioGuide/usecase"
+	"context"
+	"errors"
+	"testing"
+	"time"
 
-// 	"github.com/stretchr/testify/mock"
-// 	"github.com/stretchr/testify/suite"
-// )
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
+)
 
-// // --- Mocks ---
-// type MockFeedbackRepo struct {
-// 	mock.Mock
-// }
+type MockFeedbackRepository struct {
+	mock.Mock
+}
 
-// func (m *MockFeedbackRepo) SubmitFeedback(ctx context.Context, feedback *domain.Feedback) error {
-// 	args := m.Called(ctx, feedback)
-// 	return args.Error(0)
-// }
-// func (m *MockFeedbackRepo) GetFeedbackByID(ctx context.Context, id string) (*domain.Feedback, error) {
-// 	args := m.Called(ctx, id)
-// 	var fb *domain.Feedback
-// 	if args.Get(0) != nil {
-// 		fb = args.Get(0).(*domain.Feedback)
-// 	}
-// 	return fb, args.Error(1)
-// }
-// func (m *MockFeedbackRepo) GetAllFeedbacksForProcedure(ctx context.Context, procedureID string, filter *domain.FeedbackFilter) ([]*domain.Feedback, int64, error) {
-// 	args := m.Called(ctx, procedureID, filter)
-// 	var feedbacks []*domain.Feedback
-// 	if args.Get(0) != nil {
-// 		feedbacks = args.Get(0).([]*domain.Feedback)
-// 	}
-// 	return feedbacks, args.Get(1).(int64), args.Error(2)
-// }
-// func (m *MockFeedbackRepo) UpdateFeedbackStatus(ctx context.Context, feedbackID string, newFeedback *domain.Feedback) error {
-// 	args := m.Called(ctx, feedbackID, newFeedback)
-// 	return args.Error(0)
-// }
-// func (m *MockFeedbackRepo) GetAllFeedbacks(ctx context.Context, filter *domain.FeedbackFilter) ([]*domain.Feedback, int64, error) {
-// 	args := m.Called(ctx, filter)
-// 	var feedbacks []*domain.Feedback
-// 	if args.Get(0) != nil {
-// 		feedbacks = args.Get(0).([]*domain.Feedback)
-// 	}
-// 	return feedbacks, args.Get(1).(int64), args.Error(2)
+func (m *MockFeedbackRepository) SubmitFeedback(ctx context.Context, feedback *domain.Feedback) error {
+	args := m.Called(ctx, feedback)
+	return args.Error(0)
+}
+func (m *MockFeedbackRepository) GetFeedbackByID(ctx context.Context, id string) (*domain.Feedback, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Feedback), args.Error(1)
+}
+func (m *MockFeedbackRepository) GetAllFeedbacksForProcedure(ctx context.Context, procedureID string, filter *domain.FeedbackFilter) ([]*domain.Feedback, int64, error) {
+	args := m.Called(ctx, procedureID, filter)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*domain.Feedback), args.Get(1).(int64), args.Error(2)
+}
+func (m *MockFeedbackRepository) UpdateFeedbackStatus(ctx context.Context, feedbackID string, newFeedback *domain.Feedback) error {
+	args := m.Called(ctx, feedbackID, newFeedback)
+	return args.Error(0)
+}
+func (m *MockFeedbackRepository) GetAllFeedbacks(ctx context.Context, filter *domain.FeedbackFilter) ([]*domain.Feedback, int64, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*domain.Feedback), args.Get(1).(int64), args.Error(2)
+}
 
-// }
+// --- Test Suite ---
+type FeedbackUsecaseTestSuite struct {
+	suite.Suite
+	mockFeedbackRepo *MockFeedbackRepository
+	mockProcRepo     *MockProcedureRepository
+	usecase          domain.IFeedbackUsecase
+	ctx              context.Context
+}
 
-// // --- Test Suite ---
-// type FeedbackUsecaseTestSuite struct {
-// 	suite.Suite
-// 	mockFeedbackRepo  *MockFeedbackRepo
-// 	mockProcedureRepo *MockProcedureRepo
-// 	usecase           domain.IFeedbackUsecase
-// 	timeout           time.Duration
-// }
+func (s *FeedbackUsecaseTestSuite) SetupTest() {
+	s.mockFeedbackRepo = new(MockFeedbackRepository)
+	s.mockProcRepo = new(MockProcedureRepository)
+	s.usecase = NewFeedbackUsecase(s.mockFeedbackRepo, s.mockProcRepo, 5*time.Second)
+	s.ctx = context.Background()
+}
 
-// func (s *FeedbackUsecaseTestSuite) SetupTest() {
-// 	s.mockFeedbackRepo = new(MockFeedbackRepo)
-// 	s.mockProcedureRepo = new(MockProcedureRepo)
-// 	s.timeout = 2 * time.Second
-// 	s.usecase = usecase.NewFeedbackUsecase(s.mockFeedbackRepo, s.mockProcedureRepo, s.timeout)
-// }
+func (s *FeedbackUsecaseTestSuite) TestSubmitFeedback_Success() {
+	// Arrange
+	feedback := &domain.Feedback{ProcedureID: "proc-123"}
+	s.mockProcRepo.On("GetByID", mock.Anything, "proc-123").Return(&domain.Procedure{}, nil).Once()
+	s.mockFeedbackRepo.On("SubmitFeedback", mock.Anything, feedback).Return(nil).Once()
 
-// func TestFeedbackUsecaseTestSuite(t *testing.T) {
-// 	suite.Run(t, new(FeedbackUsecaseTestSuite))
-// }
+	// Act
+	err := s.usecase.SubmitFeedback(s.ctx, feedback)
 
-// // --- Tests ---
+	// Assert
+	s.NoError(err)
+	s.mockProcRepo.AssertExpectations(s.T())
+	s.mockFeedbackRepo.AssertExpectations(s.T())
+}
 
-// func (s *FeedbackUsecaseTestSuite) TestSubmitFeedback() {
-// 	feedback := &domain.Feedback{
-// 		UserID:      "user1",
-// 		ProcedureID: "proc1",
-// 		Content:     "Nice!",
-// 		Type:        domain.ThanksFeedback,
-// 		Tags:        []string{"tag1"},
-// 	}
-// 	procedure := &domain.Procedure{ID: "proc1"}
+func (s *FeedbackUsecaseTestSuite) TestSubmitFeedback_ProcedureNotFound() {
+	// Arrange
+	feedback := &domain.Feedback{ProcedureID: "proc-404"}
+	s.mockProcRepo.On("GetByID", mock.Anything, "proc-404").Return(nil, domain.ErrProcedureNotFound).Once()
 
-// 	s.Run("Success", func() {
-// 		s.SetupTest()
-// 		s.mockProcedureRepo.On("GetByID", mock.Anything, feedback.ProcedureID).Return(procedure, nil).Once()
-// 		s.mockFeedbackRepo.On("SubmitFeedback", mock.Anything, feedback).Return(nil).Once()
+	// Act
+	err := s.usecase.SubmitFeedback(s.ctx, feedback)
 
-// 		err := s.usecase.SubmitFeedback(context.Background(), feedback)
-// 		s.NoError(err)
-// 		s.mockProcedureRepo.AssertExpectations(s.T())
-// 		s.mockFeedbackRepo.AssertExpectations(s.T())
-// 	})
+	// Assert
+	s.Error(err)
+	s.ErrorIs(err, domain.ErrProcedureNotFound)
+	s.mockProcRepo.AssertExpectations(s.T())
+	// Ensure SubmitFeedback is not called if the procedure doesn't exist
+	s.mockFeedbackRepo.AssertNotCalled(s.T(), "SubmitFeedback")
+}
 
-// 	s.Run("Failure - Procedure Not Found", func() {
-// 		s.SetupTest()
-// 		s.mockProcedureRepo.On("GetByID", mock.Anything, feedback.ProcedureID).Return(nil, domain.ErrNotFound).Once()
+func (s *FeedbackUsecaseTestSuite) TestUpdateFeedbackStatus_Success() {
+	// Arrange
+	feedbackID := "fb-1"
+	userID := "org-1" // This is the owner
+	status := domain.ResolvedFeedback
+	adminResponse := "Resolved."
 
-// 		err := s.usecase.SubmitFeedback(context.Background(), feedback)
-// 		s.ErrorIs(err, domain.ErrNotFound)
-// 		s.mockProcedureRepo.AssertExpectations(s.T())
-// 	})
+	mockFeedback := &domain.Feedback{ID: feedbackID, ProcedureID: "proc-1"}
+	mockProcedure := &domain.Procedure{ID: "proc-1", OrganizationID: userID}
 
-// 	s.Run("Failure - Repo Error", func() {
-// 		s.SetupTest()
-// 		s.mockProcedureRepo.On("GetByID", mock.Anything, feedback.ProcedureID).Return(procedure, nil).Once()
-// 		s.mockFeedbackRepo.On("SubmitFeedback", mock.Anything, feedback).Return(errors.New("db error")).Once()
+	s.mockFeedbackRepo.On("GetFeedbackByID", mock.Anything, feedbackID).Return(mockFeedback, nil).Once()
+	s.mockProcRepo.On("GetByID", mock.Anything, "proc-1").Return(mockProcedure, nil).Once()
+	s.mockFeedbackRepo.On("UpdateFeedbackStatus", mock.Anything, feedbackID, mock.AnythingOfType("*domain.Feedback")).Return(nil).Once()
 
-// 		err := s.usecase.SubmitFeedback(context.Background(), feedback)
-// 		s.Error(err)
-// 		s.Contains(err.Error(), "db error")
-// 		s.mockFeedbackRepo.AssertExpectations(s.T())
-// 	})
-// }
+	// Act
+	err := s.usecase.UpdateFeedbackStatus(s.ctx, feedbackID, userID, status, &adminResponse)
 
-// func (s *FeedbackUsecaseTestSuite) TestGetAllFeedbacksForProcedure() {
-// 	filter := &domain.FeedbackFilter{Page: 1, Limit: 10}
-// 	feedbacks := []*domain.Feedback{{ID: "fb1"}}
+	// Assert
+	s.NoError(err)
+	s.mockFeedbackRepo.AssertExpectations(s.T())
+	s.mockProcRepo.AssertExpectations(s.T())
+}
 
-// 	s.Run("Success", func() {
-// 		s.SetupTest()
-// 		s.mockFeedbackRepo.On("GetAllFeedbacksForProcedure", mock.Anything, "proc1", filter).Return(feedbacks, int64(1), nil).Once()
+func (s *FeedbackUsecaseTestSuite) TestUpdateFeedbackStatus_PermissionDenied() {
+	// Arrange
+	feedbackID := "fb-1"
+	userID := "not-the-owner"
+	status := domain.ResolvedFeedback
+	adminResponse := "Should not work."
 
-// 		res, total, err := s.usecase.GetAllFeedbacksForProcedure(context.Background(), "proc1", filter)
-// 		s.NoError(err)
-// 		s.Equal(int64(1), total)
-// 		s.Equal(feedbacks, res)
-// 		s.mockFeedbackRepo.AssertExpectations(s.T())
-// 	})
+	mockFeedback := &domain.Feedback{ID: feedbackID, ProcedureID: "proc-1"}
+	mockProcedure := &domain.Procedure{ID: "proc-1", OrganizationID: "org-owner"} // Different owner
 
-// 	s.Run("Failure - Repo Error", func() {
-// 		s.SetupTest()
-// 		s.mockFeedbackRepo.On("GetAllFeedbacksForProcedure", mock.Anything, "proc1", filter).Return(nil, int64(0), errors.New("db error")).Once()
+	s.mockFeedbackRepo.On("GetFeedbackByID", mock.Anything, feedbackID).Return(mockFeedback, nil).Once()
+	s.mockProcRepo.On("GetByID", mock.Anything, "proc-1").Return(mockProcedure, nil).Once()
 
-// 		res, total, err := s.usecase.GetAllFeedbacksForProcedure(context.Background(), "proc1", filter)
-// 		s.Error(err)
-// 		s.Nil(res)
-// 		s.Equal(int64(0), total)
-// 		s.mockFeedbackRepo.AssertExpectations(s.T())
-// 	})
-// }
+	// Act
+	err := s.usecase.UpdateFeedbackStatus(s.ctx, feedbackID, userID, status, &adminResponse)
 
-// func (s *FeedbackUsecaseTestSuite) TestUpdateFeedbackStatus() {
-// 	feedback := &domain.Feedback{
-// 		ID:          "fb1",
-// 		ProcedureID: "proc1",
-// 		Status:      domain.NewFeedback,
-// 	}
-// 	procedure := &domain.Procedure{
-// 		ID:             "proc1",
-// 		OrganizationID: "org1",
-// 	}
-// 	adminResponse := "Done"
+	// Assert
+	s.Error(err)
+	s.ErrorIs(err, domain.ErrPermissionDenied)
+	s.mockFeedbackRepo.AssertExpectations(s.T())
+	s.mockProcRepo.AssertExpectations(s.T())
+	s.mockFeedbackRepo.AssertNotCalled(s.T(), "UpdateFeedbackStatus") // Should not be called on permission failure
+}
 
-// 	s.Run("Success", func() {
-// 		s.SetupTest()
-// 		s.mockFeedbackRepo.On("GetFeedbackByID", mock.Anything, feedback.ID).Return(feedback, nil).Once()
-// 		s.mockProcedureRepo.On("GetByID", mock.Anything, feedback.ProcedureID).Return(procedure, nil).Once()
-// 		s.mockFeedbackRepo.On("UpdateFeedbackStatus", mock.Anything, feedback.ID, mock.AnythingOfType("*domain.Feedback")).Return(nil).Once()
+func (s *FeedbackUsecaseTestSuite) TestUpdateFeedbackStatus_MissingAdminResponse() {
+	// Arrange
+	feedbackID, userID := "fb-1", "org-1"
+	mockFeedback := &domain.Feedback{ID: feedbackID, ProcedureID: "proc-1"}
+	mockProcedure := &domain.Procedure{ID: "proc-1", OrganizationID: userID}
 
-// 		err := s.usecase.UpdateFeedbackStatus(context.Background(), feedback.ID, "org1", domain.ResolvedFeedback, &adminResponse)
-// 		s.NoError(err)
-// 		s.mockFeedbackRepo.AssertExpectations(s.T())
-// 		s.mockProcedureRepo.AssertExpectations(s.T())
-// 	})
+	s.Run("Failure when Resolving without admin response", func() {
+		// Arrange: Reset mocks and set expectations for this specific sub-test.
+		s.SetupTest()
+		s.mockFeedbackRepo.On("GetFeedbackByID", mock.Anything, feedbackID).Return(mockFeedback, nil).Once()
+		s.mockProcRepo.On("GetByID", mock.Anything, "proc-1").Return(mockProcedure, nil).Once()
 
-// 	s.Run("Failure - Feedback Not Found", func() {
-// 		s.SetupTest()
-// 		s.mockFeedbackRepo.On("GetFeedbackByID", mock.Anything, feedback.ID).Return(nil, domain.ErrNotFound).Once()
+		// Act
+		err := s.usecase.UpdateFeedbackStatus(s.ctx, feedbackID, userID, domain.ResolvedFeedback, nil)
 
-// 		err := s.usecase.UpdateFeedbackStatus(context.Background(), feedback.ID, "org1", domain.ResolvedFeedback, &adminResponse)
-// 		s.ErrorIs(err, domain.ErrNotFound)
-// 		s.mockFeedbackRepo.AssertExpectations(s.T())
-// 	})
+		// Assert
+		s.Error(err)
+		s.Contains(err.Error(), "admin response is required")
+		s.mockFeedbackRepo.AssertExpectations(s.T())
+		s.mockProcRepo.AssertExpectations(s.T())
+	})
 
-// 	s.Run("Failure - Procedure Not Found", func() {
-// 		s.SetupTest()
-// 		s.mockFeedbackRepo.On("GetFeedbackByID", mock.Anything, feedback.ID).Return(feedback, nil).Once()
-// 		s.mockProcedureRepo.On("GetByID", mock.Anything, feedback.ProcedureID).Return(nil, domain.ErrNotFound).Once()
+	s.Run("Failure when Declining without admin response", func() {
+		// Arrange: Reset mocks and set expectations for this specific sub-test.
+		s.SetupTest()
+		s.mockFeedbackRepo.On("GetFeedbackByID", mock.Anything, feedbackID).Return(mockFeedback, nil).Once()
+		s.mockProcRepo.On("GetByID", mock.Anything, "proc-1").Return(mockProcedure, nil).Once()
 
-// 		err := s.usecase.UpdateFeedbackStatus(context.Background(), feedback.ID, "org1", domain.ResolvedFeedback, &adminResponse)
-// 		s.ErrorIs(err, domain.ErrNotFound)
-// 		s.mockProcedureRepo.AssertExpectations(s.T())
-// 	})
+		// Act
+		err := s.usecase.UpdateFeedbackStatus(s.ctx, feedbackID, userID, domain.DeclinedFeedback, nil)
 
-// 	s.Run("Failure - Permission Denied", func() {
-// 		s.SetupTest()
-// 		s.mockFeedbackRepo.On("GetFeedbackByID", mock.Anything, feedback.ID).Return(feedback, nil).Once()
-// 		s.mockProcedureRepo.On("GetByID", mock.Anything, feedback.ProcedureID).Return(procedure, nil).Once()
+		// Assert
+		s.Error(err)
+		s.Contains(err.Error(), "admin response is required")
+		s.mockFeedbackRepo.AssertExpectations(s.T())
+		s.mockProcRepo.AssertExpectations(s.T())
+	})
+}
 
-// 		err := s.usecase.UpdateFeedbackStatus(context.Background(), feedback.ID, "wrong_org", domain.ResolvedFeedback, &adminResponse)
-// 		s.ErrorIs(err, domain.ErrPermissionDenied)
-// 	})
+func (s *FeedbackUsecaseTestSuite) TestGetAllFeedbacks_PassThrough() {
+	// Arrange
+	filter := &domain.FeedbackFilter{Page: 1, Limit: 10}
+	s.mockFeedbackRepo.On("GetAllFeedbacks", mock.Anything, filter).Return([]*domain.Feedback{}, int64(0), nil).Once()
 
-// 	s.Run("Failure - Missing Admin Response", func() {
-// 		s.SetupTest()
-// 		s.mockFeedbackRepo.On("GetFeedbackByID", mock.Anything, feedback.ID).Return(feedback, nil).Once()
-// 		s.mockProcedureRepo.On("GetByID", mock.Anything, feedback.ProcedureID).Return(procedure, nil).Once()
+	// Act
+	_, _, err := s.usecase.GetAllFeedbacks(s.ctx, filter)
 
-// 		err := s.usecase.UpdateFeedbackStatus(context.Background(), feedback.ID, "org1", domain.ResolvedFeedback, nil)
-// 		s.Error(err)
-// 		s.Contains(err.Error(), "admin response is required")
-// 	})
+	// Assert
+	s.NoError(err)
+	s.mockFeedbackRepo.AssertExpectations(s.T())
+}
 
-// 	s.Run("Failure - Repo Update Error", func() {
-// 		s.SetupTest()
-// 		s.mockFeedbackRepo.On("GetFeedbackByID", mock.Anything, feedback.ID).Return(feedback, nil).Once()
-// 		s.mockProcedureRepo.On("GetByID", mock.Anything, feedback.ProcedureID).Return(procedure, nil).Once()
-// 		s.mockFeedbackRepo.On("UpdateFeedbackStatus", mock.Anything, feedback.ID, mock.AnythingOfType("*domain.Feedback")).Return(errors.New("db error")).Once()
+func (s *FeedbackUsecaseTestSuite) TestGetAllFeedbacksForProcedure_PassThrough() {
+	// Arrange
+	procedureID := "proc-1"
+	filter := &domain.FeedbackFilter{Page: 1, Limit: 10}
+	s.mockFeedbackRepo.On("GetAllFeedbacksForProcedure", mock.Anything, procedureID, filter).Return([]*domain.Feedback{}, int64(0), errors.New("repo error")).Once()
 
-// 		err := s.usecase.UpdateFeedbackStatus(context.Background(), feedback.ID, "org1", domain.ResolvedFeedback, &adminResponse)
-// 		s.Error(err)
-// 		s.Contains(err.Error(), "db error")
-// 	})
-// }
+	// Act
+	_, _, err := s.usecase.GetAllFeedbacksForProcedure(s.ctx, procedureID, filter)
 
-// func (s *FeedbackUsecaseTestSuite) TestGetAllFeedbacks() {
-// 	filter := &domain.FeedbackFilter{Page: 1, Limit: 10}
-// 	feedbacks := []*domain.Feedback{{ID: "fb1"}}
+	// Assert
+	s.Error(err)
+	s.mockFeedbackRepo.AssertExpectations(s.T())
+}
 
-// 	s.Run("Success", func() {
-// 		s.SetupTest()
-// 		s.mockFeedbackRepo.
-// 			On("GetAllFeedbacks", mock.Anything, filter).
-// 			Return(feedbacks, int64(1), nil).
-// 			Once()
-
-// 		res, total, err := s.usecase.GetAllFeedbacks(context.Background(), filter)
-
-// 		s.NoError(err)
-// 		s.Equal(int64(1), total)
-// 		s.Equal(feedbacks, res)
-// 		s.mockFeedbackRepo.AssertExpectations(s.T())
-// 	})
-
-// 	s.Run("Failure - Repo Error", func() {
-// 		s.SetupTest()
-// 		s.mockFeedbackRepo.
-// 			On("GetAllFeedbacks", mock.Anything, filter).
-// 			Return(nil, int64(0), errors.New("db error")).
-// 			Once()
-
-// 		res, total, err := s.usecase.GetAllFeedbacks(context.Background(), filter)
-
-// 		s.Error(err)
-// 		s.Nil(res)
-// 		s.Equal(int64(0), total)
-// 		s.mockFeedbackRepo.AssertExpectations(s.T())
-// 	})
-// }
+func TestFeedbackUsecaseTestSuite(t *testing.T) {
+	suite.Run(t, new(FeedbackUsecaseTestSuite))
+}

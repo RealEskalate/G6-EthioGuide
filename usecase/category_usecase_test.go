@@ -82,3 +82,116 @@ func (s *CategoryUsecaseTestSuite) TestCreateCategory() {
 		s.mockRepo.AssertExpectations(s.T())
 	})
 }
+
+func (s *CategoryUsecaseTestSuite) TestGetCategories() {
+	ctx := context.Background()
+
+	s.Run("Success - Valid Options", func() {
+		// Arrange
+		s.SetupTest() // Reset mocks for each sub-test
+		options := &domain.CategorySearchAndFilter{
+			Page:  1,
+			Limit: 20,
+		}
+		expectedCategories := []*domain.Category{{ID: "cat-1", Title: "Category 1"}}
+		var expectedTotal int64 = 1
+		s.mockRepo.On("GetCategories", mock.Anything, options).Return(expectedCategories, expectedTotal, nil).Once()
+
+		// Act
+		categories, total, err := s.usecase.GetCategories(ctx, options)
+
+		// Assert
+		s.NoError(err)
+		s.Equal(expectedTotal, total)
+		s.Equal(expectedCategories, categories)
+		s.mockRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Success - Applies Default Limit", func() {
+		// Arrange
+		s.SetupTest()
+		// Input has a limit of 0, should be defaulted to 10
+		inputOptions := &domain.CategorySearchAndFilter{
+			Page:  1,
+			Limit: 0,
+		}
+		// We expect the repo to be called with the modified options
+		expectedOptionsAfterDefault := &domain.CategorySearchAndFilter{
+			Page:  1,
+			Limit: 10,
+		}
+		s.mockRepo.On("GetCategories", mock.Anything, expectedOptionsAfterDefault).Return([]*domain.Category{}, int64(0), nil).Once()
+
+		// Act
+		_, _, err := s.usecase.GetCategories(ctx, inputOptions)
+
+		// Assert
+		s.NoError(err)
+		s.mockRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Success - Enforces Max Limit", func() {
+		// Arrange
+		s.SetupTest()
+		// Input has a limit of 200, should be enforced to 100
+		inputOptions := &domain.CategorySearchAndFilter{
+			Page:  1,
+			Limit: 200,
+		}
+		expectedOptionsAfterEnforce := &domain.CategorySearchAndFilter{
+			Page:  1,
+			Limit: 100,
+		}
+		s.mockRepo.On("GetCategories", mock.Anything, expectedOptionsAfterEnforce).Return([]*domain.Category{}, int64(0), nil).Once()
+
+		// Act
+		_, _, err := s.usecase.GetCategories(ctx, inputOptions)
+
+		// Assert
+		s.NoError(err)
+		s.mockRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Success - Applies Default Page", func() {
+		// Arrange
+		s.SetupTest()
+		// Input has a page of 0, should be defaulted to 1
+		inputOptions := &domain.CategorySearchAndFilter{
+			Page:  0,
+			Limit: 10,
+		}
+		expectedOptionsAfterDefault := &domain.CategorySearchAndFilter{
+			Page:  1,
+			Limit: 10,
+		}
+		s.mockRepo.On("GetCategories", mock.Anything, expectedOptionsAfterDefault).Return([]*domain.Category{}, int64(0), nil).Once()
+
+		// Act
+		_, _, err := s.usecase.GetCategories(ctx, inputOptions)
+
+		// Assert
+		s.NoError(err)
+		s.mockRepo.AssertExpectations(s.T())
+	})
+
+	s.Run("Failure - Repo Error", func() {
+		// Arrange
+		s.SetupTest()
+		options := &domain.CategorySearchAndFilter{
+			Page:  1,
+			Limit: 10,
+		}
+		expectedError := errors.New("database connection failed")
+		s.mockRepo.On("GetCategories", mock.Anything, options).Return(nil, int64(0), expectedError).Once()
+
+		// Act
+		categories, total, err := s.usecase.GetCategories(ctx, options)
+
+		// Assert
+		s.Error(err)
+		s.Equal(expectedError, err)
+		s.Nil(categories)
+		s.Zero(total)
+		s.mockRepo.AssertExpectations(s.T())
+	})
+}
