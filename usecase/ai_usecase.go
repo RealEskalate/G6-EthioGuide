@@ -4,6 +4,7 @@ import (
 	"EthioGuide/domain"
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 )
@@ -103,6 +104,7 @@ func (g *geminiUseCase) TranslateJSON(ctx context.Context, data map[string]inter
 	for s := range stringMap {
 		originals = append(originals, s)
 	}
+	sort.Strings(originals)
 
 	// === Translate in a single batch call ===
 	const separator = "<!--EthioGuideTranslationSeparator-->"
@@ -117,13 +119,12 @@ Do not add or remove separators.
 Do not add any introductory text, explanations, markdown, or any text other than the translated segments and their separators.
 
 Example:
-Input Text: "Hello world|||How are you?"
-Your Response for target language 'fr': "Bonjour le monde|||Comment ça va?"
+Input Text: "Hello world%sHow are you?"
+Your Response for target language 'fr': "Bonjour le monde%sComment ça va?"
 
 Now, perform the translation for the following text:
 %s
-`, separator, targetLang, separator, contentToTranslate)
-
+`, separator, targetLang, separator, separator, separator, contentToTranslate)
 	translatedBlock, err := g.geminiServices.GenerateCompletion(ctx, prompt)
 	if err != nil {
 		return nil, fmt.Errorf("gemini service failed to generate completion: %w", err)

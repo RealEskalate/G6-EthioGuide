@@ -8,15 +8,15 @@ import (
 )
 
 type feedbackUsecase struct {
-	feedbackRepo domain.IFeedbackRepository
-	procedureRepo domain.IProcedureRepository
+	feedbackRepo   domain.IFeedbackRepository
+	procedureRepo  domain.IProcedureRepository
 	contextTimeout time.Duration
 }
 
 func NewFeedbackUsecase(fr domain.IFeedbackRepository, pr domain.IProcedureRepository, contextTimeout time.Duration) domain.IFeedbackUsecase {
 	return &feedbackUsecase{
-		feedbackRepo: fr,
-		procedureRepo: pr,
+		feedbackRepo:   fr,
+		procedureRepo:  pr,
 		contextTimeout: contextTimeout,
 	}
 }
@@ -34,7 +34,7 @@ func (fu *feedbackUsecase) SubmitFeedback(c context.Context, feedback *domain.Fe
 
 func (fu *feedbackUsecase) GetAllFeedbacksForProcedure(c context.Context, procedureID string, filter *domain.FeedbackFilter) ([]*domain.Feedback, int64, error) {
 	ctx, cancel := context.WithTimeout(c, fu.contextTimeout)
-	defer cancel() 
+	defer cancel()
 
 	return fu.feedbackRepo.GetAllFeedbacksForProcedure(ctx, procedureID, filter)
 }

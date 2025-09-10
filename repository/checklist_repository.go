@@ -159,21 +159,21 @@ func (cr *ChecklistRepository) GetChecklistByUserProcedureID(ctx context.Context
 	return checklists, nil
 }
 
-func (cr *ChecklistRepository) ToggleCheck(ctx context.Context, checklistID string) error {
+func (cr *ChecklistRepository) ToggleCheckAndUpdateStatus(ctx context.Context, checklistID string) (*domain.Checklist, error) {
 	objID, err := primitive.ObjectIDFromHex(checklistID)
 	if err != nil {
-		return err // Invalid ID format
+		return nil, err // Invalid ID format
 	}
 
 	// Use a session for the transaction
 	session, err := cr.collectionChecklist.Database().Client().StartSession()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer session.EndSession(ctx)
 
 	// The WithTransaction function handles starting, committing, and aborting the transaction.
-	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+	updatedChecklist, err := session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
 		// --- Step 1: Atomically toggle the item and get its updated state ---
 		// We use FindOneAndUpdate to get the document back after the update.
 		// We need the `user_procedure_id` from it.
@@ -243,10 +243,14 @@ func (cr *ChecklistRepository) ToggleCheck(ctx context.Context, checklistID stri
 		}
 
 		// If everything succeeded, return nil to commit the transaction.
-		return nil, nil
+		return &updatedChecklistItem, nil
 	})
 
-	return err
+	checklist, ok := updatedChecklist.(ChecklistItemModel)
+	if !ok {
+		return nil, domain.ErrNotFound
+	}
+	return TodomainChecklist(&checklist), err
 }
 
 func (cr *ChecklistRepository) FindCheck(ctx context.Context, checklistID string) (*domain.Checklist, error) {

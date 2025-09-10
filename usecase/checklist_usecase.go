@@ -74,52 +74,10 @@ func (cuc *ChecklistUsecase) UpdateChecklist(ctx context.Context, checklistID st
 		return nil, domain.ErrInvalidID
 	}
 
-	checklist, err := cuc.checklistrepo.FindCheck(ctx, checklistID)
+	updatedChecklist, err := cuc.checklistrepo.ToggleCheckAndUpdateStatus(ctx, checklistID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch checklist: %w", err)
+		return nil, err
 	}
 
-	if errToggle := cuc.checklistrepo.ToggleCheck(ctx, checklistID); errToggle != nil {
-		return nil, fmt.Errorf("failed to update checklist: %w", errToggle)
-	}
-
-	filterGeneral := interface{}(map[string]interface{}{
-		"user_procedure_id": checklist.UserProcedureID,
-	})
-
-	filterChecked := interface{}(map[string]interface{}{
-		"user_procedure_id": checklist.UserProcedureID,
-		"is_checked":        true,
-	})
-
-	countDoc, errDoc := cuc.checklistrepo.CountDocumentsChecklist(ctx, filterGeneral)
-	if errDoc != nil {
-		return nil, fmt.Errorf("failed to update fields: %w", errDoc)
-	}
-
-	countChecked, errChecked := cuc.checklistrepo.CountDocumentsChecklist(ctx, filterChecked)
-	if errChecked != nil {
-		return nil, fmt.Errorf("failed to update fields: %w", errChecked)
-	}
-
-	updatefields := make(map[string]interface{})
-	percent := int((float64(countChecked) / float64(countDoc)) * 100)
-	if percent == 0 {
-		updatefields["status"] = "Not Started"
-	} else if percent > 0 && percent < 100 {
-		updatefields["status"] = "In Progress"
-	} else {
-		updatefields["status"] = "Completed"
-	}
-
-	filterUserProcedure := interface{}(map[string]interface{}{
-		"user_procedure_id": checklist.UserProcedureID,
-	})
-
-	if err := cuc.checklistrepo.UpdateUserProcedure(ctx, filterUserProcedure, updatefields); err != nil {
-		return nil, fmt.Errorf("failed to update fields: %w", errChecked)
-	}
-
-	checklist.IsChecked = !checklist.IsChecked
-	return checklist, nil
+	return updatedChecklist, nil
 }
