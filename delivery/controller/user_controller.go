@@ -328,10 +328,14 @@ func (ctrl *UserController) Logout(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
 		return
 	}
-	err := ctrl.userUsecase.Logout(c.Request.Context(), userID.(string))
-	if err != nil {
-		HandleError(c, err)
-		return
+	if isMobileClient(c) {
+		err := ctrl.userUsecase.Logout(c.Request.Context(), userID.(string))
+		if err != nil {
+			HandleError(c, err)
+			return
+		}
+	} else {
+		setAuthCookie(c, "", -1)
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
