@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	defer cancel()
 
 	// Start a MongoDB container
-	mongodbContainer, err := mongodb.Run(ctx, "mongo:6")
+	mongodbContainer, err := mongodb.Run(ctx, "mongo:6.0")
 	if err != nil {
 		log.Fatalf("Failed to start MongoDB container: %s", err)
 	}

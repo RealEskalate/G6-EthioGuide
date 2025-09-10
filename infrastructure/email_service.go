@@ -46,6 +46,10 @@ func NewSMTPEmailService(host string, port int, username, password, from, verifi
 	}
 }
 
+func (s *SmtpEmailService) SetDialer(d dialer) {
+	s.dialer = d
+}
+
 func (s *SmtpEmailService) SendPasswordResetEmail(toEmail, username, resetToken string) error {
 	subject := "Reset Your EthioGuide Password"
 	actionURL := fmt.Sprintf("%s?token=%s", s.resetPasswordUrl, resetToken)
@@ -96,16 +100,21 @@ func (s *SmtpEmailService) send(to, subject, templateFile string, data interface
 	m.SetHeader("From", s.from)
 	m.SetHeader("To", to)
 	m.SetHeader("Subject", subject)
-	// Best Practice: Add a plain text alternative for clients that don't render HTML
+
 	if d, ok := data.(emailData); ok {
 		plainTextBody := fmt.Sprintf(
 			"Hi %s,\n\nPlease use the following link to complete the action: %s\n\nThank you,\nThe EthioGuide Team",
 			d.Username,
 			d.ActionURL,
 		)
-		m.AddAlternative("text/plain", plainTextBody)
+		// 1. Set the plain text as the main body.
+		m.SetBody("text/plain", plainTextBody)
+		// 2. Add the HTML version as the alternative. This creates a multipart message.
+		m.AddAlternative("text/html", body.String())
+	} else {
+		// Fallback for cases where we only have HTML
+		m.SetBody("text/html", body.String())
 	}
-	m.SetBody("text/html", body.String())
 
 	return s.dialer.DialAndSend(m)
 }

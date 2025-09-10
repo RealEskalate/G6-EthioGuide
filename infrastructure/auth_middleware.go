@@ -48,13 +48,14 @@ func ProOnlyMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		subscription, ok := userSubscription.(string)
+		subscription, ok := userSubscription.(domain.Subscription)
 		if !ok {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Invalid subscription type"})
 			return
 		}
 
-		if subscription == "pro" {
+		// Compare with the domain constant
+		if subscription == domain.SubscriptionPro {
 			c.Next()
 			return
 		}
