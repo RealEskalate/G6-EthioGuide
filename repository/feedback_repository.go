@@ -180,6 +180,10 @@ func (r *FeedbackRepository) GetFeedbackByID(ctx context.Context, id string) (*d
 func (r *FeedbackRepository) UpdateFeedbackStatus(ctx context.Context, feedbackID string, newFeedback *domain.Feedback) error {
 	model := fromDomainFeedback(newFeedback)
 
+	if model == nil {
+		return domain.ErrNotFound
+	}
+
 	fid, err := primitive.ObjectIDFromHex(feedbackID)
 	if err != nil {
 		return fmt.Errorf("invalid feedback ID: %w", err)

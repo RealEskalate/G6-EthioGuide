@@ -12,7 +12,7 @@ import (
 )
 
 type CategoryModel struct {
-	ID             primitive.ObjectID `bson:"_id, omitempty"`
+	ID             primitive.ObjectID `bson:"_id"`
 	OrganizationID primitive.ObjectID `bson:"organization_id"`
 	ParentID       primitive.ObjectID `bson:"parent_id,omitempty"`
 	Title          string             `bson:"title"`
@@ -126,38 +126,38 @@ func (r *categoryRepository) GetCategories(ctx context.Context, opts *domain.Cat
 
 // --- helper ---
 func buildCategoryFilter(options *domain.CategorySearchAndFilter) bson.M {
-    var conditions []bson.M
+	var conditions []bson.M
 
-    if options.Title != "" {
-        conditions = append(conditions, bson.M{"title": bson.M{"$regex": options.Title, "$options": "i"}})
-    }
+	if options.Title != "" {
+		conditions = append(conditions, bson.M{"title": bson.M{"$regex": options.Title, "$options": "i"}})
+	}
 
-    // Handle ParentID filtering
-    if options.ParentID == "" {
-        // Filter for documents with no parent_id (null or absent)
-        conditions = append(conditions, bson.M{
-            "$or": []bson.M{
-                {"parent_id": bson.M{"$exists": false}},
-                {"parent_id": nil},
-            },
-        })
-    } else {
-        // Try to parse ParentID as an ObjectID for specific parent filtering
-        if parentID, err := primitive.ObjectIDFromHex(options.ParentID); err == nil {
-            conditions = append(conditions, bson.M{"parent_id": parentID})
-        }
-        // If parsing fails, do nothing (invalid ParentID is ignored)
-    }
+	// Handle ParentID filtering
+	if options.ParentID == "" {
+		// Filter for documents with no parent_id (null or absent)
+		conditions = append(conditions, bson.M{
+			"$or": []bson.M{
+				{"parent_id": bson.M{"$exists": false}},
+				{"parent_id": nil},
+			},
+		})
+	} else {
+		// Try to parse ParentID as an ObjectID for specific parent filtering
+		if parentID, err := primitive.ObjectIDFromHex(options.ParentID); err == nil {
+			conditions = append(conditions, bson.M{"parent_id": parentID})
+		}
+		// If parsing fails, do nothing (invalid ParentID is ignored)
+	}
 
-    if options.OrganizationID != "" {
-        if orgID, err := primitive.ObjectIDFromHex(options.OrganizationID); err == nil {
-            conditions = append(conditions, bson.M{"organization_id": orgID})
-        }
-    }
+	if options.OrganizationID != "" {
+		if orgID, err := primitive.ObjectIDFromHex(options.OrganizationID); err == nil {
+			conditions = append(conditions, bson.M{"organization_id": orgID})
+		}
+	}
 
-    if len(conditions) == 0 {
-        return bson.M{}
-    }
+	if len(conditions) == 0 {
+		return bson.M{}
+	}
 
-    return bson.M{"$and": conditions}
+	return bson.M{"$and": conditions}
 }

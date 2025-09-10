@@ -1,4 +1,3 @@
-// CreateEmbeddingVectorIndex creates a vector index on the 'embedding' field for vector search.
 package repository
 
 import (

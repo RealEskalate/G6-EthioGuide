@@ -12,6 +12,26 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type UserProcedureModel struct {
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	UserID      primitive.ObjectID `bson:"user_id"`
+	ProcedureID primitive.ObjectID `bson:"procedure_id"`
+	Percent     int                `bson:"percent"`
+	Status      string             `bson:"status"` // "Not Started", "In Progress", "Completed"
+	UpdatedAt   time.Time          `bson:"updated_at"`
+}
+
+func ToDomainUserProcedure(model *UserProcedureModel) *domain.UserProcedure {
+	return &domain.UserProcedure{
+		ID:          model.ID.Hex(),
+		UserID:      model.UserID.Hex(),
+		ProcedureID: model.ProcedureID.Hex(),
+		Percent:     model.Percent,
+		Status:      model.Status,
+		UpdatedAt:   model.UpdatedAt,
+	}
+}
+
 type ChecklistItemModel struct {
 	ID              primitive.ObjectID `bson:"_id,omitempty"`
 	UserProcedureID primitive.ObjectID `bson:"user_procedure_id"`
@@ -246,46 +266,15 @@ func (cr *ChecklistRepository) ToggleCheckAndUpdateStatus(ctx context.Context, c
 		return &updatedChecklistItem, nil
 	})
 
-	checklist, ok := updatedChecklist.(ChecklistItemModel)
+	if err != nil {
+		return nil, err
+	}
+
+	checklist, ok := updatedChecklist.(*ChecklistItemModel)
 	if !ok {
 		return nil, domain.ErrNotFound
 	}
-	return TodomainChecklist(&checklist), err
-}
-
-func (cr *ChecklistRepository) FindCheck(ctx context.Context, checklistID string) (*domain.Checklist, error) {
-	objID, err := primitive.ObjectIDFromHex(checklistID)
-	if err != nil {
-		return nil, err
-	}
-
-	filter := bson.M{"_id": objID}
-	var checklist ChecklistItemModel
-	if err := cr.collectionChecklist.FindOne(ctx, filter).Decode(&checklist); err != nil {
-		return nil, err
-	}
-
-	return TodomainChecklist(&checklist), nil
-}
-
-func (cr *ChecklistRepository) CountDocumentsChecklist(ctx context.Context, filter interface{}) (int64, error) {
-	countDoc, err := cr.collectionChecklist.CountDocuments(ctx, filter)
-	if err != nil {
-		return 0, err
-	}
-
-	return countDoc, nil
-}
-
-func (cr *ChecklistRepository) UpdateUserProcedure(ctx context.Context, filter interface{}, update map[string]interface{}) error {
-	updateDoc := bson.M{
-		"$set": update,
-	}
-	if _, err := cr.collectionUserProcedure.UpdateOne(ctx, filter, updateDoc); err != nil {
-		return err
-	}
-
-	return nil
+	return TodomainChecklist(checklist), err
 }
 
 func toInsertSlice(items []ChecklistItemModel) []interface{} {
