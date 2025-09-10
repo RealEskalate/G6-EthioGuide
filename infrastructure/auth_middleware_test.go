@@ -204,91 +204,115 @@ func (s *MiddlewareTestSuite) TestAuthMiddleware_Success() {
 
 // --- ProOnlyMiddleware Tests ---
 
-// Helper function to create a context with predefined values
-func setContext(c *gin.Context, subscription string, role domain.Role) {
-	c.Set("userSubscription", subscription)
-	c.Set("userRole", role)
-}
-
 func (s *MiddlewareTestSuite) TestProOnlyMiddleware_Success() {
-	s.router.GET("/pro", func(c *gin.Context) {
-		setContext(c, "pro", domain.RoleUser)
-	}, ProOnlyMiddleware(), func(c *gin.Context) {
+	// Arrange: AuthMiddleware will set the context
+	claims := &domain.JWTClaims{Subscription: domain.SubscriptionPro}
+	s.mockJWTService.On("ValidateToken", "any-valid-token").Return(claims, nil)
+
+	// Setup a route that chains both middlewares
+	s.router.GET("/pro", AuthMiddleware(s.mockJWTService), ProOnlyMiddleware(), func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})
 
+	// Act
 	req, _ := http.NewRequest(http.MethodGet, "/pro", nil)
+	req.Header.Set("Authorization", "Bearer any-valid-token")
 	s.router.ServeHTTP(s.recorder, req)
 
+	// Assert
 	s.Equal(http.StatusOK, s.recorder.Code)
 }
 
 func (s *MiddlewareTestSuite) TestProOnlyMiddleware_InsufficientSubscription() {
-	s.router.GET("/pro", func(c *gin.Context) {
-		setContext(c, "free", domain.RoleUser)
-	}, ProOnlyMiddleware(), func(c *gin.Context) {})
+	// Arrange
+	claims := &domain.JWTClaims{Subscription: domain.SubscriptionNone} // Not "pro"
+	s.mockJWTService.On("ValidateToken", "any-valid-token").Return(claims, nil)
 
+	s.router.GET("/pro", AuthMiddleware(s.mockJWTService), ProOnlyMiddleware(), func(c *gin.Context) {})
+
+	// Act
 	req, _ := http.NewRequest(http.MethodGet, "/pro", nil)
+	req.Header.Set("Authorization", "Bearer any-valid-token")
 	s.router.ServeHTTP(s.recorder, req)
 
+	// Assert
 	s.Equal(http.StatusForbidden, s.recorder.Code)
 	var response map[string]string
 	json.Unmarshal(s.recorder.Body.Bytes(), &response)
 	s.Equal("Insufficient subscription permissions", response["error"])
 }
 
-func (s *MiddlewareTestSuite) TestProOnlyMiddleware_MissingSubscription() {
-	// No context-setting middleware
-	s.router.GET("/pro", ProOnlyMiddleware(), func(c *gin.Context) {})
+func (s *MiddlewareTestSuite) TestProOnlyMiddleware_InvalidSubscriptionTypeInContext() {
+	// Arrange
+	// This simulates a bug where a different part of the code sets an incorrect type
+	s.router.GET("/pro", func(c *gin.Context) {
+		c.Set("userSubscription", 123) // Set an integer instead of a string/domain.Subscription
+	}, ProOnlyMiddleware(), func(c *gin.Context) {})
 
+	// Act
 	req, _ := http.NewRequest(http.MethodGet, "/pro", nil)
 	s.router.ServeHTTP(s.recorder, req)
 
+	// Assert
 	s.Equal(http.StatusForbidden, s.recorder.Code)
 	var response map[string]string
 	json.Unmarshal(s.recorder.Body.Bytes(), &response)
-	s.Equal("Subscription information is missing", response["error"])
+	s.Equal("Invalid subscription type", response["error"])
 }
 
 // --- RequireRole Tests ---
 
 func (s *MiddlewareTestSuite) TestRequireRole_Success() {
-	// User is an Admin, route requires Admin or Organization
-	s.router.GET("/admin", func(c *gin.Context) {
-		setContext(c, "pro", domain.RoleAdmin)
-	}, RequireRole(domain.RoleAdmin, domain.RoleOrg), func(c *gin.Context) {
+	// Arrange: User has RoleAdmin, route requires RoleAdmin
+	claims := &domain.JWTClaims{Role: domain.RoleAdmin}
+	s.mockJWTService.On("ValidateToken", "any-valid-token").Return(claims, nil)
+
+	s.router.GET("/admin", AuthMiddleware(s.mockJWTService), RequireRole(domain.RoleAdmin, domain.RoleOrg), func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})
 
+	// Act
 	req, _ := http.NewRequest(http.MethodGet, "/admin", nil)
+	req.Header.Set("Authorization", "Bearer any-valid-token")
 	s.router.ServeHTTP(s.recorder, req)
 
+	// Assert
 	s.Equal(http.StatusOK, s.recorder.Code)
 }
 
 func (s *MiddlewareTestSuite) TestRequireRole_InsufficientRole() {
-	// User is a User, route requires Admin
-	s.router.GET("/admin", func(c *gin.Context) {
-		setContext(c, "pro", domain.RoleUser)
-	}, RequireRole(domain.RoleAdmin), func(c *gin.Context) {})
+	// Arrange: User has RoleUser, route requires RoleAdmin
+	claims := &domain.JWTClaims{Role: domain.RoleUser}
+	s.mockJWTService.On("ValidateToken", "any-valid-token").Return(claims, nil)
 
+	s.router.GET("/admin", AuthMiddleware(s.mockJWTService), RequireRole(domain.RoleAdmin), func(c *gin.Context) {})
+
+	// Act
 	req, _ := http.NewRequest(http.MethodGet, "/admin", nil)
+	req.Header.Set("Authorization", "Bearer any-valid-token")
 	s.router.ServeHTTP(s.recorder, req)
 
+	// Assert
 	s.Equal(http.StatusForbidden, s.recorder.Code)
 	var response map[string]string
 	json.Unmarshal(s.recorder.Body.Bytes(), &response)
 	s.Equal("Insufficient role permissions", response["error"])
 }
 
-func (s *MiddlewareTestSuite) TestRequireRole_MissingRole() {
-	// No context-setting middleware
-	s.router.GET("/admin", RequireRole(domain.RoleAdmin), func(c *gin.Context) {})
+func (s *MiddlewareTestSuite) TestRequireRole_InvalidRoleTypeInContext() {
+	// Arrange
+	// This simulates a bug where a different part of the code sets an incorrect type
+	s.router.GET("/admin", func(c *gin.Context) {
+		c.Set("userRole", "not-a-domain-role") // Set a plain string
+	}, RequireRole(domain.RoleAdmin), func(c *gin.Context) {})
 
+	// Act
 	req, _ := http.NewRequest(http.MethodGet, "/admin", nil)
 	s.router.ServeHTTP(s.recorder, req)
 
+	// Assert
 	s.Equal(http.StatusForbidden, s.recorder.Code)
-	// Note: Your original code returns a string, not JSON, for this specific error.
-	s.Contains(s.recorder.Body.String(), "Role information is missing")
+	var response map[string]string
+	json.Unmarshal(s.recorder.Body.Bytes(), &response)
+	s.Equal("Invalid role type", response["error"])
 }

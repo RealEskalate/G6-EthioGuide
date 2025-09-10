@@ -94,6 +94,18 @@ func TestJWTService_Validation(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "token has invalid claims: token is expired")
 	})
+
+	t.Run("Failure - Malformed token string", func(t *testing.T) {
+		// Arrange
+		malformedToken := "this-is-not-a-jwt"
+
+		// Act
+		_, err := jwtService.ValidateToken(malformedToken)
+
+		// Assert
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "token is malformed")
+	})
 }
 
 func TestJWTService_ParseExpiredToken(t *testing.T) {
