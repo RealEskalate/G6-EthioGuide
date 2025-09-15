@@ -6,8 +6,8 @@ import 'package:ethioguide/features/procedure/presentation/bloc/workspace_proced
 import 'package:ethioguide/features/workspace_discussion/presentation/bloc/workspace_discussion_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'core/config/app_router.dart'; // <-- 1. Import your new router file.
-import 'injection_container.dart' as di; // --> for dependency injection
+import 'core/config/app_router.dart'; 
+import 'injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized;
@@ -18,16 +18,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   MyApp({super.key});
-
-  // NOTE: This _themeMode variable should be managed by a state management solution
-  // (like a ThemeCubit) in a real app, not as a local variable here.
-  // For now, this is okay.
   final ThemeMode _themeMode = ThemeMode.light;
-
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -44,14 +35,12 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               di.sl<ProcedureBloc>()..add(LoadProceduresEvent(null)),
         ),
-         BlocProvider(
+        BlocProvider(
           create: (context) =>
               di.sl<WorkspaceProcedureDetailBloc>()..add(FetchMyProcedures()),
-        ), 
-
+        ),
 
         BlocProvider(create: (context) => di.sl<AuthBloc>()),
-
       ],
       child: MaterialApp.router(
         themeMode: _themeMode,
@@ -64,11 +53,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-// fead back give page
-// detail of my discustion
-
-
-// test with phone 
-// check procedure detail

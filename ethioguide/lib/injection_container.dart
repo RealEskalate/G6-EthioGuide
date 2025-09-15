@@ -20,7 +20,6 @@ import 'package:ethioguide/features/procedure/domain/repositories/procedure_repo
 import 'package:ethioguide/features/procedure/domain/repositories/workspace_procedure_repository.dart';
 import 'package:ethioguide/features/procedure/domain/usecases/get_feadback.dart';
 import 'package:ethioguide/features/procedure/domain/usecases/get_my_procedure.dart';
-import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_by_organization.dart';
 import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_bystattus.dart';
 import 'package:ethioguide/features/procedure/domain/usecases/get_procedure_detail.dart';
 import 'package:ethioguide/features/procedure/domain/usecases/get_procedures.dart';
@@ -54,16 +53,11 @@ import 'package:ethioguide/features/profile/domain/usecases/get_user_profile.dar
 import 'package:ethioguide/features/profile/domain/usecases/logout_user.dart';
 import 'package:ethioguide/features/profile/presentation/bloc/profile_bloc.dart';
 
-
-
-// REMOVED: No longer need to import google_sign_in here.
-
 import 'core/network/interceptors/auth_interceptor.dart';
 
 import 'package:ethioguide/core/config/end_points.dart';
 import 'package:ethioguide/core/data/repositories/auth_repository_impl.dart';
 import 'package:ethioguide/core/domain/repositories/auth_repository.dart';
-import 'package:ethioguide/core/network/interceptors/auth_interceptor.dart';
 import 'package:ethioguide/core/network/network_info.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/repository/ai_repository.dart';
 import 'package:ethioguide/features/AI%20chat/Domain/usecases/get_history.dart';
@@ -244,14 +238,14 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetWorkspaceSummary(sl()));
   sl.registerLazySingleton(() => GetProceduresByStatus(sl()));
   sl.registerLazySingleton(() => GetProcedureDetail(sl()));
-   sl.registerLazySingleton(() => UpdateStepStatus(sl()));
+  sl.registerLazySingleton(() => UpdateStepStatus(sl()));
 
   // Bloc
   sl.registerFactory<WorkspaceProcedureDetailBloc>(
     () => WorkspaceProcedureDetailBloc(
       getProcedureDetail: sl(),
       getMyProcedureDetails: sl(),
-      procedureDetailRepository: sl()
+      procedureDetailRepository: sl(),
       // saveProgressUseCase: sl(),
       // getMyProcedureDetails: sl(),
       // getProceduresByStatus: sl(),
@@ -285,7 +279,6 @@ Future<void> init() async {
 
         connectTimeout: const Duration(seconds: 111), // Waits 60s to connect
         receiveTimeout: const Duration(seconds: 111),
-
       ),
     );
     dio.interceptors.add(AuthInterceptor(sl<CoreAuthRepository>(), dio));
